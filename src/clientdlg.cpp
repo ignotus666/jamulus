@@ -39,6 +39,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pSettings ( pNSetP ),
     bConnectDlgWasShown ( false ),
     bMIDICtrlUsed ( !strMIDISetup.isEmpty() ),
+    bDetectFeedback ( false ),
     bEnableIPv6 ( bNEnableIPv6 ),
     eLastRecorderState ( RS_UNDEFINED ), // for SetMixerBoardDeco
     eLastDesign ( GD_ORIGINAL ),         //          "
@@ -509,10 +510,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::AudioChannelsChanged, this, &CClientDlg::OnAudioChannelsChanged );
 
-    QObject::connect ( &ClientSettingsDlg,
-                       &CClientSettingsDlg::CustomCentralServerAddrChanged,
-                       &ConnectDlg,
-                       &CConnectDlg::OnCustomCentralServerAddrChanged );
+    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::DirectoryAddressChanged, &ConnectDlg, &CConnectDlg::OnCustomDirectoryAddressChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::NumMixerPanelRowsChanged, this, &CClientDlg::OnNumMixerPanelRowsChanged );
 

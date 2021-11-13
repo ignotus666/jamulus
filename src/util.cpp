@@ -666,6 +666,19 @@ void CLanguageComboBox::OnLanguageActivated ( int iLanguageIdx )
         emit LanguageChanged ( itemData ( iLanguageIdx ).toString() );
     }
 }
+
+static inline QString TruncateString ( QString str, int position )
+{
+    QTextBoundaryFinder tbfString ( QTextBoundaryFinder::Grapheme, str );
+
+    tbfString.setPosition ( position );
+    if ( !tbfString.isAtBoundary() )
+    {
+        tbfString.toPreviousBoundary();
+        position = tbfString.position();
+    }
+    return str.left ( position );
+}
 #endif
 
 /******************************************************************************\
@@ -829,12 +842,12 @@ CHostAddress NetworkUtil::GetLocalAddress6()
     }
 }
 
-QString NetworkUtil::GetCentralServerAddress ( const ECSAddType eCentralServerAddressType, const QString& strCentralServerAddress )
+QString NetworkUtil::GetDirectoryAddress ( const EDirectoryType eDirectoryType, const QString& strDirectoryAddress )
 {
-    switch ( eCentralServerAddressType )
+    switch ( eDirectoryType )
     {
     case AT_CUSTOM:
-        return strCentralServerAddress;
+        return strDirectoryAddress;
     case AT_ANY_GENRE2:
         return CENTSERV_ANY_GENRE2;
     case AT_ANY_GENRE3:
