@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2020
+ * Copyright (c) 2004-2022
  *
  * Author(s):
  *  Volker Fischer
@@ -490,6 +490,7 @@ CAboutDlg::CAboutDlg ( QWidget* parent ) : CBaseDlg ( parent )
         "<p>Dau Huy Ngoc (<a href=\"https://github.com/ngocdh\">ngocdh</a>)</p>"
         "<p>Jiri Popek (<a href=\"https://github.com/jardous\">jardous</a>)</p>"
         "<p>Gary Wang (<a href=\"https://github.com/BLumia\">BLumia</a>)</p>"
+        "<p>RobyDati (<a href=\"https://github.com/RobyDati\">RobyDati</a>)</p>"
         "<br>" +
         tr ( "For details on the contributions check out the %1" )
             .arg ( "<a href=\"https://github.com/jamulussoftware/jamulus/graphs/contributors\">" + tr ( "Github Contributors list" ) + "</a>." ) );
@@ -1926,7 +1927,7 @@ QString GetVersionAndNameStr ( const bool bDisplayInGui )
         strVersionText += " <http://www.famfamfam.com>";
         strVersionText += "\n *** ";
         strVersionText += "\n *** ";
-        strVersionText += QCoreApplication::tr ( "Copyright (C) 2005-2021 The Jamulus Development Team" );
+        strVersionText += QCoreApplication::tr ( "Copyright (C) 2005-2022 The Jamulus Development Team" );
         strVersionText += "\n";
     }
 

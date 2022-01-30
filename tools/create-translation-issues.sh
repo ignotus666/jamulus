@@ -8,7 +8,7 @@
 #   ./tools/create-translation-issues.sh RELEASE DEADLINE app|web [EXTRA_TEXT]
 #
 # Requirements:
-# - Github CLI tools + valid login
+# - Github CLI tools + valid login (run `gh auth login` before running the script)
 # - jamulus and jamulussoftware git checkouts
 #
 # Example usage for app translations:
@@ -60,6 +60,7 @@ declare -A TRANSLATORS_BY_LANG=(
     [web_es]="ignotus666"
     [web_fr]="jujudusud,trebmuh"
     [web_it]="dzpex"
+    [web_nl]="henkdegroot"
     [web_pt]="Snayler,melcon,ewarning"
 )
 
@@ -98,6 +99,7 @@ Please
 
 - Start your work in your fork on a branch based on jamuluswebsite'"'"'s `${TRANSLATE_BRANCH}` branch.
 - Update the language-specific files using your favorite editor (or directly on Github),
+- New/changed images are listed at the end of this issue. [Generate new URLs](https://github.com/jamulussoftware/jamuluswebsite/tree/release#adding-screenshots) for your image `.inc` files.
 - Commit and push your changes to your fork,
 - Open a Pull Request with your translations to the **${TRANSLATE_BRANCH}** branch with the subject `${TITLE}`,
 - Link your PR(s) to this issue by including `Fixes #<Insert this issue'"'"'s number here>` in the PR content.
@@ -115,7 +117,20 @@ Feel free to use this Issue to discuss anything you need prior to making any PR 
 
 Further documentation can be found in [TRANSLATING.md](https://github.com/jamulussoftware/jamuluswebsite/blob/${TRANSLATE_BRANCH}/README.md#translating).
 
-Thanks for contributing to Jamulus!'
+Thanks for contributing to Jamulus!
+
+---
+
+**New/Changed screenshots**:
+
+Please [replace with new URLs](https://github.com/jamulussoftware/jamuluswebsite/tree/release#adding-screenshots) for your screenshots here, and use those URLs in your `.inc` files.
+
+<!-- add URLs here-->
+
+![settings-profile](https://user-images.githubusercontent.com/4561747/150635632-df083c6e-94d2-4ab8-a81c-18c7cc0c158d.png)
+
+'
+
 
 
 get_languages() {
