@@ -72,6 +72,9 @@
 - Server: Improved the icon that is displayed in the Windows system tray for a server (#2231)
   (contributed by @henkdegroot)
 
+- Bugfix: IPv6 address formatting and obfuscation has been improved (#2343).
+  (contributed by @rdica, @hoffie, @softins)
+
 - Windows Installer: Updated NSIS to v3.08 (#2208).
   (contributed by @ann0see)
 
@@ -108,6 +111,12 @@
 
 - Internal: Improved powershell redirect handling when building for Windows in Github (#2225).
   (contributed by @henkdegroot)
+
+- Internal: Prepared autobuild logic for upcoming Qt6 compatibility (#2328).
+  (contributed by @hoffie, @softins)
+
+- Internal: Release build process has been refactored and uses pinned dependencies for better reproducibility now. (#2345)
+  (contributed by @hoffie)
 
 
 ### 3.8.1 (2021-10-23) ###
