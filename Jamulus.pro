@@ -410,7 +410,14 @@ win32 {
         }
         ICONSDIR = $$absolute_path($$ICONSDIR, $$PREFIX)
         icons.path = $$ICONSDIR
-        icons.files = distributions/jamulus.png distributions/jamulus.svg distributions/jamulus-server.svg
+        icons.files = distributions/jamulus.png
+
+        isEmpty(ICONSDIR_SVG) {
+            ICONSDIR_SVG = share/icons/hicolor/scalable/apps/
+        }
+        ICONSDIR_SVG = $$absolute_path($$ICONSDIR_SVG, $$PREFIX)
+        icons_svg.path = $$ICONSDIR_SVG
+        icons_svg.files = distributions/jamulus.svg distributions/jamulus-server.svg
 
         isEmpty(MANDIR) {
             MANDIR = share/man/man1
@@ -419,7 +426,7 @@ win32 {
         man.path = $$MANDIR
         man.files = distributions/Jamulus.1
 
-        INSTALLS += target desktop icons man
+        INSTALLS += target desktop icons icons_svg man
     }
 }
 
@@ -1173,3 +1180,12 @@ contains(CONFIG, "disable_version_check") {
     message(The version check is disabled.)
     DEFINES += DISABLE_VERSION_CHECK
 }
+
+# Enable formatting all code via `make clang_format`.
+# Note: When extending the list of file extensions or when adding new code directories,
+# be sure to update .github/workflows/coding-style-check.yml and .clang-format-ignore as well.
+CLANG_FORMAT_SOURCES = $$files(*.cpp, true) $$files(*.mm, true) $$files(*.h, true)
+CLANG_FORMAT_SOURCES = $$find(CLANG_FORMAT_SOURCES, ^\(android|ios|mac|linux|src|windows\)/)
+CLANG_FORMAT_SOURCES ~= s!^\(windows/\(nsProcess|ASIOSDK2\)/|src/res/qrc_resources\.cpp\)\S*$!!g
+clang_format.commands = 'clang-format -i $$CLANG_FORMAT_SOURCES'
+QMAKE_EXTRA_TARGETS += clang_format
