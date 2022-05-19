@@ -69,9 +69,9 @@ CServerListEntry CServerListEntry::parse ( QString strHAddr,
 
     return CServerListEntry ( haServerHostAddr,
                               haServerLocalAddr,
-                              CServerCoreInfo ( FromBase64ToString ( sName.trimmed().left ( MAX_LEN_SERVER_NAME ) ),
+                              CServerCoreInfo ( FromBase64ToString ( sName.trimmed() ).left ( MAX_LEN_SERVER_NAME ),
                                                 lcCountry,
-                                                FromBase64ToString ( sCity.trimmed().left ( MAX_LEN_SERVER_CITY ) ),
+                                                FromBase64ToString ( sCity.trimmed() ).left ( MAX_LEN_SERVER_CITY ),
                                                 iNumClients,
                                                 isPermanent ) );
 }
@@ -688,8 +688,9 @@ bool CServerListManager::Load()
     if ( !file.open ( QIODevice::ReadWrite | QIODevice::Text ) )
     {
         qWarning() << qUtf8Printable (
-            QString ( "Could not open '%1' for read/write.  Please check that Jamulus has permission (and that there is free space)." )
-                .arg ( ServerListFileName ) );
+            QString ( "Could not open '%1' for read/write.  Please check that %2 has permission (and that there is free space)." )
+                .arg ( ServerListFileName )
+                .arg ( APP_NAME ) );
         ServerListFileName.clear();
         return false;
     }
