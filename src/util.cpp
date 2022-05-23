@@ -415,6 +415,11 @@ CAboutDlg::CAboutDlg ( QWidget* parent ) : CBaseDlg ( parent )
                             ", <i><a href=\"https://www.qt.io\">https://www.qt.io</a></i></p>"
                             "<p>Opus Interactive Audio Codec"
                             ", <i><a href=\"https://www.opus-codec.org\">https://www.opus-codec.org</a></i></p>"
+#    if defined( _WIN32 ) && !defined( WITH_JACK )
+                            "<p>ASIO (Audio Stream I/O) SDK"
+                            ", <i><a href=\"https://www.steinberg.net/developers/\">https://www.steinberg.net/developers</a></i><br>" +
+                            "ASIO is a trademark and software of Steinberg Media Technologies GmbH</p>"
+#    endif
                             "<p>" +
                             tr ( "Audio reverberation code by Perry R. Cook and Gary P. Scavone" ) +
                             ", 1995 - 2021, <i><a href=\"https://ccrma.stanford.edu/software/stk\">"
@@ -495,6 +500,7 @@ CAboutDlg::CAboutDlg ( QWidget* parent ) : CBaseDlg ( parent )
         "<p>RobyDati (<a href=\"https://github.com/RobyDati\">RobyDati</a>)</p>"
         "<p>Rob-NY (<a href=\"https://github.com/Rob-NY\">Rob-NY</a>)</p>"
         "<p>Thai Pangsakulyanont (<a href=\"https://github.com/dtinth\">dtinth</a>)</p>"
+        "<p>Peter Goderie (<a href=\"https://github.com/pgScorpio\">pgScorpio</a>)</p>"
         "<br>" +
         tr ( "For details on the contributions check out the %1" )
             .arg ( "<a href=\"https://github.com/jamulussoftware/jamulus/graphs/contributors\">" + tr ( "Github Contributors list" ) + "</a>." ) );
@@ -1410,6 +1416,11 @@ QString GetVersionAndNameStr ( const bool bDisplayInGui )
         strVersionText += "\n *** Opus Interactive Audio Codec";
         strVersionText += "\n *** <https://www.opus-codec.org>";
         strVersionText += "\n *** ";
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+        strVersionText += "\n *** ASIO (Audio Stream I/O) SDK";
+        strVersionText += "\n *** <https://www.steinberg.net/developers>";
+        strVersionText += "\n *** ";
+#endif
         strVersionText += "\n *** Audio reverberation code by Perry R. Cook and Gary P. Scavone";
         strVersionText += "\n *** <https://ccrma.stanford.edu/software/stk>";
         strVersionText += "\n *** ";
