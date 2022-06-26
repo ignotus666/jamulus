@@ -660,7 +660,7 @@
     <message>
         <location filename="../clientdlg.cpp" line="153"/>
         <source>If this LED indicator turns red, you will not have much fun using %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si ce témoin lumineux devient rouge, vous n&apos;aurez pas beaucoup de plaisir à utiliser %1.</translation>
     </message>
     <message>
         <location filename="../clientdlg.cpp" line="158"/>
@@ -920,7 +920,7 @@
     <message>
         <location filename="../clientdlg.cpp" line="185"/>
         <source>If this LED indicator turns red, the audio stream is interrupted.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si ce témoin lumineux devient rouge, le flux audio est interrompu.</translation>
     </message>
     <message>
         <location filename="../clientdlg.cpp" line="189"/>
@@ -930,7 +930,7 @@
     <message>
         <location filename="../clientdlg.cpp" line="192"/>
         <source>Current Connection Status</source>
-        <translation type="unfinished"></translation>
+        <translation>État actuel de la connexion</translation>
     </message>
     <message>
         <location filename="../clientdlg.cpp" line="303"/>
