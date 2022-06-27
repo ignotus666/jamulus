@@ -1034,7 +1034,7 @@
     <message>
         <location filename="../clientdlg.cpp" line="185"/>
         <source>If this LED indicator turns red, the audio stream is interrupted.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si este indicador LED se vuelve rojo, se interrumpe el flujo de audio.</translation>
     </message>
     <message>
         <location filename="../clientdlg.cpp" line="192"/>
