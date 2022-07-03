@@ -1,4 +1,4 @@
-VERSION = 3.8.2nightly4
+VERSION = 3.8.2dev
 
 # use target name which does not use a capital letter at the beginning
 contains(CONFIG, "noupcasename") {
@@ -39,6 +39,7 @@ contains(CONFIG, "headless") {
     QT -= gui
 } else {
     QT += widgets
+    QT += multimedia
 }
 
 LRELEASE_DIR = src/translation
