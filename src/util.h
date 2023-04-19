@@ -126,7 +126,7 @@ public:
     CVector ( const int iNeSi ) { Init ( iNeSi ); }
     CVector ( const int iNeSi, const TData tInVa ) { Init ( iNeSi, tInVa ); }
 
-    CVector ( CVector const& ) = default;
+    CVector ( CVector const& )            = default;
     CVector& operator= ( CVector const& ) = default;
 
     void Init ( const int iNewSize );
@@ -650,7 +650,7 @@ inline QString svrRegStatusToString ( ESvrRegStatus eSvrRegStatus )
         return QCoreApplication::translate ( "CServerDlg", "Registered" );
 
     case SRS_SERVER_LIST_FULL:
-        return QCoreApplication::translate ( "CServerDlg", "Directory server list full" );
+        return QCoreApplication::translate ( "CServerDlg", "Server list full at directory" );
 
     case SRS_VERSION_TOO_OLD:
         return QCoreApplication::translate ( "CServerDlg", "Your server version is too old" );
@@ -662,7 +662,7 @@ inline QString svrRegStatusToString ( ESvrRegStatus eSvrRegStatus )
     return QString ( QCoreApplication::translate ( "CServerDlg", "Unknown value %1" ) ).arg ( eSvrRegStatus );
 }
 
-// Directory server registration outcome ---------------------------------------
+// Directory registration outcome ----------------------------------------------
 enum ESvrRegResult
 {
     // used for protocol -> enum values must be fixed!
