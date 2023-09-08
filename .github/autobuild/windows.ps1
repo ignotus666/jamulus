@@ -1,3 +1,28 @@
+##############################################################################
+# Copyright (c) 2022-2023
+#
+# Author(s):
+#  Christian Hoffmann
+#  The Jamulus Development Team
+#
+##############################################################################
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+#
+##############################################################################
+
 # Steps for generating Windows artifacts via Github Actions
 # See README.md in this folder for details.
 # See windows/deploy_windows.ps1 for standalone builds.
@@ -20,8 +45,8 @@ $DownloadCacheDir = 'C:\AutobuildCache'
 # The following version pinnings are semi-automatically checked for
 # updates. Verify .github/workflows/bump-dependencies.yaml when changing those manually:
 $Qt32Version = "5.15.2"
-$Qt64Version = "6.5.1"
-$AqtinstallVersion = "3.1.6"
+$Qt64Version = "6.5.2"
+$AqtinstallVersion = "3.1.7"
 $JackVersion = "1.9.22"
 $Msvc32Version = "win32_msvc2019"
 $Msvc64Version = "win64_msvc2019_64"
@@ -205,8 +230,7 @@ Function Pass-Artifact-to-Job
     }
 
     $artifact = "jamulus_${JamulusVersion}_win${ArtifactSuffix}.exe"
-
-    echo "Copying artifact to ${artifact}"
+    echo "Copying artifact to .\deploy\${artifact}"
     move ".\deploy\Jamulus*installer-win.exe" ".\deploy\${artifact}"
     if ( !$? )
     {

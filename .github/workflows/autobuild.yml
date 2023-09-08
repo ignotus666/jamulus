@@ -65,7 +65,7 @@ jobs:
     runs-on:                        ubuntu-20.04
     outputs:
       publish_to_release:           ${{ steps.get-build-vars.outputs.PUBLISH_TO_RELEASE }}
-      upload_url:                   ${{ steps.create-release.outputs.upload_url }}
+      tag_name:                     ${{ steps.get-build-vars.outputs.RELEASE_TAG }}
       build_version:                ${{ steps.get-build-vars.outputs.BUILD_VERSION }}
       build_all_targets:            ${{ steps.decide-build-targets.outputs.build_all_targets }}
     env:
@@ -85,28 +85,28 @@ jobs:
         if:                         steps.get-build-vars.outputs.PUBLISH_TO_RELEASE == 'true'
         run:                        ./.github/autobuild/extractVersionChangelog.pl ChangeLog ${{ steps.get-build-vars.outputs.JAMULUS_PRO_VERSION }} > ${{ env.release_changelog_path }}
 
-      - name:                       Remove release ${{steps.get-build-vars.outputs.RELEASE_TAG}}, if existing
-        if:                         steps.get-build-vars.outputs.PUBLISH_TO_RELEASE == 'true'
-        continue-on-error:          true
-        uses:                       dev-drprasad/delete-tag-and-release@0885ecc4123e071dd1a8be04d3a0578f5390581c
-        with:
-          delete_release:           true
-          tag_name:                 ${{ steps.get-build-vars.outputs.RELEASE_TAG }}
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-
-      - name:                       Create Release ${{steps.get-build-vars.outputs.RELEASE_TAG}}  ${{steps.get-build-vars.outputs.RELEASE_TITLE}}
+      - name:                       Create/Recreate Release ${{steps.get-build-vars.outputs.RELEASE_TAG}}  ${{steps.get-build-vars.outputs.RELEASE_TITLE}}
         if:                         steps.get-build-vars.outputs.PUBLISH_TO_RELEASE == 'true'
         id:                         create-release
-        uses:                       actions/create-release@v1
+        run:                        |
+          set -eu
+
+          # delete release if existing
+          gh release delete "${tag_name}" || true
+
+          RELEASE_PRERELEASE_ARG=""
+          if [[ "${prerelease}" == 'true' ]]; then
+            RELEASE_PRERELEASE_ARG="--prerelease"
+          fi
+          # Actually create the release. This will print the release url if successful
+          gh release create "${tag_name}" --title "${release_name}" --notes-file "${body_path}" ${RELEASE_PRERELEASE_ARG}
+
         env:
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
           tag_name:                 ${{ steps.get-build-vars.outputs.RELEASE_TAG }}
           release_name:             ${{ steps.get-build-vars.outputs.RELEASE_TITLE }}
           body_path:                ${{ env.release_changelog_path }}
           prerelease:               ${{ steps.get-build-vars.outputs.IS_PRERELEASE }}
-          draft:                    false
 
       - name:                       Decide which targets to build for
         id:                         decide-build-targets
@@ -227,11 +227,11 @@ jobs:
           - config_name:            MacOS (artifacts)
             target_os:              macos
             building_on_os:         macos-12
-            base_command:           QT_VERSION=6.5.1 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh
+            base_command:           QT_VERSION=6.5.2 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh
             # Disable CodeQL on mac as it interferes with signing the binaries (signing hangs, see #2563 and #2564)
             run_codeql:             false
-            # Latest Xcode which runs on macos-11:
-            xcode_version:          13.4.1
+            # Default Xcode which runs on macos-12:
+            xcode_version:          14.2.0
             is_main_build_target:   true
 
           # Reminder: If Legacy is removed, be sure to add a dedicated job for CodeQL again.
@@ -241,10 +241,9 @@ jobs:
             base_command:           QT_VERSION=5.9.9 SIGN_IF_POSSIBLE=0 ARTIFACT_SUFFIX=_legacy ./.github/autobuild/mac.sh
             # Enable CodeQL on mac legacy as this version does not get signed
             run_codeql:             true
-            # For Qt5 on Mac, we need to ensure SDK 10.15 is used, and not SDK 11.x.
-            # Xcode 12.1 is the most-recent release which still ships SDK 10.15:
+            # For Qt5 on Mac, we need to use an unsupported SDK version as macOS 12 doesn't
+            # support Xcode 12.1 which still ships SDK 10.15.
             # https://developer.apple.com/support/xcode/
-            # Xcode 12.1.1 is the most-recent 12.1.x release:
             # https://xcodereleases.com/
             xcode_version:          14.2.0
             is_main_build_target:   true
@@ -257,6 +256,8 @@ jobs:
             # There are no hints that iOS is supposed to be supported by CodeQL.
             # Therefore, disable it:
             run_codeql:             false
+            # Unfortunately, more modern Xcode versions no longer seem to support
+            # Qt 5.15.2. Therefore upgrading to Qt6 is needed in the medium term (#2711)
             xcode_version:          12.5.1
 
           - config_name:            Windows (artifact+codeQL)
@@ -296,10 +297,13 @@ jobs:
         run:                        |
           set -eu
           apt-get -qq update
-          apt-get install -y software-properties-common sudo
+          apt-get install -y software-properties-common sudo curl
           add-apt-repository ppa:git-core/ppa
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get -qq update
-          apt-get -qq -y install git-core
+          apt-get -qq -y install git-core gh
           # Github Runner environments usually whitelist the default checkout directory for git.
           # However, when using containers, we have to do that manually in order for git commands to work
           # (e.g. in Jamulus.pro's VERSION logic):
@@ -397,12 +401,13 @@ jobs:
                                     needs.create_release.outputs.publish_to_release == 'true' &&
                                     steps.build.outputs.macos_notarize == 'true'
         id:                         notarize-macOS-app
-        uses:                       devbotsxyz/xcode-notarize@d7219e1c390b47db8bab0f6b4fc1e3b7943e4b3b
+        uses:                       lando/notarize-action@4f5869b09386e8336802159031e4189e0919ae20
         with:
           product-path:             deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
           primary-bundle-id:        io.jamulus.Jamulus
           appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+          appstore-connect-team-id:  ${{ secrets.NOTARIZATION_TEAM_ID }}
 
       - name:                       Staple macOS Release Build
         if:                         >-
@@ -410,37 +415,19 @@ jobs:
                                     needs.create_release.outputs.publish_to_release == 'true' &&
                                     steps.build.outputs.macos_notarize == 'true'
         id:                         staple-macOS-app
-        uses:                       devbotsxyz/xcode-staple@ae68b22ca35d15864b7f7923e1a166533b2944bf
+        uses:                       BoundfoxStudios/action-xcode-staple@cd6c16fb6a3dfb365203a41343926f81e813afad
         with:
           product-path:             deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
 
-      - name:                       Upload Artifact 1 to Release
-        # Every build job has at least one artifact. Therefore, no `if artifact_1` condition here.
-        # If the artifact is missing, this should fail.
+      - name:                       Deploy Artifacts to Release
         if:                         needs.create_release.outputs.publish_to_release == 'true'
-        id:                         upload-release-asset1
-        uses:                       actions/upload-release-asset@v1
+        id:                         upload-release-assets
+        run:                        >
+          gh release upload "${{ needs.create_release.outputs.tag_name }}" "deploy/${{ steps.get-artifacts.outputs.artifact_1 }}" "deploy/${{ steps.get-artifacts.outputs.artifact_2 }}" --clobber
+          ||
+          gh release upload "${{ needs.create_release.outputs.tag_name }}" "deploy/${{ steps.get-artifacts.outputs.artifact_1 }}" --clobber
         env:
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
-          asset_name:               ${{ steps.get-artifacts.outputs.artifact_1 }}
-          asset_content_type:       application/octet-stream
-
-      - name:                       Upload Artifact 2 to Release
-        if:                         >-
-                                    steps.get-artifacts.outputs.artifact_2 != '' &&
-                                    needs.create_release.outputs.publish_to_release == 'true'
-        id:                         upload-release-asset2
-        uses:                       actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
-          asset_name:               ${{ steps.get-artifacts.outputs.artifact_2 }}
-          asset_content_type:       application/octet-stream
 
       - name:                       Perform CodeQL Analysis
         if:                         matrix.config.run_codeql
@@ -494,49 +481,14 @@ jobs:
           gpg --homedir "../gpghome" --armor --yes --clearsign --output InRelease --detach-sign Release
           gpg --homedir "../gpghome" --armor --export > "key.asc"
 
-          popd
+          # remove .deb files as they have been uploaded to the GitHub release already before
+          rm *.deb
 
-      - name:                       Upload Packages file to release
+          popd
+      - name:                       Upload Debian repository files to release
         if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        id:                         deb-upload-packagesfile
-        uses:                       actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               repo/Packages
-          asset_name:               Packages
-          asset_content_type:       text/plain
-      - name:                       Upload Release file to release
-        if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        id:                         deb-upload-releasefile
-        uses:                       actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               repo/Release
-          asset_name:               Release
-          asset_content_type:       message/rfc822
-      - name:                       Upload InRelease file to release
-        if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        id:                         deb-upload-inreleasefile
-        uses:                       actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               repo/InRelease
-          asset_name:               InRelease
-          asset_content_type:       text/PGP
-      - name:                       Upload Key file to release
-        if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        id:                         deb-upload-keyascfile
-        uses:                       actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url:               ${{ needs.create_release.outputs.upload_url }}
-          asset_path:               repo/key.asc
-          asset_name:               key.asc
-          asset_content_type:       application/pgp-keys
+        run:                        |
+          gh release upload "${{ needs.create_release.outputs.tag_name }}" "repo/InRelease" "repo/key.asc" "repo/Packages" "repo/Release" --clobber -R "${{ github.repository}}"
+

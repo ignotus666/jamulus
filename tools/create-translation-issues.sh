@@ -1,4 +1,29 @@
 #!/bin/bash
+##############################################################################
+# Copyright (c) 2021-2023
+#
+# Author(s):
+#  Christian Hoffmann
+#  The Jamulus Development Team
+#
+##############################################################################
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+#
+##############################################################################
+
 # This script opens translation issues for all languages via the Github API.
 # The script is idempotent and can be run multiple times. It will not create
 # multiple issues if milestone and title remain the same. Instead, it will
@@ -29,6 +54,8 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
+LOGGED_IN_AS=$(gh auth status | grep Logged | sed -e 's/^.*Logged in .*as //' -e 's/ ([^)]*)$//')
+
 RELEASE=$1
 DEADLINE=$2
 TYPE=$3
@@ -44,7 +71,7 @@ declare -A TRANSLATORS_BY_LANG
 # App translators:
 TRANSLATORS_BY_LANG[app_de_DE]="rolamos"
 TRANSLATORS_BY_LANG[app_es_ES]="ignotus666"
-TRANSLATORS_BY_LANG[app_fr_FR]="jujudusud"
+TRANSLATORS_BY_LANG[app_fr_FR]="jujudusud,trebmuh"
 TRANSLATORS_BY_LANG[app_it_IT]="dzpex"
 TRANSLATORS_BY_LANG[app_nl_NL]="henkdegroot,jerogee"
 TRANSLATORS_BY_LANG[app_pl_PL]="SeeLook"
@@ -53,7 +80,6 @@ TRANSLATORS_BY_LANG[app_pt_PT]="Snayler"
 TRANSLATORS_BY_LANG[app_sk_SK]="jose1711"
 TRANSLATORS_BY_LANG[app_sv_SE]="genesisproject2020"
 TRANSLATORS_BY_LANG[app_zh_CN]="BLumia"
-TRANSLATORS_BY_LANG[app_ko_KR]="bagjunggyu"
 # Web translators:
 TRANSLATORS_BY_LANG[web_de]="Helondeth,ewarning"
 TRANSLATORS_BY_LANG[web_es]="ignotus666"
@@ -179,8 +205,8 @@ create_translation_issue_for_lang() {
 
     translators=${TRANSLATORS_BY_LANG[${TYPE}_${lang}]-}
     if [[ -z $translators ]]; then
-        echo "Warning: Can't create issue for $lang - who is responsible? Skipping." > /dev/stderr
-        return
+        echo "No translator for $lang, assigning $LOGGED_IN_AS - please re-assign as necessary" > /dev/stderr
+        translators="$LOGGED_IN_AS"
     fi
 
     local title="Update ${lang} ${TYPE} translation for ${RELEASE}"
@@ -204,7 +230,8 @@ create_translation_issue_for_lang() {
 
     # Check for an existing issue
     local existing_issue
-    existing_issue=$(gh issue list --milestone "$MILESTONE" --state all --search "$title" --json number --jq '.[0].number' || true)
+
+    existing_issue=$(gh issue list --milestone "$MILESTONE" --state all --json number,title --jq '. | map(select(.title == "'"$title"'")) | .[0].number' || true)
 
     # If there's no existing issue, create one
     if [[ -z $existing_issue ]]; then
