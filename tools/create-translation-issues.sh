@@ -63,6 +63,9 @@ EXTRA_TEXT=${4:-}
 MILESTONE="Release ${RELEASE}"
 PROJECT=Tracking
 
+# shellcheck disable=SC2034  # shellcheck can't know that this will be used with envsubst, so "unused" variable is correct here.
+START_DATE=$(date -Idate)
+
 # Syntax:
 # TRANSLATORS_BY_LANG[TYPE_LANG]="github-handle1,github-handle2"
 # with TYPE being either app or web and
@@ -113,7 +116,9 @@ Further documentation can be found in [TRANSLATING.md](https://github.com/jamulu
 
 Thanks for contributing to Jamulus!
 
-<a href="https://hosted.weblate.org/engage/jamulus/"><img src="https://hosted.weblate.org/widgets/jamulus/-/jamulus-app/multi-auto.svg" alt="Translation status" /></a>'
+<a href="https://hosted.weblate.org/engage/jamulus/"><img src="https://hosted.weblate.org/widgets/jamulus/-/jamulus-app/multi-auto.svg" alt="Translation status" /></a>
+
+**[Weblate progress](https://hosted.weblate.org/changes/browse/jamulus/jamulus-app/${LANG}/?start_date=${START_DATE})**'
 
 # shellcheck disable=SC2016  # shellcheck can't know that this will be used with envsubst, so verbatim variables are correct here.
 BODY_TEMPLATE_WEB='Hi ${SPLIT_TRANSLATORS},
@@ -225,6 +230,7 @@ create_translation_issue_for_lang() {
             SPLIT_TRANSLATORS=$(sed -re 's/^/@/; s/,/, @/g' <<< "$translators") \
             TITLE="$title" \
             TRANSLATE_BRANCH=next-release \
+            START_DATE="$START_DATE" \
             envsubst <<< "$body_template"
     )
 
