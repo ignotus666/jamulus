@@ -39,6 +39,10 @@ param(
 # Fail early on all errors
 $ErrorActionPreference = "Stop"
 
+# Invoke-WebRequest is really slow by default because it renders a progress bar.
+# Disabling this, improves vastly performance:
+$ProgressPreference = 'SilentlyContinue'
+
 $QtDir = 'C:\Qt'
 $ChocoCacheDir = 'C:\ChocoCache'
 $DownloadCacheDir = 'C:\AutobuildCache'
@@ -46,7 +50,7 @@ $DownloadCacheDir = 'C:\AutobuildCache'
 # updates. Verify .github/workflows/bump-dependencies.yaml when changing those manually:
 $Qt32Version = "5.15.2"
 $Qt64Version = "6.6.0"
-$AqtinstallVersion = "3.1.7"
+$AqtinstallVersion = "3.1.11"
 $JackVersion = "1.9.22"
 $Msvc32Version = "win32_msvc2019"
 $Msvc64Version = "win64_msvc2019_64"
@@ -179,7 +183,7 @@ Function Ensure-JACK
 
     $JACKInstallPath = "${DownloadCacheDir}\JACK64.exe"
 
-    & $JACKInstallPath $JACKInstallParms
+    Start-Process -Wait $JACKInstallPath -ArgumentList "$JACKInstallParms"
 
     if ( !$? )
     {
@@ -194,7 +198,7 @@ Function Ensure-JACK
 
     $JACKInstallPath = "${DownloadCacheDir}\JACK32.exe"
 
-    & $JACKInstallPath $JACKInstallParms
+    Start-Process -Wait $JACKInstallPath -ArgumentList "$JACKInstallParms"
 
     if ( !$? )
     {
