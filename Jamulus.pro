@@ -1,7 +1,5 @@
 VERSION = 3.10.0dev
 
-error("THE BRANCH YOU GOT THIS VERSION OF JAMULUS FROM IS NO LONGER MAINTAINED. PLEASE USE THE "main" BRANCH INSTEAD!")
-
 # use target name which does not use a capital letter at the beginning
 contains(CONFIG, "noupcasename") {
     message(The target name is jamulus instead of Jamulus.)
