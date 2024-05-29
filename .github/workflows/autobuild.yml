@@ -75,7 +75,7 @@ jobs:
         contents:                   write
     steps:
       - name:                       Checkout code
-        uses:                       actions/checkout@v3
+        uses:                       actions/checkout@v4
 
       - name:                       Determine release version, type and prerelease variables
         run:                        ./.github/autobuild/get_build_vars.py
@@ -205,7 +205,7 @@ jobs:
           - config_name:            Linux .deb amd64 (artifacts+codeQL)
             target_os:              linux
             building_on_os:         ubuntu-22.04
-            building_container:     ubuntu:18.04
+            building_container:     ubuntu:20.04
             base_command:           ./.github/autobuild/linux_deb.sh
             run_codeql:             true
             is_main_build_target:   true
@@ -213,21 +213,21 @@ jobs:
           - config_name:            Linux .deb armhf (artifacts)
             target_os:              linux
             building_on_os:         ubuntu-22.04
-            building_container:     ubuntu:18.04
+            building_container:     ubuntu:20.04
             base_command:           TARGET_ARCH=armhf ./.github/autobuild/linux_deb.sh
             run_codeql:             false
 
           - config_name:            Linux .deb arm64 (artifacts)
             target_os:              linux
             building_on_os:         ubuntu-22.04
-            building_container:     ubuntu:18.04
+            building_container:     ubuntu:20.04
             base_command:           TARGET_ARCH=arm64 ./.github/autobuild/linux_deb.sh
             run_codeql:             false
 
           - config_name:            MacOS (artifacts)
             target_os:              macos
             building_on_os:         macos-12
-            base_command:           QT_VERSION=6.6.1 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh
+            base_command:           QT_VERSION=6.6.3 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh
             # Disable CodeQL on mac as it interferes with signing the binaries (signing hangs, see #2563 and #2564)
             run_codeql:             false
             # Default Xcode which runs on macos-12:
@@ -293,7 +293,7 @@ jobs:
           xcode-version:            ${{ matrix.config.xcode_version }}
 
       - name:                       Set up base dependencies in container environment
-        if:                         matrix.config.building_container == 'ubuntu:18.04'
+        if:                         matrix.config.building_container == 'ubuntu:20.04'
         run:                        |
           set -eu
           apt-get -qq update
@@ -312,14 +312,14 @@ jobs:
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name:                       Checkout code
-        uses:                       actions/checkout@v3
+        uses:                       actions/checkout@v4
         with:
           submodules:               true
           fetch-depth:              ${{ matrix.config.checkout_fetch_depth || '1' }}
 
       - name:                       Cache Mac dependencies
         if:                         matrix.config.target_os == 'macos'
-        uses:                       actions/cache@v3
+        uses:                       actions/cache@v4
         with:
           path: |
             /usr/local/opt/qt
@@ -328,7 +328,7 @@ jobs:
 
       - name:                       Cache Windows dependencies
         if:                         matrix.config.target_os == 'windows'
-        uses:                       actions/cache@v3
+        uses:                       actions/cache@v4
         with:
           path: |
             C:\Qt
@@ -340,7 +340,7 @@ jobs:
 
       - name:                       Cache Android dependencies
         if:                         matrix.config.target_os == 'android'
-        uses:                       actions/cache@v3
+        uses:                       actions/cache@v4
         with:
           path: |
             /opt/Qt
@@ -355,7 +355,7 @@ jobs:
 
       - name:                       Initialize CodeQL
         if:                         matrix.config.run_codeql
-        uses:                       github/codeql-action/init@v2
+        uses:                       github/codeql-action/init@v3
         with:
           languages: 'cpp'
 
@@ -379,7 +379,7 @@ jobs:
       - name:                       Upload Artifact 1 to Job
         # Every build job has at least one artifact. Therefore, no `if` here.
         # If the artifact is missing, this should fail.
-        uses:                       actions/upload-artifact@v3
+        uses:                       actions/upload-artifact@v4
         with:
           name:                     ${{ steps.get-artifacts.outputs.artifact_1 }}
           path:                     deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
@@ -388,7 +388,7 @@ jobs:
 
       - name:                       Upload Artifact 2 to Job
         if:                         steps.get-artifacts.outputs.artifact_2
-        uses:                       actions/upload-artifact@v3
+        uses:                       actions/upload-artifact@v4
         with:
           name:                     ${{ steps.get-artifacts.outputs.artifact_2 }}
           path:                     deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
@@ -431,7 +431,7 @@ jobs:
 
       - name:                       Perform CodeQL Analysis
         if:                         matrix.config.run_codeql
-        uses:                       github/codeql-action/analyze@v2
+        uses:                       github/codeql-action/analyze@v3
 
   create_deb_repo:
     name:                           Create files for .deb repository (if requested)
@@ -462,7 +462,7 @@ jobs:
       # Unfortunately download-artifact action doesn't support wild card downloads. Thus downloading all artifacts
       - name:                       Download all artifacts
         if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        uses:                       actions/download-artifact@v3
+        uses:                       actions/download-artifact@v4
         with:
           path:                     releasedl/
       - name:                       Create Debian repository
