@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2022
+ * Copyright (c) 2004-2024
  *
  * Author(s):
  *  Volker Fischer
@@ -943,7 +943,7 @@ void CClientDlg::SetMyWindowTitle ( const int iNumClients )
 
     setWindowTitle ( strWinTitle );
 
-#if defined( Q_OS_MACX )
+#if defined( Q_OS_MACOS )
     // for MacOS only we show the number of connected clients as a
     // badge label text if more than one user is connected
     if ( iNumClients > 1 )
@@ -1358,7 +1358,6 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
             "                         image:          url(:/png/fader/res/ledbuttonpressed.png); }"
             "QCheckBox {              color:          rgb(220, 220, 220);"
             "                         font:           bold; }" );
-
 #ifdef _WIN32
         // Workaround QT-Windows problem: This should not be necessary since in the
         // background frame the style sheet for QRadioButton was already set. But it
@@ -1450,31 +1449,39 @@ void CClientDlg::SetMixerBoardDeco ( const ERecorderState newRecorderState, cons
     eLastRecorderState = newRecorderState;
     eLastDesign        = eNewDesign;
 
+    // set base style
+    QString sTitleStyle = "QGroupBox::title { subcontrol-origin: margin;"
+                          "                   subcontrol-position: left top;"
+                          "                   left: 7px;";
+
     if ( newRecorderState == RS_RECORDING )
     {
-        MainMixerBoard->setStyleSheet ( "QGroupBox::title { subcontrol-origin: margin; "
-                                        "                   subcontrol-position: left top;"
-                                        "                   left: 7px;"
-                                        "                   color: rgb(255,255,255);"
-                                        "                   background-color: rgb(255,0,0); }" );
+        sTitleStyle += "color: rgb(255,255,255);"
+                       "background-color: rgb(255,0,0); }";
     }
     else
     {
         if ( eNewDesign == GD_ORIGINAL )
         {
-            MainMixerBoard->setStyleSheet ( "QGroupBox::title { subcontrol-origin: margin;"
-                                            "                   subcontrol-position: left top;"
-                                            "                   left: 7px;"
-                                            "                   color: rgb(220,220,220); }" );
+            // no need to set the background color for dark mode in fancy skin, as the background is already dark.
+            sTitleStyle += "color: rgb(220,220,220); }";
         }
         else
         {
-            MainMixerBoard->setStyleSheet ( "QGroupBox::title { subcontrol-origin: margin;"
-                                            "                   subcontrol-position: left top;"
-                                            "                   left: 7px;"
-                                            "                   color: rgb(0,0,0); }" );
+            if ( palette().color ( QPalette::Window ) == QColor::fromRgbF ( 0.196078, 0.196078, 0.196078, 1 ) )
+            {
+                // Dark mode on macOS/Linux needs a light color
+
+                sTitleStyle += "color: rgb(220,220,220); }";
+            }
+            else
+            {
+                sTitleStyle += "color: rgb(0,0,0); }";
+            }
         }
     }
+
+    MainMixerBoard->setStyleSheet ( sTitleStyle );
 }
 
 void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, const CMultiColorLED::ELightColor eOverallDelayLEDColor )

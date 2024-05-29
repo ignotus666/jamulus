@@ -1,10 +1,35 @@
 #!/bin/bash
+##############################################################################
+# Copyright (c) 2022-2024
+#
+# Author(s):
+#  Christian Hoffmann
+#  The Jamulus Development Team
+#
+##############################################################################
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+#
+##############################################################################
+
 set -eu
 
 QT_DIR=/usr/local/opt/qt
 # The following version pinnings are semi-automatically checked for
 # updates. Verify .github/workflows/bump-dependencies.yaml when changing those manually:
-AQTINSTALL_VERSION=3.0.2
+AQTINSTALL_VERSION=3.1.15
 
 if [[ ! ${QT_VERSION:-} =~ [0-9]+\.[0-9]+\..* ]]; then
     echo "Environment variable QT_VERSION must be set to a valid Qt version"
@@ -23,14 +48,14 @@ setup() {
         python3 -m pip install "aqtinstall==${AQTINSTALL_VERSION}"
         # Install actual ios Qt:
         local qtmultimedia=()
-        if [[ ! "${QT_VERSION}" =~ 5\..* ]]; then
+        if [[ ! "${QT_VERSION}" =~ 5\.[0-9]+\.[0-9]+ ]]; then
             # From Qt6 onwards, qtmultimedia is a module and cannot be installed
             # as an archive anymore.
             qtmultimedia=("--modules")
         fi
         qtmultimedia+=("qtmultimedia")
         python3 -m aqt install-qt --outputdir "${QT_DIR}" mac ios "${QT_VERSION}" --archives qtbase qttools qttranslations "${qtmultimedia[@]}"
-        if [[ ! "${QT_VERSION}" =~ 5\..* ]]; then
+        if [[ ! "${QT_VERSION}" =~ 5\.[0-9]+\.[0-9]+  ]]; then
             # Starting with Qt6, ios' qtbase install does no longer include a real qmake binary.
             # Instead, it is a script which invokes the mac desktop qmake.
             # As of aqtinstall 2.1.0 / 04/2022, desktop qtbase has to be installed manually:

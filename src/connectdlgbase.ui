@@ -37,7 +37,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbxDirectoryServer"/>
+      <widget class="QComboBox" name="cbxDirectory"/>
      </item>
      <item>
       <widget class="QLabel" name="lblFilter">
@@ -104,6 +104,30 @@
       <widget class="QComboBox" name="cbxServerAddr">
        <property name="editable">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="butDeleteServerAddr">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Ignored">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>24</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string notr="true">⌫</string>
        </property>
       </widget>
      </item>

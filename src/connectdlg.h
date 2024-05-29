@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2022
+ * Copyright (c) 2004-2024
  *
  * Author(s):
  *  Volker Fischer
@@ -75,7 +75,7 @@ protected:
     void             ShowAllMusicians ( const bool bState );
     void             RequestServerList();
     void             EmitCLServerListPingMes ( const CHostAddress& haServerAddress );
-    void             UpdateDirectoryServerComboBox();
+    void             UpdateDirectoryComboBox();
 
     CClientSettings* pSettings;
 
@@ -96,11 +96,12 @@ protected:
 public slots:
     void OnServerListItemDoubleClicked ( QTreeWidgetItem* Item, int );
     void OnServerAddrEditTextChanged ( const QString& );
-    void OnDirectoryServerChanged ( int iTypeIdx );
+    void OnDirectoryChanged ( int iTypeIdx );
     void OnFilterTextEdited ( const QString& ) { UpdateListFilter(); }
     void OnExpandAllStateChanged ( int value ) { ShowAllMusicians ( value == Qt::Checked ); }
     void OnCustomDirectoriesChanged();
     void OnConnectClicked();
+    void OnDeleteServerAddrClicked();
     void OnTimerPing();
     void OnTimerReRequestServList();
 

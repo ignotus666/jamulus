@@ -1,4 +1,29 @@
 #!/bin/bash
+##############################################################################
+# Copyright (c) 2022-2024
+#
+# Author(s):
+#  Christian Hoffmann
+#  The Jamulus Development Team
+#
+##############################################################################
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+#
+##############################################################################
+
 # Requirements: git, Github CLI (gh), jq
 set -eu -o pipefail
 
@@ -38,7 +63,7 @@ find_or_add_missing_entries() {
         check_or_add_pr "$id"
     done
 
-    local target_ref=origin/master
+    local target_ref=origin/main
     if git tag | grep -qxF "${target_release_tag}"; then
         # already released, use this
         target_ref="${target_release_tag}"
@@ -46,7 +71,7 @@ find_or_add_missing_entries() {
     echo
     echo "Checking if all PR references in git log since ${prev_release_tag} are included for ${target_release} based on ref ${target_ref}..."
     local milestone
-    for id in $(git log "${prev_release_tag}..master" | grep -oP '#\K(\d+)'); do
+    for id in $(git log "${prev_release_tag}..main" | grep -oP '#\K(\d+)'); do
         gh pr view "${id}" --json title &> /dev/null || continue # Skip non-PRs
         milestone=$(gh pr view "${id}" --json milestone --jq .milestone.title)
         if [[ "${milestone}" =~ "Release " ]] && [[ "${milestone}" != "Release ${target_release}" ]]; then

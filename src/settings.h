@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2022
+ * Copyright (c) 2004-2024
  *
  * Author(s):
  *  Volker Fischer
@@ -29,6 +29,7 @@
 #include <QSettings>
 #include <QDir>
 #ifndef HEADLESS
+#    include <QApplication>
 #    include <QMessageBox>
 #endif
 #include "global.h"
@@ -50,9 +51,34 @@ public:
         strFileName ( "" )
     {
         QObject::connect ( QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &CSettings::OnAboutToQuit );
+#ifndef HEADLESS
+
+        // The Jamulus App will be created as either a QCoreApplication or QApplication (a subclass of QGuiApplication).
+        // State signals are only delivered to QGuiApplications, so we determine here whether we instantiated the GUI.
+        const QGuiApplication* pGApp = dynamic_cast<const QGuiApplication*> ( QCoreApplication::instance() );
+
+        if ( pGApp != nullptr )
+        {
+#    ifndef QT_NO_SESSIONMANAGER
+            QObject::connect (
+                pGApp,
+                &QGuiApplication::saveStateRequest,
+                this,
+                [=] ( QSessionManager& ) { Save(); },
+                Qt::DirectConnection );
+
+#    endif
+            QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
+                if ( Qt::ApplicationActive != state )
+                {
+                    Save();
+                }
+            } );
+        }
+#endif
     }
 
-    void Load ( const QList<QString> CommandLineOptions );
+    void Load ( const QList<QString>& CommandLineOptions );
     void Save();
 
     // common settings
@@ -162,10 +188,9 @@ public:
     int              iNumMixerPanelRows;
     CVector<QString> vstrDirectoryAddress;
     EDirectoryType   eDirectoryType;
-    int              iCustomDirectoryIndex; // index of selected custom directory server
+    int              iCustomDirectoryIndex; // index of selected custom directory
     bool             bEnableFeedbackDetection;
     bool             bEnableAudioAlerts;
-    bool             bCleanUpLegacyFaderSettings;
 
     // window position/state settings
     QByteArray vecWindowPosSettings;
@@ -178,10 +203,7 @@ public:
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument ) override;
-    virtual void ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& CommandLineOptions ) override;
-
-    // Code for #2680 clean up
-    QString CleanUpLegacyFaderSetting ( QString strFaderTag, int iIdx );
+    virtual void ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& ) override;
 
     void ReadFaderSettingsFromXML ( const QDomDocument& IniXMLDocument );
     void WriteFaderSettingsToXML ( QDomDocument& IniXMLDocument );

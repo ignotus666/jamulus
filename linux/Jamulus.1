@@ -14,7 +14,7 @@
 .Op Fl 6 | Fl \-enableipv6
 .Op Fl c | Fl \-connect Ar address
 .Op Fl d | Fl \-discononquit
-.Op Fl e | Fl \-directoryserver Ar hostname
+.Op Fl e | Fl \-directoryaddress Ar hostname
 .Op Fl F | Fl \-fastupdate
 .Op Fl f | Fl \-listfilter Ar filter
 .Op Fl h | Fl \&? | Fl \-help
@@ -85,7 +85,7 @@ at startup
 .It Fl d | Fl \-discononquit
 .Pq Server mode only
 disconnect all Clients on quit
-.It Fl e | Fl \-directoryserver Ar hostname
+.It Fl e | Fl \-directoryaddress Ar hostname
 .Pq Server mode only
 Register the Server with the given Directory by setting the Directory Server Address to use to
 .Ar hostname ;
@@ -213,7 +213,7 @@ start with minimised window
 .It Fl \-centralserver Ar hostname
 .Pq Server mode only
 deprecated alias for
-.Fl \-directoryserver
+.Fl \-directoryaddress
 .It Fl \-clientname Ar name
 .Pq Client mode only
 set window title and JACK client name
@@ -302,7 +302,7 @@ controlling the
 verbose
 .Fl \-ctrlmidich
 documentation and other more or less useful information
-.It Pa https://github.com/jamulussoftware/jamulus/blob/master/docs/JSON\-RPC.md
+.It Pa https://github.com/jamulussoftware/jamulus/blob/main/docs/JSON\-RPC.md
 JSON-RPC API Documentation (see
 .Fl \-jsonrpcport
 above)

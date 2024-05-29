@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2022
+ * Copyright (c) 2004-2024
  *
  * Author(s):
  *  Volker Fischer
@@ -25,7 +25,7 @@
 #include "settings.h"
 
 /* Implementation *************************************************************/
-void CSettings::Load ( const QList<QString> CommandLineOptions )
+void CSettings::Load ( const QList<QString>& CommandLineOptions )
 {
     // prepare file name for loading initialization data from XML file and read
     // data from file if possible
@@ -226,13 +226,11 @@ void CClientSettings::SaveFaderSettings ( const QString& strCurFileName )
     WriteToFile ( strCurFileName, IniXMLDocument );
 }
 
-void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& CommandLineOptions )
+void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& )
 {
     int  iIdx;
     int  iValue;
     bool bValue;
-
-    bCleanUpLegacyFaderSettings = CommandLineOptions.contains ( "--cleanuplegacyfadersettings" );
 
     // IP addresses
     for ( iIdx = 0; iIdx < MAX_NUM_SERVER_ADDR_ITEMS; iIdx++ )
@@ -559,53 +557,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     ReadFaderSettingsFromXML ( IniXMLDocument );
 }
 
-QString CClientSettings::CleanUpLegacyFaderSetting ( QString strFaderTag, int iIdx )
-{
-    bool ok;
-    int  iIdy;
-    bool bDup;
-
-    if ( !bCleanUpLegacyFaderSettings || strFaderTag.isEmpty() )
-    {
-        return strFaderTag;
-    }
-
-    QStringList slChanFaderTag = strFaderTag.split ( ":" );
-    if ( slChanFaderTag.size() != 2 )
-    {
-        return strFaderTag;
-    }
-
-    const int iChan = slChanFaderTag[0].toInt ( &ok );
-    if ( ok && iChan >= 0 && iChan <= MAX_NUM_CHANNELS )
-    {
-        // *assumption*: legacy tag that needs cleaning up
-        strFaderTag = slChanFaderTag[1];
-    }
-
-    // duplicate detection
-    // this assumes the first entry into the vector is the newest one and skips any later ones.
-    // the alternative is to use iIdy for the vector entry, so overwriting the duplicate.
-    // (in both cases, this currently leaves holes in the vector.)
-    bDup = false;
-    for ( iIdy = 0; iIdy < iIdx; iIdy++ )
-    {
-        if ( strFaderTag == vecStoredFaderTags[iIdy] )
-        {
-            // duplicate entry
-            bDup = true;
-            break;
-        }
-    }
-    if ( bDup )
-    {
-        // so skip all settings for this iIdx (use iIdx here even if using iIdy and not doing continue below)
-        return QString();
-    }
-
-    return strFaderTag;
-}
-
 void CClientSettings::ReadFaderSettingsFromXML ( const QDomDocument& IniXMLDocument )
 {
     int  iIdx;
@@ -615,9 +566,8 @@ void CClientSettings::ReadFaderSettingsFromXML ( const QDomDocument& IniXMLDocum
     for ( iIdx = 0; iIdx < MAX_NUM_STORED_FADER_SETTINGS; iIdx++ )
     {
         // stored fader tags
-        QString strFaderTag = CleanUpLegacyFaderSetting (
-            FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", QString ( "storedfadertag%1_base64" ).arg ( iIdx ), "" ) ),
-            iIdx );
+        QString strFaderTag =
+            FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", QString ( "storedfadertag%1_base64" ).arg ( iIdx ), "" ) );
 
         if ( strFaderTag.isEmpty() )
         {
@@ -886,7 +836,9 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     }
 
     // to avoid multiple registrations, must do this after collecting serverinfo
-    if ( !CommandLineOptions.contains ( "--centralserver" ) && !CommandLineOptions.contains ( "--directoryserver" ) )
+    if ( !CommandLineOptions.contains ( "--centralserver" ) &&   // for backwards compatibility
+         !CommandLineOptions.contains ( "--directoryserver" ) && // also for backwards compatibility
+         !CommandLineOptions.contains ( "--directoryaddress" ) )
     {
         // custom directory
         // CServerListManager defaults to command line argument (or "" if not passed)
@@ -908,8 +860,9 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // Because type could be AT_CUSTOM, it has to be set after the address to avoid multiple registrations
     EDirectoryType directoryType = AT_NONE;
 
-    // if a command line Directory server address is set, set the Directory Type (genre) to AT_CUSTOM so it's used
-    if ( CommandLineOptions.contains ( "--centralserver" ) || CommandLineOptions.contains ( "--directoryserver" ) )
+    // if a command line Directory address is set, set the Directory Type (genre) to AT_CUSTOM so it's used
+    if ( CommandLineOptions.contains ( "--centralserver" ) || CommandLineOptions.contains ( "--directoryserver" ) ||
+         CommandLineOptions.contains ( "--directoryaddress" ) )
     {
         directoryType = AT_CUSTOM;
     }
@@ -922,6 +875,7 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             directoryType = bValue ? AT_DEFAULT : AT_CUSTOM;
         }
         else
+        {
             //### TODO: END ###//
 
             // if "directorytype" itself is set, use it (note "AT_NONE", "AT_DEFAULT" and "AT_CUSTOM" are min/max directory type here)
@@ -934,19 +888,23 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                     static_cast<int> ( AT_DEFAULT ),
                                     static_cast<int> ( AT_CUSTOM ),
                                     iValue ) )
-        {
-            directoryType = static_cast<EDirectoryType> ( iValue );
-        }
-        //### TODO: END ###//
+            {
+                directoryType = static_cast<EDirectoryType> ( iValue );
+            }
+            //### TODO: END ###//
 
-        else if ( GetNumericIniSet ( IniXMLDocument,
-                                     "server",
-                                     "directorytype",
-                                     static_cast<int> ( AT_NONE ),
-                                     static_cast<int> ( AT_CUSTOM ),
-                                     iValue ) )
-        {
-            directoryType = static_cast<EDirectoryType> ( iValue );
+            else
+            {
+                if ( GetNumericIniSet ( IniXMLDocument,
+                                        "server",
+                                        "directorytype",
+                                        static_cast<int> ( AT_NONE ),
+                                        static_cast<int> ( AT_CUSTOM ),
+                                        iValue ) )
+                {
+                    directoryType = static_cast<EDirectoryType> ( iValue );
+                }
+            }
         }
 
         //### TODO: BEGIN ###//
