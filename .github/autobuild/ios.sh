@@ -29,7 +29,7 @@ set -eu
 QT_DIR=/usr/local/opt/qt
 # The following version pinnings are semi-automatically checked for
 # updates. Verify .github/workflows/bump-dependencies.yaml when changing those manually:
-AQTINSTALL_VERSION=3.1.15
+AQTINSTALL_VERSION=3.1.16
 
 if [[ ! ${QT_VERSION:-} =~ [0-9]+\.[0-9]+\..* ]]; then
     echo "Environment variable QT_VERSION must be set to a valid Qt version"
@@ -61,6 +61,11 @@ setup() {
             # As of aqtinstall 2.1.0 / 04/2022, desktop qtbase has to be installed manually:
             python3 -m aqt install-qt --outputdir "${QT_DIR}" mac desktop "${QT_VERSION}" --archives qtbase
         fi
+
+        # Suppress deprecation of Legacy Build System for now.
+        # TODO: Legacy Build System is removed in xcode 14. Need to migrate
+        # to the Modern Build System instead.
+        /usr/libexec/PlistBuddy -c "Add :DisableBuildSystemDeprecationDiagnostic bool true" /usr/local/opt/qt/"${QT_VERSION}"/ios/mkspecs/macx-xcode/WorkspaceSettings.xcsettings
     fi
 }
 

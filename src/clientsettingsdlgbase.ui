@@ -1039,11 +1039,18 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="cbxCustomDirectories">
-               <property name="editable">
-                <bool>true</bool>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout">
+               <item>
+                <widget class="QComboBox" name="cbxCustomDirectories">
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="tbtDeleteCustomDirectory"/>
+               </item>
+              </layout>
              </item>
              <item>
               <spacer name="verticalSpacer_4">
@@ -1053,7 +1060,7 @@
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>20</width>
-                 <height>13</height>
+                 <height>40</height>
                 </size>
                </property>
               </spacer>
@@ -1367,6 +1374,7 @@
   <tabstop>sldNetBufServer</tabstop>
   <tabstop>chbSmallNetworkBuffers</tabstop>
   <tabstop>cbxCustomDirectories</tabstop>
+  <tabstop>tbtDeleteCustomDirectory</tabstop>
   <tabstop>edtNewClientLevel</tabstop>
   <tabstop>cbxInputBoost</tabstop>
   <tabstop>chbDetectFeedback</tabstop>
