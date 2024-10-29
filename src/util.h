@@ -558,11 +558,12 @@ enum ERecorderState
 enum EChSortType
 {
     // used for settings -> enum values should be fixed
-    ST_NO_SORT       = 0,
-    ST_BY_NAME       = 1,
-    ST_BY_INSTRUMENT = 2,
-    ST_BY_GROUPID    = 3,
-    ST_BY_CITY       = 4
+    ST_NO_SORT           = 0,
+    ST_BY_NAME           = 1,
+    ST_BY_INSTRUMENT     = 2,
+    ST_BY_GROUPID        = 3,
+    ST_BY_CITY           = 4,
+    ST_BY_SERVER_CHANNEL = 5
 };
 
 // Directory type --------------------------------------------------------------
@@ -1098,54 +1099,16 @@ public:
     {
 #ifdef _WIN32
         return OT_WINDOWS;
-#elif defined( __APPLE__ ) || defined( __MACOSX )
+#elif defined( Q_OS_MACOS )
         return OT_MAC_OS;
-#elif defined( ANDROID )
+#elif defined( Q_OS_IOS )
+        return OT_I_OS;
+#elif defined( Q_OS_ANDROID ) || defined( ANDROID )
         return OT_ANDROID;
 #else
         return OT_LINUX;
 #endif
     }
-};
-
-// Audio reverbration ----------------------------------------------------------
-class CAudioReverb
-{
-public:
-    CAudioReverb() {}
-
-    void Init ( const EAudChanConf eNAudioChannelConf, const int iNStereoBlockSizeSam, const int iSampleRate, const float fT60 = 1.1f );
-
-    void Clear();
-    void Process ( CVector<int16_t>& vecsStereoInOut, const bool bReverbOnLeftChan, const float fAttenuation );
-
-protected:
-    void setT60 ( const float fT60, const int iSampleRate );
-    bool isPrime ( const int number );
-
-    class COnePole
-    {
-    public:
-        COnePole() : fA ( 0 ), fB ( 0 ) { Reset(); }
-        void  setPole ( const float fPole );
-        float Calc ( const float fIn );
-        void  Reset() { fLastSample = 0; }
-
-    protected:
-        float fA;
-        float fB;
-        float fLastSample;
-    };
-
-    EAudChanConf eAudioChannelConf;
-    int          iStereoBlockSizeSam;
-    CFIFO<float> allpassDelays[3];
-    CFIFO<float> combDelays[4];
-    COnePole     combFilters[4];
-    CFIFO<float> outLeftDelay;
-    CFIFO<float> outRightDelay;
-    float        allpassCoefficient;
-    float        combCoefficient[4];
 };
 
 // CRC -------------------------------------------------------------------------

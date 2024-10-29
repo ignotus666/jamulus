@@ -39,12 +39,12 @@
     <message>
         <location filename="../util.cpp" line="597"/>
         <source>(build)</source>
-        <translation type="unfinished"></translation>
+        <translation>(versão)</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="598"/>
         <source>(runtime)</source>
-        <translation type="unfinished"></translation>
+        <translation>(tempo de execução)</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="616"/>
@@ -94,12 +94,12 @@
     <message>
         <location filename="../util.cpp" line="622"/>
         <source>Some pixmaps are from the %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Alguns pixmaps são de %1</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="630"/>
         <source>Some sound samples are from %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Algumas amostras de áudio são de %1</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="709"/>
@@ -1510,7 +1510,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../clientsettingsdlg.cpp" line="281"/>
         <source>Select the language to be used for the user interface.</source>
-        <translation>Selecione o idioma para ser utilizado na interface do usuário.</translation>
+        <translation>Selecione o idioma para ser utilizado na interface do utilizador.</translation>
     </message>
     <message>
         <location filename="../clientsettingsdlg.cpp" line="283"/>
@@ -1525,7 +1525,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../clientsettingsdlg.cpp" line="362"/>
         <source>If you need to add additional directories to the Connect dialog Directory drop down, you can enter the addresses here.&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Se você precisa adicionar mais diretórios ao menu suspenso de Diretórios na janela Conectar, insira os endereços aqui.&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../clientsettingsdlg.cpp" line="375"/>
@@ -2079,17 +2079,17 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../clientsettingsdlg.cpp" line="369"/>
         <source>Delete custom directory button</source>
-        <translation type="unfinished"></translation>
+        <translation>Botão para apagar diretórios personalizados</translation>
     </message>
     <message>
         <location filename="../clientsettingsdlg.cpp" line="370"/>
         <source>Delete Custom Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Apagar Diretório Personalizado</translation>
     </message>
     <message>
         <location filename="../clientsettingsdlg.cpp" line="371"/>
         <source>Click the button to delete the currently selected custom directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique no botão para excluir o diretório personalizado selecionado.</translation>
     </message>
     <message>
         <location filename="../clientsettingsdlg.cpp" line="385"/>
@@ -2951,17 +2951,17 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../connectdlg.cpp" line="99"/>
         <source>Delete server address button</source>
-        <translation type="unfinished"></translation>
+        <translation>Botão para apagar endereço de servidor</translation>
     </message>
     <message>
         <location filename="../connectdlg.cpp" line="100"/>
         <source>Delete Server Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Apagar Endereço de Servidor</translation>
     </message>
     <message>
         <location filename="../connectdlg.cpp" line="101"/>
         <source>Click the button to clear the currently selected server address and delete it from the list of stored servers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique no botão para limpar o endereço de servidor selecionado e excluí-lo da lista de servidores armazenados.</translation>
     </message>
     <message>
         <source>The IP address or URL of the server running the </source>
@@ -3681,7 +3681,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="215"/>
         <source>The current value of server list persistence file name. The user %1 is running as needs to be able to create the file name specified although it may already exist (it will get overwritten on save). Click the button to open the dialog that allows the server list persistence file name to be set.</source>
-        <translation>O valor atual do nome do arquivo de persistência da lista de servidores. O usuário com o qual %1 está sendo corrido precisa ser capaz de criar o nome do arquivo especificado, embora ele já exista (será substituído ao salvar). Clique no botão para abrir o diálogo que permite definir o nome do arquivo de persistência da lista de servidores.</translation>
+        <translation>O valor atual do nome do arquivo de persistência da lista de servidores. O utilizador com o qual %1 está sendo corrido precisa ser capaz de criar o nome do arquivo especificado, embora ele já exista (será substituído ao salvar). Clique no botão para abrir o diálogo que permite definir o nome do arquivo de persistência da lista de servidores.</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="222"/>
@@ -3881,7 +3881,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="182"/>
         <source>Main recording directory text box (read-only)</source>
-        <translation>Caixa de texto do diretório das gravações (só de leitura)</translation>
+        <translation>Caixa de texto do diretório principal das gravações (só de leitura)</translation>
     </message>
     <message>
         <source>The current value of the main recording directory. The chosen value must exist and be writeable (allow creation of sub-directories by the user Jamulus is running as). Click the button to open the dialog that allows the main recording directory to be selected.</source>
@@ -3905,7 +3905,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="121"/>
         <source>Checkbox to turn on or off server recording</source>
-        <translation>Caixa de selecção para ligar ou desligar a gravação no servidor</translation>
+        <translation>Caixa de seleção para ligar ou desligar a gravação no servidor</translation>
     </message>
     <message>
         <source>If the Register Server check box is checked, this will show whether registration with the directory server is successful. If the registration failed, please choose another server list.</source>
@@ -3923,22 +3923,22 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="149"/>
         <source>Current session directory text box (read-only)</source>
-        <translation>Caixa de texto com a pasta da gravação actual (apenas leitura)</translation>
+        <translation>Caixa de texto do diretório da gravação atual (apenas leitura)</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="153"/>
         <source>Current Session Directory</source>
-        <translation>Pasta da Sessão Acual</translation>
+        <translation>Diretório de Sessão Atual</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="154"/>
         <source>Enabled during recording and holds the current recording session directory. Disabled after recording or when the recorder is not enabled.</source>
-        <translation>Activo durante a gravação e exibe a pasta da gravação actual. Inactivo depois de gravação ou quando o gravador não estiver ligado.</translation>
+        <translation>Ativado durante a gravação e exibe a diretoria da gravação atual. Desativado depois da gravação ou quando o gravador não estiver ativado.</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="131"/>
         <source>Recorder status label</source>
-        <translation>Etiqueta do estado do Gravador</translation>
+        <translation>Etiqueta do estado do gravador</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="63"/>
@@ -3954,7 +3954,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="133"/>
         <source>Displays the current status of the recorder.  The following values are possible:</source>
-        <translation>Mostra o estado actual do gravadro. Os valores possíveis são:</translation>
+        <translation>Mostra o estado atual do gravador. Os valores possíveis são:</translation>
     </message>
     <message>
         <source>No recording directory has been set or the value is not useable.</source>
@@ -3985,7 +3985,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="145"/>
         <source>NOTE</source>
-        <translation>NOTE</translation>
+        <translation>NOTA</translation>
     </message>
     <message>
         <source>If the recording directory is not useable, the problem will be displayed in place of the directory.</source>
@@ -3999,12 +3999,12 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="161"/>
         <source>Server Welcome Message</source>
-        <translation>Mesagem de Boas-Vindas do Servidor</translation>
+        <translation>Mensagem de Boas-Vindas do Servidor</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="162"/>
         <source>A server welcome message text is displayed in the chat window if a musician enters the server. If no message is set, the server welcome is disabled.</source>
-        <translation>Uma mensagem de boas vindas do servidor é exibida na janela de mensagens quando um utilizador entra no servidor. Se não houver nenhuma mensagem definida, a mensagem do servidor ficará inactiva.</translation>
+        <translation>Uma mensagem de boas-vindas do servidor é exibida na janela de mensagens quando um utilizador entra no servidor. Se não for definida nenhuma mensagem, esta mensagem estará desativada.</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="168"/>
@@ -4014,7 +4014,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="168"/>
         <source>Select the language to be used for the user interface.</source>
-        <translation>Selecione o idioma a ser utilizado na interface do usuário.</translation>
+        <translation>Selecione o idioma a ser utilizado na interface do utilizador.</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="172"/>
@@ -4057,7 +4057,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="338"/>
         <source>Type a message here. If no message is set, the server welcome is disabled.</source>
-        <translation>Insira uma mensagem aqui. Se não houver nenhuma mensagem definida, a mensagem do servidor ficará inactiva.</translation>
+        <translation>Insira uma mensagem aqui. Se não houver nenhuma mensagem definida, a mensagem do servidor ficará desativada.</translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="44"/>
@@ -4072,7 +4072,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="591"/>
         <source>Recorder failed to start. Please check available disk space and permissions and try again. Error: </source>
-        <translation>O Gravador falhou a inicialização. Por favor verifique se tem espaço em disco e permições e tente de novo. Erro: </translation>
+        <translation>O gravador falhou a inicialização. Por favor, verifique se tem espaço em disco e permissões e tente de novo. Erro: </translation>
     </message>
     <message>
         <location filename="../serverdlg.cpp" line="870"/>
@@ -4123,7 +4123,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.cpp" line="603"/>
         <source>Select Main Recording Directory</source>
-        <translation>Seleciona o Diretório Principal das Gravações</translation>
+        <translation>Selecionar o Diretório Principal das Gravações</translation>
     </message>
     <message>
         <source>Predefined Address</source>
@@ -4147,7 +4147,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlg.h" line="54"/>
         <source>Not enabled</source>
-        <translation>Desactivado</translation>
+        <translation>Desativado</translation>
     </message>
     <message>
         <source>Manual</source>
@@ -4187,7 +4187,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../util.h" line="638"/>
         <source>Bad address</source>
-        <translation>Endereço incorrecto</translation>
+        <translation>Endereço incorreto</translation>
     </message>
     <message>
         <location filename="../util.h" line="641"/>
@@ -4197,7 +4197,7 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../util.h" line="644"/>
         <source>Registration failed</source>
-        <translation>Falha no registo</translation>
+        <translation>Registo falhou</translation>
     </message>
     <message>
         <location filename="../util.h" line="647"/>
@@ -4302,12 +4302,12 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../serverdlgbase.ui" line="288"/>
         <source>Server List Filename</source>
-        <translation>Arquivo da Lista de Servidores</translation>
+        <translation>Nome de Ficheiro da Lista de Servidores</translation>
     </message>
     <message>
         <location filename="../serverdlgbase.ui" line="307"/>
         <source>Start Minimized on Windows Start</source>
-        <translation>Iniciar Minimizado com o Sistema Operativo</translation>
+        <translation>Iniciar Minimizado no Início do Windows</translation>
     </message>
     <message>
         <location filename="../serverdlgbase.ui" line="314"/>
@@ -4797,32 +4797,32 @@ O seu canal foi silenciado e foi activada a função &apos;Silenciar-me&apos;. P
     <message>
         <location filename="../util.cpp" line="1733"/>
         <source>This app uses the following libraries, resources or code snippets:</source>
-        <translation type="unfinished">Esta aplicação utiliza as seguintes bibliotecas, recursos ou partes de código:</translation>
+        <translation>Esta aplicação utiliza as seguintes bibliotecas, recursos ou partes de código:</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="1735"/>
         <source>Qt cross-platform application framework</source>
-        <translation type="unfinished">Estrutura de aplicações multiplataforma Qt</translation>
+        <translation>Estrutura de aplicações multiplataforma Qt</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="1736"/>
         <source>(build)</source>
-        <translation type="unfinished"></translation>
+        <translation>(versão)</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="1736"/>
         <source>(runtime)</source>
-        <translation type="unfinished"></translation>
+        <translation>(tempo de execução)</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="1754"/>
         <source>Some pixmaps are from the %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Alguns pixmaps são de %1</translation>
     </message>
     <message>
         <location filename="../util.cpp" line="1760"/>
         <source>Some sound samples are from %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Algumas amostras de áudio são de %1</translation>
     </message>
     <message>
         <source>This program is free software; you can redistribute it and/or modify it under</source>

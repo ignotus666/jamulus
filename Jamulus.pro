@@ -1,4 +1,4 @@
-VERSION = 3.10.0dev
+VERSION = 3.11.0dev
 
 # Using lrelease and embed_translations only works for Qt 5.12 or later.
 # See https://github.com/jamulussoftware/jamulus/pull/3288 for these changes.
@@ -182,7 +182,7 @@ win32 {
     HEADERS += src/mac/activity.h src/mac/badgelabel.h
     OBJECTIVE_SOURCES += src/mac/activity.mm src/mac/badgelabel.mm
     CONFIG += x86
-    QMAKE_TARGET_BUNDLE_PREFIX = io.jamulus
+    QMAKE_TARGET_BUNDLE_PREFIX = app.jamulussoftware
 
     OSX_ENTITLEMENTS.files = mac/Jamulus.entitlements
     OSX_ENTITLEMENTS.path = Contents/Resources
@@ -229,12 +229,13 @@ win32 {
     }
 
 } else:ios {
+    QMAKE_ASSET_CATALOGS += src/res/iOSIcons.xcassets
     QMAKE_INFO_PLIST = ios/Info.plist
     OBJECTIVE_SOURCES += src/ios/ios_app_delegate.mm
     HEADERS += src/ios/ios_app_delegate.h
     HEADERS += src/sound/coreaudio-ios/sound.h
     OBJECTIVE_SOURCES += src/sound/coreaudio-ios/sound.mm
-    QMAKE_TARGET_BUNDLE_PREFIX = io.jamulus
+    QMAKE_TARGET_BUNDLE_PREFIX = app.jamulussoftware
     LIBS += -framework AVFoundation \
         -framework AudioToolbox
 } else:android {
@@ -378,7 +379,8 @@ FORMS_GUI = src/aboutdlgbase.ui \
         src/connectdlgbase.ui
 }
 
-HEADERS += src/buffer.h \
+HEADERS += src/plugins/audioreverb.h \
+    src/buffer.h \
     src/channel.h \
     src/global.h \
     src/protocol.h \
@@ -486,7 +488,8 @@ HEADERS_OPUS_X86 = libs/opus/celt/x86/celt_lpc_sse.h \
     libs/opus/celt/x86/x86cpu.h \
     $$files(libs/opus/silk/x86/*.h)
 
-SOURCES += src/buffer.cpp \
+SOURCES += src/plugins/audioreverb.cpp \
+    src/buffer.cpp \
     src/channel.cpp \
     src/main.cpp \
     src/protocol.cpp \
@@ -702,7 +705,6 @@ DISTFILES += ChangeLog \
     docs/TRANSLATING.md \
     linux/jamulus.desktop.in \
     linux/jamulus-server.desktop.in \
-    mac/Info-make-legacy.plist \
     mac/Info-make.plist \
     mac/Info-xcode.plist \
     mac/Jamulus.entitlements \
@@ -710,21 +712,21 @@ DISTFILES += ChangeLog \
     src/res/io.jamulus.jamulus.png \
     src/res/io.jamulus.jamulus.svg \
     src/res/io.jamulus.jamulusserver.svg \
-    src/res/CLEDBlack.png \
     src/res/CLEDBlackSmall.png \
-    src/res/CLEDDisabledSmall.png \
-    src/res/CLEDGreen.png \
     src/res/CLEDGreenSmall.png \
     src/res/CLEDGrey.png \
-    src/res/CLEDGreySmall.png \
-    src/res/CLEDRed.png \
     src/res/CLEDRedSmall.png \
-    src/res/CLEDYellow.png \
     src/res/CLEDYellowSmall.png \
-    src/res/LEDBlackSmall.png \
-    src/res/LEDGreenSmall.png \
-    src/res/LEDRedSmall.png \
-    src/res/LEDYellowSmall.png \
+    src/res/CLEDBlackBig.png \
+    src/res/CLEDBlackSrc.png \
+    src/res/CLEDDisabled.png \
+    src/res/CLEDGreenBig.png \
+    src/res/CLEDGreenSrc.png \
+    src/res/CLEDGreySrc.png \
+    src/res/CLEDRedBig.png \
+    src/res/CLEDRedSrc.png \
+    src/res/CLEDYellowBig.png \
+    src/res/CLEDYellowSrc.png \
     src/res/IndicatorGreen.png \
     src/res/IndicatorYellow.png \
     src/res/IndicatorRed.png \
@@ -734,13 +736,15 @@ DISTFILES += ChangeLog \
     src/res/faderhandle.png \
     src/res/faderhandlesmall.png \
     src/res/HLEDGreen.png \
-    src/res/HLEDGreenSmall.png \
     src/res/HLEDBlack.png \
-    src/res/HLEDBlackSmall.png \
     src/res/HLEDRed.png \
-    src/res/HLEDRedSmall.png \
     src/res/HLEDYellow.png \
-    src/res/HLEDYellowSmall.png \
+    src/res/HLEDBlackSrc.png \
+    src/res/HLEDGreenSrc.png \
+    src/res/HLEDGrey.png \
+    src/res/HLEDGreySrc.png \
+    src/res/HLEDRedSrc.png \
+    src/res/HLEDYellowSrc.png \
     src/res/ledbuttonnotpressed.png \
     src/res/ledbuttonpressed.png \
     src/res/fronticon.png \
@@ -750,6 +754,7 @@ DISTFILES += ChangeLog \
     src/res/mutediconorange.png \
     src/res/servertrayiconactive.png \
     src/res/servertrayiconinactive.png \
+    src/res/installerbackground.png \
     src/res/instruments/accordeon.png \
     src/res/instruments/aguitar.png \
     src/res/instruments/bassguitar.png \
@@ -1051,6 +1056,12 @@ DISTFILES += ChangeLog \
     src/res/flags/za.png \
     src/res/flags/zm.png \
     src/res/flags/zw.png \
+    src/res/flags/catalonia.png \
+    src/res/flags/england.png \
+    src/res/flags/europeanunion.png \
+    src/res/flags/scotland.png \
+    src/res/flags/wales.png \
+    src/res/flags/readme.txt \
     tools/changelog-helper.sh \
     tools/check-wininstaller-translations.sh \
     tools/checkkeys.pl \
@@ -1065,7 +1076,6 @@ DISTFILES += ChangeLog \
 DISTFILES_OPUS += libs/opus/AUTHORS \
     libs/opus/ChangeLog \
     libs/opus/COPYING \
-    libs/opus/INSTALL \
     libs/opus/NEWS \
     libs/opus/README \
     libs/opus/celt/arm/armopts.s.in \
