@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2024
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -285,6 +285,11 @@ public:
     {
         Channel.GetBufErrorRates ( vecErrRates, dLimit, dMaxUpLimit );
     }
+
+    //### TODO: BEGIN ###//
+    // Refactor this to use signal/slot mechanism. https://github.com/jamulussoftware/jamulus/pull/3479/files#r1976382416
+    CProtocol* getConnLessProtocol() { return &ConnLessProtocol; }
+    //### TODO: END ###//
 
     // settings
     CChannelCoreInfo ChannelInfo;
