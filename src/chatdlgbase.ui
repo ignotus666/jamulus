@@ -50,6 +50,13 @@
      </item>
      <item>
       <widget class="QPushButton" name="butSend">
+       <property name="font">
+        <font>
+         <family>IDroid</family>
+         <pointsize>11</pointsize>
+         <italic>true</italic>
+        </font>
+       </property>
        <property name="text">
         <string>&amp;Send</string>
        </property>
