@@ -711,7 +711,7 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
     else
     {
         // in normal mode use bold font
-        plblLabel->setStyleSheet("QLabel { color: black; font: bold; }");
+        plblLabel->setStyleSheet ( "QLabel { color: black; font: bold; }" );
 
         // break text at predefined position
         iBreakPos = MAX_LEN_FADER_TAG / 2;
