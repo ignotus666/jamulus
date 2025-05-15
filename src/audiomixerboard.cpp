@@ -619,7 +619,7 @@ void CChannelFader::UpdateGroupIDDependencies()
     // the fader tag border color is set according to the selected group
     SetupFaderTag ( cReceivedChanInfo.eSkillLevel );
     // Set font:
-    pcbGroup->setFont ( QFont ( "IDroid", 11 ) );
+    pcbGroup->setFont ( QFont ( "IDroid", 10 ) );
     pcbGroup->setCursor ( Qt::PointingHandCursor );
 }
 

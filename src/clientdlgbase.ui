@@ -2284,7 +2284,7 @@
                 <property name="font">
                  <font>
                   <family>IDroid</family>
-                  <pointsize>10</pointsize>
+                  <pointsize>8</pointsize>
                   <weight>75</weight>
                   <italic>true</italic>
                   <bold>true</bold>
@@ -2292,6 +2292,9 @@
                 </property>
                 <property name="text">
                  <string>ms</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
                 </property>
                </widget>
               </item>
@@ -2340,7 +2343,7 @@
                 <property name="font">
                  <font>
                   <family>IDroid</family>
-                  <pointsize>10</pointsize>
+                  <pointsize>8</pointsize>
                   <weight>75</weight>
                   <italic>true</italic>
                   <bold>true</bold>
@@ -2348,6 +2351,9 @@
                 </property>
                 <property name="text">
                  <string>ms</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
                 </property>
                </widget>
               </item>
