@@ -228,10 +228,9 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
 
         // Use StyleSheet to set font
-        pPanLabel->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pcbMute->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pcbSolo->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pPanLabel->setCursor ( Qt::PointingHandCursor );
+        pPanLabel->setStyleSheet ( "font-family: 'IDroid'; font-size: 10pt;" );
+        pcbMute->setStyleSheet ( "font-family: 'IDroid'; font-size: 10pt;" );
+        pcbSolo->setStyleSheet ( "font-family: 'IDroid'; font-size: 10pt;" );
         pcbMute->setCursor ( Qt::PointingHandCursor );
         pcbSolo->setCursor ( Qt::PointingHandCursor );
         break;

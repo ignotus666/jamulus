@@ -1361,8 +1361,8 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
             ".QWidget {               background:     transparent; }" // note: matches instances of QWidget, but not of its subclasses
             "QGroupBox {              background:     transparent; }"
             "QGroupBox::title {       color:          rgb(220, 220, 220); }"
-            "QCheckBox::indicator {   width:          38px;"
-            "                         height:         21px; }"
+            "QCheckBox::indicator {   width:          34px;"
+            "                         height:         18px; }"
             "QCheckBox::indicator:unchecked {"
             "                         image:          url(:/png/fader/res/ledbuttonnotpressed.png); }"
             "QCheckBox::indicator:checked {"
