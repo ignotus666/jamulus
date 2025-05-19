@@ -812,7 +812,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
 void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
-	tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
+    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
     UpdateDisplay();
     UpdateDirectoryComboBox();
 
@@ -848,7 +848,6 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
 void CClientSettingsDlg::hideEvent ( QHideEvent* event )
 {
     pSettings->iSettingsTab = tabSettings->currentIndex();
-	qDebug() << "hideEvent: iSettingsTab =" << pSettings->iSettingsTab;
     QDialog::hideEvent ( event );
 }
 

@@ -424,5 +424,5 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
 
 void CSoundBase::SetMIDIMapping ( const QString& strMIDISetup )
 {
-	ParseCommandLineArgument ( strMIDISetup );
+    ParseCommandLineArgument ( strMIDISetup );
 }

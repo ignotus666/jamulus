@@ -400,7 +400,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
-    pSettingsMenu->addAction ( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );;
+    pSettingsMenu->addAction ( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );
 
 
     // Main menu bar -----------------------------------------------------------
@@ -985,11 +985,13 @@ void CClientDlg::ShowConnectionSetupDialog()
     ConnectDlg.activateWindow();
 }
 
-void CClientDlg::ShowGeneralSettings(int iTab)
+void CClientDlg::ShowGeneralSettings ( int iTab )
 {
+    // open general settings dialog
 	emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
-    ClientSettingsDlg.setWindowTitle(MakeClientNameTitle (tr ("Settings" ), pClient->strClientName ) );
+    // make sure dialog is upfront and has focus
+    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
     ClientSettingsDlg.raise();
     ClientSettingsDlg.activateWindow();
 }
@@ -1519,5 +1521,5 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 
 void CClientDlg::OnOpenMidiSettings()
 {
-	ShowGeneralSettings(SETTING_TAB_MIDI);
+	ShowGeneralSettings ( SETTING_TAB_MIDI );
 }
