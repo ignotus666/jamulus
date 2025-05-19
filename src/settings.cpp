@@ -557,24 +557,50 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     ReadFaderSettingsFromXML ( IniXMLDocument );
 
     // MIDI settings
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midichannel", 0, 15, iValue) )
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 15, iValue ) )
+	{
         midiChannel = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midifaderoffset", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifaderoffset", 0, 127, iValue ) )
+	{
         midiFaderOffset = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midifadercount", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifadercount", 0, 127, iValue ) )
+	{
         midiFaderCount = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midipanoffset", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipanoffset", 0, 127, iValue ) )
+	{
         midiPanOffset = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midipancount", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipancount", 0, 127, iValue ) )
+	{
         midiPanCount = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midisolooffset", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolooffset", 0, 127, iValue ) )
+	{
         midiSoloOffset = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midisolocount", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolocount", 0, 127, iValue ) )
+	{
         midiSoloCount = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midimuteoffset", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimuteoffset", 0, 127, iValue ) )
+	{
         midiMuteOffset = iValue;
-    if ( GetNumericIniSet(IniXMLDocument, "client", "midimutecount", 0, 127, iValue) )
+	}
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimutecount", 0, 127, iValue ) )
+	{
         midiMuteCount = iValue;
+	}
 }
 
 void CClientSettings::ReadFaderSettingsFromXML ( const QDomDocument& IniXMLDocument )
@@ -775,15 +801,15 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "settingstab", iSettingsTab );
 
     // MIDI settings
-    SetNumericIniSet(IniXMLDocument, "client", "midichannel", midiChannel);
-    SetNumericIniSet(IniXMLDocument, "client", "midifaderoffset", midiFaderOffset);
-    SetNumericIniSet(IniXMLDocument, "client", "midifadercount", midiFaderCount);
-    SetNumericIniSet(IniXMLDocument, "client", "midipanoffset", midiPanOffset);
-    SetNumericIniSet(IniXMLDocument, "client", "midipancount", midiPanCount);
-    SetNumericIniSet(IniXMLDocument, "client", "midisolooffset", midiSoloOffset);
-    SetNumericIniSet(IniXMLDocument, "client", "midisolocount", midiSoloCount);
-    SetNumericIniSet(IniXMLDocument, "client", "midimuteoffset", midiMuteOffset);
-    SetNumericIniSet(IniXMLDocument, "client", "midimutecount", midiMuteCount);
+    SetNumericIniSet ( IniXMLDocument, "client", "midichannel", midiChannel );
+    SetNumericIniSet ( IniXMLDocument, "client", "midifaderoffset", midiFaderOffset );
+    SetNumericIniSet ( IniXMLDocument, "client", "midifadercount", midiFaderCount );
+    SetNumericIniSet ( IniXMLDocument, "client", "midipanoffset", midiPanOffset );
+    SetNumericIniSet ( IniXMLDocument, "client", "midipancount", midiPanCount );
+    SetNumericIniSet ( IniXMLDocument, "client", "midisolooffset", midiSoloOffset );
+    SetNumericIniSet ( IniXMLDocument, "client", "midisolocount", midiSoloCount );
+    SetNumericIniSet ( IniXMLDocument, "client", "midimuteoffset", midiMuteOffset );
+    SetNumericIniSet ( IniXMLDocument, "client", "midimutecount", midiMuteCount );
 
     // fader settings
     WriteFaderSettingsToXML ( IniXMLDocument );

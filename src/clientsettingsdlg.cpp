@@ -750,16 +750,16 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
-       // MIDI tab: connect valueChanged signals to update settings
-    QObject::connect(cbxChannel, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiChannel = v; });
-    QObject::connect(cbxFaderOffset, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiFaderOffset = v; });
-    QObject::connect(cbxFaderCount, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiFaderCount = v; });
-    QObject::connect(cbxPanOffset, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiPanOffset = v; });
-    QObject::connect(cbxPanCount, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiPanCount = v; });
-    QObject::connect(cbxSoloOffset, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiSoloOffset = v; });
-    QObject::connect(cbxSoloCount, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiSoloCount = v; });
-    QObject::connect(cbxMuteOffset, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiMuteOffset = v; });
-    QObject::connect(cbxMuteCount, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int v){ pSettings->midiMuteCount = v; });
+    // MIDI tab
+	QObject::connect ( cbxChannel, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiChannel = v; } );
+	QObject::connect ( cbxFaderOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiFaderOffset = v; } );
+	QObject::connect ( cbxFaderCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged) , this, [this] ( int v ) { pSettings->midiFaderCount = v; } );
+	QObject::connect ( cbxPanOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiPanOffset = v; } );
+	QObject::connect ( cbxPanCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiPanCount = v; } );
+	QObject::connect ( cbxSoloOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiSoloOffset = v; } );
+	QObject::connect ( cbxSoloCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiSoloCount = v; } );
+	QObject::connect ( cbxMuteOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiMuteOffset = v; } );
+	QObject::connect ( cbxMuteCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiMuteCount = v; } );
 
     // Timers ------------------------------------------------------------------
     // start timer for status bar
@@ -787,17 +787,17 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     pcbxSkill->setCurrentIndex ( pcbxSkill->findData ( static_cast<int> ( pClient->ChannelInfo.eSkillLevel ) ) );
 
     // MIDI tab: set widgets from settings
-    cbxChannel->setValue(pSettings->midiChannel);
-    cbxFaderOffset->setValue(pSettings->midiFaderOffset);
-    cbxFaderCount->setValue(pSettings->midiFaderCount);
-    cbxPanOffset->setValue(pSettings->midiPanOffset);
-    cbxPanCount->setValue(pSettings->midiPanCount);
-    cbxSoloOffset->setValue(pSettings->midiSoloOffset);
-    cbxSoloCount->setValue(pSettings->midiSoloCount);
-    cbxMuteOffset->setValue(pSettings->midiMuteOffset);
-    cbxMuteCount->setValue(pSettings->midiMuteCount);
+	cbxChannel->setValue ( pSettings->midiChannel );
+	cbxFaderOffset->setValue ( pSettings->midiFaderOffset );
+	cbxFaderCount->setValue ( pSettings->midiFaderCount );
+	cbxPanOffset->setValue ( pSettings->midiPanOffset );
+	cbxPanCount->setValue ( pSettings->midiPanCount );
+	cbxSoloOffset->setValue ( pSettings->midiSoloOffset );
+	cbxSoloCount->setValue ( pSettings->midiSoloCount );
+	cbxMuteOffset->setValue ( pSettings->midiMuteOffset );
+	cbxMuteCount->setValue ( pSettings->midiMuteCount );
 
-    QDialog::showEvent(event);
+	QDialog::showEvent ( event ) ;
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()

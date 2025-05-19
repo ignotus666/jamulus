@@ -1522,8 +1522,5 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 
 void CClientDlg::OnOpenMidiSettings()
 {
-    emit SendTabChange(SETTING_TAB_MIDI); // SETTING_TAB_MIDI should be the MIDI tab index
-    ClientSettingsDlg.show();
-    ClientSettingsDlg.raise();
-    ClientSettingsDlg.activateWindow();
+	ShowGeneralSettings(SETTING_TAB_MIDI);
 }
