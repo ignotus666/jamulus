@@ -238,7 +238,7 @@ QVector<QString> CSoundBase::LoadAndInitializeFirstValidDriver ( const bool bOpe
 void CSoundBase::ParseCommandLineArgument ( const QString& strMIDISetup )
 {
     // Clear all previous MIDI mappings
-    for (int i = 0; i < aMidiCtls.size(); ++i)
+    for ( int i = 0; i < aMidiCtls.size(); ++i )
         aMidiCtls[i] = { None, 0 };
 
     int iMIDIOffsetFader = 70; // Behringer X-TOUCH: offset of 0x46
@@ -422,7 +422,7 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
 }
 
 
-void CSoundBase::SetMIDIMapping(const QString& strMIDISetup)
+void CSoundBase::SetMIDIMapping ( const QString& strMIDISetup )
 {
-	ParseCommandLineArgument(strMIDISetup);
+	ParseCommandLineArgument ( strMIDISetup );
 }
