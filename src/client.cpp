@@ -1688,4 +1688,39 @@ bool CClient::ReorderLevelList ( CVector<uint16_t>& vecLevelList )
 void CClient::ApplyMIDISetup(const QString& strMIDISetup)
 {
     Sound.ApplyMIDISetup(strMIDISetup);
+
+    quint8 channel = 0;
+    quint8 faderOffset = 0, numFaders = 0;
+    quint8 panOffset = 0,   numPans   = 0;
+    quint8 soloOffset = 0,  numSolos  = 0;
+    quint8 muteOffset = 0,  numMutes  = 0;
+
+    QStringList parts = strMIDISetup.split(';');
+    if (parts.size() >= 5) {
+        channel = parts[0].toUInt();
+
+        auto parseBlock = [](const QString& s, QChar prefix, quint8& offset, quint8& count) {
+            if (s.startsWith(prefix)) {
+                QString body = s.mid(1);
+                QStringList fields = body.split('*');
+                if (fields.size() == 2) {
+                    offset = static_cast<quint8>(fields[0].toUInt());
+                    count  = static_cast<quint8>(fields[1].toUInt());
+                }
+            }
+        };
+
+        parseBlock(parts[1], 'f', faderOffset, numFaders);
+        parseBlock(parts[2], 'p', panOffset,   numPans);
+        parseBlock(parts[3], 's', soloOffset,  numSolos);
+        parseBlock(parts[4], 'm', muteOffset,  numMutes);
+    }
+
+    emit MIDISetupChanged(
+        channel,
+        faderOffset, numFaders,
+        panOffset,   numPans,
+        soloOffset,  numSolos,
+        muteOffset,  numMutes
+    );
 }

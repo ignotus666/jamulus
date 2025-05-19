@@ -242,7 +242,7 @@ public slots:
     void OnNumClientsChanged ( int iNewNumClients );
 
     void accept() { close(); } // introduced by pljones
-    void OnOpenMIDISettings();
+    void OnOpenMidiSettings();
 
 
 signals:

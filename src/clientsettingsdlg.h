@@ -132,4 +132,13 @@ signals:
     void AudioChannelsChanged();
     void CustomDirectoriesChanged();
     void NumMixerPanelRowsChanged ( int value );
+    void CtrlMIDIChannelChanged(quint8 value);
+    void MIDIOffsetFaderChanged(quint8 value);
+    void MIDINumFadersChanged(quint8 value);
+    void MIDIOffsetPanChanged(quint8 value);
+    void MIDINumPansChanged(quint8 value);
+    void MIDIOffsetSoloChanged(quint8 value);
+    void MIDINumSolosChanged(quint8 value);
+    void MIDIOffsetMuteChanged(quint8 value);
+    void MIDINumMutesChanged(quint8 value);
 };

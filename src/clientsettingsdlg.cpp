@@ -32,51 +32,34 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 {
     setupUi ( this );
 
-    // Restore last‑used tab on dialog creation
-    tabSettings->setCurrentIndex(pSettings->iSettingsTab);
-    // DEBUG: are we opening the Settings dialog, and what values were loaded?
-    qDebug() << "Opening Settings dialog, loaded MIDI values:"
-             << "channel="   << pSettings->iCtrlMIDIChannel
-             << "faderOff="  << pSettings->iMIDIOffsetFader
-             << "faderNum="  << pSettings->iMIDINumFaders
-             << "panOff="    << pSettings->iMIDIOffsetPan
-             << "panNum="    << pSettings->iMIDINumPans
-             << "soloOff="   << pSettings->iMIDIOffsetSolo
-             << "soloNum="   << pSettings->iMIDINumSolos
-             << "muteOff="   << pSettings->iMIDIOffsetMute
-             << "muteNum="   << pSettings->iMIDINumMutes;
-
-    // Initialize MIDI spinbox values from settings
-    cbxChannel     ->setValue(pSettings->iCtrlMIDIChannel);
-    cbxFaderOffset ->setValue(pSettings->iMIDIOffsetFader);
-    cbxFaderCount  ->setValue(pSettings->iMIDINumFaders);
-    cbxPanOffset   ->setValue(pSettings->iMIDIOffsetPan);
-    cbxPanCount    ->setValue(pSettings->iMIDINumPans);
-    cbxSoloOffset  ->setValue(pSettings->iMIDIOffsetSolo);
-    cbxSoloCount   ->setValue(pSettings->iMIDINumSolos);
-    cbxMuteOffset  ->setValue(pSettings->iMIDIOffsetMute);
-    cbxMuteCount   ->setValue(pSettings->iMIDINumMutes);
-    // ────────────────────────────────────────────────────────────────────────
-
     // ─── Connect MIDI widgets so that any change is saved immediately ──────
     QObject::connect(cbxChannel, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iCtrlMIDIChannel  = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit CtrlMIDIChannelChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxFaderOffset, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDIOffsetFader  = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDIOffsetFaderChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxFaderCount, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDINumFaders    = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDINumFadersChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxPanOffset, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDIOffsetPan    = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDIOffsetPanChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxPanCount, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDINumPans      = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDINumPansChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxSoloOffset, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDIOffsetSolo   = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDIOffsetSoloChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxSoloCount, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDINumSolos     = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDINumSolosChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxMuteOffset, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDIOffsetMute   = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDIOffsetMuteChanged(static_cast<quint8>(v)); });
+
     QObject::connect(cbxMuteCount, QOverload<int>::of(&QSpinBox::valueChanged),
-                     this, [this](int v){ pSettings->iMIDINumMutes     = static_cast<quint8>(v); pSettings->Save(false); });
+    this, [this](int v){ emit MIDINumMutesChanged(static_cast<quint8>(v)); });
+
 
 #if defined( Q_OS_IOS )
     // iOS needs menu to close

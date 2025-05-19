@@ -473,4 +473,11 @@ signals:
     void ControllerInFaderIsSolo ( int iChannelIdx, bool bIsSolo );
     void ControllerInFaderIsMute ( int iChannelIdx, bool bIsMute );
     void ControllerInMuteMyself ( bool bMute );
+    void MIDISetupChanged(
+        quint8 channel,
+        quint8 faderOffset, quint8 numFaders,
+        quint8 panOffset,   quint8 numPans,
+        quint8 soloOffset,  quint8 numSolos,
+        quint8 muteOffset,  quint8 numMutes
+    );
 };

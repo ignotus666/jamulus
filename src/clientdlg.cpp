@@ -400,7 +400,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
-    pSettingsMenu->addAction( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMIDISettings() ), QKeySequence(Qt::CTRL + Qt::Key_M ) );
+    pSettingsMenu->addAction( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence(Qt::CTRL + Qt::Key_M ) );
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
@@ -536,6 +536,48 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::CustomDirectoriesChanged, &ConnectDlg, &CConnectDlg::OnCustomDirectoriesChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::NumMixerPanelRowsChanged, this, &CClientDlg::OnNumMixerPanelRowsChanged );
+
+    // Lambda to save and apply all MIDI settings at once
+	auto updateAndApplyMIDI = [this]()
+	{
+   	 QString midiString =
+        QString::number(pSettings->iCtrlMIDIChannel) + ";" +
+        "f" + QString::number(pSettings->iMIDIOffsetFader) + "*" + QString::number(pSettings->iMIDINumFaders) + ";" +
+        "p" + QString::number(pSettings->iMIDIOffsetPan) + "*" + QString::number(pSettings->iMIDINumPans) + ";" +
+        "s" + QString::number(pSettings->iMIDIOffsetSolo) + "*" + QString::number(pSettings->iMIDINumSolos) + ";" +
+        "m" + QString::number(pSettings->iMIDIOffsetMute) + "*" + QString::number(pSettings->iMIDINumMutes);
+
+    pSettings->Save(false);
+    pClient->ApplyMIDISetup(midiString);
+	};
+
+	// Connect MIDI-related signals to update and apply immediately
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::CtrlMIDIChannelChanged,
+    this, [=](quint8 v) { pSettings->iCtrlMIDIChannel = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDIOffsetFaderChanged,
+    this, [=](quint8 v) { pSettings->iMIDIOffsetFader = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDINumFadersChanged,
+    this, [=](quint8 v) { pSettings->iMIDINumFaders = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDIOffsetPanChanged,
+    this, [=](quint8 v) { pSettings->iMIDIOffsetPan = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDINumPansChanged,
+    this, [=](quint8 v) { pSettings->iMIDINumPans = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDIOffsetSoloChanged,
+    this, [=](quint8 v) { pSettings->iMIDIOffsetSolo = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDINumSolosChanged,
+    this, [=](quint8 v) { pSettings->iMIDINumSolos = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDIOffsetMuteChanged,
+    this, [=](quint8 v) { pSettings->iMIDIOffsetMute = v; updateAndApplyMIDI(); });
+
+	QObject::connect(&ClientSettingsDlg, &CClientSettingsDlg::MIDINumMutesChanged,
+    this, [=](quint8 v) { pSettings->iMIDINumMutes = v; updateAndApplyMIDI(); });
 
     QObject::connect ( this, &CClientDlg::SendTabChange, &ClientSettingsDlg, &CClientSettingsDlg::OnMakeTabChange );
 
@@ -911,6 +953,8 @@ void CClientDlg::OnOpenAudioNetSettings() { ShowGeneralSettings ( SETTING_TAB_AU
 void CClientDlg::OnOpenAdvancedSettings() { ShowGeneralSettings ( SETTING_TAB_ADVANCED ); }
 
 void CClientDlg::OnOpenUserProfileSettings() { ShowGeneralSettings ( SETTING_TAB_USER ); }
+
+void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }
 
 void CClientDlg::SetMyWindowTitle ( const int iNumClients )
 {
@@ -1517,14 +1561,4 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 
     // set current LED status
     ledDelay->SetLight ( eOverallDelayLEDColor );
-}
-
-void CClientDlg::OnOpenMIDISettings()
-{
-    const int MIDI_TAB_INDEX = 3;
-    // Remember last‑used tab
-    pSettings->iSettingsTab = MIDI_TAB_INDEX;
-    // Tell the settings dialog which tab to show
-    ClientSettingsDlg.SetActiveTab(MIDI_TAB_INDEX);
-    ClientSettingsDlg.show();
 }
