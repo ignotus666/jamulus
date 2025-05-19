@@ -1684,3 +1684,8 @@ bool CClient::ReorderLevelList ( CVector<uint16_t>& vecLevelList )
 
     return true; // tell caller to emit signal with new list
 }
+
+void CClient::ApplyMIDISetup(const QString& strMIDISetup)
+{
+    Sound.ApplyMIDISetup(strMIDISetup);
+}

@@ -286,6 +286,8 @@ public:
         Channel.GetBufErrorRates ( vecErrRates, dLimit, dMaxUpLimit );
     }
 
+    void ApplyMIDISetup(const QString& strMIDISetup);
+
     //### TODO: BEGIN ###//
     // Refactor this to use signal/slot mechanism. https://github.com/jamulussoftware/jamulus/pull/3479/files#r1976382416
     CProtocol* getConnLessProtocol() { return &ConnLessProtocol; }

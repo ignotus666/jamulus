@@ -219,7 +219,7 @@ void CClientSettings::SaveFaderSettings ( const QString& strCurFileName )
     QDomDocument IniXMLDocument;
 
     // write the settings in the XML file
-    WriteFaderSettingsToXML ( IniXMLDocument );
+    WriteSettingsToXML ( IniXMLDocument, /*isAboutToQuit=*/ false );
 
     // prepare file name for storing initialization data in XML file and store
     // XML data in file
@@ -228,6 +228,7 @@ void CClientSettings::SaveFaderSettings ( const QString& strCurFileName )
 
 void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& )
 {
+    qDebug() << "CClientSettings::ReadSettingsFromXML() called";
     int  iIdx;
     int  iValue;
     bool bValue;
@@ -460,7 +461,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         pClient->SetAudioQuality ( static_cast<EAudioQuality> ( iValue ) );
     }
-
     // custom directories
 
     //### TODO: BEGIN ###//
@@ -551,6 +551,46 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     if ( GetNumericIniSet ( IniXMLDocument, "client", "settingstab", 0, 2, iValue ) )
     {
         iSettingsTab = iValue;
+    }
+
+    // MIDI settings
+    {
+      if (GetNumericIniSet(IniXMLDocument, "midi", "channel",  0, 16, iValue))
+          iCtrlMIDIChannel = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "faderOff", 0, 127, iValue))
+          iMIDIOffsetFader = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "faderNum",  1, MAX_NUM_CHANNELS, iValue))
+          iMIDINumFaders = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "panOff",    0, 127, iValue))
+          iMIDIOffsetPan = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "panNum",    1, MAX_NUM_CHANNELS, iValue))
+          iMIDINumPans = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "soloOff",   0, 127, iValue))
+          iMIDIOffsetSolo = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "soloNum",   1, MAX_NUM_CHANNELS, iValue))
+          iMIDINumSolos = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "muteOff",   0, 127, iValue))
+          iMIDIOffsetMute = static_cast<quint8>(iValue);
+
+      if (GetNumericIniSet(IniXMLDocument, "midi", "muteNum",   1, MAX_NUM_CHANNELS, iValue))
+          iMIDINumMutes = static_cast<quint8>(iValue);
+    }
+
+    {
+      QString midiString =
+          QString::number(iCtrlMIDIChannel) + ";" +
+          "f" + QString::number(iMIDIOffsetFader) + "*" + QString::number(iMIDINumFaders) + ";" +
+          "p" + QString::number(iMIDIOffsetPan)   + "*" + QString::number(iMIDINumPans)   + ";" +
+          "s" + QString::number(iMIDIOffsetSolo)  + "*" + QString::number(iMIDINumSolos)  + ";" +
+          "m" + QString::number(iMIDIOffsetMute)  + "*" + QString::number(iMIDINumMutes);
+      pClient->ApplyMIDISetup(midiString);
     }
 
     // fader settings
@@ -754,8 +794,29 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // Settings Tab
     SetNumericIniSet ( IniXMLDocument, "client", "settingstab", iSettingsTab );
 
+    // MIDI settings as <ini category="midi"
+    SetNumericIniSet(IniXMLDocument, "midi", "channel",  static_cast<int>(iCtrlMIDIChannel));
+    SetNumericIniSet(IniXMLDocument, "midi", "faderOff", static_cast<int>(iMIDIOffsetFader));
+    SetNumericIniSet(IniXMLDocument, "midi", "faderNum", static_cast<int>(iMIDINumFaders));
+    SetNumericIniSet(IniXMLDocument, "midi", "panOff",   static_cast<int>(iMIDIOffsetPan));
+    SetNumericIniSet(IniXMLDocument, "midi", "panNum",   static_cast<int>(iMIDINumPans));
+    SetNumericIniSet(IniXMLDocument, "midi", "soloOff",  static_cast<int>(iMIDIOffsetSolo));
+    SetNumericIniSet(IniXMLDocument, "midi", "soloNum",  static_cast<int>(iMIDINumSolos));
+    SetNumericIniSet(IniXMLDocument, "midi", "muteOff",  static_cast<int>(iMIDIOffsetMute));
+    SetNumericIniSet(IniXMLDocument, "midi", "muteNum",  static_cast<int>(iMIDINumMutes));
+
     // fader settings
     WriteFaderSettingsToXML ( IniXMLDocument );
+
+    // Remove any legacy <midi> block from previous versions
+    {
+        QDomElement root = IniXMLDocument.documentElement();
+        QDomNodeList midiNodes = root.elementsByTagName("midi");
+        for (int i = 0; i < midiNodes.count(); ++i)
+        {
+            root.removeChild(midiNodes.at(i));
+        }
+    }
 }
 
 void CClientSettings::WriteFaderSettingsToXML ( QDomDocument& IniXMLDocument )

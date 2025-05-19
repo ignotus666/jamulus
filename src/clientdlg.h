@@ -242,6 +242,8 @@ public slots:
     void OnNumClientsChanged ( int iNewNumClients );
 
     void accept() { close(); } // introduced by pljones
+    void OnOpenMIDISettings();
+
 
 signals:
     void SendTabChange ( int iTabIdx );

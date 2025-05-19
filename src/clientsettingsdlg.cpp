@@ -32,6 +32,52 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 {
     setupUi ( this );
 
+    // Restore last‑used tab on dialog creation
+    tabSettings->setCurrentIndex(pSettings->iSettingsTab);
+    // DEBUG: are we opening the Settings dialog, and what values were loaded?
+    qDebug() << "Opening Settings dialog, loaded MIDI values:"
+             << "channel="   << pSettings->iCtrlMIDIChannel
+             << "faderOff="  << pSettings->iMIDIOffsetFader
+             << "faderNum="  << pSettings->iMIDINumFaders
+             << "panOff="    << pSettings->iMIDIOffsetPan
+             << "panNum="    << pSettings->iMIDINumPans
+             << "soloOff="   << pSettings->iMIDIOffsetSolo
+             << "soloNum="   << pSettings->iMIDINumSolos
+             << "muteOff="   << pSettings->iMIDIOffsetMute
+             << "muteNum="   << pSettings->iMIDINumMutes;
+
+    // Initialize MIDI spinbox values from settings
+    cbxChannel     ->setValue(pSettings->iCtrlMIDIChannel);
+    cbxFaderOffset ->setValue(pSettings->iMIDIOffsetFader);
+    cbxFaderCount  ->setValue(pSettings->iMIDINumFaders);
+    cbxPanOffset   ->setValue(pSettings->iMIDIOffsetPan);
+    cbxPanCount    ->setValue(pSettings->iMIDINumPans);
+    cbxSoloOffset  ->setValue(pSettings->iMIDIOffsetSolo);
+    cbxSoloCount   ->setValue(pSettings->iMIDINumSolos);
+    cbxMuteOffset  ->setValue(pSettings->iMIDIOffsetMute);
+    cbxMuteCount   ->setValue(pSettings->iMIDINumMutes);
+    // ────────────────────────────────────────────────────────────────────────
+
+    // ─── Connect MIDI widgets so that any change is saved immediately ──────
+    QObject::connect(cbxChannel, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iCtrlMIDIChannel  = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxFaderOffset, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDIOffsetFader  = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxFaderCount, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDINumFaders    = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxPanOffset, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDIOffsetPan    = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxPanCount, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDINumPans      = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxSoloOffset, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDIOffsetSolo   = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxSoloCount, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDINumSolos     = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxMuteOffset, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDIOffsetMute   = static_cast<quint8>(v); pSettings->Save(false); });
+    QObject::connect(cbxMuteCount, QOverload<int>::of(&QSpinBox::valueChanged),
+                     this, [this](int v){ pSettings->iMIDINumMutes     = static_cast<quint8>(v); pSettings->Save(false); });
+
 #if defined( Q_OS_IOS )
     // iOS needs menu to close
     QMenuBar* pMenu  = new QMenuBar ( this );
@@ -1215,4 +1261,63 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 {
     pClient->SetAudioInFader ( value );
     UpdateAudioFaderSlider();
+}
+
+void CClientSettingsDlg::OnMidiChannelChanged(int value)
+{
+    pSettings->iCtrlMIDIChannel = static_cast<quint8>(value);
+    pSettings->Save(false);  // call your existing save helper (or pSettings->Save(false))
+}
+
+void CClientSettingsDlg::OnMidiFaderOffsetChanged(int value)
+{
+    pSettings->iMIDIOffsetFader = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::OnMidiFaderCountChanged(int value)
+{
+    pSettings->iMIDINumFaders = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::OnMidiPanOffsetChanged(int value)
+{
+    pSettings->iMIDIOffsetPan = static_cast<quint8>(value);
+    pSettings->Save(false);  // call your existing save helper (or pSettings->Save(false))
+}
+
+void CClientSettingsDlg::OnMidiPanCountChanged(int value)
+{
+    pSettings->iMIDINumPans = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::OnMidiSoloOffsetChanged(int value)
+{
+    pSettings->iMIDIOffsetSolo = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::OnMidiSoloCountChanged(int value)
+{
+    pSettings->iMIDINumSolos = static_cast<quint8>(value);
+    pSettings->Save(false);  // call your existing save helper (or pSettings->Save(false))
+}
+
+void CClientSettingsDlg::OnMidiMuteOffsetChanged(int value)
+{
+    pSettings->iMIDIOffsetMute = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::OnMidiMuteCountChanged(int value)
+{
+    pSettings->iMIDINumMutes = static_cast<quint8>(value);
+    pSettings->Save(false);
+}
+
+void CClientSettingsDlg::SetActiveTab(int index)
+{
+    tabSettings->setCurrentIndex(index);
 }

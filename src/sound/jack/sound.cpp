@@ -338,4 +338,9 @@ void CSound::shutdownCallback ( void* arg )
     pSound->bJackWasShutDown = true;
     pSound->EmitReinitRequestSignal ( RS_ONLY_RESTART_AND_INIT );
 }
+
+void CSound::ApplyMIDISetup(const QString& strMIDISetup)
+{
+    ParseCommandLineArgument(strMIDISetup);  // this is legal because it's protected in base
+}
 #endif // WITH_JACK

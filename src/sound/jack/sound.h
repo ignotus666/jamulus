@@ -70,6 +70,8 @@ public:
         bJackWasShutDown ( false ),
         fInOutLatencyMs ( 0.0f )
     {
+        ApplyMIDISetup(strMIDISetup);
+
         QString strJackName = QString ( APP_NAME );
 
         if ( !strJackClientName.isEmpty() )
@@ -87,6 +89,9 @@ public:
     virtual void Stop();
 
     virtual float GetInOutLatencyMs() { return fInOutLatencyMs; }
+
+
+    void ApplyMIDISetup(const QString& strMIDISetup);
 
     // these variables should be protected but cannot since we want
     // to access them from the callback function

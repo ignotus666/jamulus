@@ -400,6 +400,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
+    pSettingsMenu->addAction( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMIDISettings() ), QKeySequence(Qt::CTRL + Qt::Key_M ) );
+
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
 
@@ -1515,4 +1517,14 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 
     // set current LED status
     ledDelay->SetLight ( eOverallDelayLEDColor );
+}
+
+void CClientDlg::OnOpenMIDISettings()
+{
+    const int MIDI_TAB_INDEX = 3;
+    // Remember last‑used tab
+    pSettings->iSettingsTab = MIDI_TAB_INDEX;
+    // Tell the settings dialog which tab to show
+    ClientSettingsDlg.SetActiveTab(MIDI_TAB_INDEX);
+    ClientSettingsDlg.show();
 }

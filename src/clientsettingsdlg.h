@@ -62,6 +62,9 @@ public:
 
     void SetEnableFeedbackDetection ( bool enable );
 
+    void LoadMIDIPreferencesFromSettings();
+    void SetActiveTab(int index);
+
 protected:
     void    UpdateJitterBufferFrame();
     void    UpdateSoundCardFrame();
@@ -106,6 +109,16 @@ public slots:
     void OnTabChanged();
     void OnMakeTabChange ( int iTabIdx );
     void OnAudioPanValueChanged ( int value );
+
+    void OnMidiChannelChanged(int value);
+    void OnMidiFaderOffsetChanged(int value);
+    void OnMidiFaderCountChanged(int value);
+    void OnMidiPanOffsetChanged(int value);
+    void OnMidiPanCountChanged(int value);
+    void OnMidiSoloOffsetChanged(int value);
+    void OnMidiSoloCountChanged(int value);
+    void OnMidiMuteOffsetChanged(int value);
+    void OnMidiMuteCountChanged(int value);
 
 #if defined( _WIN32 ) && !defined( WITH_JACK )
     // Only include this slot for Windows when JACK is NOT used

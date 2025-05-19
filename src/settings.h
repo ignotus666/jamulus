@@ -168,6 +168,16 @@ public:
     {
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
     }
+    // MIDI members
+    quint8 iCtrlMIDIChannel  = 0;    // 0 = listen to all channels
+    quint8 iMIDIOffsetFader  = 70;   // default X‑Touch offset
+    quint8 iMIDINumFaders    = 1;
+    quint8 iMIDIOffsetPan    = 0;
+    quint8 iMIDINumPans      = 1;
+    quint8 iMIDIOffsetSolo   = 0;
+    quint8 iMIDINumSolos     = 1;
+    quint8 iMIDIOffsetMute   = 0;
+    quint8 iMIDINumMutes     = 1;
 
     void LoadFaderSettings ( const QString& strCurFileName );
     void SaveFaderSettings ( const QString& strCurFileName );
