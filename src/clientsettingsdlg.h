@@ -67,6 +67,7 @@ protected:
     void    UpdateSoundCardFrame();
     void    UpdateDirectoryComboBox();
     void    UpdateAudioFaderSlider();
+	void ApplyMIDIMappingFromSettings();
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );

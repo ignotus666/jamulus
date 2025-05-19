@@ -751,15 +751,59 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
     // MIDI tab
-	QObject::connect ( cbxChannel, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiChannel = v; } );
-	QObject::connect ( cbxFaderOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiFaderOffset = v; } );
-	QObject::connect ( cbxFaderCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged) , this, [this] ( int v ) { pSettings->midiFaderCount = v; } );
-	QObject::connect ( cbxPanOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiPanOffset = v; } );
-	QObject::connect ( cbxPanCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiPanCount = v; } );
-	QObject::connect ( cbxSoloOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiSoloOffset = v; } );
-	QObject::connect ( cbxSoloCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiSoloCount = v; } );
-	QObject::connect ( cbxMuteOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiMuteOffset = v; } );
-	QObject::connect ( cbxMuteCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) { pSettings->midiMuteCount = v; } );
+	QObject::connect ( cbxChannel,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiChannel = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxFaderOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiFaderOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxFaderCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiFaderCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxPanOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiPanOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxPanCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiPanCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxSoloOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiSoloOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxSoloCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiSoloCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxMuteOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiMuteOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxMuteCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiMuteCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
 
     // Timers ------------------------------------------------------------------
     // start timer for status bar
@@ -1239,4 +1283,20 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 {
     pClient->SetAudioInFader ( value );
     UpdateAudioFaderSlider();
+}
+
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
+{
+    QString midiMap = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9" )
+        .arg ( pSettings->midiChannel )
+        .arg ( pSettings->midiFaderOffset )
+        .arg ( pSettings->midiFaderCount )
+        .arg ( pSettings->midiPanOffset )
+        .arg ( pSettings->midiPanCount )
+        .arg ( pSettings->midiSoloOffset )
+        .arg ( pSettings->midiSoloCount )
+        .arg ( pSettings->midiMuteOffset )
+        .arg ( pSettings->midiMuteCount );
+
+    pClient->ApplyMIDIMapping ( midiMap );
 }

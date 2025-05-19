@@ -295,6 +295,8 @@ public:
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;
 
+	void ApplyMIDIMapping(const QString& midiMap);
+
 protected:
     // callback function must be static, otherwise it does not work
     static void AudioCallback ( CVector<short>& psData, void* arg );
