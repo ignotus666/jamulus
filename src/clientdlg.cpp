@@ -985,14 +985,11 @@ void CClientDlg::ShowConnectionSetupDialog()
     ConnectDlg.activateWindow();
 }
 
-void CClientDlg::ShowGeneralSettings ( int iTab )
+void CClientDlg::ShowGeneralSettings(int iTab)
 {
-    // open general settings dialog
-    emit SendTabChange ( iTab );
+	emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
-    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
-
-    // make sure dialog is upfront and has focus
+    ClientSettingsDlg.setWindowTitle(MakeClientNameTitle (tr ("Settings" ), pClient->strClientName ) );
     ClientSettingsDlg.raise();
     ClientSettingsDlg.activateWindow();
 }

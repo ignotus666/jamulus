@@ -812,6 +812,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
 void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
+	tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
     UpdateDisplay();
     UpdateDirectoryComboBox();
 
@@ -842,6 +843,13 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
 	cbxMuteCount->setValue ( pSettings->midiMuteCount );
 
 	QDialog::showEvent ( event ) ;
+}
+
+void CClientSettingsDlg::hideEvent ( QHideEvent* event )
+{
+    pSettings->iSettingsTab = tabSettings->currentIndex();
+	qDebug() << "hideEvent: iSettingsTab =" << pSettings->iSettingsTab;
+    QDialog::hideEvent ( event );
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()
