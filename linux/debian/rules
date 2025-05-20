@@ -34,7 +34,13 @@ override_dh_auto_configure:
 	mkdir -p build-gui && cd build-gui && $(QMAKE) "CONFIG+=noupcasename" PREFIX=/usr ../Jamulus.pro
 
 override_dh_auto_build:
-	cd build-gui && make -j "$$(nproc)"
+	# nuke any prior build to ensure a truly clean rebuild
+	rm -rf build-gui
+	# reconfigure & build
+	mkdir -p build-gui
+	cd build-gui && $(QMAKE) "CONFIG+=noupcasename" PREFIX=/usr ../Jamulus.pro
+	cd build-gui && make -j"$(nproc)"
+
 
 override_dh_auto_install:
 	cd build-gui && make install INSTALL_ROOT=../debian/tmp
