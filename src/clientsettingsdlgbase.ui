@@ -1498,7 +1498,7 @@
          <x>130</x>
          <y>190</y>
          <width>291</width>
-         <height>111</height>
+         <height>101</height>
         </rect>
        </property>
        <property name="font">
@@ -1615,7 +1615,7 @@
          <x>130</x>
          <y>310</y>
          <width>291</width>
-         <height>111</height>
+         <height>101</height>
         </rect>
        </property>
        <property name="font">
@@ -1732,7 +1732,7 @@
          <x>130</x>
          <y>430</y>
          <width>291</width>
-         <height>111</height>
+         <height>101</height>
         </rect>
        </property>
        <property name="font">
