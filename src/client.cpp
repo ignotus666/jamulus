@@ -172,6 +172,8 @@ CClient::CClient ( const quint16  iPortNumber,
 
     QObject::connect ( pSignalHandler, &CSignalHandler::HandledSignal, this, &CClient::OnHandledSignal );
 
+    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, &CClient::OnMidiCCReceived );
+
     // start timer so that elapsed time works
     PreciseTime.start();
 
@@ -1550,9 +1552,14 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
-void CClient::ApplyMIDIMapping(const QString& midiMap)
+void CClient::ApplyMIDIMapping ( const QString& midiMap )
 {
-    Sound.SetMIDIMapping(midiMap);
+    Sound.SetMIDIMapping ( midiMap );
+}
+
+void CClient::OnMidiCCReceived ( int ccNumber )
+{
+    emit MidiCCReceived ( ccNumber );
 }
 
 // find, and optionally create, a client channel for the supplied server channel ID

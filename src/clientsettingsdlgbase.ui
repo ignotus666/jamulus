@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>625</width>
-    <height>577</height>
+    <width>622</width>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1344,9 +1344,9 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>40</y>
+         <y>28</y>
          <width>71</width>
-         <height>19</height>
+         <height>31</height>
         </rect>
        </property>
        <property name="font">
@@ -1378,10 +1378,10 @@
       <widget class="QGroupBox" name="faderGroup">
        <property name="geometry">
         <rect>
-         <x>40</x>
+         <x>130</x>
          <y>80</y>
-         <width>281</width>
-         <height>91</height>
+         <width>291</width>
+         <height>101</height>
         </rect>
        </property>
        <property name="font">
@@ -1397,9 +1397,9 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>20</y>
+          <y>30</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1415,9 +1415,9 @@
        <widget class="QSpinBox" name="cbxFaderOffset">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>20</y>
-          <width>46</width>
+          <x>100</x>
+          <y>30</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1437,7 +1437,7 @@
           <x>10</x>
           <y>70</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1453,9 +1453,9 @@
        <widget class="QSpinBox" name="cbxFaderCount">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>60</y>
-          <width>46</width>
+          <x>100</x>
+          <y>70</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1472,14 +1472,33 @@
          <number>127</number>
         </property>
        </widget>
+       <widget class="QPushButton" name="butLearnFaderOffset">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>91</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Learn</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QGroupBox" name="panGroup">
        <property name="geometry">
         <rect>
-         <x>40</x>
+         <x>130</x>
          <y>190</y>
-         <width>281</width>
-         <height>91</height>
+         <width>291</width>
+         <height>111</height>
         </rect>
        </property>
        <property name="font">
@@ -1495,9 +1514,9 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>20</y>
+          <y>30</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1513,9 +1532,9 @@
        <widget class="QSpinBox" name="cbxPanOffset">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>20</y>
-          <width>46</width>
+          <x>100</x>
+          <y>30</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1535,7 +1554,7 @@
           <x>10</x>
           <y>70</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1551,9 +1570,9 @@
        <widget class="QSpinBox" name="cbxPanCount">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>60</y>
-          <width>46</width>
+          <x>100</x>
+          <y>70</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1570,14 +1589,33 @@
          <number>127</number>
         </property>
        </widget>
+       <widget class="QPushButton" name="butLearnPanOffset">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>91</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Learn</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QGroupBox" name="soloGroup">
        <property name="geometry">
         <rect>
-         <x>40</x>
-         <y>290</y>
-         <width>281</width>
-         <height>91</height>
+         <x>130</x>
+         <y>310</y>
+         <width>291</width>
+         <height>111</height>
         </rect>
        </property>
        <property name="font">
@@ -1595,7 +1633,7 @@
           <x>10</x>
           <y>30</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1611,10 +1649,10 @@
        <widget class="QSpinBox" name="cbxSoloOffset">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>20</y>
-          <width>46</width>
-          <height>28</height>
+          <x>100</x>
+          <y>30</y>
+          <width>51</width>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1633,7 +1671,7 @@
           <x>10</x>
           <y>70</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1649,9 +1687,9 @@
        <widget class="QSpinBox" name="cbxSoloCount">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>60</y>
-          <width>46</width>
+          <x>100</x>
+          <y>70</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1668,14 +1706,33 @@
          <number>127</number>
         </property>
        </widget>
+       <widget class="QPushButton" name="butLearnSoloOffset">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>91</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Learn</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QGroupBox" name="muteGroup">
        <property name="geometry">
         <rect>
-         <x>40</x>
-         <y>400</y>
-         <width>281</width>
-         <height>91</height>
+         <x>130</x>
+         <y>430</y>
+         <width>291</width>
+         <height>111</height>
         </rect>
        </property>
        <property name="font">
@@ -1693,7 +1750,7 @@
           <x>10</x>
           <y>30</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1709,9 +1766,9 @@
        <widget class="QSpinBox" name="cbxMuteOffset">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>20</y>
-          <width>46</width>
+          <x>100</x>
+          <y>30</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1731,7 +1788,7 @@
           <x>10</x>
           <y>70</y>
           <width>71</width>
-          <height>19</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="font">
@@ -1747,9 +1804,9 @@
        <widget class="QSpinBox" name="cbxMuteCount">
         <property name="geometry">
          <rect>
-          <x>150</x>
-          <y>60</y>
-          <width>46</width>
+          <x>100</x>
+          <y>70</y>
+          <width>51</width>
           <height>28</height>
          </rect>
         </property>
@@ -1764,6 +1821,25 @@
         </property>
         <property name="maximum">
          <number>127</number>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="butLearnMuteOffset">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>91</width>
+          <height>27</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Learn</string>
         </property>
        </widget>
       </widget>

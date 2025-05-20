@@ -121,4 +121,16 @@ signals:
     void AudioChannelsChanged();
     void CustomDirectoriesChanged();
     void NumMixerPanelRowsChanged ( int value );
+
+private:
+    enum MidiLearnTarget { None, Fader, Pan, Solo, Mute };
+    MidiLearnTarget midiLearnTarget = None;
+    void ResetMidiLearn();
+
+private slots:
+    void OnLearnFaderOffset();
+    void OnLearnPanOffset();
+    void OnLearnSoloOffset();
+    void OnLearnMuteOffset();
+    void OnMidiCCReceived ( int ccNumber );
 };

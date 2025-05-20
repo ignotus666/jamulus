@@ -805,6 +805,14 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 					   [this] ( int v ) { pSettings->midiMuteCount = v;
 					   ApplyMIDIMappingFromSettings(); } );
 
+    // MIDI Learn buttons
+    QObject::connect ( butLearnFaderOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnFaderOffset);
+    QObject::connect ( butLearnPanOffset,   &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnPanOffset);
+    QObject::connect ( butLearnSoloOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnSoloOffset);
+    QObject::connect(butLearnMuteOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteOffset);
+    // Connect MIDI CC signal from sound engine
+    QObject::connect(pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived);
+
     // Timers ------------------------------------------------------------------
     // start timer for status bar
     TimerStatus.start ( DISPLAY_UPDATE_TIME );
@@ -1306,4 +1314,103 @@ void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
         .arg ( pSettings->midiMuteCount );
 
     pClient->ApplyMIDIMapping ( midiMap );
+}
+
+void CClientSettingsDlg::ResetMidiLearn()
+{
+    midiLearnTarget = None;
+    butLearnFaderOffset->setText(tr("Learn"));
+    butLearnFaderOffset->setEnabled(true);
+    butLearnPanOffset->setText(tr("Learn"));
+    butLearnPanOffset->setEnabled(true);
+    butLearnSoloOffset->setText(tr("Learn"));
+    butLearnSoloOffset->setEnabled(true);
+    butLearnMuteOffset->setText(tr("Learn"));
+    butLearnMuteOffset->setEnabled(true);
+}
+
+void CClientSettingsDlg::OnLearnFaderOffset()
+{
+    if (midiLearnTarget == Fader) {
+        ResetMidiLearn();
+        return;
+    }
+    ResetMidiLearn();
+    midiLearnTarget = Fader;
+    butLearnFaderOffset->setText(tr("Listening..."));
+    butLearnFaderOffset->setEnabled(true);
+    butLearnPanOffset->setEnabled(false);
+    butLearnSoloOffset->setEnabled(false);
+    butLearnMuteOffset->setEnabled(false);
+}
+
+void CClientSettingsDlg::OnLearnPanOffset()
+{
+    if (midiLearnTarget == Pan) {
+        ResetMidiLearn();
+        return;
+    }
+    ResetMidiLearn();
+    midiLearnTarget = Pan;
+    butLearnPanOffset->setText(tr("Listening..."));
+    butLearnPanOffset->setEnabled(true);
+    butLearnFaderOffset->setEnabled(false);
+    butLearnSoloOffset->setEnabled(false);
+    butLearnMuteOffset->setEnabled(false);
+}
+
+void CClientSettingsDlg::OnLearnSoloOffset()
+{
+    if (midiLearnTarget == Solo) {
+        ResetMidiLearn();
+        return;
+    }
+    ResetMidiLearn();
+    midiLearnTarget = Solo;
+    butLearnSoloOffset->setText(tr("Listening..."));
+    butLearnSoloOffset->setEnabled(true);
+    butLearnFaderOffset->setEnabled(false);
+    butLearnPanOffset->setEnabled(false);
+    butLearnMuteOffset->setEnabled(false);
+}
+
+void CClientSettingsDlg::OnLearnMuteOffset()
+{
+    if (midiLearnTarget == Mute) {
+        ResetMidiLearn();
+        return;
+    }
+    ResetMidiLearn();
+    midiLearnTarget = Mute;
+    butLearnMuteOffset->setText(tr("Listening..."));
+    butLearnMuteOffset->setEnabled(true);
+    butLearnFaderOffset->setEnabled(false);
+    butLearnPanOffset->setEnabled(false);
+    butLearnSoloOffset->setEnabled(false);
+}
+
+void CClientSettingsDlg::OnMidiCCReceived(int ccNumber)
+{
+    qDebug() << "CClientSettingsDlg: OnMidiCCReceived" << ccNumber;
+    if (midiLearnTarget == None)
+        return;
+
+    switch (midiLearnTarget)
+    {
+        case Fader:
+            cbxFaderOffset->setValue(ccNumber);
+            break;
+        case Pan:
+            cbxPanOffset->setValue(ccNumber);
+            break;
+        case Solo:
+            cbxSoloOffset->setValue(ccNumber);
+            break;
+        case Mute:
+            cbxMuteOffset->setValue(ccNumber);
+            break;
+        default:
+            break;
+    }
+    ResetMidiLearn();
 }
