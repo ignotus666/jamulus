@@ -371,7 +371,7 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
                     {
                         const CMidiCtlEntry& cCtrl  = aMidiCtls[vMIDIPaketBytes[1]];
                         const int            iValue = vMIDIPaketBytes[2];
-                        emit MidiCCReceived(vMIDIPaketBytes[1]);
+                        emit MidiCCReceived ( vMIDIPaketBytes[1] );
                         ;
                         switch ( cCtrl.eType )
                         {
