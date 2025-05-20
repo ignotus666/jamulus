@@ -750,13 +750,77 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
+    // MIDI tab
+	QObject::connect ( cbxChannel,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiChannel = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxFaderOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiFaderOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxFaderCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiFaderCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxPanOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiPanOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxPanCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiPanCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxSoloOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiSoloOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxSoloCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiSoloCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxMuteOffset,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiMuteOffset = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+	QObject::connect ( cbxMuteCount,
+					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+					   this,
+					   [this] ( int v ) { pSettings->midiMuteCount = v;
+					   ApplyMIDIMappingFromSettings(); } );
+
+    // MIDI Learn buttons
+    QObject::connect ( butLearnFaderOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnFaderOffset );
+    QObject::connect ( butLearnPanOffset,   &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnPanOffset );
+    QObject::connect ( butLearnSoloOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnSoloOffset );
+    QObject::connect ( butLearnMuteOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteOffset );
+    // Connect MIDI CC signal from sound engine
+    QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
+
     // Timers ------------------------------------------------------------------
     // start timer for status bar
     TimerStatus.start ( DISPLAY_UPDATE_TIME );
 }
 
-void CClientSettingsDlg::showEvent ( QShowEvent* )
+void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
+    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
     UpdateDisplay();
     UpdateDirectoryComboBox();
 
@@ -774,6 +838,25 @@ void CClientSettingsDlg::showEvent ( QShowEvent* )
 
     // select the skill level
     pcbxSkill->setCurrentIndex ( pcbxSkill->findData ( static_cast<int> ( pClient->ChannelInfo.eSkillLevel ) ) );
+
+    // MIDI tab: set widgets from settings
+	cbxChannel->setValue ( pSettings->midiChannel );
+	cbxFaderOffset->setValue ( pSettings->midiFaderOffset );
+	cbxFaderCount->setValue ( pSettings->midiFaderCount );
+	cbxPanOffset->setValue ( pSettings->midiPanOffset );
+	cbxPanCount->setValue ( pSettings->midiPanCount );
+	cbxSoloOffset->setValue ( pSettings->midiSoloOffset );
+	cbxSoloCount->setValue ( pSettings->midiSoloCount );
+	cbxMuteOffset->setValue ( pSettings->midiMuteOffset );
+	cbxMuteCount->setValue ( pSettings->midiMuteCount );
+
+	QDialog::showEvent ( event ) ;
+}
+
+void CClientSettingsDlg::hideEvent ( QHideEvent* event )
+{
+    pSettings->iSettingsTab = tabSettings->currentIndex();
+    QDialog::hideEvent ( event );
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()
@@ -1215,4 +1298,127 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 {
     pClient->SetAudioInFader ( value );
     UpdateAudioFaderSlider();
+}
+
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
+{
+    QString midiMap = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9" )
+        .arg ( pSettings->midiChannel )
+        .arg ( pSettings->midiFaderOffset )
+        .arg ( pSettings->midiFaderCount )
+        .arg ( pSettings->midiPanOffset )
+        .arg ( pSettings->midiPanCount )
+        .arg ( pSettings->midiSoloOffset )
+        .arg ( pSettings->midiSoloCount )
+        .arg ( pSettings->midiMuteOffset )
+        .arg ( pSettings->midiMuteCount );
+
+    pClient->ApplyMIDIMapping ( midiMap );
+}
+
+void CClientSettingsDlg::ResetMidiLearn()
+{
+    midiLearnTarget = None;
+    butLearnFaderOffset->setText ( tr ( "Learn" ) );
+    butLearnFaderOffset->setEnabled ( true );
+    butLearnPanOffset->setText ( tr ( "Learn" ) );
+    butLearnPanOffset->setEnabled(true);
+    butLearnSoloOffset->setText ( tr ( "Learn" ) );
+    butLearnSoloOffset->setEnabled ( true );
+    butLearnMuteOffset->setText ( tr ( "Learn" ) );
+    butLearnMuteOffset->setEnabled ( true );
+}
+
+void CClientSettingsDlg::OnLearnFaderOffset()
+{
+    if ( midiLearnTarget == Fader )
+    {
+        ResetMidiLearn();
+        return;
+    }
+
+    ResetMidiLearn();
+    midiLearnTarget = Fader;
+    butLearnFaderOffset->setText ( tr ( "Listening..." ) );
+    butLearnFaderOffset->setEnabled ( true );
+    butLearnPanOffset->setEnabled ( false );
+    butLearnSoloOffset->setEnabled ( false );
+    butLearnMuteOffset->setEnabled ( false );
+}
+
+void CClientSettingsDlg::OnLearnPanOffset()
+{
+    if ( midiLearnTarget == Pan )
+    {
+        ResetMidiLearn();
+        return;
+    }
+
+    ResetMidiLearn();
+    midiLearnTarget = Pan;
+    butLearnPanOffset->setText (tr ( "Listening..." ) );
+    butLearnPanOffset->setEnabled ( true );
+    butLearnFaderOffset->setEnabled ( false );
+    butLearnSoloOffset->setEnabled ( false );
+    butLearnMuteOffset->setEnabled ( false );
+}
+
+void CClientSettingsDlg::OnLearnSoloOffset()
+{
+    if (midiLearnTarget == Solo)
+    {
+        ResetMidiLearn();
+        return;
+    }
+
+    ResetMidiLearn();
+    midiLearnTarget = Solo;
+    butLearnSoloOffset->setText ( tr ( "Listening..." ) );
+    butLearnSoloOffset->setEnabled ( true );
+    butLearnFaderOffset->setEnabled ( false );
+    butLearnPanOffset->setEnabled ( false );
+    butLearnMuteOffset->setEnabled ( false );
+}
+
+void CClientSettingsDlg::OnLearnMuteOffset()
+{
+    if (midiLearnTarget == Mute)
+    {
+        ResetMidiLearn();
+        return;
+    }
+
+    ResetMidiLearn();
+    midiLearnTarget = Mute;
+    butLearnMuteOffset->setText ( tr ( "Listening..." ) );
+    butLearnMuteOffset->setEnabled ( true );
+    butLearnFaderOffset->setEnabled ( false );
+    butLearnPanOffset->setEnabled ( false );
+    butLearnSoloOffset->setEnabled ( false );
+}
+
+void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
+{
+    qDebug() << "CClientSettingsDlg: OnMidiCCReceived" << ccNumber;
+    if ( midiLearnTarget == None )
+        return;
+
+    switch ( midiLearnTarget )
+    {
+        case Fader:
+            cbxFaderOffset->setValue ( ccNumber );
+            break;
+        case Pan:
+            cbxPanOffset->setValue ( ccNumber );
+            break;
+        case Solo:
+            cbxSoloOffset->setValue ( ccNumber );
+            break;
+        case Mute:
+            cbxMuteOffset->setValue ( ccNumber );
+            break;
+        default:
+            break;
+    }
+    ResetMidiLearn();
 }
