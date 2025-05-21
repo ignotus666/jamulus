@@ -918,72 +918,40 @@ int main ( int argc, char** argv )
     try
     {
 #ifndef SERVER_ONLY
-        if ( bIsClient )
-        {
-            // Client:
-            // actual client object
-            CClient Client ( iPortNumber,
-                             iQosNumber,
-                             strConnOnStartupAddress,
-                             strMIDISetup,
-                             bNoAutoJackConnect,
-                             strClientName,
-                             bEnableIPv6,
-                             bMuteMeInPersonalMix );
-
-            // load settings from init-file (command line options override)
-            CClientSettings Settings ( &Client, strIniFileName );
-            Settings.Load ( CommandLineOptions );
-
-// Overwrite MIDI settings in Settings if --ctrlmidich was given
-if ( !strMIDISetup.isEmpty() )
+        if (bIsClient)
 {
-    QStringList slMIDIParams = strMIDISetup.split ( ";" );
-    if ( slMIDIParams.count() >= 1 )
+    // --- MIDI PORT ENABLE BLOCK ---
+    if (strMIDISetup.isEmpty())
     {
-        Settings.midiChannel = slMIDIParams[0].toInt();
-        for ( int i = 1; i < slMIDIParams.count(); ++i )
-        {
-            QString sParm = slMIDIParams[i].trimmed();
-            if ( sParm.startsWith ( "f" ) )
-            {
-                QStringList slP = sParm.mid ( 1 ).split ( '*' );
-                Settings.midiFaderOffset = slP[0].toInt();
-                if ( slP.size() > 1 )
-                {
-                    Settings.midiFaderCount = slP[1].toInt();
-                }
-            }
-            else if ( sParm.startsWith ( "p" ) )
-            {
-                QStringList slP = sParm.mid ( 1 ).split ( '*' );
-                Settings.midiPanOffset = slP[0].toInt();
-                if ( slP.size() > 1 )
-                {
-                    Settings.midiPanCount = slP[1].toInt();
-                }
-            }
-            else if ( sParm.startsWith ( "s" ) )
-            {
-                QStringList slP = sParm.mid ( 1 ).split ( '*' );
-                Settings.midiSoloOffset = slP[0].toInt();
-                if ( slP.size() > 1 )
-                {
-                    Settings.midiSoloCount = slP[1].toInt();
-                }
-            }
-            else if ( sParm.startsWith ( "m" ) )
-            {
-                QStringList slP = sParm.mid ( 1 ).split ( '*' );
-                Settings.midiMuteOffset = slP[0].toInt();
-                if ( slP.size() > 1 )
-                {
-                    Settings.midiMuteCount = slP[1].toInt();
-                }
-            }
-        }
+        CClientSettings tmpSettings(nullptr, strIniFileName);
+        tmpSettings.Load(CommandLineOptions);
+
+        strMIDISetup = QString("%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10")
+            .arg(tmpSettings.midiChannel)
+            .arg(tmpSettings.midiFaderOffset)
+            .arg(tmpSettings.midiFaderCount)
+            .arg(tmpSettings.midiPanOffset)
+            .arg(tmpSettings.midiPanCount)
+            .arg(tmpSettings.midiSoloOffset)
+            .arg(tmpSettings.midiSoloCount)
+            .arg(tmpSettings.midiMuteOffset)
+            .arg(tmpSettings.midiMuteCount)
+            .arg(tmpSettings.midiMuteMyself);
     }
-}
+
+    CClient Client ( iPortNumber,
+                     iQosNumber,
+                     strConnOnStartupAddress,
+                     strMIDISetup,
+                     bNoAutoJackConnect,
+                     strClientName,
+                     bEnableIPv6,
+                     bMuteMeInPersonalMix );
+
+    // Now create Settings with the client pointer
+    CClientSettings Settings ( &Client, strIniFileName );
+    Settings.Load(CommandLineOptions);
+
 #    ifndef NO_JSON_RPC
             if ( pRpcServer )
             {
