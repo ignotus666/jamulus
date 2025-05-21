@@ -1376,7 +1376,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxChannel">
+             <widget class="QSpinBox" name="spnChannel">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1409,7 +1409,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxMuteMyself">
+             <widget class="QSpinBox" name="spnMuteMyself">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1492,7 +1492,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxFaderOffset">
+             <widget class="QSpinBox" name="spnFaderOffset">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1547,7 +1547,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxFaderCount">
+             <widget class="QSpinBox" name="spnFaderCount">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1617,7 +1617,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxPanOffset">
+             <widget class="QSpinBox" name="spnPanOffset">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1672,7 +1672,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxPanCount">
+             <widget class="QSpinBox" name="spnPanCount">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1742,7 +1742,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxSoloOffset">
+             <widget class="QSpinBox" name="spnSoloOffset">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1797,7 +1797,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxSoloCount">
+             <widget class="QSpinBox" name="spnSoloCount">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1867,7 +1867,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxMuteOffset">
+             <widget class="QSpinBox" name="spnMuteOffset">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1922,7 +1922,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="cbxMuteCount">
+             <widget class="QSpinBox" name="spnMuteCount">
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -2000,21 +2000,21 @@
   <tabstop>cbxInputBoost</tabstop>
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
-  <tabstop>cbxChannel</tabstop>
-  <tabstop>cbxMuteMyself</tabstop>
+  <tabstop>spnChannel</tabstop>
+  <tabstop>spnMuteMyself</tabstop>
   <tabstop>butLearnMuteMyself</tabstop>
-  <tabstop>cbxFaderOffset</tabstop>
+  <tabstop>spnFaderOffset</tabstop>
   <tabstop>butLearnFaderOffset</tabstop>
-  <tabstop>cbxFaderCount</tabstop>
-  <tabstop>cbxPanOffset</tabstop>
+  <tabstop>spnFaderCount</tabstop>
+  <tabstop>spnPanOffset</tabstop>
   <tabstop>butLearnPanOffset</tabstop>
-  <tabstop>cbxPanCount</tabstop>
-  <tabstop>cbxSoloOffset</tabstop>
+  <tabstop>spnPanCount</tabstop>
+  <tabstop>spnSoloOffset</tabstop>
   <tabstop>butLearnSoloOffset</tabstop>
-  <tabstop>cbxSoloCount</tabstop>
-  <tabstop>cbxMuteOffset</tabstop>
+  <tabstop>spnSoloCount</tabstop>
+  <tabstop>spnMuteOffset</tabstop>
   <tabstop>butLearnMuteOffset</tabstop>
-  <tabstop>cbxMuteCount</tabstop>
+  <tabstop>spnMuteCount</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
