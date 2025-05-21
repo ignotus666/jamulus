@@ -203,6 +203,7 @@ public:
 
     // MIDI settings
     int midiChannel = 0; // Default MIDI channel 0
+    int midiMuteMyself = 0;
     int midiFaderOffset = 70;
     int midiFaderCount = 0;
     int midiPanOffset = 0;

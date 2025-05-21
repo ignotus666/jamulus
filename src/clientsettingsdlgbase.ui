@@ -1344,7 +1344,7 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <item>
-          <widget class="QGroupBox" name="channelGroup">
+          <widget class="QGroupBox" name="chanMuteGroup">
            <property name="font">
             <font>
              <weight>75</weight>
@@ -1356,7 +1356,7 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_16">
             <item>
-             <spacer name="horizontalSpacer_23">
+             <spacer name="horizontalSpacer_25">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -1385,6 +1385,55 @@
               </property>
               <property name="maximum">
                <number>16</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_23">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblMuteMyself">
+              <property name="text">
+               <string>Mute Myself</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="cbxMuteMyself">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="maximum">
+               <number>127</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="butLearnMuteMyself">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Learn</string>
+              </property>
+              <property name="autoDefault">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -1465,6 +1514,9 @@
               </property>
               <property name="text">
                <string>Learn</string>
+              </property>
+              <property name="autoDefault">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -1588,6 +1640,9 @@
               <property name="text">
                <string>Learn</string>
               </property>
+              <property name="autoDefault">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item>
@@ -1709,6 +1764,9 @@
               </property>
               <property name="text">
                <string>Learn</string>
+              </property>
+              <property name="autoDefault">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -1832,6 +1890,9 @@
               <property name="text">
                <string>Learn</string>
               </property>
+              <property name="autoDefault">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item>
@@ -1939,6 +2000,21 @@
   <tabstop>cbxInputBoost</tabstop>
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
+  <tabstop>cbxChannel</tabstop>
+  <tabstop>cbxMuteMyself</tabstop>
+  <tabstop>butLearnMuteMyself</tabstop>
+  <tabstop>cbxFaderOffset</tabstop>
+  <tabstop>butLearnFaderOffset</tabstop>
+  <tabstop>cbxFaderCount</tabstop>
+  <tabstop>cbxPanOffset</tabstop>
+  <tabstop>butLearnPanOffset</tabstop>
+  <tabstop>cbxPanCount</tabstop>
+  <tabstop>cbxSoloOffset</tabstop>
+  <tabstop>butLearnSoloOffset</tabstop>
+  <tabstop>cbxSoloCount</tabstop>
+  <tabstop>cbxMuteOffset</tabstop>
+  <tabstop>butLearnMuteOffset</tabstop>
+  <tabstop>cbxMuteCount</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
