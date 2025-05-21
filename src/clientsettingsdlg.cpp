@@ -762,7 +762,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
     // MIDI tab
-	QObject::connect ( cbxChannel,
+    QObject::connect ( cbxChannel,
 					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
 					   this,
 					   [this] ( int v ) { pSettings->midiChannel = v;
@@ -774,19 +774,19 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 					   [this] ( int v ) { pSettings->midiMuteMyself = v;
 					   ApplyMIDIMappingFromSettings(); } );
 
-	QObject::connect ( cbxFaderOffset,
+    QObject::connect ( cbxFaderOffset,
 					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
 					   this,
 					   [this] ( int v ) { pSettings->midiFaderOffset = v;
 					   ApplyMIDIMappingFromSettings(); } );
 
-	QObject::connect ( cbxFaderCount,
+    QObject::connect ( cbxFaderCount,
 					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
 					   this,
 					   [this] ( int v ) { pSettings->midiFaderCount = v;
 					   ApplyMIDIMappingFromSettings(); } );
 
-	QObject::connect ( cbxPanOffset,
+    QObject::connect ( cbxPanOffset,
                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
                       this,
                       [this] ( int v ) {
