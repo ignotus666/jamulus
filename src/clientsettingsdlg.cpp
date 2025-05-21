@@ -763,76 +763,54 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MIDI tab
     QObject::connect ( cbxChannel,
-					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-					   this,
-					   [this] ( int v ) { pSettings->midiChannel = v;
-					   ApplyMIDIMappingFromSettings(); } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiChannel = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxMuteMyself,
-					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-					   this,
-					   [this] ( int v ) { pSettings->midiMuteMyself = v;
-					   ApplyMIDIMappingFromSettings(); } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteMyself = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxFaderOffset,
-					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-					   this,
-					   [this] ( int v ) { pSettings->midiFaderOffset = v;
-					   ApplyMIDIMappingFromSettings(); } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiFaderOffset = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxFaderCount,
-					   static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-					   this,
-					   [this] ( int v ) { pSettings->midiFaderCount = v;
-					   ApplyMIDIMappingFromSettings(); } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiFaderCount = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxPanOffset,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiPanOffset = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiPanOffset = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxPanCount,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiPanCount = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiPanCount = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxSoloOffset,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiSoloOffset = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiSoloOffset = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxSoloCount,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiSoloCount = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiSoloCount = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxMuteOffset,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiMuteOffset = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteOffset = v; ApplyMIDIMappingFromSettings(); } );
 
     QObject::connect ( cbxMuteCount,
-                      static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
-                      this,
-                      [this] ( int v ) {
-                          pSettings->midiMuteCount = v;
-                          ApplyMIDIMappingFromSettings();
-                      } );
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteCount = v; ApplyMIDIMappingFromSettings(); } );
 
     // MIDI Learn buttons
     QObject::connect ( butLearnMuteMyself,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteMyself );

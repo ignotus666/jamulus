@@ -918,25 +918,24 @@ int main ( int argc, char** argv )
     try
     {
 #ifndef SERVER_ONLY
-        if (bIsClient)
+        if ( bIsClient )
         {
-            // --- MIDI PORT ENABLE BLOCK ---
-            if (strMIDISetup.isEmpty())
+            if ( strMIDISetup.isEmpty() )
             {
-                CClientSettings tmpSettings(nullptr, strIniFileName);
-                tmpSettings.Load(CommandLineOptions);
+                CClientSettings tmpSettings ( nullptr, strIniFileName );
+                tmpSettings.Load ( CommandLineOptions );
 
-                strMIDISetup = QString("%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10")
-                    .arg(tmpSettings.midiChannel)
-                    .arg(tmpSettings.midiFaderOffset)
-                    .arg(tmpSettings.midiFaderCount)
-                    .arg(tmpSettings.midiPanOffset)
-                    .arg(tmpSettings.midiPanCount)
-                    .arg(tmpSettings.midiSoloOffset)
-                    .arg(tmpSettings.midiSoloCount)
-                    .arg(tmpSettings.midiMuteOffset)
-                    .arg(tmpSettings.midiMuteCount)
-                    .arg(tmpSettings.midiMuteMyself);
+                strMIDISetup = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
+                    .arg ( tmpSettings.midiChannel )
+                    .arg ( tmpSettings.midiFaderOffset )
+                    .arg ( tmpSettings.midiFaderCount )
+                    .arg ( tmpSettings.midiPanOffset )
+                    .arg ( tmpSettings.midiPanCount )
+                    .arg ( tmpSettings.midiSoloOffset )
+                    .arg ( tmpSettings.midiSoloCount )
+                    .arg ( tmpSettings.midiMuteOffset )
+                    .arg ( tmpSettings.midiMuteCount )
+                    .arg ( tmpSettings.midiMuteMyself );
             }
 
             CClient Client(
@@ -950,9 +949,9 @@ int main ( int argc, char** argv )
                 bMuteMeInPersonalMix
             );
 
-            // Now create Settings with the client pointer
-            CClientSettings Settings(&Client, strIniFileName);
-            Settings.Load(CommandLineOptions);
+            // Create Settings with the client pointer
+            CClientSettings Settings ( &Client, strIniFileName );
+            Settings.Load ( CommandLineOptions );
 
 #    ifndef NO_JSON_RPC
             if ( pRpcServer )

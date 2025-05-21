@@ -339,7 +339,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         midiMuteMyself = iValue;
     }
 
-    // --- All code that uses pClient must be guarded ---
+    // All code that uses pClient must be guarded
     if ( pClient )
     {
         // name
