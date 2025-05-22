@@ -400,6 +400,9 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
+    pSettingsMenu->addAction ( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );
+
+
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
 
@@ -985,11 +988,10 @@ void CClientDlg::ShowConnectionSetupDialog()
 void CClientDlg::ShowGeneralSettings ( int iTab )
 {
     // open general settings dialog
-    emit SendTabChange ( iTab );
+	emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
-    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
-
     // make sure dialog is upfront and has focus
+    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
     ClientSettingsDlg.raise();
     ClientSettingsDlg.activateWindow();
 }
@@ -1515,4 +1517,9 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 
     // set current LED status
     ledDelay->SetLight ( eOverallDelayLEDColor );
+}
+
+void CClientDlg::OnOpenMidiSettings()
+{
+	ShowGeneralSettings ( SETTING_TAB_MIDI );
 }
