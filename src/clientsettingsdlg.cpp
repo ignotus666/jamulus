@@ -850,7 +850,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
 void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
-    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
     UpdateDisplay();
     UpdateDirectoryComboBox();
 
@@ -870,24 +869,18 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     pcbxSkill->setCurrentIndex ( pcbxSkill->findData ( static_cast<int> ( pClient->ChannelInfo.eSkillLevel ) ) );
 
     // MIDI tab: set widgets from settings
-	spnChannel->setValue ( pSettings->midiChannel );
-	spnMuteMyself->setValue ( pSettings->midiMuteMyself );
-	spnFaderOffset->setValue ( pSettings->midiFaderOffset );
-	spnFaderCount->setValue ( pSettings->midiFaderCount );
-	spnPanOffset->setValue ( pSettings->midiPanOffset );
-	spnPanCount->setValue ( pSettings->midiPanCount );
-	spnSoloOffset->setValue ( pSettings->midiSoloOffset );
-	spnSoloCount->setValue ( pSettings->midiSoloCount );
-	spnMuteOffset->setValue ( pSettings->midiMuteOffset );
-	spnMuteCount->setValue ( pSettings->midiMuteCount );
+    spnChannel->setValue ( pSettings->midiChannel );
+    spnMuteMyself->setValue ( pSettings->midiMuteMyself );
+    spnFaderOffset->setValue ( pSettings->midiFaderOffset );
+    spnFaderCount->setValue ( pSettings->midiFaderCount );
+    spnPanOffset->setValue ( pSettings->midiPanOffset );
+    spnPanCount->setValue ( pSettings->midiPanCount );
+    spnSoloOffset->setValue ( pSettings->midiSoloOffset );
+    spnSoloCount->setValue ( pSettings->midiSoloCount );
+    spnMuteOffset->setValue ( pSettings->midiMuteOffset );
+    spnMuteCount->setValue ( pSettings->midiMuteCount );
 
 	QDialog::showEvent ( event ) ;
-}
-
-void CClientSettingsDlg::hideEvent ( QHideEvent* event )
-{
-    pSettings->iSettingsTab = tabSettings->currentIndex();
-    QDialog::hideEvent ( event );
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()

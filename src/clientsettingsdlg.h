@@ -71,7 +71,6 @@ protected:
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );
-    void hideEvent ( QHideEvent* event ) override;
 
     CClient*         pClient;
     CClientSettings* pSettings;
