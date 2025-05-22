@@ -122,9 +122,17 @@ signals:
     void NumMixerPanelRowsChanged ( int value );
 
 private:
-    enum MidiLearnTarget { None, MuteMyself, Fader, Pan, Solo, Mute };
+    enum MidiLearnTarget
+    {
+        None,
+        MuteMyself,
+        Fader,
+        Pan,
+        Solo,
+        Mute
+    };
     MidiLearnTarget midiLearnTarget = None;
-    void ResetMidiLearn();
+    void            ResetMidiLearn();
 
 private slots:
     void OnLearnMuteMyself();

@@ -988,7 +988,7 @@ void CClientDlg::ShowConnectionSetupDialog()
 void CClientDlg::ShowGeneralSettings ( int iTab )
 {
     // open general settings dialog
-	emit SendTabChange ( iTab );
+    emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
     // make sure dialog is upfront and has focus
     ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
@@ -1519,7 +1519,4 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
     ledDelay->SetLight ( eOverallDelayLEDColor );
 }
 
-void CClientDlg::OnOpenMidiSettings()
-{
-	ShowGeneralSettings ( SETTING_TAB_MIDI );
-}
+void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }

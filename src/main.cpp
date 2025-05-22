@@ -926,28 +926,26 @@ int main ( int argc, char** argv )
                 tmpSettings.Load ( CommandLineOptions );
 
                 strMIDISetup = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
-                    .arg ( tmpSettings.midiChannel )
-                    .arg ( tmpSettings.midiFaderOffset )
-                    .arg ( tmpSettings.midiFaderCount )
-                    .arg ( tmpSettings.midiPanOffset )
-                    .arg ( tmpSettings.midiPanCount )
-                    .arg ( tmpSettings.midiSoloOffset )
-                    .arg ( tmpSettings.midiSoloCount )
-                    .arg ( tmpSettings.midiMuteOffset )
-                    .arg ( tmpSettings.midiMuteCount )
-                    .arg ( tmpSettings.midiMuteMyself );
+                                   .arg ( tmpSettings.midiChannel )
+                                   .arg ( tmpSettings.midiFaderOffset )
+                                   .arg ( tmpSettings.midiFaderCount )
+                                   .arg ( tmpSettings.midiPanOffset )
+                                   .arg ( tmpSettings.midiPanCount )
+                                   .arg ( tmpSettings.midiSoloOffset )
+                                   .arg ( tmpSettings.midiSoloCount )
+                                   .arg ( tmpSettings.midiMuteOffset )
+                                   .arg ( tmpSettings.midiMuteCount )
+                                   .arg ( tmpSettings.midiMuteMyself );
             }
 
-            CClient Client(
-                iPortNumber,
-                iQosNumber,
-                strConnOnStartupAddress,
-                strMIDISetup,
-                bNoAutoJackConnect,
-                strClientName,
-                bEnableIPv6,
-                bMuteMeInPersonalMix
-            );
+            CClient Client ( iPortNumber,
+                             iQosNumber,
+                             strConnOnStartupAddress,
+                             strMIDISetup,
+                             bNoAutoJackConnect,
+                             strClientName,
+                             bEnableIPv6,
+                             bMuteMeInPersonalMix );
 
             // Create Settings with the client pointer
             CClientSettings Settings ( &Client, strIniFileName );
@@ -964,7 +962,7 @@ int main ( int argc, char** argv )
                         QString sParm = slMIDIParams[i].trimmed();
                         if ( sParm.startsWith ( "f" ) )
                         {
-                            QStringList slP = sParm.mid ( 1 ).split ( '*' );
+                            QStringList slP          = sParm.mid ( 1 ).split ( '*' );
                             Settings.midiFaderOffset = slP[0].toInt();
                             if ( slP.size() > 1 )
                             {
@@ -973,7 +971,7 @@ int main ( int argc, char** argv )
                         }
                         else if ( sParm.startsWith ( "p" ) )
                         {
-                            QStringList slP = sParm.mid ( 1 ).split ( '*' );
+                            QStringList slP        = sParm.mid ( 1 ).split ( '*' );
                             Settings.midiPanOffset = slP[0].toInt();
                             if ( slP.size() > 1 )
                             {
@@ -982,7 +980,7 @@ int main ( int argc, char** argv )
                         }
                         else if ( sParm.startsWith ( "s" ) )
                         {
-                            QStringList slP = sParm.mid ( 1 ).split ( '*' );
+                            QStringList slP         = sParm.mid ( 1 ).split ( '*' );
                             Settings.midiSoloOffset = slP[0].toInt();
                             if ( slP.size() > 1 )
                             {
@@ -991,7 +989,7 @@ int main ( int argc, char** argv )
                         }
                         else if ( sParm.startsWith ( "m" ) )
                         {
-                            QStringList slP = sParm.mid ( 1 ).split ( '*' );
+                            QStringList slP         = sParm.mid ( 1 ).split ( '*' );
                             Settings.midiMuteOffset = slP[0].toInt();
                             if ( slP.size() > 1 )
                             {
@@ -1000,7 +998,7 @@ int main ( int argc, char** argv )
                         }
                         else if ( sParm.startsWith ( "o" ) )
                         {
-                            QStringList slP = sParm.mid ( 1 ).split ( '*' );
+                            QStringList slP         = sParm.mid ( 1 ).split ( '*' );
                             Settings.midiMuteMyself = slP[0].toInt();
                         }
                     }
