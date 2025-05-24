@@ -201,9 +201,9 @@ LED bar:      lbr
 #define UPPER_BOUND_SIG_METER ( 0.0 )   // dB
 
 // defines for LED level meter CLevelMeter
-#define NUM_STEPS_LED_BAR    15
-#define RED_BOUND_LED_BAR    14
-#define YELLOW_BOUND_LED_BAR 10
+#define NUM_STEPS_LED_BAR    8
+#define RED_BOUND_LED_BAR    7
+#define YELLOW_BOUND_LED_BAR 5
 
 // maximum number of connected clients at the server (must not be larger than 256)
 #define MAX_NUM_CHANNELS 150 // max number channels for server
