@@ -399,18 +399,18 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MIDI settings
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
-                              tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
-                                   "for each item controlled: offset and consecutive CC numbers (count). First set the "
-                                   "channel you want Jamulus to listen on (0 for all channels). Then, for each item "
-                                   "you want to control (volume fader, pan, solo, mute), set the offset (CC number "
-                                   "to start from) and number of consecutive CC numbers (count). There is one "
-                                   "exception that does not require establishing consecutive CC numbers which is "
-                                   "the “Mute Myself” parameter - it only requires a single CC number as it is only "
-                                   "applied to one’s own audio stream." ) +
-                              "<br>" +
-                              tr ( "You can either type in the MIDI CC values or use the \"Learn\" button: click on "
-                                   "\"Learn\", move the fader/knob on your MIDI controller, and the MIDI CC number "
-                                   "will be saved." );
+                                      tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
+                                           "for each item controlled: offset and consecutive CC numbers (count). First set the "
+                                           "channel you want Jamulus to listen on (0 for all channels). Then, for each item "
+                                           "you want to control (volume fader, pan, solo, mute), set the offset (CC number "
+                                           "to start from) and number of consecutive CC numbers (count). There is one "
+                                           "exception that does not require establishing consecutive CC numbers which is "
+                                           "the “Mute Myself” parameter - it only requires a single CC number as it is only "
+                                           "applied to one’s own audio stream." ) +
+                                           "<br>" +
+                                      tr ( "You can either type in the MIDI CC values or use the \"Learn\" button: click on "
+                                           "\"Learn\", move the fader/knob on your MIDI controller, and the MIDI CC number "
+                                           "will be saved." );
     lblChannel->setWhatsThis ( strMidiSettings );
     lblMuteMyself->setWhatsThis ( strMidiSettings );
     faderGroup->setWhatsThis ( strMidiSettings );
@@ -784,62 +784,62 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
     // MIDI tab
-    QObject::connect ( spnChannel, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiChannel = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnChannel,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiChannel = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnMuteMyself, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiMuteMyself = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnMuteMyself,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteMyself = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnFaderOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiFaderOffset = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnFaderOffset,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiFaderOffset = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnFaderCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiFaderCount = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnFaderCount,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiFaderCount = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnPanOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiPanOffset = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnPanOffset,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiPanOffset = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnPanCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiPanCount = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnPanCount,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiPanCount = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnSoloOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiSoloOffset = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnSoloOffset,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiSoloOffset = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnSoloCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiSoloCount = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnSoloCount,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiSoloCount = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnMuteOffset, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiMuteOffset = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnMuteOffset,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteOffset = v; ApplyMIDIMappingFromSettings(); } );
 
-    QObject::connect ( spnMuteCount, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
-        pSettings->midiMuteCount = v;
-        ApplyMIDIMappingFromSettings();
-    } );
+    QObject::connect ( spnMuteCount,
+                       static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ),
+                       this,
+                       [this] ( int v ) { pSettings->midiMuteCount = v; ApplyMIDIMappingFromSettings(); } );
 
     // MIDI Learn buttons
-    QObject::connect ( butLearnMuteMyself, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteMyself );
+    QObject::connect ( butLearnMuteMyself,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteMyself );
     QObject::connect ( butLearnFaderOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnFaderOffset );
-    QObject::connect ( butLearnPanOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnPanOffset );
-    QObject::connect ( butLearnSoloOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnSoloOffset );
-    QObject::connect ( butLearnMuteOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteOffset );
+    QObject::connect ( butLearnPanOffset,   &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnPanOffset );
+    QObject::connect ( butLearnSoloOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnSoloOffset );
+    QObject::connect ( butLearnMuteOffset,  &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnMuteOffset );
     // Connect MIDI CC signal from sound engine
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
@@ -880,7 +880,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
 
-    QDialog::showEvent ( event );
+	QDialog::showEvent ( event ) ;
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()
@@ -1327,16 +1327,16 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
 {
     QString midiMap = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
-                          .arg ( pSettings->midiChannel )
-                          .arg ( pSettings->midiFaderOffset )
-                          .arg ( pSettings->midiFaderCount )
-                          .arg ( pSettings->midiPanOffset )
-                          .arg ( pSettings->midiPanCount )
-                          .arg ( pSettings->midiSoloOffset )
-                          .arg ( pSettings->midiSoloCount )
-                          .arg ( pSettings->midiMuteOffset )
-                          .arg ( pSettings->midiMuteCount )
-                          .arg ( pSettings->midiMuteMyself );
+        .arg ( pSettings->midiChannel )
+        .arg ( pSettings->midiFaderOffset )
+        .arg ( pSettings->midiFaderCount )
+        .arg ( pSettings->midiPanOffset )
+        .arg ( pSettings->midiPanCount )
+        .arg ( pSettings->midiSoloOffset )
+        .arg ( pSettings->midiSoloCount )
+        .arg ( pSettings->midiMuteOffset )
+        .arg ( pSettings->midiMuteCount )
+        .arg ( pSettings->midiMuteMyself );
 
     pClient->ApplyMIDIMapping ( midiMap );
 }
@@ -1349,7 +1349,7 @@ void CClientSettingsDlg::ResetMidiLearn()
     butLearnFaderOffset->setText ( tr ( "Learn" ) );
     butLearnFaderOffset->setEnabled ( true );
     butLearnPanOffset->setText ( tr ( "Learn" ) );
-    butLearnPanOffset->setEnabled ( true );
+    butLearnPanOffset->setEnabled(true);
     butLearnSoloOffset->setText ( tr ( "Learn" ) );
     butLearnSoloOffset->setEnabled ( true );
     butLearnMuteOffset->setText ( tr ( "Learn" ) );
@@ -1402,7 +1402,7 @@ void CClientSettingsDlg::OnLearnPanOffset()
 
     ResetMidiLearn();
     midiLearnTarget = Pan;
-    butLearnPanOffset->setText ( tr ( "Listening..." ) );
+    butLearnPanOffset->setText (tr ( "Listening..." ) );
     butLearnPanOffset->setEnabled ( true );
     butLearnMuteMyself->setEnabled ( false );
     butLearnFaderOffset->setEnabled ( false );
@@ -1412,7 +1412,7 @@ void CClientSettingsDlg::OnLearnPanOffset()
 
 void CClientSettingsDlg::OnLearnSoloOffset()
 {
-    if ( midiLearnTarget == Solo )
+    if (midiLearnTarget == Solo)
     {
         ResetMidiLearn();
         return;
@@ -1430,7 +1430,7 @@ void CClientSettingsDlg::OnLearnSoloOffset()
 
 void CClientSettingsDlg::OnLearnMuteOffset()
 {
-    if ( midiLearnTarget == Mute )
+    if (midiLearnTarget == Mute)
     {
         ResetMidiLearn();
         return;
@@ -1453,23 +1453,23 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
 
     switch ( midiLearnTarget )
     {
-    case Fader:
-        spnFaderOffset->setValue ( ccNumber );
-        break;
-    case Pan:
-        spnPanOffset->setValue ( ccNumber );
-        break;
-    case Solo:
-        spnSoloOffset->setValue ( ccNumber );
-        break;
-    case Mute:
-        spnMuteOffset->setValue ( ccNumber );
-        break;
-    case MuteMyself:
-        spnMuteMyself->setValue ( ccNumber );
-        break;
-    default:
-        break;
+        case Fader:
+            spnFaderOffset->setValue ( ccNumber );
+            break;
+        case Pan:
+            spnPanOffset->setValue ( ccNumber );
+            break;
+        case Solo:
+            spnSoloOffset->setValue ( ccNumber );
+            break;
+        case Mute:
+            spnMuteOffset->setValue ( ccNumber );
+            break;
+        case MuteMyself:
+            spnMuteMyself->setValue ( ccNumber );
+            break;
+        default:
+            break;
     }
     ResetMidiLearn();
 }

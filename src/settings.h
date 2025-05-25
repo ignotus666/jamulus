@@ -202,16 +202,16 @@ public:
     bool       bOwnFaderFirst;
 
     // MIDI settings
-    int midiChannel     = 0; // Default MIDI channel 0
-    int midiMuteMyself  = 0;
+    int midiChannel = 0; // Default MIDI channel 0
+    int midiMuteMyself = 0;
     int midiFaderOffset = 70;
-    int midiFaderCount  = 0;
-    int midiPanOffset   = 0;
-    int midiPanCount    = 0;
-    int midiSoloOffset  = 0;
-    int midiSoloCount   = 0;
-    int midiMuteOffset  = 0;
-    int midiMuteCount   = 0;
+    int midiFaderCount = 0;
+    int midiPanOffset = 0;
+    int midiPanCount = 0;
+    int midiSoloOffset = 0;
+    int midiSoloCount = 0;
+    int midiMuteOffset = 0;
+    int midiMuteCount = 0;
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool isAboutToQuit ) override;

@@ -30,7 +30,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <property name="usesScrollButtons">
       <bool>true</bool>
@@ -1370,12 +1370,6 @@
             </item>
             <item>
              <widget class="QLabel" name="lblChannel">
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
               <property name="text">
                <string>Channel</string>
               </property>
@@ -1409,12 +1403,6 @@
             </item>
             <item>
              <widget class="QLabel" name="lblMuteMyself">
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
               <property name="text">
                <string>Mute Myself</string>
               </property>
@@ -1469,8 +1457,8 @@
           <widget class="QGroupBox" name="faderGroup">
            <property name="font">
             <font>
-             <weight>50</weight>
-             <bold>false</bold>
+             <weight>75</weight>
+             <bold>true</bold>
             </font>
            </property>
            <property name="title">
@@ -1594,8 +1582,8 @@
           <widget class="QGroupBox" name="panGroup">
            <property name="font">
             <font>
-             <weight>50</weight>
-             <bold>false</bold>
+             <weight>75</weight>
+             <bold>true</bold>
             </font>
            </property>
            <property name="title">
@@ -1719,8 +1707,8 @@
           <widget class="QGroupBox" name="soloGroup">
            <property name="font">
             <font>
-             <weight>50</weight>
-             <bold>false</bold>
+             <weight>75</weight>
+             <bold>true</bold>
             </font>
            </property>
            <property name="title">
@@ -1844,8 +1832,8 @@
           <widget class="QGroupBox" name="muteGroup">
            <property name="font">
             <font>
-             <weight>50</weight>
-             <bold>false</bold>
+             <weight>75</weight>
+             <bold>true</bold>
             </font>
            </property>
            <property name="title">

@@ -402,6 +402,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "&MIDI Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );
 
+
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
 
@@ -987,7 +988,7 @@ void CClientDlg::ShowConnectionSetupDialog()
 void CClientDlg::ShowGeneralSettings ( int iTab )
 {
     // open general settings dialog
-    emit SendTabChange ( iTab );
+	emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
     // make sure dialog is upfront and has focus
     ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
@@ -1362,8 +1363,8 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
             ".QWidget {               background:     transparent; }" // note: matches instances of QWidget, but not of its subclasses
             "QGroupBox {              background:     transparent; }"
             "QGroupBox::title {       color:          rgb(220, 220, 220); }"
-            "QCheckBox::indicator {   width:          38px;"
-            "                         height:         21px; }"
+            "QCheckBox::indicator {   width:          34px;"
+            "                         height:         18px; }"
             "QCheckBox::indicator:unchecked {"
             "                         image:          url(:/png/fader/res/ledbuttonnotpressed.png); }"
             "QCheckBox::indicator:checked {"
@@ -1518,4 +1519,7 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
     ledDelay->SetLight ( eOverallDelayLEDColor );
 }
 
-void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }
+void CClientDlg::OnOpenMidiSettings()
+{
+	ShowGeneralSettings ( SETTING_TAB_MIDI );
+}

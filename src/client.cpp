@@ -1552,9 +1552,15 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
-void CClient::ApplyMIDIMapping ( const QString& midiMap ) { Sound.SetMIDIMapping ( midiMap ); }
+void CClient::ApplyMIDIMapping ( const QString& midiMap )
+{
+    Sound.SetMIDIMapping ( midiMap );
+}
 
-void CClient::OnMidiCCReceived ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); }
+void CClient::OnMidiCCReceived ( int ccNumber )
+{
+    emit MidiCCReceived ( ccNumber );
+}
 
 // find, and optionally create, a client channel for the supplied server channel ID
 // returns a client channel ID or INVALID_INDEX

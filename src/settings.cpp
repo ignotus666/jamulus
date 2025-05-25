@@ -290,7 +290,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     }
 
     // --- MIDI settings (do NOT require pClient) ---
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 15, iValue ) )
     {
         midiChannel = iValue;
     }
