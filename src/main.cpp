@@ -865,10 +865,10 @@ int main ( int argc, char** argv )
     Q_INIT_RESOURCE ( resources );
 
 #ifndef SERVER_ONLY
-    //### TEST: BEGIN ###//
-    // activate the following line to activate the test bench,
-    // CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
-    //### TEST: END ###//
+    // ### TEST: BEGIN ###//
+    //  activate the following line to activate the test bench,
+    //  CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
+    // ### TEST: END ###//
 #endif
 
 #ifdef NO_JSON_RPC
@@ -924,18 +924,7 @@ int main ( int argc, char** argv )
             {
                 CClientSettings tmpSettings ( nullptr, strIniFileName );
                 tmpSettings.Load ( CommandLineOptions );
-
-                strMIDISetup = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
-                                   .arg ( tmpSettings.midiChannel )
-                                   .arg ( tmpSettings.midiFaderOffset )
-                                   .arg ( tmpSettings.midiFaderCount )
-                                   .arg ( tmpSettings.midiPanOffset )
-                                   .arg ( tmpSettings.midiPanCount )
-                                   .arg ( tmpSettings.midiSoloOffset )
-                                   .arg ( tmpSettings.midiSoloCount )
-                                   .arg ( tmpSettings.midiMuteOffset )
-                                   .arg ( tmpSettings.midiMuteCount )
-                                   .arg ( tmpSettings.midiMuteMyself );
+                strMIDISetup = tmpSettings.GetMIDIMapString();
             }
 
             CClient Client ( iPortNumber,
