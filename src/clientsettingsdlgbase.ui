@@ -1445,7 +1445,7 @@
                <string>Learn</string>
               </property>
               <property name="autoDefault">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1528,7 +1528,7 @@
                <string>Learn</string>
               </property>
               <property name="autoDefault">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1653,7 +1653,7 @@
                <string>Learn</string>
               </property>
               <property name="autoDefault">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1778,7 +1778,7 @@
                <string>Learn</string>
               </property>
               <property name="autoDefault">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1903,7 +1903,7 @@
                <string>Learn</string>
               </property>
               <property name="autoDefault">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
