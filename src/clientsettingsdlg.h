@@ -132,13 +132,12 @@ private:
         Mute
     };
     MidiLearnTarget midiLearnTarget = None;
-    void            ResetMidiLearn();
+
+    QPushButton* midiLearnButtons[5];
+    void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
+    void         ResetMidiLearn();
 
 private slots:
-    void OnLearnMuteMyself();
-    void OnLearnFaderOffset();
-    void OnLearnPanOffset();
-    void OnLearnSoloOffset();
-    void OnLearnMuteOffset();
+    void OnLearnButtonClicked();
     void OnMidiCCReceived ( int ccNumber );
 };
