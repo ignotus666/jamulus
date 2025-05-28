@@ -60,7 +60,12 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
+            QObject::connect (
+                pGApp,
+                &QGuiApplication::saveStateRequest,
+                this,
+                [=] ( QSessionManager& ) { Save ( false ); },
+                Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {

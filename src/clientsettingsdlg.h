@@ -60,7 +60,7 @@ public:
     void UpdateDisplay();
     void UpdateSoundDeviceChannelSelectionFrame();
 
-    void    SetEnableFeedbackDetection ( bool enable );
+    void SetEnableFeedbackDetection ( bool enable );
 
 protected:
     void    UpdateJitterBufferFrame();
