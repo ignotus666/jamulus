@@ -1330,22 +1330,7 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
     UpdateAudioFaderSlider();
 }
 
-void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
-{
-    QString midiMap = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
-                          .arg ( pSettings->midiChannel )
-                          .arg ( pSettings->midiFaderOffset )
-                          .arg ( pSettings->midiFaderCount )
-                          .arg ( pSettings->midiPanOffset )
-                          .arg ( pSettings->midiPanCount )
-                          .arg ( pSettings->midiSoloOffset )
-                          .arg ( pSettings->midiSoloCount )
-                          .arg ( pSettings->midiMuteOffset )
-                          .arg ( pSettings->midiMuteCount )
-                          .arg ( pSettings->midiMuteMyself );
-
-    pClient->ApplyMIDIMapping ( midiMap );
-}
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings() { pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() ); }
 
 void CClientSettingsDlg::ResetMidiLearn()
 {

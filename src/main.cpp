@@ -662,14 +662,12 @@ int main ( int argc, char** argv )
 
             if ( !strServerListFileName.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list persistence file will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list persistence file will only take effect when running as a directory.";
             }
 
             if ( !strServerListFilter.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list filter will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list filter will only take effect when running as a directory.";
             }
         }
         else
@@ -821,7 +819,7 @@ int main ( int argc, char** argv )
     bIsClient = true; // Client only - TODO: maybe a switch in interface to change to server?
 
     // bUseMultithreading = true;
-    QApplication* pApp       = new QApplication ( argc, argv );
+    QApplication* pApp = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
 #    endif
@@ -865,10 +863,10 @@ int main ( int argc, char** argv )
     Q_INIT_RESOURCE ( resources );
 
 #ifndef SERVER_ONLY
-    //### TEST: BEGIN ###//
-    // activate the following line to activate the test bench,
-    // CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
-    //### TEST: END ###//
+    // ### TEST: BEGIN ###//
+    //  activate the following line to activate the test bench,
+    //  CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
+    // ### TEST: END ###//
 #endif
 
 #ifdef NO_JSON_RPC
@@ -877,7 +875,7 @@ int main ( int argc, char** argv )
         qWarning() << "No JSON-RPC support in this build.";
     }
 #else
-    CRpcServer*   pRpcServer = nullptr;
+    CRpcServer* pRpcServer = nullptr;
 
     if ( iJsonRpcPortNumber != INVALID_PORT )
     {
@@ -924,18 +922,7 @@ int main ( int argc, char** argv )
             {
                 CClientSettings tmpSettings ( nullptr, strIniFileName );
                 tmpSettings.Load ( CommandLineOptions );
-
-                strMIDISetup = QString ( "%1;f%2*%3;p%4*%5;s%6*%7;m%8*%9;o%10" )
-                                   .arg ( tmpSettings.midiChannel )
-                                   .arg ( tmpSettings.midiFaderOffset )
-                                   .arg ( tmpSettings.midiFaderCount )
-                                   .arg ( tmpSettings.midiPanOffset )
-                                   .arg ( tmpSettings.midiPanCount )
-                                   .arg ( tmpSettings.midiSoloOffset )
-                                   .arg ( tmpSettings.midiSoloCount )
-                                   .arg ( tmpSettings.midiMuteOffset )
-                                   .arg ( tmpSettings.midiMuteCount )
-                                   .arg ( tmpSettings.midiMuteMyself );
+                strMIDISetup = tmpSettings.GetMIDIMapString();
             }
 
             CClient Client ( iPortNumber,
