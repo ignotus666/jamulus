@@ -131,7 +131,7 @@ private:
         Solo,
         Mute
     };
-    MidiLearnTarget midiLearnTarget = None;
+    MidiLearnTarget midiLearnTarget;
 
     QPushButton* midiLearnButtons[5];
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );

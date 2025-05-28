@@ -28,7 +28,8 @@
 CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
     CBaseDlg ( parent, Qt::Window ), // use Qt::Window to get min/max window buttons
     pClient ( pNCliP ),
-    pSettings ( pNSetP )
+    pSettings ( pNSetP ),
+    midiLearnTarget ( None )
 {
     setupUi ( this );
 
@@ -841,11 +842,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     midiLearnButtons[3] = butLearnSoloOffset;
     midiLearnButtons[4] = butLearnMuteOffset;
 
-    QObject::connect ( butLearnMuteMyself, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
-    QObject::connect ( butLearnFaderOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
-    QObject::connect ( butLearnPanOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
-    QObject::connect ( butLearnSoloOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
-    QObject::connect ( butLearnMuteOffset, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
+    for ( QPushButton* button : midiLearnButtons )
+    {
+        QObject::connect ( button, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
+    }
+
     // Connect MIDI CC signal from sound engine
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
@@ -1384,6 +1385,13 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
 {
     if ( midiLearnTarget == None )
         return;
+
+    // Validate MIDI CC number is within valid range (0-127)
+    if ( ccNumber < 0 || ccNumber > 127 )
+    {
+        qWarning() << "CClientSettingsDlg::OnMidiCCReceived: Invalid MIDI CC number received:" << ccNumber;
+        return;
+    }
 
     switch ( midiLearnTarget )
     {
