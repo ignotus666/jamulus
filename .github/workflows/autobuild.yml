@@ -1,5 +1,5 @@
 # Simplified build workflow for custom packages
-# Builds only .deb, .exe, and .apk packages
+# Builds only .exe and .apk packages
 # Triggered manually only for my-build branch
 
 name: Custom Build
@@ -13,18 +13,11 @@ jobs:
   build:
     name: Build ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-    container: ${{ matrix.config.container }}
     if: github.ref == 'refs/heads/my-build'
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: Linux .deb
-            os: ubuntu-22.04
-            container: ubuntu:20.04
-            command: ./.github/autobuild/linux_deb.sh
-            target: linux
-
           - name: Windows .exe
             os: windows-2022
             command: powershell .\.github\autobuild\windows.ps1 -Stage
@@ -37,19 +30,6 @@ jobs:
             fetch_depth: 0
 
     steps:
-      - name: Set up base dependencies in container
-        if: matrix.config.container == 'ubuntu:20.04'
-        run: |
-          apt-get -qq update
-          apt-get install -y software-properties-common sudo curl
-          add-apt-repository ppa:git-core/ppa
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          apt-get -qq update
-          apt-get -qq -y install git-core gh
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
