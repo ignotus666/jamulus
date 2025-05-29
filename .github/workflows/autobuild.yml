@@ -79,18 +79,18 @@ jobs:
       - name: Set up build dependencies
         run: ${{ matrix.config.command }} setup
         env:
-          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: 3.11.0
 
       - name: Build
         run: ${{ matrix.config.command }} build
         env:
-          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: 3.11.0
 
       - name: Get artifacts
         id: get-artifacts
         run: ${{ matrix.config.command }} get-artifacts
         env:
-          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: 3.11.0
 
       - name: Upload primary artifact
         uses: actions/upload-artifact@v4
