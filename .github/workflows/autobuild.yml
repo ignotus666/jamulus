@@ -45,16 +45,16 @@ jobs:
           add-apt-repository ppa:git-core/ppa
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get -qq update
           apt-get -qq -y install git-core gh
-          git config --global --add safe.directory "\${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: \${{ matrix.config.target == 'android' }}
-          fetch-depth: \${{ matrix.config.fetch_depth || '1' }}
+          submodules: ${{ matrix.config.target == 'android' }}
+          fetch-depth: ${{ matrix.config.fetch_depth || '1' }}
 
       - name: Cache Windows dependencies
         if: matrix.config.target == 'windows'
@@ -64,7 +64,7 @@ jobs:
             C:\Qt
             C:\ChocoCache
             C:\AutobuildCache
-          key: windows-\${{ hashFiles('.github/workflows/autobuild.yml') }}
+          key: windows-${{ hashFiles('.github/workflows/autobuild.yml') }}
 
       - name: Cache Android dependencies
         if: matrix.config.target == 'android'
@@ -74,29 +74,29 @@ jobs:
             /opt/Qt
             /opt/android/android-sdk
             /opt/android/android-ndk
-          key: android-\${{ hashFiles('.github/workflows/autobuild.yml') }}
+          key: android-${{ hashFiles('.github/workflows/autobuild.yml') }}
 
       - name: Set up build dependencies
-        run: \${{ matrix.config.command }} setup
+        run: ${{ matrix.config.command }} setup
         env:
-          JAMULUS_BUILD_VERSION: \${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
 
       - name: Build
-        run: \${{ matrix.config.command }} build
+        run: ${{ matrix.config.command }} build
         env:
-          JAMULUS_BUILD_VERSION: \${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
 
       - name: Get artifacts
         id: get-artifacts
-        run: \${{ matrix.config.command }} get-artifacts
+        run: ${{ matrix.config.command }} get-artifacts
         env:
-          JAMULUS_BUILD_VERSION: \${{ github.run_number }}
+          JAMULUS_BUILD_VERSION: ${{ github.run_number }}
 
       - name: Upload primary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: \${{ steps.get-artifacts.outputs.artifact_1 }}
-          path: deploy/\${{ steps.get-artifacts.outputs.artifact_1 }}
+          name: ${{ steps.get-artifacts.outputs.artifact_1 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
           retention-days: 31
           if-no-files-found: error
 
@@ -104,7 +104,7 @@ jobs:
         if: steps.get-artifacts.outputs.artifact_2
         uses: actions/upload-artifact@v4
         with:
-          name: \${{ steps.get-artifacts.outputs.artifact_2 }}
-          path: deploy/\${{ steps.get-artifacts.outputs.artifact_2 }}
+          name: ${{ steps.get-artifacts.outputs.artifact_2 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
           retention-days: 31
           if-no-files-found: error
