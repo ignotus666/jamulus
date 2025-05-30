@@ -289,7 +289,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         bEnableAudioAlerts = bValue;
     }
 
-    // --- MIDI settings (do NOT require pClient) ---
+    // MIDI settings
     if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
     {
         midiChannel = iValue;
@@ -339,7 +339,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         midiMuteMyself = iValue;
     }
 
-    // All code that uses pClient must be guarded
+    // Code that uses pClient is guarded. MIDI settings in particular need to be decoupled from
+    // the Client state to enable opening the MIDI-in port without the --ctrlmidich pàrameter.
     if ( pClient )
     {
         // name
