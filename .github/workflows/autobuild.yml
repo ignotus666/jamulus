@@ -2,7 +2,7 @@
 # Builds only .exe and .apk packages
 # Triggered manually only for my-build branch
 
-name: Custom Build
+name: Build .exe and .apk
 on:
   workflow_dispatch:
 
