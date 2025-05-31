@@ -41,11 +41,7 @@ public:
     CThreadPool() = default;
     CThreadPool ( size_t );
     template<class F, class... Args>
-#if __cplusplus >= 201703L
-    auto enqueue ( F&& f, Args&&... args ) -> std::future<typename std::invoke_result<F, Args...>::type>;
-#else
     auto enqueue ( F&& f, Args&&... args ) -> std::future<typename std::result_of<F ( Args... )>::type>;
-#endif
     ~CThreadPool();
 
 private:
@@ -91,17 +87,9 @@ inline CThreadPool::CThreadPool ( size_t threads ) : stop ( false )
 
 // add new work item to the pool
 template<class F, class... Args>
-#if __cplusplus >= 201703L
-auto CThreadPool::enqueue ( F&& f, Args&&... args ) -> std::future<typename std::invoke_result<F, Args...>::type>
-#else
 auto CThreadPool::enqueue ( F&& f, Args&&... args ) -> std::future<typename std::result_of<F ( Args... )>::type>
-#endif
 {
-#if __cplusplus >= 201703L
-    using return_type = typename std::invoke_result<F, Args...>::type;
-#else
     using return_type = typename std::result_of<F ( Args... )>::type;
-#endif
 
     auto task = std::make_shared<std::packaged_task<return_type()>> ( std::bind ( std::forward<F> ( f ), std::forward<Args> ( args )... ) );
 

@@ -625,7 +625,7 @@ void CServer::OnTimer()
                 const int iStartChanCnt = iBlockCnt * iMTBlockSize;
                 const int iStopChanCnt  = std::min ( ( iBlockCnt + 1 ) * iMTBlockSize - 1, iNumClients - 1 );
 
-                Futures.push_back ( pThreadPool->enqueue ( static_cast<void(*)(CServer*, const int, const int, const int)>(CServer::DecodeReceiveDataBlocks), this, iStartChanCnt, iStopChanCnt, iNumClients ) );
+                Futures.push_back ( pThreadPool->enqueue ( CServer::DecodeReceiveDataBlocks, this, iStartChanCnt, iStopChanCnt, iNumClients ) );
             }
 
             // make sure all concurrent run threads have finished when we leave this function
