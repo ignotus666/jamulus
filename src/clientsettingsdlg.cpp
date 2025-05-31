@@ -835,6 +835,19 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         ApplyMIDIMappingFromSettings();
     } );
 
+// Connect MIDI controller checkbox
+QObject::connect(chbUseMIDIController, &QCheckBox::toggled, this, [this](bool checked) {
+    pSettings->bUseMIDIController = checked;
+
+    if (checked) {
+        pClient->ApplyMIDIMapping(pSettings->GetMIDIMapString());
+    } else {
+        pClient->ApplyMIDIMapping("");
+    }
+
+    emit MIDIControllerUsageChanged(checked);
+});
+
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
     midiLearnButtons[1] = butLearnFaderOffset;
@@ -886,6 +899,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnSoloCount->setValue ( pSettings->midiSoloCount );
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
+    chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
 
     QDialog::showEvent ( event );
 }
@@ -1331,7 +1345,19 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
     UpdateAudioFaderSlider();
 }
 
-void CClientSettingsDlg::ApplyMIDIMappingFromSettings() { pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() ); }
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
+{
+    // Only apply MIDI mapping if the controller is enabled
+    if ( pSettings->bUseMIDIController )
+    {
+        pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
+    }
+    else
+    {
+        // If disabled, ensure no MIDI mapping is applied
+        pClient->ApplyMIDIMapping ( "" );
+    }
+}
 
 void CClientSettingsDlg::ResetMidiLearn()
 {

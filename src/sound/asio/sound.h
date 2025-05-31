@@ -82,6 +82,10 @@ public:
 
     virtual float GetInOutLatencyMs() { return fInOutLatencyMs; }
 
+    // MIDI support
+    virtual void EnableMIDI ( bool bEnable );
+    virtual bool IsMIDIEnabled() const;
+
 protected:
     virtual QString LoadAndInitializeDriver ( QString strDriverName, bool bOpenDriverSetup );
     virtual void    UnloadCurrentDriver();

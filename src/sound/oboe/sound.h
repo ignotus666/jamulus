@@ -31,6 +31,9 @@
 #include <android/log.h>
 #include "buffer.h"
 #include <mutex>
+#include <jni.h>
+#include <QAndroidJniObject>
+#include <QAndroidJniEnvironment>
 
 /* Classes ********************************************************************/
 class CSound : public CSoundBase, public oboe::AudioStreamCallback
@@ -44,11 +47,18 @@ public:
              const QString& strMIDISetup,
              const bool,
              const QString& );
-    virtual ~CSound() {}
+    virtual ~CSound();
 
     virtual int  Init ( const int iNewPrefMonoBufferSize );
     virtual void Start();
     virtual void Stop();
+
+    // MIDI control - required virtual functions from CSoundBase
+    virtual void EnableMIDI ( bool bEnable ) override;
+    virtual bool IsMIDIEnabled() const override;
+
+    // Static registry for MIDI callback - needs to be public for JNI access
+    static CSound* pCurrentSoundInstance;
 
     // Call backs for Oboe
     virtual oboe::DataCallbackResult onAudioReady ( oboe::AudioStream* oboeStream, void* audioData, int32_t numFrames );
@@ -95,4 +105,10 @@ private:
     static constexpr int32_t kNumCallbacksToDrain   = 10;
     int32_t                  mCountCallbacksToDrain = kNumCallbacksToDrain;
     Stats                    mStats;
+    
+    // MIDI support members
+    bool                     bMidiEnabled;
+    QAndroidJniObject        midiManager;
+    void                     initializeMidiManager();
+    void                     cleanupMidiManager();
 };

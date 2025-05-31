@@ -1342,6 +1342,13 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
+        <widget class="QCheckBox" name="chbUseMIDIController">
+         <property name="text">
+          <string>Enable MIDI-in port</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <item>
           <widget class="QGroupBox" name="chanMuteGroup">

@@ -291,6 +291,10 @@ public:
     CProtocol* getConnLessProtocol() { return &ConnLessProtocol; }
     //### TODO: END ###//
 
+    // MIDI control
+    void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
+    bool IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
+
     // settings
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;

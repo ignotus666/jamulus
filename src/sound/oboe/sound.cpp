@@ -24,21 +24,46 @@
 
 #include "sound.h"
 #include "../../android/androiddebug.cpp"
+#include <QAndroidJniObject>
+#include <QAndroidJniEnvironment>
+#include <QtAndroid>
 
 /* Implementation *************************************************************/
 
 const uint8_t CSound::RING_FACTOR = 20;
+
+// Static member for MIDI callback
+CSound* CSound::pCurrentSoundInstance = nullptr;
 
 CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
                  void*          arg,
                  const QString& strMIDISetup,
                  const bool,
                  const QString& ) :
-    CSoundBase ( "Oboe", fpNewProcessCallback, arg, strMIDISetup )
+    CSoundBase ( "Oboe", fpNewProcessCallback, arg, strMIDISetup ),
+    bMidiEnabled ( false )
 {
 #ifdef ANDROIDDEBUG
     qInstallMessageHandler ( myMessageHandler );
 #endif
+    
+    // Register this instance for MIDI callbacks
+    pCurrentSoundInstance = this;
+    
+    // Initialize MIDI manager
+    initializeMidiManager();
+}
+
+CSound::~CSound()
+{
+    // Cleanup MIDI
+    cleanupMidiManager();
+    
+    // Unregister instance
+    if ( pCurrentSoundInstance == this )
+    {
+        pCurrentSoundInstance = nullptr;
+    }
 }
 
 void CSound::setupCommonStreamParams ( oboe::AudioStreamBuilder* builder )
@@ -353,4 +378,108 @@ void CSound::Stats::log() const
     qDebug() << "Stats: "
              << "frames_in: " << frames_in << ",frames_out: " << frames_out << ",frames_filled_out: " << frames_filled_out
              << ",in_callback_calls: " << in_callback_calls << ",out_callback_calls: " << out_callback_calls << ",ring_overrun: " << ring_overrun;
+}
+
+// MIDI functions implementation for Android/Oboe
+void CSound::EnableMIDI ( bool bEnable )
+{
+    qDebug() << "CSound::EnableMIDI called with bEnable =" << bEnable;
+    
+    if ( bEnable == bMidiEnabled )
+    {
+        return; // No change needed
+    }
+    
+    if ( midiManager.isValid() )
+    {
+        // Call Java method to enable/disable MIDI
+        midiManager.callMethod<void> ( "setMidiEnabled", "(Z)V", bEnable );
+        bMidiEnabled = bEnable;
+        
+        qDebug() << "Android MIDI" << (bEnable ? "enabled" : "disabled");
+    }
+    else
+    {
+        qWarning() << "Android MIDI manager not available";
+        bMidiEnabled = false;
+    }
+}
+
+bool CSound::IsMIDIEnabled() const
+{
+    if ( midiManager.isValid() )
+    {
+        return midiManager.callMethod<jboolean> ( "isMidiEnabled", "()Z" );
+    }
+    return false;
+}
+
+void CSound::initializeMidiManager()
+{
+    QAndroidJniEnvironment env;
+    
+    // Get the Android activity
+    QAndroidJniObject activity = QtAndroid::androidActivity();
+    if ( !activity.isValid() )
+    {
+        qWarning() << "Cannot get Android activity for MIDI initialization";
+        return;
+    }
+    
+    // Create JamulusMidiManager instance
+    midiManager = QAndroidJniObject ( "com/github/jamulussoftware/jamulus/JamulusMidiManager",
+                                      "(Landroid/content/Context;)V",
+                                      activity.object<jobject>() );
+    
+    if ( !midiManager.isValid() )
+    {
+        qWarning() << "Failed to create JamulusMidiManager";
+        if ( env->ExceptionCheck() )
+        {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+        return;
+    }
+    
+    qDebug() << "Android MIDI manager initialized successfully";
+}
+
+void CSound::cleanupMidiManager()
+{
+    if ( midiManager.isValid() )
+    {
+        // Disable MIDI first
+        EnableMIDI ( false );
+        
+        // Call cleanup method
+        midiManager.callMethod<void> ( "cleanup", "()V" );
+        
+        qDebug() << "Android MIDI manager cleaned up";
+    }
+}
+
+// JNI callback function called from Java when MIDI messages are received
+extern "C" JNIEXPORT void JNICALL
+Java_com_github_jamulussoftware_jamulus_JamulusMidiManager_onMidiMessageReceived(JNIEnv *env, jclass clazz, jbyteArray data, jint length)
+{
+    Q_UNUSED(clazz);
+    
+    if (length <= 0 || CSound::pCurrentSoundInstance == nullptr) {
+        return;
+    }
+    
+    // Convert Java byte array to C++ vector
+    jbyte* bytes = env->GetByteArrayElements(data, nullptr);
+    if (bytes != nullptr) {
+        CVector<uint8_t> midiData(length);
+        for (int i = 0; i < length; i++) {
+            midiData[i] = static_cast<uint8_t>(bytes[i]);
+        }
+        
+        // Parse MIDI message using the current sound instance
+        CSound::pCurrentSoundInstance->ParseMIDIMessage(midiData);
+        
+        env->ReleaseByteArrayElements(data, bytes, 0);
+    }
 }
