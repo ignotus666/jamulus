@@ -63,6 +63,10 @@ public:
     virtual void Start();
     virtual void Stop();
 
+    // MIDI control
+    virtual void EnableMIDI ( bool bEnable ) override;
+    virtual bool IsMIDIEnabled() const override;
+
     virtual void OpenDriverSetup() { ASIOControlPanel(); }
 
     // channel selection
@@ -138,4 +142,5 @@ protected:
 
     // Windows native MIDI support
     CMidi Midi;
+    // bool m_bMidiEnabled; // This was removed as state is now in CMidi
 };

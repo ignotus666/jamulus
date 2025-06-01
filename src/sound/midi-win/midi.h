@@ -26,21 +26,26 @@
 
 #include "../../util.h"
 #include "../../global.h"
+#include <MMSystem.h>
 
 /* Classes ********************************************************************/
+class CSound;
+
 class CMidi
 {
 public:
-    CMidi() {}
+    CMidi(); // Constructor
 
     virtual ~CMidi() {}
 
     void MidiStart();
     void MidiStop();
+    bool IsActive() const; // Method to check if MIDI is active
 
 protected:
     int              iMidiDevs;
     QVector<HMIDIIN> vecMidiInHandles; // windows handles
+    bool             m_bIsActive;      // Tracks if MIDI is currently started
 
     static void CALLBACK MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2 );
 };
