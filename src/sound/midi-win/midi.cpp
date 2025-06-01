@@ -100,15 +100,6 @@ void CMidi::MidiStop()
         midiInStop ( vecMidiInHandles.at ( i ) );
         midiInClose ( vecMidiInHandles.at ( i ) );
     }
-    
-    // clear the handles vector
-    vecMidiInHandles.clear();
-}
-
-bool CMidi::IsMidiRunning() const
-{
-    // MIDI is running if we have any open handles
-    return !vecMidiInHandles.isEmpty();
 }
 
 // See https://learn.microsoft.com/en-us/previous-versions//dd798460(v=vs.85)

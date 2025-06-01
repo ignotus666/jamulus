@@ -578,13 +578,17 @@ CSound::CSound ( void ( *fpNewCallback ) ( CVector<int16_t>& psData, void* arg )
     asioCallbacks.asioMessage          = &asioMessages;
     asioCallbacks.bufferSwitchTimeInfo = &bufferSwitchTimeInfo;
 
-    // MIDI initialization is now manual via EnableMIDI() - removed automatic initialization
+    // Optional MIDI initialization --------------------------------------------
+    if ( iCtrlMIDIChannel != INVALID_MIDI_CH )
+    {
+        Midi.MidiStart();
+    }
 }
 
 CSound::~CSound()
 {
     // stop MIDI if running
-    if ( IsMIDIEnabled() )
+    if ( iCtrlMIDIChannel != INVALID_MIDI_CH )
     {
         Midi.MidiStop();
     }
@@ -600,32 +604,6 @@ void CSound::ResetChannelMapping()
     vSelectedInputChannels[1]  = 1;
     vSelectedOutputChannels[0] = 0;
     vSelectedOutputChannels[1] = 1;
-}
-
-void CSound::EnableMIDI ( bool bEnable )
-{
-    if ( bEnable && ( iCtrlMIDIChannel != INVALID_MIDI_CH ) )
-    {
-        // Start MIDI if we have valid MIDI channel and MIDI is not running
-        if ( !IsMIDIEnabled() )
-        {
-            Midi.MidiStart();
-        }
-    }
-    else
-    {
-        // Stop MIDI if it's currently running
-        if ( IsMIDIEnabled() )
-        {
-            Midi.MidiStop();
-        }
-    }
-}
-
-bool CSound::IsMIDIEnabled() const
-{
-    // Check if MIDI is enabled by asking the MIDI instance if it's running
-    return Midi.IsMidiRunning();
 }
 
 // ASIO callbacks -------------------------------------------------------------
@@ -762,7 +740,8 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    // Placeholder for potential future implementation
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        static_cast<int16_t> ( static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] * _MAXSHORT );
                 }
                 break;
 
@@ -772,7 +751,8 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    // Placeholder for potential future implementation
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        static_cast<int16_t> ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
                 }
                 break;
 
@@ -782,7 +762,8 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    // Placeholder for potential future implementation
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        static_cast<int16_t> ( ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
                 }
                 break;
 
@@ -792,75 +773,133 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    // Placeholder for potential future implementation
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        static_cast<int16_t> ( ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
                 }
-                break; // Added break
+                break;
 
-            case ASIOSTInt32LSB24:
-                // Placeholder or specific implementation
-                break; // Added break
+            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        static_cast<int16_t> ( ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
+                }
+                break;
 
-            // This is where the first block of MSB types should be.
-            // If these are not implemented, they should at least have a break.
             case ASIOSTInt16MSB:
-                // Add handling or break;
+                // clang-format off
+// NOT YET TESTED
+                // clang-format on
+                // flip bits
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
+                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
+                }
                 break;
-            case ASIOSTInt24MSB:
-                // Add handling or break;
-                break;
-            case ASIOSTInt32MSB:
-                // Add handling or break;
-                break;
-            case ASIOSTFloat32MSB:
-                // Add handling or break;
-                break;
-            case ASIOSTFloat64MSB:
-                // Add handling or break;
-                break;
-            case ASIOSTInt32MSB16: // MSB specific
-                 // Add handling or break;
-                break;
-            case ASIOSTInt32MSB18: // MSB specific
-                 // Add handling or break;
-                break;
-            case ASIOSTInt32MSB20: // MSB specific
-                 // Add handling or break;
-                break;
-            case ASIOSTInt32MSB24: // MSB specific
-                 // Add handling or break;
-                break;
-
-            // The following block appears to be a complete duplication
-            // of case labels, including LSB types that were mixed in.
-            // Removing this entire duplicated section.
-            /*
-            case ASIOSTInt16MSB:
-
 
             case ASIOSTInt24MSB:
+                // clang-format off
+// NOT YET TESTED
+                // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    // because the bits are flipped, we do not have to perform the
+                    // shift by 8 bits
+                    int iCurSam = 0;
+                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
 
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
+                }
+                break;
 
             case ASIOSTInt32MSB:
+                // clang-format off
+// NOT YET TESTED
+                // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    // flip bits and convert to 16 bit
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
+                }
+                break;
 
+            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
+                        _MAXSHORT );
+                }
+                break;
 
-            case ASIOSTFloat32MSB:
+            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        static_cast<double> ( Flip64Bits ( static_cast<int64_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
+                        _MAXSHORT );
+                }
+                break;
 
-            case ASIOSTFloat64MSB:
+            case ASIOSTInt32MSB16: // 32 bit data with 16 bit alignment
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFF );
+                }
+                break;
 
-            case ASIOSTInt32LSB16: // Erroneously repeated LSB type
+            case ASIOSTInt32MSB18: // 32 bit data with 18 bit alignment
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0x3FFFF ) >> 2 );
+                }
+                break;
 
-            case ASIOSTInt32LSB18: // Erroneously repeated LSB type
+            case ASIOSTInt32MSB20: // 32 bit data with 20 bit alignment
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFFF ) >> 4 );
+                }
+                break;
 
-            case ASIOSTInt32LSB20: // Erroneously repeated LSB type
-
-            case ASIOSTInt32LSB24: // Erroneously repeated LSB type
-            */
-            // The default case should catch anything not explicitly handled.
-            default:
-                // Handle any other sample types or log an error
+            case ASIOSTInt32MSB24: // 32 bit data with 24 bit alignment
+                                   // clang-format off
+// NOT YET TESTED
+                                   // clang-format on
+                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
+                {
+                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
+                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFFFF ) >> 8 );
+                }
                 break;
             }
         }
+
+        // call processing callback function
+        pSound->ProcessCallback ( vecsMultChanAudioSndCrd );
 
         // PLAYBACK ------------------------------------------------------------
         for ( int i = 0; i < NUM_IN_OUT_CHANNELS; i++ )
@@ -995,650 +1034,8 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                 // flip bits
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int iCurSam = 0;
-                    memcpy ( &iCurSam, ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, 3 );
-
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = Flip16Bits ( static_cast<int16_t> ( iCurSam ) );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // flip bits and convert to 16 bit
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) >> 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) ) *
-                        _MAXSHORT );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<double*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = fCurSam / _MAXSHORT;
-                }
-                break;
-
-            case ASIOSTInt32LSB16: // 32 bit data with 16 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFF );
-                }
-                break;
-
-            case ASIOSTInt32LSB18: // 32 bit data with 18 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0x3FFFF ) >> 2 );
-                }
-                break;
-
-            case ASIOSTInt32LSB20: // 32 bit data with 20 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFF ) >> 4 );
-                }
-                break;
-
-            case ASIOSTInt32LSB24: // 32 bit data with 24 bit alignment
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] & 0xFFFFFF ) >> 8 );
-                }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
+                    ( (int16_t*) pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] =
+                        Flip16Bits ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
                 }
                 break;
 
@@ -1701,8 +1098,10 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFF );
+                    // convert to 32 bit
+                    const int32_t iCurSam = static_cast<int32_t> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
+
+                    static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = Flip32Bits ( iCurSam );
                 }
                 break;
 
@@ -1712,8 +1111,10 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0x3FFFF ) >> 2 );
+                    // convert to 32 bit
+                    const int32_t iCurSam = static_cast<int32_t> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
+
+                    static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = Flip32Bits ( iCurSam << 2 );
                 }
                 break;
 
@@ -1723,8 +1124,10 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFFF ) >> 4 );
+                    // convert to 32 bit
+                    const int32_t iCurSam = static_cast<int32_t> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
+
+                    static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = Flip32Bits ( iCurSam << 4 );
                 }
                 break;
 
@@ -1734,81 +1137,101 @@ void CSound::bufferSwitch ( long index, ASIOBool )
                                    // clang-format on
                 for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
                 {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] = static_cast<int16_t> (
-                        ( Flip32Bits ( static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] ) & 0xFFFFFF ) >> 8 );
+                    // convert to 32 bit
+                    const int32_t iCurSam = static_cast<int32_t> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
+
+                    static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = Flip32Bits ( iCurSam << 8 );
                 }
-                break;
-
-            case ASIOSTInt16MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                // flip bits
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    vecsMultChanAudioSndCrd[2 * iCurSample + i] =
-                        Flip16Bits ( ( static_cast<int16_t*> ( pSound->bufferInfos[iSelCH].buffers[index] ) )[iCurSample] );
-                }
-                break;
-
-            case ASIOSTInt24MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // because the bits are flipped, we do not have to perform the
-                    // shift by 8 bits
-                    int32_t iCurSam = static_cast<int32_t> ( Flip16Bits ( vecsMultChanAudioSndCrd[2 * iCurSample + i] ) );
-
-                    memcpy ( ( (char*) pSound->bufferInfos[iSelCH].buffers[index] ) + iCurSample * 3, &iCurSam, 3 );
-                }
-                break;
-
-            case ASIOSTInt32MSB:
-                // clang-format off
-// NOT YET TESTED
-                // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    // convert to 32 bit and flip bits
-                    int iCurSam = static_cast<int32_t> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<int32_t*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] = Flip32Bits ( iCurSam << 16 );
-                }
-                break;
-
-            case ASIOSTFloat32MSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const float fCurSam = static_cast<float> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<float*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] =
-                        static_cast<float> ( Flip32Bits ( static_cast<int32_t> ( fCurSam / _MAXSHORT ) ) );
-                }
-                break;
-
-            case ASIOSTFloat64MSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
-                                   // clang-format off
-// NOT YET TESTED
-                                   // clang-format on
-                for ( iCurSample = 0; iCurSample < iASIOBufferSizeMono; iCurSample++ )
-                {
-                    const double fCurSam = static_cast<double> ( vecsMultChanAudioSndCrd[2 * iCurSample + i] );
-
-                    static_cast<float*> ( pSound->bufferInfos[iSelCH].buffers[index] )[iCurSample] =
-                        static_cast<double> ( Flip64Bits ( static_cast<int64_t> ( fCurSam / _MAXSHORT ) ) );
-                }
-                break;
-
-            // The default case should catch anything not explicitly handled.
-            default:
-                // Handle any other sample types or log an error
                 break;
             }
         }
+
+        // Finally if the driver supports the ASIOOutputReady() optimization,
+        // do it here, all data are in place -----------------------------------
+        if ( pSound->bASIOPostOutput )
+        {
+            ASIOOutputReady();
+        }
     }
+    pSound->ASIOMutex.unlock();
+}
+
+long CSound::asioMessages ( long selector, long, void*, double* )
+{
+    long ret = 0;
+
+    switch ( selector )
+    {
+    case kAsioEngineVersion:
+        // return the supported ASIO version of the host application
+        ret = 2L; // Host ASIO implementation version, 2 or higher
+        break;
+
+    // both messages might be send if the buffer size changes
+    case kAsioBufferSizeChange:
+        pSound->EmitReinitRequestSignal ( RS_ONLY_RESTART_AND_INIT );
+        ret = 1L; // 1L if request is accepted or 0 otherwise
+        break;
+
+    case kAsioResetRequest:
+        pSound->EmitReinitRequestSignal ( RS_RELOAD_RESTART_AND_INIT );
+        ret = 1L; // 1L if request is accepted or 0 otherwise
+        break;
+    }
+
+    return ret;
+}
+
+int16_t CSound::Flip16Bits ( const int16_t iIn )
+{
+    uint16_t iMask = ( 1 << 15 );
+    int16_t  iOut  = 0;
+
+    for ( unsigned int i = 0; i < 16; i++ )
+    {
+        // copy current bit to correct position
+        iOut |= ( iIn & iMask ) ? 1 : 0;
+
+        // shift out value and mask by one bit
+        iOut <<= 1;
+        iMask >>= 1;
+    }
+
+    return iOut;
+}
+
+int32_t CSound::Flip32Bits ( const int32_t iIn )
+{
+    uint32_t iMask = ( static_cast<uint32_t> ( 1 ) << 31 );
+    int32_t  iOut  = 0;
+
+    for ( unsigned int i = 0; i < 32; i++ )
+    {
+        // copy current bit to correct position
+        iOut |= ( iIn & iMask ) ? 1 : 0;
+
+        // shift out value and mask by one bit
+        iOut <<= 1;
+        iMask >>= 1;
+    }
+
+    return iOut;
+}
+
+int64_t CSound::Flip64Bits ( const int64_t iIn )
+{
+    uint64_t iMask = ( static_cast<uint64_t> ( 1 ) << 63 );
+    int64_t  iOut  = 0;
+
+    for ( unsigned int i = 0; i < 64; i++ )
+    {
+        // copy current bit to correct position
+        iOut |= ( iIn & iMask ) ? 1 : 0;
+
+        // shift out value and mask by one bit
+        iOut <<= 1;
+        iMask >>= 1;
+    }
+
+    return iOut;
 }
