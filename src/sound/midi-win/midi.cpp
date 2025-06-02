@@ -26,19 +26,11 @@
 \******************************************************************************/
 
 #include "midi.h"
-#include "../soundbase.h"
-#include <QDebug>
 
 /* Implementation *************************************************************/
 
 // pointer to the sound object (for passing received MIDI messages upwards)
 extern CSound* pSound;
-
-
-CMidi::CMidi() : iMidiDevs ( 0 ), m_bIsActive ( false )
-{
-    // Constructor
-}
 
 //---------------------------------------------------------------------------------------
 // Windows Native MIDI support
@@ -47,11 +39,6 @@ CMidi::CMidi() : iMidiDevs ( 0 ), m_bIsActive ( false )
 
 void CMidi::MidiStart()
 {
-    if ( m_bIsActive )
-    {
-        return; // Already started
-    }
-
     QString selMIDIDevice = pSound->GetMIDIDevice();
 
     /* Get the number of MIDI In devices in this computer */
@@ -103,11 +90,6 @@ void CMidi::MidiStart()
         // success, add it to list of open handles
         vecMidiInHandles.append ( hMidiIn );
     }
-
-    if ( !vecMidiInHandles.isEmpty() )
-    {
-        m_bIsActive = true;
-    }
 }
 
 void CMidi::MidiStop()
@@ -118,13 +100,6 @@ void CMidi::MidiStop()
         midiInStop ( vecMidiInHandles.at ( i ) );
         midiInClose ( vecMidiInHandles.at ( i ) );
     }
-    vecMidiInHandles.clear(); // Clear the list of handles
-    m_bIsActive = false;
-}
-
-bool CMidi::IsActive() const
-{
-    return m_bIsActive;
 }
 
 // See https://learn.microsoft.com/en-us/previous-versions//dd798460(v=vs.85)
@@ -132,7 +107,6 @@ bool CMidi::IsActive() const
 void CALLBACK CMidi::MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2 )
 {
     Q_UNUSED ( hMidiIn );
-    // CMidi* pMidiInstance = reinterpret_cast<CMidi*>(dwInstance); // If we passed 'this' to midiInOpen
     Q_UNUSED ( dwInstance );
     Q_UNUSED ( dwParam2 );
 
@@ -151,9 +125,6 @@ void CALLBACK CMidi::MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInst
         vMIDIPaketBytes[1] = static_cast<uint8_t> ( data1 );
         vMIDIPaketBytes[2] = static_cast<uint8_t> ( data2 );
 
-        if ( pSound ) // Ensure pSound is valid
-        {
-            pSound->ParseMIDIMessage ( vMIDIPaketBytes );
-        }
+        pSound->ParseMIDIMessage ( vMIDIPaketBytes );
     }
 }

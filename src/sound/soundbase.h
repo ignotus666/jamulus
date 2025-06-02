@@ -121,7 +121,6 @@ public:
     void SetMIDIMapping ( const QString& strMIDISetup );
     virtual void EnableMIDI ( bool /* bEnable */ ) {} // Default empty implementation
     virtual bool IsMIDIEnabled() const { return false; } // Default false
-    virtual void sampleRateChanged(ASIOSampleRate) {}
 
 protected:
     virtual QString  LoadAndInitializeDriver ( QString, bool ) { return ""; }

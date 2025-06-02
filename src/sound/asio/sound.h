@@ -63,10 +63,6 @@ public:
     virtual void Start();
     virtual void Stop();
 
-    // MIDI control
-    virtual void EnableMIDI ( bool bEnable ) override;
-    virtual bool IsMIDIEnabled() const override;
-
     virtual void OpenDriverSetup() { ASIOControlPanel(); }
 
     // channel selection
@@ -135,12 +131,11 @@ protected:
     // callbacks
     static void      bufferSwitch ( long index, ASIOBool processNow );
     static ASIOTime* bufferSwitchTimeInfo ( ASIOTime* timeInfo, long index, ASIOBool processNow );
-    void sampleRateChanged(ASIOSampleRate sRate) override;
+    static void      sampleRateChanged ( ASIOSampleRate ) {}
     static long      asioMessages ( long selector, long value, void* message, double* opt );
 
     char* cDriverNames[MAX_NUMBER_SOUND_CARDS];
 
     // Windows native MIDI support
     CMidi Midi;
-    // bool m_bMidiEnabled; // This was removed as state is now in CMidi
 };
