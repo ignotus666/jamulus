@@ -31,7 +31,7 @@
 class CMidi
 {
 public:
-    CMidi() : m_bIsActive(false) {}
+    CMidi() : m_bIsActive ( false ) {}
 
     virtual ~CMidi() {}
 
@@ -42,7 +42,7 @@ public:
 protected:
     int              iMidiDevs;
     QVector<HMIDIIN> vecMidiInHandles; // windows handles
-    bool             m_bIsActive;     // Tracks if MIDI is currently active
+    bool             m_bIsActive;      // Tracks if MIDI is currently active
 
     static void CALLBACK MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2 );
 };

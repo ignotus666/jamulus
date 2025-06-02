@@ -519,17 +519,17 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
     // custom directories
 
-    //### TODO: BEGIN ###//
-    // compatibility to old version (< 3.6.1)
+    // ### TODO: BEGIN ###//
+    //  compatibility to old version (< 3.6.1)
     QString strDirectoryAddress = GetIniSetting ( IniXMLDocument, "client", "centralservaddr", "" );
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     for ( iIdx = 0; iIdx < MAX_NUM_SERVER_ADDR_ITEMS; iIdx++ )
     {
-        //### TODO: BEGIN ###//
-        // compatibility to old version (< 3.8.2)
+        // ### TODO: BEGIN ###//
+        //  compatibility to old version (< 3.8.2)
         strDirectoryAddress = GetIniSetting ( IniXMLDocument, "client", QString ( "centralservaddr%1" ).arg ( iIdx ), strDirectoryAddress );
-        //### TODO: END ###//
+        // ### TODO: END ###//
 
         vstrDirectoryAddress[iIdx] = GetIniSetting ( IniXMLDocument, "client", QString ( "directoryaddress%1" ).arg ( iIdx ), strDirectoryAddress );
         strDirectoryAddress        = "";
@@ -537,9 +537,9 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
     // directory type
 
-    //### TODO: BEGIN ###//
-    // compatibility to old version (<3.4.7)
-    // only the case that "centralservaddr" was set in old ini must be considered
+    // ### TODO: BEGIN ###//
+    //  compatibility to old version (<3.4.7)
+    //  only the case that "centralservaddr" was set in old ini must be considered
     if ( !vstrDirectoryAddress[0].isEmpty() && GetFlagIniSet ( IniXMLDocument, "client", "defcentservaddr", bValue ) && !bValue )
     {
         eDirectoryType = AT_CUSTOM;
@@ -549,7 +549,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         eDirectoryType = static_cast<EDirectoryType> ( iValue );
     }
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     else if ( GetNumericIniSet ( IniXMLDocument, "client", "directorytype", 0, static_cast<int> ( AT_CUSTOM ), iValue ) )
     {

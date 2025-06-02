@@ -990,11 +990,11 @@ int main ( int argc, char** argv )
 
                 // Enable MIDI controller and apply settings when command line MIDI is provided
                 Settings.bUseMIDIController = true;
-                Client.ApplyMIDIMapping( Settings.GetMIDIMapString() );
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
             }
             else if ( Settings.bUseMIDIController )
             {
-                Client.ApplyMIDIMapping( Settings.GetMIDIMapString() );
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
             }
 
 #    ifndef NO_JSON_RPC

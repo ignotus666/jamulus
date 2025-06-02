@@ -50,10 +50,6 @@ public:
     virtual void Start();
     virtual void Stop();
 
-    // MIDI control - required virtual functions from CSoundBase
-    virtual void EnableMIDI ( bool bEnable ) override;
-    virtual bool IsMIDIEnabled() const override;
-
     // Call backs for Oboe
     virtual oboe::DataCallbackResult onAudioReady ( oboe::AudioStream* oboeStream, void* audioData, int32_t numFrames );
     virtual void                     onErrorAfterClose ( oboe::AudioStream* oboeStream, oboe::Result result );

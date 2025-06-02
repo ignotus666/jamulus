@@ -727,10 +727,7 @@ void CSound::EnableMIDI ( bool bEnable )
     }
 }
 
-bool CSound::IsMIDIEnabled() const
-{
-    return ( midiInPortRef != static_cast<MIDIPortRef> ( NULL ) );
-}
+bool CSound::IsMIDIEnabled() const { return ( midiInPortRef != static_cast<MIDIPortRef> ( NULL ) ); }
 
 void CSound::CreateMIDIPort()
 {
@@ -762,7 +759,7 @@ void CSound::CreateMIDIPort()
             MIDIEndpointRef src = MIDIGetSource ( i );
             MIDIPortConnectSource ( midiInPortRef, src, NULL );
         }
-        
+
         qInfo() << "CoreAudio MIDI port created and connected to" << iNMIDISources << "sources";
     }
 }
@@ -786,7 +783,7 @@ void CSound::DestroyMIDIPort()
             qWarning() << "Failed to dispose CoreAudio MIDI input port. Error code:" << result;
         }
         midiInPortRef = static_cast<MIDIPortRef> ( NULL );
-        
+
         qInfo() << "CoreAudio MIDI port destroyed";
     }
 

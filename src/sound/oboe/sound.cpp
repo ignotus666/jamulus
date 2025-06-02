@@ -354,21 +354,3 @@ void CSound::Stats::log() const
              << "frames_in: " << frames_in << ",frames_out: " << frames_out << ",frames_filled_out: " << frames_filled_out
              << ",in_callback_calls: " << in_callback_calls << ",out_callback_calls: " << out_callback_calls << ",ring_overrun: " << ring_overrun;
 }
-
-// MIDI functions implementation for Android/Oboe
-void CSound::EnableMIDI ( bool bEnable )
-{
-    // Android/Oboe MIDI support is not currently implemented
-    // This is a placeholder implementation to maintain API compatibility
-    Q_UNUSED ( bEnable );
-    
-    // TODO: Add Android MIDI implementation using Android MIDI API
-    // See: https://developer.android.com/reference/android/media/midi/package-summary
-}
-
-bool CSound::IsMIDIEnabled() const
-{
-    // Android/Oboe MIDI support is not currently implemented
-    // Return false to indicate MIDI is not available
-    return false;
-}

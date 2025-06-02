@@ -83,7 +83,7 @@ public:
     virtual float GetInOutLatencyMs() { return fInOutLatencyMs; }
 
     // MIDI port toggle
-    virtual void EnableMIDI(bool bEnable);
+    virtual void EnableMIDI ( bool bEnable );
     virtual bool IsMIDIEnabled() const;
 
 protected:
