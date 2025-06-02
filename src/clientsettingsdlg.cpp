@@ -399,7 +399,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     chbAudioAlerts->setAccessibleName ( tr ( "Audio Alerts check box" ) );
 
     // MIDI settings
-    chbUseMIDIController->setWhatsThis ( "<b>" + tr ( "Enable/disable MIDI-in port" ) + "</b> " ) );
+    chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
 
     chbUseMIDIController->setAccessibleName ( tr ( "Enable or disable MIDI-in port check box" ) );
 

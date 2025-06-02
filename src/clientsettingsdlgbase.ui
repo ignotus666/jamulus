@@ -2095,7 +2095,6 @@
   <tabstop>spnMuteOffset</tabstop>
   <tabstop>butLearnMuteOffset</tabstop>
   <tabstop>spnMuteCount</tabstop>
-  <tabstop>tabSettings</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
