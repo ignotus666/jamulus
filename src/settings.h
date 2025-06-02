@@ -204,7 +204,7 @@ public:
     // MIDI settings
     int     midiChannel     = 0; // Default MIDI channel 0
     int     midiMuteMyself  = 0;
-    int     midiFaderOffset = 70;
+    int     midiFaderOffset = 0;
     int     midiFaderCount  = 0;
     int     midiPanOffset   = 0;
     int     midiPanCount    = 0;
@@ -212,6 +212,7 @@ public:
     int     midiSoloCount   = 0;
     int     midiMuteOffset  = 0;
     int     midiMuteCount   = 0;
+    bool    bUseMIDIController = false;
     QString GetMIDIMapString() const;
 
 protected:

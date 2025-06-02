@@ -537,6 +537,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::NumMixerPanelRowsChanged, this, &CClientDlg::OnNumMixerPanelRowsChanged );
 
+    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MIDIControllerUsageChanged, this, &CClientDlg::OnMIDIControllerUsageChanged );
+
     QObject::connect ( this, &CClientDlg::SendTabChange, &ClientSettingsDlg, &CClientSettingsDlg::OnMakeTabChange );
 
     QObject::connect ( MainMixerBoard, &CAudioMixerBoard::ChangeChanGain, this, &CClientDlg::OnChangeChanGain );
@@ -1287,11 +1289,11 @@ void CClientDlg::Disconnect()
     TimerDetectFeedback.stop();
     bDetectFeedback = false;
 
-    //### TODO: BEGIN ###//
-    // is this still required???
-    // immediately update status bar
+    // ### TODO: BEGIN ###//
+    //  is this still required???
+    //  immediately update status bar
     OnTimerStatus();
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     // reset LEDs
     ledBuffers->Reset();
@@ -1519,3 +1521,12 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
 }
 
 void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }
+
+void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
+{
+    // Update the mixer board's MIDI flag to trigger proper user numbering display
+    MainMixerBoard->SetMIDICtrlUsed ( bEnabled );
+
+    // Enable/disable runtime MIDI via the sound interface through the public CClient interface
+    pClient->EnableMIDI ( bEnabled );
+}

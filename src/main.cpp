@@ -662,14 +662,12 @@ int main ( int argc, char** argv )
 
             if ( !strServerListFileName.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list persistence file will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list persistence file will only take effect when running as a directory.";
             }
 
             if ( !strServerListFilter.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list filter will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list filter will only take effect when running as a directory.";
             }
         }
         else
@@ -821,7 +819,7 @@ int main ( int argc, char** argv )
     bIsClient = true; // Client only - TODO: maybe a switch in interface to change to server?
 
     // bUseMultithreading = true;
-    QApplication* pApp       = new QApplication ( argc, argv );
+    QApplication* pApp = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
 #    endif
@@ -877,7 +875,7 @@ int main ( int argc, char** argv )
         qWarning() << "No JSON-RPC support in this build.";
     }
 #else
-    CRpcServer*   pRpcServer = nullptr;
+    CRpcServer* pRpcServer = nullptr;
 
     if ( iJsonRpcPortNumber != INVALID_PORT )
     {
@@ -920,17 +918,11 @@ int main ( int argc, char** argv )
 #ifndef SERVER_ONLY
         if ( bIsClient )
         {
-            if ( strMIDISetup.isEmpty() )
-            {
-                CClientSettings tmpSettings ( nullptr, strIniFileName );
-                tmpSettings.Load ( CommandLineOptions );
-                strMIDISetup = tmpSettings.GetMIDIMapString();
-            }
-
+            // Create client with empty MIDI string initially (safer initialization)
             CClient Client ( iPortNumber,
                              iQosNumber,
                              strConnOnStartupAddress,
-                             strMIDISetup,
+                             "", // Always start with empty MIDI
                              bNoAutoJackConnect,
                              strClientName,
                              bEnableIPv6,
@@ -940,6 +932,7 @@ int main ( int argc, char** argv )
             CClientSettings Settings ( &Client, strIniFileName );
             Settings.Load ( CommandLineOptions );
 
+            // Parse command line MIDI parameters if provided
             if ( !strMIDISetup.isEmpty() )
             {
                 QStringList slMIDIParams = strMIDISetup.split ( ";" );
@@ -992,6 +985,14 @@ int main ( int argc, char** argv )
                         }
                     }
                 }
+
+                // Enable MIDI controller and apply settings when command line MIDI is provided
+                Settings.bUseMIDIController = true;
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
+            }
+            else if ( Settings.bUseMIDIController )
+            {
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
             }
 
 #    ifndef NO_JSON_RPC
