@@ -2062,8 +2062,8 @@
   <tabstop>butDriverSetup</tabstop>
   <tabstop>cbxLInChan</tabstop>
   <tabstop>cbxRInChan</tabstop>
-  <tabstop>cbxLOutChan</tabstop>
   <tabstop>cbxROutChan</tabstop>
+  <tabstop>cbxLOutChan</tabstop>
   <tabstop>cbxAudioChannels</tabstop>
   <tabstop>cbxAudioQuality</tabstop>
   <tabstop>rbtBufferDelayPreferred</tabstop>
@@ -2079,6 +2079,7 @@
   <tabstop>cbxInputBoost</tabstop>
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
+  <tabstop>chbUseMIDIController</tabstop>
   <tabstop>spnChannel</tabstop>
   <tabstop>spnMuteMyself</tabstop>
   <tabstop>butLearnMuteMyself</tabstop>
@@ -2094,6 +2095,7 @@
   <tabstop>spnMuteOffset</tabstop>
   <tabstop>butLearnMuteOffset</tabstop>
   <tabstop>spnMuteCount</tabstop>
+  <tabstop>tabSettings</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

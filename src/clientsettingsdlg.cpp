@@ -399,6 +399,10 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     chbAudioAlerts->setAccessibleName ( tr ( "Audio Alerts check box" ) );
 
     // MIDI settings
+    chbUseMIDIController->setWhatsThis ( "<b>" + tr ( "Enable/disable MIDI-in port" ) + "</b> " ) );
+
+    chbUseMIDIController->setAccessibleName ( tr ( "Enable or disable MIDI-in port check box" ) );
+
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
                                    "for each item controlled: First MIDI CC and consecutive CC numbers (count). First set the "
@@ -412,6 +416,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                               tr ( "You can either type in the MIDI CC values or use the \"Learn\" button: click on "
                                    "\"Learn\", move the fader/knob on your MIDI controller, and the MIDI CC number "
                                    "will be saved." );
+
     lblChannel->setWhatsThis ( strMidiSettings );
     lblMuteMyself->setWhatsThis ( strMidiSettings );
     faderGroup->setWhatsThis ( strMidiSettings );
