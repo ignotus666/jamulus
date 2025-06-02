@@ -1335,7 +1335,7 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
     Mutex.unlock(); // release mutex
 
     // Ensure MIDI state is applied to faders during the connection process
-    SetMIDICtrlUsed(pSettings->bUseMIDIController);
+    SetMIDICtrlUsed ( pSettings->bUseMIDIController );
 
     // sort the channels according to the selected sorting type
     ChangeFaderOrder ( eChSortType );
