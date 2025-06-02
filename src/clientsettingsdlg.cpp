@@ -909,6 +909,9 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteCount->setValue ( pSettings->midiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
 
+    // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
+    emit MIDIControllerUsageChanged(chbUseMIDIController->isChecked());
+
     QDialog::showEvent ( event );
 }
 
