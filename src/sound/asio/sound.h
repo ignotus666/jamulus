@@ -135,7 +135,7 @@ protected:
     // callbacks
     static void      bufferSwitch ( long index, ASIOBool processNow );
     static ASIOTime* bufferSwitchTimeInfo ( ASIOTime* timeInfo, long index, ASIOBool processNow );
-    static void      sampleRateChanged ( ASIOSampleRate ) {}
+    void sampleRateChanged(ASIOSampleRate sRate) override;
     static long      asioMessages ( long selector, long value, void* message, double* opt );
 
     char* cDriverNames[MAX_NUMBER_SOUND_CARDS];
