@@ -38,11 +38,6 @@ public:
     void MidiStart();
     void MidiStop();
 
-    bool IsActive() const { return m_bIsActive; }
-
-private:
-    bool m_bIsActive = false; // Tracks whether MIDI is active
-
 protected:
     int              iMidiDevs;
     QVector<HMIDIIN> vecMidiInHandles; // windows handles

@@ -39,76 +39,66 @@ extern CSound* pSound;
 
 void CMidi::MidiStart()
 {
-    if (!m_bIsActive)
+    QString selMIDIDevice = pSound->GetMIDIDevice();
+
+    /* Get the number of MIDI In devices in this computer */
+    iMidiDevs = midiInGetNumDevs();
+
+    qInfo() << qUtf8Printable ( QString ( "- MIDI devices found: %1" ).arg ( iMidiDevs ) );
+
+    // open all connected MIDI devices and set the callback function to handle incoming messages
+    for ( int i = 0; i < iMidiDevs; i++ )
     {
-        QString selMIDIDevice = pSound->GetMIDIDevice();
+        HMIDIIN    hMidiIn; // windows handle
+        MIDIINCAPS mic;     // device name and capabilities
 
-        /* Get the number of MIDI In devices in this computer */
-        iMidiDevs = midiInGetNumDevs();
+        MMRESULT result = midiInGetDevCaps ( i, &mic, sizeof ( MIDIINCAPS ) );
 
-        qInfo() << qUtf8Printable ( QString ( "- MIDI devices found: %1" ).arg ( iMidiDevs ) );
-
-        // open all connected MIDI devices and set the callback function to handle incoming messages
-        for ( int i = 0; i < iMidiDevs; i++ )
+        if ( result != MMSYSERR_NOERROR )
         {
-            HMIDIIN    hMidiIn; // windows handle
-            MIDIINCAPS mic;     // device name and capabilities
-
-            MMRESULT result = midiInGetDevCaps ( i, &mic, sizeof ( MIDIINCAPS ) );
-
-            if ( result != MMSYSERR_NOERROR )
-            {
-                qWarning() << qUtf8Printable ( QString ( "! Failed to identify MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
-                continue; // try next device, if any
-            }
-
-            QString midiDev ( mic.szPname );
-
-            if ( !selMIDIDevice.isEmpty() && selMIDIDevice != midiDev )
-            {
-                qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( midiDev ) );
-                continue; // try next device, if any
-            }
-
-            qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( midiDev ) );
-
-            result = midiInOpen ( &hMidiIn, i, (DWORD_PTR) MidiCallback, 0, CALLBACK_FUNCTION );
-
-            if ( result != MMSYSERR_NOERROR )
-            {
-                qWarning() << qUtf8Printable ( QString ( "! Failed to open MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
-                continue; // try next device, if any
-            }
-
-            result = midiInStart ( hMidiIn );
-
-            if ( result != MMSYSERR_NOERROR )
-            {
-                qWarning() << qUtf8Printable ( QString ( "! Failed to start MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
-                midiInClose ( hMidiIn );
-                continue; // try next device, if any
-            }
-
-            // success, add it to list of open handles
-            vecMidiInHandles.append ( hMidiIn );
+            qWarning() << qUtf8Printable ( QString ( "! Failed to identify MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
+            continue; // try next device, if any
         }
 
-        m_bIsActive = true;
+        QString midiDev ( mic.szPname );
+
+        if ( !selMIDIDevice.isEmpty() && selMIDIDevice != midiDev )
+        {
+            qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( midiDev ) );
+            continue; // try next device, if any
+        }
+
+        qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( midiDev ) );
+
+        result = midiInOpen ( &hMidiIn, i, (DWORD_PTR) MidiCallback, 0, CALLBACK_FUNCTION );
+
+        if ( result != MMSYSERR_NOERROR )
+        {
+            qWarning() << qUtf8Printable ( QString ( "! Failed to open MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
+            continue; // try next device, if any
+        }
+
+        result = midiInStart ( hMidiIn );
+
+        if ( result != MMSYSERR_NOERROR )
+        {
+            qWarning() << qUtf8Printable ( QString ( "! Failed to start MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
+            midiInClose ( hMidiIn );
+            continue; // try next device, if any
+        }
+
+        // success, add it to list of open handles
+        vecMidiInHandles.append ( hMidiIn );
     }
 }
 
 void CMidi::MidiStop()
 {
-    if (m_bIsActive)
+    // stop MIDI if running
+    for ( int i = 0; i < vecMidiInHandles.size(); i++ )
     {
-        // stop MIDI if running
-        for ( int i = 0; i < vecMidiInHandles.size(); i++ )
-        {
-            midiInStop ( vecMidiInHandles.at ( i ) );
-            midiInClose ( vecMidiInHandles.at ( i ) );
-        }
-
-        m_bIsActive = false;
+        midiInStop ( vecMidiInHandles.at ( i ) );
+        midiInClose ( vecMidiInHandles.at ( i ) );
     }
 }
 
