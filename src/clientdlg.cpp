@@ -1289,11 +1289,11 @@ void CClientDlg::Disconnect()
     TimerDetectFeedback.stop();
     bDetectFeedback = false;
 
-    //### TODO: BEGIN ###//
-    // is this still required???
-    // immediately update status bar
+    // ### TODO: BEGIN ###//
+    //  is this still required???
+    //  immediately update status bar
     OnTimerStatus();
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     // reset LEDs
     ledBuffers->Reset();
@@ -1526,7 +1526,7 @@ void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 {
     // Update the mixer board's MIDI flag to trigger proper user numbering display
     MainMixerBoard->SetMIDICtrlUsed ( bEnabled );
-    
+
     // Enable/disable runtime MIDI via the sound interface through the public CClient interface
     pClient->EnableMIDI ( bEnabled );
 }

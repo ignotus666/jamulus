@@ -43,7 +43,7 @@ public:
              const QString& strMIDISetup,
              const bool,
              const QString& );
-    
+
     virtual ~CSound();
 
     virtual int  Init ( const int iNewPrefMonoBufferSize );

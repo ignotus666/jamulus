@@ -198,10 +198,7 @@ void CSound::EnableMIDI ( bool bEnable )
     }
 }
 
-bool CSound::IsMIDIEnabled() const
-{
-    return ( input_port_midi != nullptr );
-}
+bool CSound::IsMIDIEnabled() const { return ( input_port_midi != nullptr ); }
 
 void CSound::CreateMIDIPort()
 {
@@ -234,13 +231,13 @@ void CSound::DestroyMIDIPort()
 int CSound::Init ( const int /* iNewPrefMonoBufferSize */ )
 {
 
-    //### TODO: BEGIN ###//
-    // try setting buffer size seems not to work! -> no audio after this operation!
-    // Doesn't this give an infinite loop? The set buffer size function will call our
-    // registered callback which calls "EmitReinitRequestSignal()". In that function
-    // this CSound::Init() function is called...
-    // jack_set_buffer_size ( pJackClient, iNewPrefMonoBufferSize );
-    //### TODO: END ###//
+    // ### TODO: BEGIN ###//
+    //  try setting buffer size seems not to work! -> no audio after this operation!
+    //  Doesn't this give an infinite loop? The set buffer size function will call our
+    //  registered callback which calls "EmitReinitRequestSignal()". In that function
+    //  this CSound::Init() function is called...
+    //  jack_set_buffer_size ( pJackClient, iNewPrefMonoBufferSize );
+    // ### TODO: END ###//
 
     // without a Jack server, Jamulus makes no sense to run, throw an error message
     if ( bJackWasShutDown )
@@ -344,10 +341,10 @@ int CSound::process ( jack_nframes_t nframes, void* arg )
 
                 // copy packet and send it to the MIDI parser
 
-                //### TODO: BEGIN ###//
-                // do not call malloc in real-time callback
+                // ### TODO: BEGIN ###//
+                //  do not call malloc in real-time callback
                 CVector<uint8_t> vMIDIPaketBytes ( in_event.size );
-                //### TODO: END ###//
+                // ### TODO: END ###//
 
                 for ( i = 0; i < static_cast<int> ( in_event.size ); i++ )
                 {

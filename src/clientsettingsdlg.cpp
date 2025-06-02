@@ -835,18 +835,21 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         ApplyMIDIMappingFromSettings();
     } );
 
-// Connect MIDI controller checkbox
-QObject::connect(chbUseMIDIController, &QCheckBox::toggled, this, [this](bool checked) {
-    pSettings->bUseMIDIController = checked;
+    // Connect MIDI controller checkbox
+    QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bUseMIDIController = checked;
 
-    if (checked) {
-        pClient->ApplyMIDIMapping(pSettings->GetMIDIMapString());
-    } else {
-        pClient->ApplyMIDIMapping("");
-    }
+        if ( checked )
+        {
+            pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
+        }
+        else
+        {
+            pClient->ApplyMIDIMapping ( "" );
+        }
 
-    emit MIDIControllerUsageChanged(checked);
-});
+        emit MIDIControllerUsageChanged ( checked );
+    } );
 
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
