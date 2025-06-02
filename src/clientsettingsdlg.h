@@ -120,6 +120,7 @@ signals:
     void AudioChannelsChanged();
     void CustomDirectoriesChanged();
     void NumMixerPanelRowsChanged ( int value );
+    void MIDIControllerUsageChanged ( bool bEnabled );
 
 private:
     enum MidiLearnTarget

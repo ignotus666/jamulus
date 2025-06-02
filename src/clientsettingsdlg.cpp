@@ -401,9 +401,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // MIDI settings
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
-                                   "for each item controlled: offset and consecutive CC numbers (count). First set the "
+                                   "for each item controlled: First MIDI CC and consecutive CC numbers (count). First set the "
                                    "channel you want Jamulus to listen on (0 for all channels). Then, for each item "
-                                   "you want to control (volume fader, pan, solo, mute), set the offset (CC number "
+                                   "you want to control (volume fader, pan, solo, mute), set the first MIDI CC (CC number "
                                    "to start from) and number of consecutive CC numbers (count). There is one "
                                    "exception that does not require establishing consecutive CC numbers which is "
                                    "the “Mute Myself” parameter - it only requires a single CC number as it is only "
@@ -835,6 +835,19 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         ApplyMIDIMappingFromSettings();
     } );
 
+// Connect MIDI controller checkbox
+QObject::connect(chbUseMIDIController, &QCheckBox::toggled, this, [this](bool checked) {
+    pSettings->bUseMIDIController = checked;
+
+    if (checked) {
+        pClient->ApplyMIDIMapping(pSettings->GetMIDIMapString());
+    } else {
+        pClient->ApplyMIDIMapping("");
+    }
+
+    emit MIDIControllerUsageChanged(checked);
+});
+
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
     midiLearnButtons[1] = butLearnFaderOffset;
@@ -886,6 +899,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnSoloCount->setValue ( pSettings->midiSoloCount );
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
+    chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
 
     QDialog::showEvent ( event );
 }
@@ -1331,7 +1345,19 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
     UpdateAudioFaderSlider();
 }
 
-void CClientSettingsDlg::ApplyMIDIMappingFromSettings() { pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() ); }
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
+{
+    // Only apply MIDI mapping if the controller is enabled
+    if ( pSettings->bUseMIDIController )
+    {
+        pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
+    }
+    else
+    {
+        // If disabled, ensure no MIDI mapping is applied
+        pClient->ApplyMIDIMapping ( "" );
+    }
+}
 
 void CClientSettingsDlg::ResetMidiLearn()
 {

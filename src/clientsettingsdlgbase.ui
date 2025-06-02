@@ -1342,6 +1342,13 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
+        <widget class="QCheckBox" name="chbUseMIDIController">
+         <property name="text">
+          <string>Enable MIDI-in port</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <item>
           <widget class="QGroupBox" name="chanMuteGroup">
@@ -1377,12 +1384,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Channel</string>
+               <string>MIDI Channel</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnChannel">
+              <property name="minimumSize">
+               <size>
+                <width>55</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1422,6 +1435,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteMyself">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1499,12 +1518,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnFaderOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1560,6 +1585,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnFaderCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1624,12 +1655,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnPanOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1685,6 +1722,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnPanCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1749,12 +1792,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnSoloOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1810,6 +1859,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnSoloCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1874,12 +1929,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1935,6 +1996,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>

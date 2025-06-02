@@ -119,6 +119,8 @@ public:
     // this needs to be public so that it can be called from CMidi
     void ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes );
     void SetMIDIMapping ( const QString& strMIDISetup );
+    virtual void EnableMIDI ( bool /* bEnable */ ) {} // Default empty implementation
+    virtual bool IsMIDIEnabled() const { return false; } // Default false
 
 protected:
     virtual QString  LoadAndInitializeDriver ( QString, bool ) { return ""; }
