@@ -37,6 +37,7 @@ public:
 
     void MidiStart();
     void MidiStop();
+    bool IsActive() const;
 
 protected:
     int              iMidiDevs;

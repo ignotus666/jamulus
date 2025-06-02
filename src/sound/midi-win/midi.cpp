@@ -54,15 +54,15 @@ void CMidi::MidiStart()
     // open all connected MIDI devices and set the callback function to handle incoming messages
     for ( int i = 0; i < iMidiDevs; i++ )
     {
-        HMIDIIN    hMidiIn; // windows handle
-        MIDIINCAPS mic;     // device name and capabilities
+        HMIDIIN    hMidiIn; // Windows handle
+        MIDIINCAPS mic;     // Device name and capabilities
 
         MMRESULT result = midiInGetDevCaps ( i, &mic, sizeof ( MIDIINCAPS ) );
 
         if ( result != MMSYSERR_NOERROR )
         {
             qWarning() << qUtf8Printable ( QString ( "! Failed to identify MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
-            continue; // try next device, if any
+            continue; // Try next device, if any
         }
 
         QString midiDev ( mic.szPname );
@@ -70,7 +70,7 @@ void CMidi::MidiStart()
         if ( !selMIDIDevice.isEmpty() && selMIDIDevice != midiDev )
         {
             qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( midiDev ) );
-            continue; // try next device, if any
+            continue; // Try next device, if any
         }
 
         qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( midiDev ) );
@@ -80,7 +80,7 @@ void CMidi::MidiStart()
         if ( result != MMSYSERR_NOERROR )
         {
             qWarning() << qUtf8Printable ( QString ( "! Failed to open MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
-            continue; // try next device, if any
+            continue; // Try next device, if any
         }
 
         result = midiInStart ( hMidiIn );
@@ -89,10 +89,10 @@ void CMidi::MidiStart()
         {
             qWarning() << qUtf8Printable ( QString ( "! Failed to start MIDI input device %1. Error code: %2" ).arg ( i ).arg ( result ) );
             midiInClose ( hMidiIn );
-            continue; // try next device, if any
+            continue; // Try next device, if any
         }
 
-        // success, add it to list of open handles
+        // Success, add it to the list of open handles
         vecMidiInHandles.append ( hMidiIn );
     }
 
@@ -109,7 +109,7 @@ void CMidi::MidiStop()
         return; // MIDI is already stopped, no need to stop again
     }
 
-    // stop MIDI if running
+    // Stop MIDI if running
     for ( int i = 0; i < vecMidiInHandles.size(); i++ )
     {
         midiInStop ( vecMidiInHandles.at ( i ) );
