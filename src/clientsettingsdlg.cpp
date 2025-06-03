@@ -785,10 +785,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     QObject::connect ( pcbxSkill, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ), this, &CClientSettingsDlg::OnSkillActivated );
 
-    QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
-
-    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
-
     // MIDI tab
     QObject::connect ( spnChannel, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
         pSettings->midiChannel = v;
@@ -871,6 +867,10 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // Connect MIDI CC signal from sound engine
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
+    QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
+
+    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
+
     // Timers ------------------------------------------------------------------
     // start timer for status bar
     TimerStatus.start ( DISPLAY_UPDATE_TIME );
@@ -908,6 +908,9 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+
+    // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
+    emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
 
     QDialog::showEvent ( event );
 }
