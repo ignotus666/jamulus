@@ -1404,16 +1404,27 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     QPushButton* sender = qobject_cast<QPushButton*> ( QObject::sender() );
 
     MidiLearnTarget target = None;
+
     if ( sender == butLearnMuteMyself )
+    {
         target = MuteMyself;
+    }
     else if ( sender == butLearnFaderOffset )
+    {
         target = Fader;
+    }
     else if ( sender == butLearnPanOffset )
+    {
         target = Pan;
+    }
     else if ( sender == butLearnSoloOffset )
+    {
         target = Solo;
+    }
     else if ( sender == butLearnMuteOffset )
+    {
         target = Mute;
+    }
 
     SetMidiLearnTarget ( target, sender );
 }
