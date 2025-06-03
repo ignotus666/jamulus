@@ -226,6 +226,14 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pcbSolo->setText ( tr ( "SOLO" ) );
         strGroupBaseText  = tr ( "GRP" );
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
+
+        // Use StyleSheet to set font
+        pPanLabel->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
+        pcbMute->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
+        pcbSolo->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
+        pPanLabel->setCursor ( Qt::PointingHandCursor );
+        pcbMute->setCursor ( Qt::PointingHandCursor );
+        pcbSolo->setCursor ( Qt::PointingHandCursor );
         break;
 
     case GD_SLIMFADER:
@@ -610,7 +618,9 @@ void CChannelFader::UpdateGroupIDDependencies()
     }
 
     // the fader tag border color is set according to the selected group
-    SetupFaderTag ( cReceivedChanInfo.eSkillLevel );
+    SetupFaderTag ( cReceivedChanInfo.eSkillLevel );    // Set font:
+    pcbGroup->setFont ( QFont ( "IDroid", 11 ) );
+    pcbGroup->setCursor ( Qt::PointingHandCursor );
 }
 
 void CChannelFader::OnGroupStateChanged ( int )
