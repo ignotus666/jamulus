@@ -2,7 +2,7 @@
 # Builds only .exe and .apk packages
 # Triggered manually only for my-build branch
 
-name: Build .exe and .apk
+name: Build .exe, .apk and macOS packages
 on:
   workflow_dispatch:
 
@@ -28,6 +28,11 @@ jobs:
             command: ./.github/autobuild/android.sh
             target: android
             fetch_depth: 0
+
+          - name: macOS package
+            os: macos-14
+            command: QT_VERSION=6.8.1 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh
+            target: macos
 
     steps:
       - name: Checkout code
@@ -55,6 +60,15 @@ jobs:
             /opt/android/android-sdk
             /opt/android/android-ndk
           key: android-${{ hashFiles('.github/workflows/autobuild.yml') }}
+
+      - name: Cache macOS dependencies
+        if: matrix.config.target == 'macos'
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/qt
+            ~/Library/Cache/jamulus-homebrew-bottles
+          key: macos-${{ hashFiles('.github/workflows/autobuild.yml') }}
 
       - name: Set up build dependencies
         run: ${{ matrix.config.command }} setup
