@@ -1338,7 +1338,7 @@
      </widget>
      <widget class="QWidget" name="tab_3_midi">
       <attribute name="title">
-       <string>MIDI</string>
+       <string>MIDI Control</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
