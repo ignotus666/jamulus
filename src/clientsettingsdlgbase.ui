@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>622</width>
-    <height>647</height>
+    <width>524</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
    <item>
     <widget class="QTabWidget" name="tabSettings">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -1338,7 +1338,7 @@
      </widget>
      <widget class="QWidget" name="tab_3_midi">
       <attribute name="title">
-       <string>MIDI</string>
+       <string>MIDI Control</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
@@ -1485,6 +1485,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_12">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="faderGroup">
            <property name="font">
             <font>
@@ -1496,19 +1509,6 @@
             <string>Fader</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <item>
-             <spacer name="horizontalSpacer_20">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item>
              <widget class="QLabel" name="lblFaderOffset">
               <property name="font">
@@ -1622,6 +1622,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_14">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="panGroup">
            <property name="font">
             <font>
@@ -1633,19 +1646,6 @@
             <string>Pan</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <item>
-             <spacer name="horizontalSpacer_18">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item>
              <widget class="QLabel" name="lblPanOffset">
               <property name="font">
@@ -1759,6 +1759,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_16">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="soloGroup">
            <property name="font">
             <font>
@@ -1770,19 +1783,6 @@
             <string>Solo</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_14">
-            <item>
-             <spacer name="horizontalSpacer_15">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item>
              <widget class="QLabel" name="lblSoloOffset">
               <property name="font">
@@ -1896,6 +1896,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_17">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="muteGroup">
            <property name="font">
             <font>
@@ -1907,19 +1920,6 @@
             <string>Mute</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <item>
-             <spacer name="horizontalSpacer_16">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
             <item>
              <widget class="QLabel" name="lblMuteOffset">
               <property name="font">

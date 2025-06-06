@@ -66,7 +66,18 @@ CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* 
 CSound::~CSound()
 {
     // Ensure MIDI resources are properly cleaned up
-    DestroyMIDIPort();
+    DestroyMIDIPort(); // This will destroy the port if it exists
+
+    // Explicitly destroy the client if it exists
+    if ( midiClient != static_cast<MIDIClientRef> ( NULL ) )
+    {
+        OSStatus result = MIDIClientDispose ( midiClient );
+        if ( result != noErr )
+        {
+            qWarning() << "Failed to dispose CoreAudio MIDI client in destructor. Error code:" << result;
+        }
+        midiClient = static_cast<MIDIClientRef> ( NULL );
+    }
 }
 
 void CSound::GetAvailableInOutDevices()
@@ -785,17 +796,6 @@ void CSound::DestroyMIDIPort()
         midiInPortRef = static_cast<MIDIPortRef> ( NULL );
 
         qInfo() << "CoreAudio MIDI port destroyed";
-    }
-
-    // Only dispose client if no ports are using it
-    if ( midiClient != static_cast<MIDIClientRef> ( NULL ) && midiInPortRef == static_cast<MIDIPortRef> ( NULL ) )
-    {
-        OSStatus result = MIDIClientDispose ( midiClient );
-        if ( result != noErr )
-        {
-            qWarning() << "Failed to dispose CoreAudio MIDI client. Error code:" << result;
-        }
-        midiClient = static_cast<MIDIClientRef> ( NULL );
     }
 }
 
