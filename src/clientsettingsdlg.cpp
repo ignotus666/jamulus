@@ -414,8 +414,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                                    "applied to one’s own audio stream." ) +
                               "<br>" +
                               tr ( "You can either type in the MIDI CC values or use the \"Learn\" button: click on "
-                                   "\"Learn\", move the fader/knob on your MIDI controller, and the MIDI CC number "
-                                   "will be saved." );
+                                   "\"Learn\", actuate the fader/knob/button on your MIDI controller, and the MIDI CC "
+                                   "number will be detected and saved." );
 
     lblChannel->setWhatsThis ( strMidiSettings );
     lblMuteMyself->setWhatsThis ( strMidiSettings );
@@ -1404,16 +1404,27 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     QPushButton* sender = qobject_cast<QPushButton*> ( QObject::sender() );
 
     MidiLearnTarget target = None;
+
     if ( sender == butLearnMuteMyself )
+    {
         target = MuteMyself;
+    }
     else if ( sender == butLearnFaderOffset )
+    {
         target = Fader;
+    }
     else if ( sender == butLearnPanOffset )
+    {
         target = Pan;
+    }
     else if ( sender == butLearnSoloOffset )
+    {
         target = Solo;
+    }
     else if ( sender == butLearnMuteOffset )
+    {
         target = Mute;
+    }
 
     SetMidiLearnTarget ( target, sender );
 }
