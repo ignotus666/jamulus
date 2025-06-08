@@ -244,6 +244,8 @@ public slots:
     void accept() { close(); } // introduced by pljones
 
     void OnOpenMidiSettings();
+    void OnMIDIControllerUsageChanged ( bool bEnabled );
+    void OnMIDIPickupModeChanged ( bool bEnabled );
 
 signals:
     void SendTabChange ( int iTabIdx );

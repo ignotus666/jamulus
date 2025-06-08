@@ -239,7 +239,9 @@ void CSoundBase::ParseCommandLineArgument ( const QString& strMIDISetup )
 {
     // Clear all previous MIDI mappings
     for ( int i = 0; i < aMidiCtls.size(); ++i )
+    {
         aMidiCtls[i] = { None, 0 };
+    }
 
     int iMIDIOffsetFader = 70; // Behringer X-TOUCH: offset of 0x46
 
@@ -422,4 +424,12 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
     }
 }
 
-void CSoundBase::SetMIDIMapping ( const QString& strMIDISetup ) { ParseCommandLineArgument ( strMIDISetup ); }
+void CSoundBase::SetMIDIMapping ( const QString& strMIDISetup )
+{
+    // Parse the MIDI mapping
+    ParseCommandLineArgument ( strMIDISetup );
+
+    // Enable/disable MIDI port based on whether mapping is empty
+    bool bShouldEnable = !strMIDISetup.isEmpty();
+    EnableMIDI ( bShouldEnable );
+}

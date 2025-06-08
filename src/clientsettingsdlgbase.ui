@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>622</width>
-    <height>647</height>
+    <width>524</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
    <item>
     <widget class="QTabWidget" name="tabSettings">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -1338,9 +1338,26 @@
      </widget>
      <widget class="QWidget" name="tab_3_midi">
       <attribute name="title">
-       <string>MIDI</string>
+       <string>MIDI Control</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_19">
+       <item>
+        <widget class="QCheckBox" name="chbUseMIDIController">
+         <property name="text">
+          <string>Enable MIDI-in port</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chbMIDIPickupMode">
+         <property name="text">
+          <string>Enable MIDI pickup mode</string>
+         </property>
+         <property name="toolTip">
+          <string>Prevents sudden volume changes when using physical MIDI controllers</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <item>
@@ -1377,12 +1394,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Channel</string>
+               <string>MIDI Channel</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnChannel">
+              <property name="minimumSize">
+               <size>
+                <width>55</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1422,6 +1445,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteMyself">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1466,6 +1495,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_12">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="faderGroup">
            <property name="font">
             <font>
@@ -1478,19 +1520,6 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_11">
             <item>
-             <spacer name="horizontalSpacer_20">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QLabel" name="lblFaderOffset">
               <property name="font">
                <font>
@@ -1499,12 +1528,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnFaderOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1560,6 +1595,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnFaderCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1591,6 +1632,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_14">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="panGroup">
            <property name="font">
             <font>
@@ -1603,19 +1657,6 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_13">
             <item>
-             <spacer name="horizontalSpacer_18">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QLabel" name="lblPanOffset">
               <property name="font">
                <font>
@@ -1624,12 +1665,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnPanOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1685,6 +1732,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnPanCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1716,6 +1769,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_16">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="soloGroup">
            <property name="font">
             <font>
@@ -1728,19 +1794,6 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_14">
             <item>
-             <spacer name="horizontalSpacer_15">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QLabel" name="lblSoloOffset">
               <property name="font">
                <font>
@@ -1749,12 +1802,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnSoloOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1810,6 +1869,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnSoloCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1841,6 +1906,19 @@
           </widget>
          </item>
          <item>
+          <spacer name="verticalSpacer_17">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QGroupBox" name="muteGroup">
            <property name="font">
             <font>
@@ -1853,19 +1931,6 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
             <item>
-             <spacer name="horizontalSpacer_16">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QLabel" name="lblMuteOffset">
               <property name="font">
                <font>
@@ -1874,12 +1939,18 @@
                </font>
               </property>
               <property name="text">
-               <string>Offset</string>
+               <string>First MIDI CC</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteOffset">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1935,6 +2006,12 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spnMuteCount">
+              <property name="minimumSize">
+               <size>
+                <width>65</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="font">
                <font>
                 <weight>50</weight>
@@ -1995,8 +2072,8 @@
   <tabstop>butDriverSetup</tabstop>
   <tabstop>cbxLInChan</tabstop>
   <tabstop>cbxRInChan</tabstop>
-  <tabstop>cbxLOutChan</tabstop>
   <tabstop>cbxROutChan</tabstop>
+  <tabstop>cbxLOutChan</tabstop>
   <tabstop>cbxAudioChannels</tabstop>
   <tabstop>cbxAudioQuality</tabstop>
   <tabstop>rbtBufferDelayPreferred</tabstop>
@@ -2012,6 +2089,7 @@
   <tabstop>cbxInputBoost</tabstop>
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
+  <tabstop>chbUseMIDIController</tabstop>
   <tabstop>spnChannel</tabstop>
   <tabstop>spnMuteMyself</tabstop>
   <tabstop>butLearnMuteMyself</tabstop>

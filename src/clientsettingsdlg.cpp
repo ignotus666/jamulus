@@ -399,19 +399,34 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     chbAudioAlerts->setAccessibleName ( tr ( "Audio Alerts check box" ) );
 
     // MIDI settings
+    chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
+    chbUseMIDIController->setAccessibleName ( tr ( "Enable or disable MIDI-in port check box" ) );
+
+    // MIDI pickup mode help text
+    QString strMIDIPickupMode = "<b>" + tr ( "MIDI Pickup Mode" ) + ":</b> " +
+                                tr ( "When enabled, physical MIDI controllers need to approach their current software value "
+                                    "before they start changing the parameter. This helps prevent sudden jumps in levels "
+                                    "when starting to use a MIDI controller that was moved since the software was started." ) +
+                                "<br><br>" +
+                                tr ( "The fader or pan control must be within +/- 2 MIDI values to start changing the software parameter." );
+
+    chbMIDIPickupMode->setWhatsThis ( strMIDIPickupMode );
+    chbMIDIPickupMode->setAccessibleName ( tr ( "Enable or disable MIDI pickup mode check box" ) );
+
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
-                                   "for each item controlled: offset and consecutive CC numbers (count). First set the "
+                                   "for each item controlled: First MIDI CC and consecutive CC numbers (count). First set the "
                                    "channel you want Jamulus to listen on (0 for all channels). Then, for each item "
-                                   "you want to control (volume fader, pan, solo, mute), set the offset (CC number "
+                                   "you want to control (volume fader, pan, solo, mute), set the first MIDI CC (CC number "
                                    "to start from) and number of consecutive CC numbers (count). There is one "
                                    "exception that does not require establishing consecutive CC numbers which is "
                                    "the “Mute Myself” parameter - it only requires a single CC number as it is only "
                                    "applied to one’s own audio stream." ) +
                               "<br>" +
                               tr ( "You can either type in the MIDI CC values or use the \"Learn\" button: click on "
-                                   "\"Learn\", move the fader/knob on your MIDI controller, and the MIDI CC number "
-                                   "will be saved." );
+                                   "\"Learn\", actuate the fader/knob/button on your MIDI controller, and the MIDI CC "
+                                   "number will be detected and saved." );
+
     lblChannel->setWhatsThis ( strMidiSettings );
     lblMuteMyself->setWhatsThis ( strMidiSettings );
     faderGroup->setWhatsThis ( strMidiSettings );
@@ -780,10 +795,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     QObject::connect ( pcbxSkill, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ), this, &CClientSettingsDlg::OnSkillActivated );
 
-    QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
-
-    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
-
     // MIDI tab
     QObject::connect ( spnChannel, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this] ( int v ) {
         pSettings->midiChannel = v;
@@ -835,6 +846,25 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         ApplyMIDIMappingFromSettings();
     } );
 
+    // Connect MIDI controller checkbox
+    QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bUseMIDIController = checked;
+
+        if ( checked )
+        {
+            pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
+        }
+        else
+        {
+            pClient->ApplyMIDIMapping ( "" );
+        }
+
+        emit MIDIControllerUsageChanged ( checked );
+    } );
+    
+    // MIDI pickup mode checkbox
+    QObject::connect ( chbMIDIPickupMode, &QCheckBox::stateChanged, this, &CClientSettingsDlg::OnMIDIPickupModeChanged );
+
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
     midiLearnButtons[1] = butLearnFaderOffset;
@@ -849,6 +879,10 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // Connect MIDI CC signal from sound engine
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
+
+    QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
+
+    tabSettings->setCurrentIndex ( pSettings->iSettingsTab );
 
     // Timers ------------------------------------------------------------------
     // start timer for status bar
@@ -886,6 +920,11 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnSoloCount->setValue ( pSettings->midiSoloCount );
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
+    chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+    chbMIDIPickupMode->setChecked ( pSettings->bMIDIPickupMode );
+
+    // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
+    emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
 
     QDialog::showEvent ( event );
 }
@@ -1331,7 +1370,19 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
     UpdateAudioFaderSlider();
 }
 
-void CClientSettingsDlg::ApplyMIDIMappingFromSettings() { pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() ); }
+void CClientSettingsDlg::ApplyMIDIMappingFromSettings()
+{
+    // Only apply MIDI mapping if the controller is enabled
+    if ( pSettings->bUseMIDIController )
+    {
+        pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
+    }
+    else
+    {
+        // If disabled, ensure no MIDI mapping is applied
+        pClient->ApplyMIDIMapping ( "" );
+    }
+}
 
 void CClientSettingsDlg::ResetMidiLearn()
 {
@@ -1367,16 +1418,27 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     QPushButton* sender = qobject_cast<QPushButton*> ( QObject::sender() );
 
     MidiLearnTarget target = None;
+
     if ( sender == butLearnMuteMyself )
+    {
         target = MuteMyself;
+    }
     else if ( sender == butLearnFaderOffset )
+    {
         target = Fader;
+    }
     else if ( sender == butLearnPanOffset )
+    {
         target = Pan;
+    }
     else if ( sender == butLearnSoloOffset )
+    {
         target = Solo;
+    }
     else if ( sender == butLearnMuteOffset )
+    {
         target = Mute;
+    }
 
     SetMidiLearnTarget ( target, sender );
 }
@@ -1414,4 +1476,13 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
         break;
     }
     ResetMidiLearn();
+}
+
+void CClientSettingsDlg::OnMIDIPickupModeChanged ( int value )
+{
+    // Store the pickup mode setting in the client settings
+    pSettings->bMIDIPickupMode = (value == Qt::Checked);
+    
+    // Notify listeners about the change
+    emit MIDIPickupModeChanged ( pSettings->bMIDIPickupMode );
 }

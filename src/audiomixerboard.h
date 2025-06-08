@@ -70,12 +70,12 @@ public:
     void    SetDisplayPans ( const bool eNDP );
     QFrame* GetMainWidget() { return pFrame; }
 
-    void SetPanValue ( const int iPan );
+    void SetPanValue ( const int iPan, const bool bIsMIDIUpdate = false );
     void SetFaderIsSolo ( const bool bIsSolo );
     void SetFaderIsMute ( const bool bIsMute );
     void SetGroupID ( const int iNGroupID );
     void SetRemoteFaderIsMute ( const bool bIsMute );
-    void SetFaderLevel ( const double dLevel, const bool bIsGroupUpdate = false );
+    void SetFaderLevel ( const double dLevel, const bool bIsGroupUpdate = false, const bool bIsMIDIUpdate = false );
 
     int    GetFaderLevel() { return pFader->value(); }
     double GetPreviousFaderLevel() { return dPreviousFaderLevel; }
@@ -88,7 +88,35 @@ public:
     bool   GetIsMyOwnFader() { return bIsMyOwnFader; }
     void   UpdateSoloState ( const bool bNewOtherSoloState );
 
-    void SetMIDICtrlUsed ( const bool isMIDICtrlUsed ) { bMIDICtrlUsed = isMIDICtrlUsed; }
+    void SetMIDICtrlUsed ( const bool isMIDICtrlUsed ) { 
+        bool wasPreviouslyUsed = bMIDICtrlUsed;
+        bMIDICtrlUsed = isMIDICtrlUsed; 
+        
+        // Reset pickup state whenever MIDI controller usage changes
+        // This ensures controller must pick up value after enabling MIDI
+        bFaderPickedUp = false;
+        bPanPickedUp = false;
+        
+        // Reset the MIDI values to force re-pickup
+        iLastMIDIFaderVal = -1;
+        iLastMIDIPanVal = -1;
+        
+        qDebug() << "MIDI ctrl used changed from" << wasPreviouslyUsed << "to" << isMIDICtrlUsed 
+                << ", reset pickup state - Fader:" << bFaderPickedUp 
+                << "Pan:" << bPanPickedUp
+                << "Values reset to require pickup";
+    }
+    bool GetMIDICtrlUsed() const { return bMIDICtrlUsed; }
+    
+    // For MIDI pickup mode
+    void SetLastMIDIFaderVal ( const int iValue ) { iLastMIDIFaderVal = iValue; }
+    int GetLastMIDIFaderVal() { return iLastMIDIFaderVal; }
+    void SetLastMIDIPanVal ( const int iValue ) { iLastMIDIPanVal = iValue; }
+    int GetLastMIDIPanVal() { return iLastMIDIPanVal; }
+    void SetFaderPickedUp ( const bool bValue ) { bFaderPickedUp = bValue; }
+    bool GetFaderPickedUp() { return bFaderPickedUp; }
+    void SetPanPickedUp ( const bool bValue ) { bPanPickedUp = bValue; }
+    bool GetPanPickedUp() { return bPanPickedUp; }
 
 protected:
     void UpdateGroupIDDependencies();
@@ -133,6 +161,10 @@ protected:
     EMeterStyle eMeterStyle;
     QPixmap     BitmapMutedIcon;
     bool        bMIDICtrlUsed;
+    int         iLastMIDIFaderVal; // for MIDI pickup mode
+    int         iLastMIDIPanVal;   // for MIDI pickup mode
+    bool        bFaderPickedUp;    // for MIDI pickup mode sticky window
+    bool        bPanPickedUp;      // for MIDI pickup mode sticky window
 
 public slots:
     void OnLevelValueChanged ( int value )
@@ -230,6 +262,42 @@ public:
     void MuteMyChannel();
 
     void SetMIDICtrlUsed ( const bool bMIDICtrlUsed );
+    
+    // For MIDI pickup mode
+    void SetMIDIPickupMode ( const bool bIsMIDIPickupMode ) { 
+        bool wasPreviouslyEnabled = bMIDIPickupModeEnabled;
+        bMIDIPickupModeEnabled = bIsMIDIPickupMode; 
+        qDebug() << "MIDI Pickup Mode changed from" << (wasPreviouslyEnabled ? "ENABLED" : "DISABLED")
+                 << "to" << (bMIDIPickupModeEnabled ? "ENABLED" : "DISABLED");
+        
+        // Always force complete reset of pickup states when changing mode
+        QMutexLocker locker ( &Mutex );
+        for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
+        {
+            if (vecpChanFader[i]->GetMIDICtrlUsed())
+            {
+                // Reset pickup states for all channels
+                vecpChanFader[i]->SetFaderPickedUp(false);
+                vecpChanFader[i]->SetPanPickedUp(false);
+                
+                // Reset the stored MIDI values to force re-pickup
+                vecpChanFader[i]->SetLastMIDIFaderVal(-1);
+                vecpChanFader[i]->SetLastMIDIPanVal(-1);
+                
+                qDebug() << "Reset pickup state for channel" << i 
+                        << "- Required pickup on next controller movement";
+            }
+        }
+    }
+    
+    bool GetMIDICtrlUsed(const int iChannelIdx) 
+    {
+        if ((iChannelIdx >= 0) && (iChannelIdx < MAX_NUM_CHANNELS))
+        {
+            return vecpChanFader[static_cast<size_t>(iChannelIdx)]->GetMIDICtrlUsed();
+        }
+        return false;
+    }
 
 protected:
     class CMixerBoardScrollArea : public QScrollArea
@@ -275,6 +343,7 @@ protected:
     QMutex                  Mutex;
     EChSortType             eChSortType;
     CVector<float>          vecAvgLevels;
+    bool                    bMIDIPickupModeEnabled;
 
     virtual void UpdateGainValue ( const int    iChannelIdx,
                                    const float  fValue,

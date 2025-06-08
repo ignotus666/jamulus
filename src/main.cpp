@@ -920,17 +920,11 @@ int main ( int argc, char** argv )
 #ifndef SERVER_ONLY
         if ( bIsClient )
         {
-            if ( strMIDISetup.isEmpty() )
-            {
-                CClientSettings tmpSettings ( nullptr, strIniFileName );
-                tmpSettings.Load ( CommandLineOptions );
-                strMIDISetup = tmpSettings.GetMIDIMapString();
-            }
-
+            // Create client with empty MIDI string initially (safer initialization)
             CClient Client ( iPortNumber,
                              iQosNumber,
                              strConnOnStartupAddress,
-                             strMIDISetup,
+                             "", // Always start with empty MIDI
                              bNoAutoJackConnect,
                              strClientName,
                              bEnableIPv6,
@@ -940,6 +934,7 @@ int main ( int argc, char** argv )
             CClientSettings Settings ( &Client, strIniFileName );
             Settings.Load ( CommandLineOptions );
 
+            // Parse command line MIDI parameters if provided
             if ( !strMIDISetup.isEmpty() )
             {
                 QStringList slMIDIParams = strMIDISetup.split ( ";" );
@@ -992,6 +987,14 @@ int main ( int argc, char** argv )
                         }
                     }
                 }
+
+                // Enable MIDI controller and apply settings when command line MIDI is provided
+                Settings.bUseMIDIController = true;
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
+            }
+            else if ( Settings.bUseMIDIController )
+            {
+                Client.ApplyMIDIMapping ( Settings.GetMIDIMapString() );
             }
 
 #    ifndef NO_JSON_RPC
