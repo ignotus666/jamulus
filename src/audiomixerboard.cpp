@@ -1373,13 +1373,15 @@ static bool midiPickupShouldApply(int midiValue, int currentValue, int tolerance
 }
 
 // MIDI Pickup State
-namespace {
+namespace
+{
 // Per-channel pickup state
-struct MidiPickupState {
+struct MidiPickupState
+{
     std::deque<int> recentFader;
     std::deque<int> recentPan;
 };
-std::vector<MidiPickupState> g_midiPickupStates(MAX_NUM_CHANNELS);
+std::vector<MidiPickupState> g_midiPickupStates ( MAX_NUM_CHANNELS );
 }
 
 void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
