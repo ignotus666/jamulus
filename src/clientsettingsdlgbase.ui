@@ -1344,7 +1344,7 @@
        <item>
         <widget class="QCheckBox" name="chbUseMIDIController">
          <property name="text">
-          <string>Enable MIDI-in port</string>
+          <string>MIDI-in port</string>
          </property>
         </widget>
        </item>
@@ -1354,7 +1354,7 @@
           <string/>
          </property>
          <property name="text">
-          <string>Enable pickup mode for fader and pan</string>
+          <string>Fader and Pan Pickup Mode</string>
          </property>
         </widget>
        </item>

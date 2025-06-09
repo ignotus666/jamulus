@@ -141,5 +141,5 @@ private:
 private slots:
     void OnLearnButtonClicked();
     void OnMidiCCReceived ( int ccNumber );
-    void OnMIDIPickupModeToggled(bool checked);
+    void OnMIDIPickupModeToggled ( bool checked );
 };

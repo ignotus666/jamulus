@@ -1346,30 +1346,33 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
 
 // Helper for MIDI pickup logic
 template<typename T>
-static bool midiPickupShouldApply(int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues)
+static bool midiPickupShouldApply ( int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues )
 {
     // Accept if within tolerance, or if recent values crossed the software value
-    if (std::abs(midiValue - currentValue) <= tolerance)
+    if ( std::abs ( midiValue - currentValue ) <= tolerance )
         return true;
     // If the software value is between any two recent MIDI values, allow pickup
-    for (size_t i = 1; i < recentMidiValues.size(); ++i) {
-        int v1 = recentMidiValues[i-1];
+    for ( size_t i = 1; i < recentMidiValues.size(); ++i )
+    {
+        int v1 = recentMidiValues[i - 1];
         int v2 = recentMidiValues[i];
-        if ((v1 <= currentValue && v2 >= currentValue) || (v1 >= currentValue && v2 <= currentValue))
+        if ( ( v1 <= currentValue && v2 >= currentValue ) || ( v1 >= currentValue && v2 <= currentValue ) )
             return true;
     }
     return false;
 }
 
 // MIDI Pickup State
-namespace {
+namespace
+{
 // Per-channel pickup state
-struct MidiPickupState {
+struct MidiPickupState
+{
     std::deque<int> recentFader;
     std::deque<int> recentPan;
 };
-std::vector<MidiPickupState> g_midiPickupStates(MAX_NUM_CHANNELS);
-}
+std::vector<MidiPickupState> g_midiPickupStates ( MAX_NUM_CHANNELS );
+} // namespace
 
 void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
 {
@@ -1378,15 +1381,15 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
             // MIDI pickup logic
-            if (pSettings && pSettings->bMIDIPickupMode)
+            if ( pSettings && pSettings->bMIDIPickupMode )
             {
                 auto& pickup = g_midiPickupStates[iChannelIdx].recentFader;
                 // Track recent MIDI values
-                if (pickup.size() >= MIDI_PICKUP_HISTORY)
+                if ( pickup.size() >= MIDI_PICKUP_HISTORY )
                     pickup.pop_front();
-                pickup.push_back(iValue);
-                int current = vecpChanFader[static_cast<size_t>(iChannelIdx)]->GetFaderLevel();
-                if (!midiPickupShouldApply(iValue, current, MIDI_PICKUP_TOLERANCE, pickup))
+                pickup.push_back ( iValue );
+                int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetFaderLevel();
+                if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
                     return; // Ignore until pickup
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetFaderLevel ( iValue );
@@ -1401,14 +1404,14 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
             // MIDI pickup logic
-            if (pSettings && pSettings->bMIDIPickupMode)
+            if ( pSettings && pSettings->bMIDIPickupMode )
             {
                 auto& pickup = g_midiPickupStates[iChannelIdx].recentPan;
-                if (pickup.size() >= MIDI_PICKUP_HISTORY)
+                if ( pickup.size() >= MIDI_PICKUP_HISTORY )
                     pickup.pop_front();
-                pickup.push_back(iValue);
-                int current = vecpChanFader[static_cast<size_t>(iChannelIdx)]->GetPanValue();
-                if (!midiPickupShouldApply(iValue, current, MIDI_PICKUP_TOLERANCE, pickup))
+                pickup.push_back ( iValue );
+                int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetPanValue();
+                if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
                     return;
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetPanValue ( iValue );
