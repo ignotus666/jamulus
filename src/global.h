@@ -166,7 +166,9 @@ LED bar:      lbr
 #define AUD_MIX_PAN_MAX   100
 
 // MIDI pickup mode tolerance (in MIDI units, 0-127)
-#define MIDI_PICKUP_TOLERANCE 4
+#define MIDI_PICKUP_TOLERANCE 3
+// Number of recent MIDI values to track for pickup logic
+#define MIDI_PICKUP_HISTORY 2
 
 // range of audio mixer fader
 #define AUD_MIX_FADER_RANGE_DB 35.0f
@@ -204,9 +206,9 @@ LED bar:      lbr
 #define UPPER_BOUND_SIG_METER ( 0.0 )   // dB
 
 // defines for LED level meter CLevelMeter
-#define NUM_STEPS_LED_BAR    15
-#define RED_BOUND_LED_BAR    14
-#define YELLOW_BOUND_LED_BAR 9
+#define NUM_STEPS_LED_BAR    8
+#define RED_BOUND_LED_BAR    7
+#define YELLOW_BOUND_LED_BAR 5
 
 // maximum number of connected clients at the server (must not be larger than 256)
 #define MAX_NUM_CHANNELS 150 // max number channels for server
