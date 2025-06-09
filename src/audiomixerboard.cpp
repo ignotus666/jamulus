@@ -1361,9 +1361,8 @@ static bool midiPickupShouldApply(int midiValue, int currentValue, int tolerance
     return false;
 }
 
-// --- MIDI Pickup State ---
+// MIDI Pickup State
 namespace {
-constexpr size_t MIDI_PICKUP_HISTORY = 4; // Number of recent values to track
 // Per-channel pickup state
 struct MidiPickupState {
     std::deque<int> recentFader;
