@@ -516,6 +516,10 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         bUseMIDIController = bValue;
     }
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midipickupmode", bValue ) )
+    {
+        bMIDIPickupMode = bValue;
+    }
 
     // custom directories
 
@@ -821,6 +825,7 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "midimutecount", midiMuteCount );
     SetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", midiMuteMyself );
     SetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bUseMIDIController );
+    SetFlagIniSet ( IniXMLDocument, "client", "midipickupmode", bMIDIPickupMode );
 
     // fader settings
     WriteFaderSettingsToXML ( IniXMLDocument );

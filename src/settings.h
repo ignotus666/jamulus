@@ -213,6 +213,7 @@ public:
     int     midiMuteOffset     = 0;
     int     midiMuteCount      = 0;
     bool    bUseMIDIController = false;
+    bool    bMIDIPickupMode = false; // Enable pickup mode for fader and pan
     QString GetMIDIMapString() const;
 
 protected:

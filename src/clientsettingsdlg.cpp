@@ -839,7 +839,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // Connect MIDI controller checkbox
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
-
         if ( checked )
         {
             pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
@@ -848,9 +847,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         {
             pClient->ApplyMIDIMapping ( "" );
         }
-
         emit MIDIControllerUsageChanged ( checked );
     } );
+
+    // Connect MIDI pickup mode checkbox
+    QObject::connect(chbMIDIPickupMode, &QCheckBox::toggled, this, &CClientSettingsDlg::OnMIDIPickupModeToggled);
 
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
@@ -908,6 +909,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->midiMuteOffset );
     spnMuteCount->setValue ( pSettings->midiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+    chbMIDIPickupMode->setChecked ( pSettings->bMIDIPickupMode );
 
     // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
     emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
@@ -1462,4 +1464,9 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
         break;
     }
     ResetMidiLearn();
+}
+
+void CClientSettingsDlg::OnMIDIPickupModeToggled(bool checked)
+{
+    pSettings->bMIDIPickupMode = checked;
 }

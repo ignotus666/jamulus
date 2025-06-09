@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>524</width>
+    <width>519</width>
     <height>569</height>
    </rect>
   </property>
@@ -1349,6 +1349,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="chbMIDIPickupMode">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Enable pickup mode for fader and pan</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <item>
           <widget class="QGroupBox" name="chanMuteGroup">
@@ -2062,8 +2072,8 @@
   <tabstop>butDriverSetup</tabstop>
   <tabstop>cbxLInChan</tabstop>
   <tabstop>cbxRInChan</tabstop>
-  <tabstop>cbxROutChan</tabstop>
   <tabstop>cbxLOutChan</tabstop>
+  <tabstop>cbxROutChan</tabstop>
   <tabstop>cbxAudioChannels</tabstop>
   <tabstop>cbxAudioQuality</tabstop>
   <tabstop>rbtBufferDelayPreferred</tabstop>
@@ -2080,6 +2090,7 @@
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
   <tabstop>chbUseMIDIController</tabstop>
+  <tabstop>chbMIDIPickupMode</tabstop>
   <tabstop>spnChannel</tabstop>
   <tabstop>spnMuteMyself</tabstop>
   <tabstop>butLearnMuteMyself</tabstop>
