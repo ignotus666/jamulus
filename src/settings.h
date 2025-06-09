@@ -60,12 +60,7 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect (
-                pGApp,
-                &QGuiApplication::saveStateRequest,
-                this,
-                [=] ( QSessionManager& ) { Save ( false ); },
-                Qt::DirectConnection );
+            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
@@ -213,7 +208,7 @@ public:
     int     midiMuteOffset     = 0;
     int     midiMuteCount      = 0;
     bool    bUseMIDIController = false;
-    bool    bMIDIPickupMode = false; // Enable pickup mode for fader and pan
+    bool    bMIDIPickupMode    = false; // Enable pickup mode for fader and pan
     QString GetMIDIMapString() const;
 
 protected:
