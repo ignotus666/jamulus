@@ -400,8 +400,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MIDI settings
     chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
-
-    chbUseMIDIController->setAccessibleName ( tr ( "Enable or disable MIDI-in port check box" ) );
+    chbUseMIDIController->setAccessibleName ( tr ( "MIDI-in port check box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
@@ -836,7 +835,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         ApplyMIDIMappingFromSettings();
     } );
 
-    // Connect MIDI controller checkbox
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
 
@@ -864,7 +862,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         QObject::connect ( button, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
     }
 
-    // Connect MIDI CC signal from sound engine
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
     QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );

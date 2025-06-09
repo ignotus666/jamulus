@@ -1344,7 +1344,7 @@
        <item>
         <widget class="QCheckBox" name="chbUseMIDIController">
          <property name="text">
-          <string>Enable MIDI-in port</string>
+          <string>MIDI-in port</string>
          </property>
         </widget>
        </item>
