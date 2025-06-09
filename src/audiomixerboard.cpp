@@ -1372,7 +1372,7 @@ struct MidiPickupState
     std::deque<int> recentPan;
 };
 std::vector<MidiPickupState> g_midiPickupStates ( MAX_NUM_CHANNELS );
-} // namespace
+}
 
 void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
 {
