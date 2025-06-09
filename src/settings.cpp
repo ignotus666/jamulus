@@ -516,7 +516,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         bUseMIDIController = bValue;
     }
-    
     if ( GetFlagIniSet ( IniXMLDocument, "client", "midipickupmode", bValue ) )
     {
         bMIDIPickupMode = bValue;

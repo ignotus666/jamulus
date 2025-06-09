@@ -107,7 +107,6 @@ public slots:
     void OnTabChanged();
     void OnMakeTabChange ( int iTabIdx );
     void OnAudioPanValueChanged ( int value );
-    void OnMIDIPickupModeChanged ( int value );
 
 #if defined( _WIN32 ) && !defined( WITH_JACK )
     // Only include this slot for Windows when JACK is NOT used
@@ -122,7 +121,6 @@ signals:
     void CustomDirectoriesChanged();
     void NumMixerPanelRowsChanged ( int value );
     void MIDIControllerUsageChanged ( bool bEnabled );
-    void MIDIPickupModeChanged ( bool bEnabled );
 
 private:
     enum MidiLearnTarget
@@ -143,4 +141,5 @@ private:
 private slots:
     void OnLearnButtonClicked();
     void OnMidiCCReceived ( int ccNumber );
+    void OnMIDIPickupModeToggled(bool checked);
 };

@@ -220,10 +220,6 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Pass through flag for MIDICtrlUsed
     MainMixerBoard->SetMIDICtrlUsed ( !strMIDISetup.isEmpty() );
-    
-    // Set MIDI pickup mode from settings
-    MainMixerBoard->SetMIDIPickupMode ( pSettings->bMIDIPickupMode );
-    qDebug() << "Initializing MIDI Pickup Mode to:" << (pSettings->bMIDIPickupMode ? "ENABLED" : "DISABLED");
 
     // reset mixer board
     MainMixerBoard->HideAll();
@@ -542,8 +538,6 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::NumMixerPanelRowsChanged, this, &CClientDlg::OnNumMixerPanelRowsChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MIDIControllerUsageChanged, this, &CClientDlg::OnMIDIControllerUsageChanged );
-    
-    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MIDIPickupModeChanged, this, &CClientDlg::OnMIDIPickupModeChanged );
 
     QObject::connect ( this, &CClientDlg::SendTabChange, &ClientSettingsDlg, &CClientSettingsDlg::OnMakeTabChange );
 
@@ -1535,10 +1529,4 @@ void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 
     // Enable/disable runtime MIDI via the sound interface through the public CClient interface
     pClient->EnableMIDI ( bEnabled );
-}
-
-void CClientDlg::OnMIDIPickupModeChanged ( bool bEnabled )
-{
-    // Update the mixer board's MIDI pickup mode flag
-    MainMixerBoard->SetMIDIPickupMode ( bEnabled );
 }

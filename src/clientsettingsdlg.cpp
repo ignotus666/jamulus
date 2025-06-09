@@ -400,18 +400,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MIDI settings
     chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
+
     chbUseMIDIController->setAccessibleName ( tr ( "Enable or disable MIDI-in port check box" ) );
-
-    // MIDI pickup mode help text
-    QString strMIDIPickupMode = "<b>" + tr ( "MIDI Pickup Mode" ) + ":</b> " +
-                                tr ( "When enabled, physical MIDI controllers need to approach their current software value "
-                                    "before they start changing the parameter. This helps prevent sudden jumps in levels "
-                                    "when starting to use a MIDI controller that was moved since the software was started." ) +
-                                "<br><br>" +
-                                tr ( "The fader or pan control must be within +/- 2 MIDI values to start changing the software parameter." );
-
-    chbMIDIPickupMode->setWhatsThis ( strMIDIPickupMode );
-    chbMIDIPickupMode->setAccessibleName ( tr ( "Enable or disable MIDI pickup mode check box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (1-16) and two parameters you can set "
@@ -849,7 +839,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // Connect MIDI controller checkbox
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
-
         if ( checked )
         {
             pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
@@ -858,12 +847,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         {
             pClient->ApplyMIDIMapping ( "" );
         }
-
         emit MIDIControllerUsageChanged ( checked );
     } );
-    
-    // MIDI pickup mode checkbox
-    QObject::connect ( chbMIDIPickupMode, &QCheckBox::stateChanged, this, &CClientSettingsDlg::OnMIDIPickupModeChanged );
+
+    // Connect MIDI pickup mode checkbox
+    QObject::connect(chbMIDIPickupMode, &QCheckBox::toggled, this, &CClientSettingsDlg::OnMIDIPickupModeToggled);
 
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
@@ -1478,11 +1466,7 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
     ResetMidiLearn();
 }
 
-void CClientSettingsDlg::OnMIDIPickupModeChanged ( int value )
+void CClientSettingsDlg::OnMIDIPickupModeToggled(bool checked)
 {
-    // Store the pickup mode setting in the client settings
-    pSettings->bMIDIPickupMode = (value == Qt::Checked);
-    
-    // Notify listeners about the change
-    emit MIDIPickupModeChanged ( pSettings->bMIDIPickupMode );
+    pSettings->bMIDIPickupMode = checked;
 }

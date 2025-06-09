@@ -165,30 +165,11 @@ LED bar:      lbr
 #define AUD_MIX_FADER_MAX 100
 #define AUD_MIX_PAN_MAX   100
 
+// MIDI pickup mode tolerance (in MIDI units, 0-127)
+#define MIDI_PICKUP_TOLERANCE 4
+
 // range of audio mixer fader
 #define AUD_MIX_FADER_RANGE_DB 35.0f
-
-// MIDI pickup mode settings
-/**
- * MIDI Pickup Mode Settings
- *
- * These settings control how the MIDI pickup mode behaves, where physical MIDI controllers
- * must approach the current software value before taking effect. This prevents sudden jumps
- * when starting to use a controller.
- *
- * The enhanced pickup algorithm supports:
- * 1. Initial pickup when controller is near software value
- * 2. Pickup when controller crosses software value
- * 3. Pickup when consistently approaching the software value
- * 4. Simple reset detection based on distance
- *
- * The algorithm is designed to be intuitive and prevent jumps while still allowing
- * responsive control. It works well with both fast and slow controller movements.
- */
-
-// Tolerance value for MIDI pickup mode (controller must come within this range to register)
-// Higher values make it easier to "pick up" the control but may cause jumpier behavior
-#define MIDI_PICKUP_TOLERANCE 5
 
 // coefficient for averaging channel levels for automatic fader adjustment
 #define AUTO_FADER_ADJUST_ALPHA 0.2f

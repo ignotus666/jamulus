@@ -30,11 +30,7 @@
 CChannelFader::CChannelFader ( QWidget* pNW ) :
     eDesign ( GD_STANDARD ),
     BitmapMutedIcon ( QString::fromUtf8 ( ":/png/fader/res/mutediconorange.png" ) ),
-    bMIDICtrlUsed ( false ),
-    iLastMIDIFaderVal ( -1 ), // -1 means no MIDI value received yet
-    iLastMIDIPanVal ( -1 ),   // -1 means no MIDI value received yet
-    bFaderPickedUp ( false ), // for MIDI pickup mode sticky window
-    bPanPickedUp ( false )    // for MIDI pickup mode sticky window
+    bMIDICtrlUsed ( false )
 {
     // create new GUI control objects and store pointers to them (note that
     // QWidget takes the ownership of the pMainGrid so that this only has
@@ -431,24 +427,6 @@ void CChannelFader::Reset()
     pcbSolo->setChecked ( false );
     plbrChannelLevel->SetValue ( 0 );
     plbrChannelLevel->ClipReset();
-    
-    // reset MIDI pickup mode values
-    // -1 is a special value indicating "no MIDI value received yet"
-    // This forces the controller to send at least one value before any pickup logic is applied
-    iLastMIDIFaderVal = -1;  // Direct access for consistent initialization
-    iLastMIDIPanVal = -1;    // Direct access for consistent initialization
-    
-    // IMPORTANT: Reset pickup state so controllers need to approach current values before taking effect
-    // This fixes a bug where controls can sometimes start in "picked up" state
-    bFaderPickedUp = false; // Direct access to ensure it's set properly
-    bPanPickedUp = false;   // Direct access to ensure it's set properly
-    
-    // Log the reset operation for debugging with more detail
-    qDebug() << "Reset MIDI pickup state for channel - Fader PickedUp:" << bFaderPickedUp 
-             << "Pan PickedUp:" << bPanPickedUp
-             << "Last MIDI Fader:" << iLastMIDIFaderVal
-             << "Last MIDI Pan:" << iLastMIDIPanVal
-             << "MIDI Ctrl Used:" << bMIDICtrlUsed;
 
     // clear instrument picture, country flag, tool tips and label text
     plblLabel->setText ( "" );
@@ -474,7 +452,7 @@ void CChannelFader::Reset()
     UpdateGroupIDDependencies();
 }
 
-void CChannelFader::SetFaderLevel ( const double dLevel, const bool bIsGroupUpdate, const bool bIsMIDIUpdate )
+void CChannelFader::SetFaderLevel ( const double dLevel, const bool bIsGroupUpdate )
 {
     // first make a range check
     if ( dLevel >= 0 )
@@ -483,39 +461,10 @@ void CChannelFader::SetFaderLevel ( const double dLevel, const bool bIsGroupUpda
         // server about the change (block the signal of the fader since we want to
         // call SendFaderLevelToServer with a special additional parameter)
         pFader->blockSignals ( true );
-        int iIntFaderLevel = std::min ( AUD_MIX_FADER_MAX, MathUtils::round ( dLevel ) );
-        pFader->setValue ( iIntFaderLevel );
+        pFader->setValue ( std::min ( AUD_MIX_FADER_MAX, MathUtils::round ( dLevel ) ) );
         pFader->blockSignals ( false );
 
         SendFaderLevelToServer ( std::min ( static_cast<double> ( AUD_MIX_FADER_MAX ), dLevel ), bIsGroupUpdate );
-
-        // Update tracking variables differently based on whether this is a UI or MIDI update
-        if (bIsMIDIUpdate)
-        {
-            // This is a MIDI update, so we just need to make sure the last value is tracked
-            // for future pickup calculations - don't touch the pickup state
-            iLastMIDIFaderVal = static_cast<int>( static_cast<double>( iIntFaderLevel ) / AUD_MIX_FADER_MAX * 127 );
-            qDebug() << "MIDI update fader:" << iIntFaderLevel << "MIDI value:" << iLastMIDIFaderVal << "PickedUp:" << bFaderPickedUp;
-        }
-        else if (!bMIDICtrlUsed) 
-        {
-            // UI update on a non-MIDI control - still track the value for potential future MIDI usage
-            iLastMIDIFaderVal = static_cast<int>( static_cast<double>( iIntFaderLevel ) / AUD_MIX_FADER_MAX * 127 );
-            
-            // Reset the pickup flag when the fader is moved by UI or another non-MIDI source
-            // This ensures that we need to "pick up" the fader again with the MIDI controller
-            if (bFaderPickedUp) {
-                qDebug() << "UI moved fader - resetting pickup state";
-                SetFaderPickedUp(false);
-            }
-        }
-        // When MIDI is being used but we're getting a UI update (like from a group operation),
-        // we should still track the current value to enable proper pickup later
-        else if (bIsGroupUpdate || !bFaderPickedUp)
-        {
-            // Convert current UI fader level to MIDI range for consistent tracking
-            iLastMIDIFaderVal = static_cast<int>( static_cast<double>( iIntFaderLevel ) / AUD_MIX_FADER_MAX * 127 );
-        }
 
         if ( dLevel > AUD_MIX_FADER_MAX )
         {
@@ -528,7 +477,7 @@ void CChannelFader::SetFaderLevel ( const double dLevel, const bool bIsGroupUpda
     }
 }
 
-void CChannelFader::SetPanValue ( const int iPan, const bool bIsMIDIUpdate )
+void CChannelFader::SetPanValue ( const int iPan )
 {
     // first make a range check
     if ( ( iPan >= 0 ) && ( iPan <= AUD_MIX_PAN_MAX ) )
@@ -537,33 +486,6 @@ void CChannelFader::SetPanValue ( const int iPan, const bool bIsMIDIUpdate )
         // emits to signal to tell the server about the change (implicitly)
         pPan->setValue ( iPan );
         pPan->setAccessibleName ( QString::number ( iPan ) );
-
-        // Update tracking variables differently based on whether this is a UI or MIDI update
-        if (bIsMIDIUpdate)
-        {
-            // This is a MIDI update, so we just need to make sure the last value is tracked
-            // for future pickup calculations - don't touch the pickup state
-            iLastMIDIPanVal = static_cast<int>( static_cast<double>( iPan ) / AUD_MIX_PAN_MAX * 126 ) + 1;
-            qDebug() << "MIDI update pan:" << iPan << "MIDI value:" << iLastMIDIPanVal << "PickedUp:" << bPanPickedUp;
-        }
-        else if (!bMIDICtrlUsed)
-        {
-            // UI update on a non-MIDI control - still track the value for potential future MIDI usage
-            iLastMIDIPanVal = static_cast<int>( static_cast<double>( iPan ) / AUD_MIX_PAN_MAX * 126 ) + 1; 
-            
-            // Reset the pickup flag when the pan is moved by UI or another non-MIDI source
-            // This ensures that we need to "pick up" the pan again with the MIDI controller
-            if (bPanPickedUp) {
-                qDebug() << "UI moved pan - resetting pickup state";
-                SetPanPickedUp(false);
-            }
-        }
-        // When MIDI is being used but we're getting a UI update, track the current value for proper pickup
-        else if (!bPanPickedUp)
-        {
-            // Convert current UI pan value to MIDI range for consistent tracking
-            iLastMIDIPanVal = static_cast<int>( static_cast<double>( iPan ) / AUD_MIX_PAN_MAX * 126 ) + 1;
-        }
     }
 }
 
@@ -969,8 +891,7 @@ CAudioMixerBoard::CAudioMixerBoard ( QWidget* parent ) :
     iNumMixerPanelRows ( 1 ), // pSettings->iNumMixerPanelRows is not yet available
     strServerName ( "" ),
     eRecorderState ( RS_UNDEFINED ),
-    eChSortType ( ST_NO_SORT ),
-    bMIDIPickupModeEnabled ( false )
+    eChSortType ( ST_NO_SORT )
 {
     // add group box and hboxlayout
     QHBoxLayout* pGroupBoxLayout = new QHBoxLayout ( this );
@@ -1115,21 +1036,14 @@ void CAudioMixerBoard::HideAll()
     // before hiding the faders, store their settings
     StoreAllFaderSettings();
 
-    // make all controls invisible and reset their state
+    // make all controls invisible
     for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
     {
         vecpChanFader[i]->SetChannelLevel ( 0 );
         vecpChanFader[i]->SetDisplayChannelLevel ( false );
         vecpChanFader[i]->SetDisplayPans ( false );
-        
-        // Important: Call Reset to ensure pickup state is properly initialized
-        vecpChanFader[i]->Reset();
-        
         vecpChanFader[i]->Hide();
     }
-    
-    // Log the pickup mode state after reset
-    qDebug() << "Mixer board reset with MIDI pickup mode:" << (bMIDIPickupModeEnabled ? "ENABLED" : "DISABLED");
 
     // initialize flags and other parameters
     bIsPanSupported      = false;
@@ -1422,20 +1336,6 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
 
     // Ensure MIDI state is applied to faders during the connection process
     SetMIDICtrlUsed ( pSettings->bUseMIDIController );
-    
-    // Log MIDI pickup mode state after applying new client list
-    qDebug() << "Client list updated. MIDI Pickup Mode:" << (bMIDIPickupModeEnabled ? "ENABLED" : "DISABLED")
-             << "MIDI Controller Used:" << pSettings->bUseMIDIController;
-    
-    // Verify that all visible channels have proper pickup states
-    for (size_t i = 0; i < MAX_NUM_CHANNELS; i++)
-    {
-        if (vecpChanFader[i]->IsVisible() && vecpChanFader[i]->GetMIDICtrlUsed())
-        {
-            qDebug() << "Channel" << i << "MIDI state - Fader picked up:" << vecpChanFader[i]->GetFaderPickedUp()
-                     << "Pan picked up:" << vecpChanFader[i]->GetPanPickedUp();
-        }
-    }
 
     // sort the channels according to the selected sorting type
     ChangeFaderOrder ( eChSortType );
@@ -1444,128 +1344,53 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
     emit NumClientsChanged ( static_cast<int> ( iNumConnectedClients ) );
 }
 
+// Helper for MIDI pickup logic
+template<typename T>
+static bool midiPickupShouldApply(int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues)
+{
+    // Accept if within tolerance, or if recent values crossed the software value
+    if (std::abs(midiValue - currentValue) <= tolerance)
+        return true;
+    // If the software value is between any two recent MIDI values, allow pickup
+    for (size_t i = 1; i < recentMidiValues.size(); ++i) {
+        int v1 = recentMidiValues[i-1];
+        int v2 = recentMidiValues[i];
+        if ((v1 <= currentValue && v2 >= currentValue) || (v1 >= currentValue && v2 <= currentValue))
+            return true;
+    }
+    return false;
+}
+
+// --- MIDI Pickup State ---
+namespace {
+constexpr size_t MIDI_PICKUP_HISTORY = 4; // Number of recent values to track
+// Per-channel pickup state
+struct MidiPickupState {
+    std::deque<int> recentFader;
+    std::deque<int> recentPan;
+};
+std::vector<MidiPickupState> g_midiPickupStates(MAX_NUM_CHANNELS);
+}
+
 void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
 {
     if ( ( iChannelIdx >= 0 ) && ( iChannelIdx < MAX_NUM_CHANNELS ) )
     {
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
-            CChannelFader* pChanFader = vecpChanFader[static_cast<size_t> ( iChannelIdx )];
-
-            // Important: iValue is already scaled to AUD_MIX_FADER_MAX range in soundbase.cpp
-            // No need to convert from MIDI range again
-            
-            if ( pChanFader->GetMIDICtrlUsed() && bMIDIPickupModeEnabled )
+            // MIDI pickup logic
+            if (pSettings && pSettings->bMIDIPickupMode)
             {
-                int iLastMIDIFaderVal = pChanFader->GetLastMIDIFaderVal();
-                int iCurrentFaderLevel = pChanFader->GetFaderLevel();
-                
-                // First MIDI message for this fader - store the value but don't act on it
-                if ( iLastMIDIFaderVal < 0 ) 
-                {
-                    pChanFader->SetLastMIDIFaderVal( iValue );
-                    // Make sure pickup state is explicitly set to false for new channels
-                    pChanFader->SetFaderPickedUp(false);
-                    qDebug() << "INITIAL MIDI Fader - Channel:" << iChannelIdx 
-                         << "First MIDI Value:" << iValue 
-                         << "Current Fader:" << iCurrentFaderLevel 
-                         << "Pickup State Explicitly Reset";
-                    return;
-                }
-                
-                // Enhanced pickup logic that tracks the "intended" fader position
-                bool hasPickedUp = false;
-                
-                // Get the current pickup state
-                bool currentPickupState = pChanFader->GetFaderPickedUp();
-                
-                // We track the continuous movement of the controller
-                
-                // Only check for pickup if we're not already picked up
-                if (!currentPickupState) {
-                    // Check if the current MIDI value is close to the software fader
-                    if (abs(iCurrentFaderLevel - iValue) <= MIDI_PICKUP_TOLERANCE) {
-                        hasPickedUp = true;
-                        qDebug() << "  PICKUP CRITERION: Within tolerance of current position";
-                    }
-                    // Check if controller has crossed the current fader position (standard logic)
-                    else if ((iLastMIDIFaderVal < iCurrentFaderLevel && iValue >= iCurrentFaderLevel) ||
-                             (iLastMIDIFaderVal > iCurrentFaderLevel && iValue <= iCurrentFaderLevel)) {
-                        hasPickedUp = true;
-                        qDebug() << "  PICKUP CRITERION: Crossed current fader position";
-                    }
-                    // NEW IMPROVED: Check if controller is consistently approaching the fader value
-                    // This helps with pickup during continuous movements toward the software value
-                    else if (((iValue > iLastMIDIFaderVal) && (iLastMIDIFaderVal < iCurrentFaderLevel) && (iValue < iCurrentFaderLevel)) || 
-                             ((iValue < iLastMIDIFaderVal) && (iLastMIDIFaderVal > iCurrentFaderLevel) && (iValue > iCurrentFaderLevel))) {
-                        // Only pickup if we're getting close
-                        if (abs(iCurrentFaderLevel - iValue) <= MIDI_PICKUP_TOLERANCE * 2) {
-                            hasPickedUp = true;
-                            qDebug() << "  PICKUP CRITERION: Approaching fader position consistently";
-                        }
-                    }
-                }
-                
-                // Simplified pickup reset logic that avoids false resets
-                
-                // Calculate velocity of movement (how fast the controller is moving)
-                int moveVelocity = abs(iValue - iLastMIDIFaderVal);
-                
-                // Only check for reset if the fader is far away and we're picked up
-                // This is a simpler condition that only resets when there's significant distance
-                // between the controller and software value
-                bool needsPickupReset = currentPickupState && 
-                                      (abs(iCurrentFaderLevel - iValue) > MIDI_PICKUP_TOLERANCE * 4);
-                
-                if (needsPickupReset) {
-                    qDebug() << "PICKUP RESET - Controller movement suggests manual repositioning:" 
-                             << "dist:" << abs(iCurrentFaderLevel - iValue) 
-                             << "velocity:" << moveVelocity
-                             << "Ch:" << iChannelIdx;
-                    currentPickupState = false;
-                    pChanFader->SetFaderPickedUp(false);
-                }
-                
-                // Debug output with improved readability
-                qDebug() << "MIDI Fader [" << (bMIDIPickupModeEnabled ? "PICKUP" : "DIRECT") << "] Ch:" << iChannelIdx 
-                         << "Fader:" << iCurrentFaderLevel 
-                         << "MIDI prev:" << iLastMIDIFaderVal 
-                         << "new:" << iValue 
-                         << "tol:" << MIDI_PICKUP_TOLERANCE
-                         << "dist:" << abs(iCurrentFaderLevel - iValue)
-                         << "currPickedUp:" << currentPickupState
-                         << "willPickUp:" << hasPickedUp
-                         << "reset:" << needsPickupReset;
-                
-                // Always update the last value for tracking movement direction
-                pChanFader->SetLastMIDIFaderVal(iValue);
-                
-                // Once we've picked up the fader, remember this state
-                if (hasPickedUp && !currentPickupState) {
-                    pChanFader->SetFaderPickedUp(true);
-                    qDebug() << "PICKUP ACQUIRED - Fader:" << iChannelIdx;
-                }
-                
-                // Only apply MIDI values after pickup
-                if ((currentPickupState && !needsPickupReset) || hasPickedUp) {
-                    // Simple direct value application
-                    int adjustedValue = iValue;
-                    
-                    // Using SetFaderLevel with proper parameters to avoid issues
-                    // Pass the MIDI flag to ensure state is tracked correctly
-                    pChanFader->SetFaderLevel(adjustedValue, false, true);
-                } else {
-                    qDebug() << "WAITING FOR PICKUP - Channel:" << iChannelIdx 
-                             << "(MIDI:" << iValue << ", Fader:" << iCurrentFaderLevel << ")";
-                }
-                // Otherwise we're still outside the pickup range, don't apply the value
+                auto& pickup = g_midiPickupStates[iChannelIdx].recentFader;
+                // Track recent MIDI values
+                if (pickup.size() >= MIDI_PICKUP_HISTORY)
+                    pickup.pop_front();
+                pickup.push_back(iValue);
+                int current = vecpChanFader[static_cast<size_t>(iChannelIdx)]->GetFaderLevel();
+                if (!midiPickupShouldApply(iValue, current, MIDI_PICKUP_TOLERANCE, pickup))
+                    return; // Ignore until pickup
             }
-            else
-            {
-                // Non-pickup mode: directly apply the value
-                qDebug() << "NON-PICKUP MODE: Directly applying fader value:" << iValue << "to channel" << iChannelIdx;
-                pChanFader->SetFaderLevel( iValue );
-            }
+            vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetFaderLevel ( iValue );
         }
     }
 }
@@ -1576,122 +1401,18 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
     {
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
-            CChannelFader* pChanFader = vecpChanFader[static_cast<size_t> ( iChannelIdx )];
-
-            // Important: iValue is already scaled to AUD_MIX_PAN_MAX range in soundbase.cpp
-            
-            if ( pChanFader->GetMIDICtrlUsed() && bMIDIPickupModeEnabled )
+            // MIDI pickup logic
+            if (pSettings && pSettings->bMIDIPickupMode)
             {
-                int iLastMIDIPanVal = pChanFader->GetLastMIDIPanVal();
-                int iCurrentPanValue = pChanFader->GetPanValue();
-                
-                // First MIDI message for this pan control - store the value but don't act on it yet
-                if ( iLastMIDIPanVal < 0 ) 
-                {
-                    pChanFader->SetLastMIDIPanVal( iValue );
-                    // Make sure pickup state is explicitly set to false for new channels
-                    pChanFader->SetPanPickedUp(false);
-                    qDebug() << "INITIAL MIDI Pan - Channel:" << iChannelIdx 
-                         << "First MIDI Value:" << iValue 
-                         << "Current Pan:" << iCurrentPanValue
-                         << "Pickup State Explicitly Reset";
+                auto& pickup = g_midiPickupStates[iChannelIdx].recentPan;
+                if (pickup.size() >= MIDI_PICKUP_HISTORY)
+                    pickup.pop_front();
+                pickup.push_back(iValue);
+                int current = vecpChanFader[static_cast<size_t>(iChannelIdx)]->GetPanValue();
+                if (!midiPickupShouldApply(iValue, current, MIDI_PICKUP_TOLERANCE, pickup))
                     return;
-                }
-                
-                // Enhanced pickup logic that tracks the "intended" pan position
-                bool hasPickedUp = false;
-                
-                // Get the current pickup state
-                bool currentPickupState = pChanFader->GetPanPickedUp();
-                
-                // We track the continuous movement of the controller
-                
-                // Only check for pickup if we're not already picked up
-                if (!currentPickupState) {
-                    // Check if the current MIDI value is close to the software pan control
-                    if (abs(iCurrentPanValue - iValue) <= MIDI_PICKUP_TOLERANCE) {
-                        hasPickedUp = true;
-                        qDebug() << "  PICKUP CRITERION: Within tolerance of current position";
-                    }
-                    // Check if controller has crossed the current pan position (standard logic)
-                    else if ((iLastMIDIPanVal < iCurrentPanValue && iValue >= iCurrentPanValue) ||
-                             (iLastMIDIPanVal > iCurrentPanValue && iValue <= iCurrentPanValue)) {
-                        hasPickedUp = true;
-                        qDebug() << "  PICKUP CRITERION: Crossed current pan position";
-                    }
-                    // NEW IMPROVED: Check if controller is consistently approaching the pan value
-                    // This helps with pickup during continuous movements toward the software value
-                    else if (((iValue > iLastMIDIPanVal) && (iLastMIDIPanVal < iCurrentPanValue) && (iValue < iCurrentPanValue)) || 
-                             ((iValue < iLastMIDIPanVal) && (iLastMIDIPanVal > iCurrentPanValue) && (iValue > iCurrentPanValue))) {
-                        // Only pickup if we're getting close
-                        if (abs(iCurrentPanValue - iValue) <= MIDI_PICKUP_TOLERANCE * 2) {
-                            hasPickedUp = true;
-                            qDebug() << "  PICKUP CRITERION: Approaching pan position consistently";
-                        }
-                    }
-                }
-                
-                // Simplified pickup reset logic that avoids false resets
-                
-                // Calculate velocity of movement (how fast the controller is moving)
-                int moveVelocity = abs(iValue - iLastMIDIPanVal);
-                
-                // Only check for reset if the pan control is far away and we're picked up
-                // This is a simpler condition that only resets when there's significant distance
-                // between the controller and software value
-                bool needsPickupReset = currentPickupState && 
-                                      (abs(iCurrentPanValue - iValue) > MIDI_PICKUP_TOLERANCE * 4);
-                
-                if (needsPickupReset) {
-                    qDebug() << "PICKUP RESET - Controller movement suggests manual repositioning:" 
-                             << "dist:" << abs(iCurrentPanValue - iValue) 
-                             << "velocity:" << moveVelocity
-                             << "Ch:" << iChannelIdx;
-                    currentPickupState = false;
-                    pChanFader->SetPanPickedUp(false);
-                }
-                
-                // Debug output with improved readability
-                qDebug() << "MIDI Pan [" << (bMIDIPickupModeEnabled ? "PICKUP" : "DIRECT") << "] Ch:" << iChannelIdx 
-                         << "Pan:" << iCurrentPanValue 
-                         << "MIDI prev:" << iLastMIDIPanVal 
-                         << "new:" << iValue 
-                         << "tol:" << MIDI_PICKUP_TOLERANCE
-                         << "dist:" << abs(iCurrentPanValue - iValue)
-                         << "currPickedUp:" << currentPickupState
-                         << "willPickUp:" << hasPickedUp
-                         << "reset:" << needsPickupReset;
-                
-                // Update the last value for tracking movement direction
-                pChanFader->SetLastMIDIPanVal(iValue);
-                
-                // Once we've picked up the pan control, remember this state
-                if (hasPickedUp && !currentPickupState) {
-                    pChanFader->SetPanPickedUp(true);
-                    qDebug() << "PICKUP ACQUIRED - Pan:" << iChannelIdx;
-                }
-                
-                // Only apply MIDI values after pickup
-                if ((currentPickupState && !needsPickupReset) || hasPickedUp) {
-                    // Simple direct value application - no velocity adjustments
-                    int adjustedValue = iValue;
-                    
-                    qDebug() << "APPLYING PAN VALUE:" << adjustedValue << "to channel" << iChannelIdx;
-                    
-                    // Using SetPanValue to set the control properly with MIDI flag
-                    pChanFader->SetPanValue(adjustedValue, true);
-                } else {
-                    qDebug() << "WAITING FOR PICKUP - Channel:" << iChannelIdx 
-                             << "(MIDI Pan:" << iValue << ", Current Pan:" << iCurrentPanValue << ")";
-                }
-                // Otherwise we're still outside the pickup range, don't apply the value
             }
-            else
-            {
-                // Non-pickup mode: directly apply the value
-                qDebug() << "DIRECT MODE: Applying pan value:" << iValue << "to channel" << iChannelIdx;
-                pChanFader->SetPanValue( iValue );
-            }
+            vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetPanValue ( iValue );
         }
     }
 }
@@ -1892,9 +1613,6 @@ void CAudioMixerBoard::SetMIDICtrlUsed ( const bool bMIDICtrlUsed )
 {
     QMutexLocker locker ( &Mutex );
 
-    qDebug() << "Setting MIDI control used to" << bMIDICtrlUsed << "for all channels";
-    qDebug() << "Current MIDI Pickup Mode is" << (bMIDIPickupModeEnabled ? "ENABLED" : "DISABLED");
-    
     for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
     {
         vecpChanFader[i]->SetMIDICtrlUsed ( bMIDICtrlUsed );
@@ -1933,7 +1651,7 @@ void CAudioMixerBoard::LoadAllFaderSettings()
             vecpChanFader[i]->SetFaderLevel ( iStoredFaderLevel, true ); // suppress group update
             vecpChanFader[i]->SetPanValue ( iStoredPanValue );
             vecpChanFader[i]->SetFaderIsSolo ( bStoredFaderIsSolo );
-                       vecpChanFader[i]->SetFaderIsMute ( bStoredFaderIsMute );
+            vecpChanFader[i]->SetFaderIsMute ( bStoredFaderIsMute );
             vecpChanFader[i]->SetGroupID ( iGroupID ); // Must be the last to be set in the fader!
         }
     }

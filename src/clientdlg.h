@@ -245,7 +245,6 @@ public slots:
 
     void OnOpenMidiSettings();
     void OnMIDIControllerUsageChanged ( bool bEnabled );
-    void OnMIDIPickupModeChanged ( bool bEnabled );
 
 signals:
     void SendTabChange ( int iTabIdx );
