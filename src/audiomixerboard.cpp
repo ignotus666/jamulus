@@ -1412,11 +1412,6 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
 template<typename T>
 static bool midiPickupShouldApply ( int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues )
 {
-<<<<<<< HEAD
-    // Accept if within tolerance
-=======
-    // Accept if within tolerance, or if recent values crossed the software value
->>>>>>> origin/my-build
     if ( std::abs ( midiValue - currentValue ) <= tolerance )
         return true;
 
@@ -1466,7 +1461,6 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
     {
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
-<<<<<<< HEAD
             if ( pSettings && pSettings->bMIDIPickupMode && g_midiPickupInitialized[iChannelIdx] )
             {
                 auto& midiState = g_midiPickupStates[iChannelIdx];
@@ -1488,7 +1482,7 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
                 g_midiPickupWaitingForPickup[iChannelIdx] = waiting;
                 if ( waiting )
                     return;
-=======
+                
             // MIDI pickup logic
             if ( pSettings && pSettings->bMIDIPickupMode )
             {
@@ -1500,7 +1494,6 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
                 int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetFaderLevel();
                 if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
                     return; // Ignore until pickup
->>>>>>> origin/my-build
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetFaderLevel ( iValue );
         }
@@ -1513,7 +1506,6 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
     {
         if ( vecpChanFader[static_cast<size_t> ( iChannelIdx )]->IsVisible() )
         {
-<<<<<<< HEAD
             if ( pSettings && pSettings->bMIDIPickupMode && g_midiPickupInitialized[iChannelIdx] )
             {
                 auto& midiState = g_midiPickupStates[iChannelIdx];
@@ -1534,7 +1526,6 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
                 waiting                                   = midiPickupTryApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup, waiting );
                 g_midiPickupWaitingForPickup[iChannelIdx] = waiting;
                 if ( waiting )
-=======
             // MIDI pickup logic
             if ( pSettings && pSettings->bMIDIPickupMode )
             {
@@ -1544,7 +1535,6 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
                 pickup.push_back ( iValue );
                 int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetPanValue();
                 if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
->>>>>>> origin/my-build
                     return;
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetPanValue ( iValue );
