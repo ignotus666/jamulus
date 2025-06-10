@@ -403,10 +403,10 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     chbUseMIDIController->setAccessibleName ( tr ( "MIDI-in port check box" ) );
 
     chbMIDIPickupMode->setWhatsThis ( "<b>" + tr ( "Pickup Mode" ) + ":</b> " +
-                                      tr ( "Fader and pan controls will wait for the MIDI controller
-                                           "value to be at the same level before they start moving. This
-                                           "prevents sudden jumps in values when hardware and software controls
-                                           "are not in sync" ) );
+                                      tr ( "Fader and pan controls will wait for the MIDI controller "
+                                           "value to be at the same level before they start moving. This "
+                                           "prevents sudden jumps in values when hardware and software controls "
+                                           "are not in sync." ) );
     chbMIDIPickupMode->setAccessibleName ( tr ( "Pickup Mode check box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
