@@ -290,14 +290,6 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pcbSolo->setText ( tr ( "Solo" ) );
         strGroupBaseText  = tr ( "Grp" );
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
-
-        // Use StyleSheet to set font
-        pPanLabel->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pcbMute->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pcbSolo->setStyleSheet ( "font-family: 'IDroid'; font-size: 11pt;" );
-        pPanLabel->setCursor ( Qt::PointingHandCursor );
-        pcbMute->setCursor ( Qt::PointingHandCursor );
-        pcbSolo->setCursor ( Qt::PointingHandCursor );
         break;
     }
 
@@ -656,9 +648,6 @@ void CChannelFader::UpdateGroupIDDependencies()
 
     // the fader tag border color is set according to the selected group
     SetupFaderTag ( cReceivedChanInfo.eSkillLevel );
-    // Set font:
-    pcbGroup->setFont ( QFont ( "IDroid", 11 ) );
-    pcbGroup->setCursor ( Qt::PointingHandCursor );
 }
 
 void CChannelFader::OnGroupStateChanged ( int )
@@ -1412,6 +1401,7 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
 template<typename T>
 static bool midiPickupShouldApply ( int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues )
 {
+    // Accept if within tolerance
     if ( std::abs ( midiValue - currentValue ) <= tolerance )
         return true;
 
@@ -1482,18 +1472,6 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
                 g_midiPickupWaitingForPickup[iChannelIdx] = waiting;
                 if ( waiting )
                     return;
-                
-            // MIDI pickup logic
-            if ( pSettings && pSettings->bMIDIPickupMode )
-            {
-                auto& pickup = g_midiPickupStates[iChannelIdx].recentFader;
-                // Track recent MIDI values
-                if ( pickup.size() >= MIDI_PICKUP_HISTORY )
-                    pickup.pop_front();
-                pickup.push_back ( iValue );
-                int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetFaderLevel();
-                if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
-                    return; // Ignore until pickup
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetFaderLevel ( iValue );
         }
@@ -1526,15 +1504,6 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
                 waiting                                   = midiPickupTryApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup, waiting );
                 g_midiPickupWaitingForPickup[iChannelIdx] = waiting;
                 if ( waiting )
-            // MIDI pickup logic
-            if ( pSettings && pSettings->bMIDIPickupMode )
-            {
-                auto& pickup = g_midiPickupStates[iChannelIdx].recentPan;
-                if ( pickup.size() >= MIDI_PICKUP_HISTORY )
-                    pickup.pop_front();
-                pickup.push_back ( iValue );
-                int current = vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetPanValue();
-                if ( !midiPickupShouldApply ( iValue, current, MIDI_PICKUP_TOLERANCE, pickup ) )
                     return;
             }
             vecpChanFader[static_cast<size_t> ( iChannelIdx )]->SetPanValue ( iValue );
