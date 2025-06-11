@@ -14,7 +14,7 @@
    <string>Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="resources.qrc">
     <normaloff>:/png/main/res/fronticon.png</normaloff>:/png/main/res/fronticon.png</iconset>
   </property>
   <property name="sizeGripEnabled">
@@ -2091,6 +2091,9 @@
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
   <tabstop>chbUseMIDIController</tabstop>
+  <tabstop>spnChannel</tabstop>
+  <tabstop>spnMuteMyself</tabstop>
+  <tabstop>butLearnMuteMyself</tabstop>
   <tabstop>spnFaderOffset</tabstop>
   <tabstop>butLearnFaderOffset</tabstop>
   <tabstop>spnFaderCount</tabstop>
