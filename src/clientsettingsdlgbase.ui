@@ -2120,6 +2120,9 @@
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
   <tabstop>chbUseMIDIController</tabstop>
+  <tabstop>spnChannel</tabstop>
+  <tabstop>spnMuteMyself</tabstop>
+  <tabstop>butLearnMuteMyself</tabstop>
   <tabstop>spnFaderOffset</tabstop>
   <tabstop>butLearnFaderOffset</tabstop>
   <tabstop>spnFaderCount</tabstop>
@@ -2132,6 +2135,7 @@
   <tabstop>spnMuteOffset</tabstop>
   <tabstop>butLearnMuteOffset</tabstop>
   <tabstop>spnMuteCount</tabstop>
+  <tabstop>chbMIDIPickupMode</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
