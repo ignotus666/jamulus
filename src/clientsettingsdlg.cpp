@@ -844,6 +844,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
+        SetMIDIControlsEnabled ( checked );
         if ( checked )
         {
             pClient->ApplyMIDIMapping ( pSettings->GetMIDIMapString() );
@@ -916,6 +917,8 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
 
     // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
     emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
+
+    SetMIDIControlsEnabled ( chbUseMIDIController->isChecked() );
 
     QDialog::showEvent ( event );
 }
@@ -1384,6 +1387,8 @@ void CClientSettingsDlg::ResetMidiLearn()
         button->setEnabled ( true );
     }
 }
+
+void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { midiControlsContainer->setEnabled ( enabled ); }
 
 void CClientSettingsDlg::SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton )
 {

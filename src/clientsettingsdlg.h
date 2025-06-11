@@ -137,6 +137,7 @@ private:
     QPushButton* midiLearnButtons[5];
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
+    void         SetMIDIControlsEnabled ( bool enabled );
 
 private slots:
     void OnLearnButtonClicked();
