@@ -2,6 +2,7 @@
 #include "PluginEditor.h"
 #include <QCoreApplication>
 #include <QThread>
+#include "global.h" // For types
 
 // Static QApp instance
 static int argc = 1;
@@ -23,9 +24,15 @@ JamulusVSTAudioProcessor::JamulusVSTAudioProcessor()
         qAppInstance = std::make_unique<QCoreApplication>(argc, argv);
     }
 
+    // Register Meta Types for Queued Connections (Network Thread -> Main Thread)
+    qRegisterMetaType<CVector<uint8_t>>("CVector<uint8_t>");
+    qRegisterMetaType<CHostAddress>("CHostAddress");
+    qRegisterMetaType<CVector<CServerInfo>>("CVector<CServerInfo>");
+    qRegisterMetaType<CVector<CChannelInfo>>("CVector<CChannelInfo>");
+    qRegisterMetaType<CVector<uint16_t>>("CVector<uint16_t>");
+    qRegisterMetaType<CVector<double>>("CVector<double>");
+
     // Initialize CClient on Main Thread (Constructor)
-    // This ensures CClient lives on the Message Thread, so it can receive signals
-    // from the Network Thread when we pump the event loop.
     if (!jamulusClient)
     {
         jamulusClient = std::make_unique<CClient>(
@@ -124,21 +131,12 @@ void JamulusVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // Start client if not running
     if (jamulusClient && !jamulusClient->IsRunning())
     {
-        // CClient::Start() calls Init() which handles buffer sizes
-        // We might need to pass sample rate info if Jamulus wasn't fixed to 48k?
-        // Jamulus is fixed to 48k. If host is not 48k, pitch will be wrong (Resampling needed).
-        // For now, assuming host is 48k or user accepts it.
         jamulusClient->Start();
     }
 }
 
 void JamulusVSTAudioProcessor::releaseResources()
 {
-    // Do NOT stop the client here if we want to keep connection alive across track disable/enable?
-    // VST3 releaseResources is called when processing stops.
-    // If we stop the client, we disconnect.
-    // Ideally we keep it running or reconnect.
-    // Let's stop to be safe and save resources.
     if (jamulusClient && jamulusClient->IsRunning())
     {
         jamulusClient->Stop();
