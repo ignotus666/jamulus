@@ -51,7 +51,7 @@ list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.cpp")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.h")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/analyzerconsole.*")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/audiomixerboard.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/levelmeter_orig\\.h")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/levelmeter.*") # Exclude all levelmeter files (h/cpp/orig)
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/multicolorled.*")
 
 # Plugin Sources
@@ -84,8 +84,8 @@ target_sources(JamulusVST PRIVATE
 # Include Directories
 target_include_directories(JamulusVST PRIVATE
     src
-    src/sound/vst # Fix: Add sound backend path
-    src/sound/vst/stubs # Include stubs path
+    src/sound/vst
+    # Removed stubs path as we don't use it anymore
     libs/opus/include
     libs/opus/celt
     libs/opus/src
