@@ -42,7 +42,9 @@
 #include "buffer.h"
 #include "signalhandler.h"
 
-#if defined( _WIN32 ) && !defined( JACK_ON_WINDOWS )
+#ifdef VST_PLUGIN
+#    include "sound/vst/sound.h"
+#elif defined( _WIN32 ) && !defined( JACK_ON_WINDOWS )
 #    include "sound/asio/sound.h"
 #else
 #    if ( defined( Q_OS_MACOS ) ) && !defined( JACK_REPLACES_COREAUDIO )
@@ -300,6 +302,10 @@ public:
     QString          strClientName;
 
     void ApplyMIDIMapping ( const QString& midiMap );
+
+#ifdef VST_PLUGIN
+    CSound& GetSound() { return Sound; }
+#endif
 
 protected:
     // callback function must be static, otherwise it does not work

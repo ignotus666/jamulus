@@ -59,6 +59,7 @@ LED bar:      lbr
 #include <stdio.h>
 #include <math.h>
 #include <string>
+#include <cstdint> // Use C++11 standard integer types
 #ifndef _WIN32
 #    include <unistd.h> // solves a compile problem on recent Ubuntu
 #endif
@@ -74,7 +75,9 @@ LED bar:      lbr
 // version and application name (use version from qt prject file)
 #undef VERSION
 #define VERSION  APP_VERSION
+#ifndef APP_NAME
 #define APP_NAME "Jamulus"
+#endif
 
 // Windows registry key name of auto run entry for the server
 #define AUTORUN_SERVER_REG_NAME "Jamulus server"
@@ -301,29 +304,8 @@ LED bar:      lbr
 #define _MINSHORT     ( -32768 )
 #define INVALID_INDEX -1 // define invalid index as a negative value (a valid index must always be >= 0)
 
-#if HAVE_STDINT_H
-#    include <stdint.h>
-#elif HAVE_INTTYPES_H
-#    include <inttypes.h>
-#elif defined( _WIN32 )
-typedef __int64          int64_t;
-typedef __int32          int32_t;
-typedef __int16          int16_t;
-typedef unsigned __int64 uint64_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int8  uint8_t;
-#elif defined( ANDROID )
-// don't redfine types for android as these ones below don't work
-#else
-typedef long long          int64_t;
-typedef int                int32_t;
-typedef short              int16_t;
-typedef unsigned long long uint64_t;
-typedef unsigned int       uint32_t;
-typedef unsigned short     uint16_t;
-typedef unsigned char      uint8_t;
-#endif
+// Removed old typedefs which conflict with stdint.h / modern C++
+// Rely on <cstdint> included above.
 
 /* Pseudo enum definitions -------------------------------------------------- */
 // definition for custom event
