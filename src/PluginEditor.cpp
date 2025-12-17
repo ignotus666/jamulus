@@ -22,7 +22,8 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
             // ID is index + 1
             int idx = serverListBox.getSelectedId() - 1;
             if (idx >= 0 && idx < currentServerList.size()) {
-                serverAddressEditor.setText(currentServerList[idx].HostAddr.toString());
+                // Fix: Convert QString to std::string for JUCE
+                serverAddressEditor.setText(currentServerList[idx].HostAddr.toString().toStdString());
             }
         }
     };
@@ -47,11 +48,6 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     disconnectButton.onClick = [this] {
         if (auto* client = audioProcessor.getClient()) {
             // Explicitly disconnect logic
-            // 1. Send Disconnect Message manually to ensure it goes out
-            // client->getConnLessProtocol()->CreateCLDisconnection(client->Channel.GetAddress()); // Access issue?
-            // client->CreateCLDisconnection() is not public in CClient?
-            // client->Stop() handles it, but let's make sure we process events AFTER stop.
-
             client->Stop();
 
             // Pump event loop a bit to flush the packet
@@ -176,7 +172,9 @@ void JamulusVSTAudioProcessorEditor::timerCallback()
     // Update Status
     if (auto* client = audioProcessor.getClient()) {
         if (client->IsConnected()) {
-            connectionStatusLabel.setText("Connected: " + juce::String(client->Channel.GetAddress().toString().toStdString()), juce::dontSendNotification);
+            // Fix: Use public accessor and string conversion
+            juce::String addr = client->GetServerAddress().toStdString();
+            connectionStatusLabel.setText("Connected: " + addr, juce::dontSendNotification);
         } else {
             connectionStatusLabel.setText("Disconnected", juce::dontSendNotification);
         }

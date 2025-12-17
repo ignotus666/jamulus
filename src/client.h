@@ -305,6 +305,7 @@ public:
 
 #ifdef VST_PLUGIN
     CSound& GetSound() { return Sound; }
+    QString GetServerAddress() { return Channel.GetAddress().toString(); }
 #endif
 
 protected:
