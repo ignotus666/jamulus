@@ -39,20 +39,21 @@ file(GLOB_RECURSE JAMULUS_SOURCES
 )
 
 # Filter Sources
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/main.cpp")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/asio/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/jack/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/coreaudio-mac/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/coreaudio-ios/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/oboe/.*")
+# Note: GLOB_RECURSE returns absolute paths, so we use simpler regexes that match any part of the path
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "main\\.cpp$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/asio/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/jack/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-mac/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-ios/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/oboe/")
 
 # Exclude GUI files
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.cpp")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.h")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/analyzerconsole.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/audiomixerboard.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/levelmeter.*") # Exclude all levelmeter files (h/cpp/orig)
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/multicolorled.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "dlg\\.cpp$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "dlg\\.h$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "analyzerconsole.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "audiomixerboard.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "levelmeter.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "multicolorled.*")
 
 # Plugin Sources
 set(PLUGIN_SOURCES
@@ -85,7 +86,6 @@ target_sources(JamulusVST PRIVATE
 target_include_directories(JamulusVST PRIVATE
     src
     src/sound/vst
-    # Removed stubs path as we don't use it anymore
     libs/opus/include
     libs/opus/celt
     libs/opus/src
