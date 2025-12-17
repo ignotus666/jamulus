@@ -306,6 +306,13 @@ public:
 #ifdef VST_PLUGIN
     CSound& GetSound() { return Sound; }
     QString GetServerAddress() { return Channel.GetAddress().toString(); }
+    void DisconnectFromHost() {
+        ConnLessProtocol.CreateCLDisconnection(Channel.GetAddress());
+        Channel.SetEnable(false);
+        // Do NOT stop sound engine, just logic.
+        bJitterBufferOK = true;
+        SignalLevelMeter.Reset();
+    }
 #endif
 
 protected:

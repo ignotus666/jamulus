@@ -5,7 +5,41 @@
 #include "PluginProcessor.h"
 #include <QTimer>
 #include "client.h"
-#include "ServerListListener.h"
+#include "JamulusBridge.h"
+
+// Component for a single channel strip
+class ChannelStrip : public juce::Component
+{
+public:
+    ChannelStrip()
+    {
+        addAndMakeVisible(fader);
+        fader.setSliderStyle(juce::Slider::LinearVertical);
+        fader.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+        fader.setRange(0.0, 100.0);
+
+        addAndMakeVisible(nameLabel);
+        nameLabel.setJustificationType(juce::Justification::centred);
+
+        addAndMakeVisible(levelMeter);
+        levelMeter.setColour(juce::ProgressBar::foregroundColourId, juce::Colours::green);
+    }
+
+    void resized() override
+    {
+        nameLabel.setBounds(0, 0, getWidth(), 20);
+        fader.setBounds(0, 20, getWidth(), getHeight() - 30);
+        levelMeter.setBounds(0, getHeight() - 10, getWidth(), 10);
+    }
+
+    void setName(const juce::String& name) { nameLabel.setText(name, juce::dontSendNotification); }
+    void setLevel(float level) { levelMeter.setProperty("value", level); levelMeter.repaint(); } // Hacky meter update
+
+    juce::Slider fader;
+    juce::Label nameLabel;
+    juce::ProgressBar levelMeter { levelVal };
+    double levelVal = 0.0;
+};
 
 class JamulusVSTAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer
 {
@@ -20,9 +54,10 @@ public:
 private:
     JamulusVSTAudioProcessor& audioProcessor;
 
-    // GUI Components
+    // Connect/Disconnect
     juce::TextButton connectButton { "Connect" };
     juce::TextButton disconnectButton { "Disconnect" };
+    juce::Label connectionStatusLabel;
 
     // Server List
     juce::Label directoryLabel { "Directory:", "Directory:" };
@@ -31,23 +66,29 @@ private:
     juce::ComboBox serverListBox;
 
     // Manual Address
-    juce::Label serverAddressLabel { "Manual Addr:", "Manual Addr:" };
+    juce::Label serverAddressLabel { "Address:", "Address:" };
     juce::TextEditor serverAddressEditor;
 
-    // Settings
-    juce::Label inputFaderLabel { "Input", "Input" };
+    // My Settings
+    juce::Label inputFaderLabel { "My Input", "My Input" };
     juce::Slider inputFader;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputFaderAttachment;
 
-    juce::Label connectionStatusLabel;
+    // Mixer View
+    juce::Viewport mixerViewport;
+    juce::Component mixerContent;
+    std::vector<std::unique_ptr<ChannelStrip>> channelStrips;
 
     // Logic
-    std::unique_ptr<ServerListListener> serverListListener;
+    std::unique_ptr<JamulusBridge> bridge;
     std::vector<CServerInfo> currentServerList;
+    std::vector<CChannelInfo> currentClientList;
 
     void populateDirectoryBox();
     void fetchServerList();
     void updateServerListBox();
+    void updateMixerLayout();
+    void updateLevels(const CVector<uint16_t>& levels);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JamulusVSTAudioProcessorEditor)
 };

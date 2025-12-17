@@ -4,7 +4,7 @@
 JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (500, 400); // Increased size
+    setSize (800, 500);
 
     // Directory Box
     addAndMakeVisible(directoryLabel);
@@ -19,10 +19,8 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible(serverListBox);
     serverListBox.onChange = [this] {
         if (serverListBox.getSelectedId() > 0) {
-            // ID is index + 1
             int idx = serverListBox.getSelectedId() - 1;
             if (idx >= 0 && idx < currentServerList.size()) {
-                // Fix: Convert QString to std::string for JUCE
                 serverAddressEditor.setText(currentServerList[idx].HostAddr.toString().toStdString());
             }
         }
@@ -33,7 +31,7 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible (serverAddressEditor);
     serverAddressEditor.setText(audioProcessor.getServerAddress());
 
-    // Connect Button
+    // Connect/Disconnect
     addAndMakeVisible (connectButton);
     connectButton.onClick = [this] {
         if (auto* client = audioProcessor.getClient()) {
@@ -43,19 +41,17 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
         }
     };
 
-    // Disconnect Button
     addAndMakeVisible (disconnectButton);
     disconnectButton.onClick = [this] {
         if (auto* client = audioProcessor.getClient()) {
-            // Explicitly disconnect logic
-            client->Stop();
+            client->DisconnectFromHost();
 
-            // Pump event loop a bit to flush the packet
-            for(int i=0; i<5; ++i) QCoreApplication::processEvents();
+            // Force pump to send packet
+            for(int i=0; i<10; ++i) QCoreApplication::processEvents();
         }
     };
 
-    // Fader
+    // My Fader
     addAndMakeVisible (inputFaderLabel);
     addAndMakeVisible (inputFader);
     inputFader.setSliderStyle (juce::Slider::LinearVertical);
@@ -65,17 +61,30 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible(connectionStatusLabel);
     connectionStatusLabel.setText("Disconnected", juce::dontSendNotification);
 
-    // Initialize Listener
+    // Mixer
+    addAndMakeVisible(mixerViewport);
+    mixerViewport.setViewedComponent(&mixerContent, false);
+
+    // Initialize Bridge
     if (auto* client = audioProcessor.getClient()) {
-        serverListListener = std::make_unique<ServerListListener>(client,
+        bridge = std::make_unique<JamulusBridge>(client,
+            // Server List
             [this](const CVector<CServerInfo>& list) {
-                // On Main Thread
                 currentServerList.clear();
-                for(int i=0; i<list.Size(); ++i) {
-                    currentServerList.push_back(list[i]);
-                }
+                for(int i=0; i<list.Size(); ++i) currentServerList.push_back(list[i]);
                 updateServerListBox();
-            });
+            },
+            // Client List (Participants)
+            [this](const CVector<CChannelInfo>& list) {
+                currentClientList.clear();
+                for(int i=0; i<list.Size(); ++i) currentClientList.push_back(list[i]);
+                updateMixerLayout();
+            },
+            // Levels
+            [this](const CVector<uint16_t>& levels) {
+                updateLevels(levels);
+            }
+        );
     }
 
     startTimer(30);
@@ -83,35 +92,36 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
 
 JamulusVSTAudioProcessorEditor::~JamulusVSTAudioProcessorEditor()
 {
-    // Ensure listener is deleted before client if possible, though client is in processor
-    serverListListener.reset();
+    bridge.reset();
 }
 
 void JamulusVSTAudioProcessorEditor::populateDirectoryBox()
 {
-    directoryBox.addItem("Any Genre 1 (Default)", 1);
-    directoryBox.addItem("Any Genre 2", 2);
+    // See src/global.h EDirectoryType
+    directoryBox.addItem("Any Genre 1", 1); // AT_DEFAULT = 0
+    directoryBox.addItem("Any Genre 2", 2); // AT_ANY_GENRE2 = 1
     directoryBox.addItem("Any Genre 3", 3);
     directoryBox.addItem("Rock", 4);
     directoryBox.addItem("Jazz", 5);
     directoryBox.addItem("Classical/Folk", 6);
     directoryBox.addItem("Choral", 7);
-    directoryBox.addItem("Custom", 8);
     directoryBox.setSelectedId(1);
 }
 
 void JamulusVSTAudioProcessorEditor::fetchServerList()
 {
     if (auto* client = audioProcessor.getClient()) {
-        // Determine Directory Address
-        QString dirAddr = NetworkUtil::GetDirectoryAddress(
-            static_cast<EDirectoryType>(directoryBox.getSelectedId() - 1),
-            "" // Custom address not yet supported in UI
-        );
+        // ID 1 is AT_DEFAULT (0). ID 8 is AT_CUSTOM (7).
+        int id = directoryBox.getSelectedId();
+        EDirectoryType type = static_cast<EDirectoryType>(id - 1);
 
-        // Resolve address
+        QString dirAddr = NetworkUtil::GetDirectoryAddress(type, "");
+
+        // Debug
+        // std::cout << "Fetching from: " << dirAddr.toStdString() << std::endl;
+
         CHostAddress hostAddr;
-        if (NetworkUtil::ParseNetworkAddress(dirAddr, hostAddr, false)) { // IPv4 for now
+        if (NetworkUtil::ParseNetworkAddress(dirAddr, hostAddr, false)) {
              client->CreateCLReqServerListMes(hostAddr);
         }
     }
@@ -127,6 +137,43 @@ void JamulusVSTAudioProcessorEditor::updateServerListBox()
     }
 }
 
+void JamulusVSTAudioProcessorEditor::updateMixerLayout()
+{
+    channelStrips.clear();
+    mixerContent.removeAllChildren();
+
+    int x = 0;
+    int w = 60;
+
+    for (const auto& client : currentClientList) {
+        auto strip = std::make_unique<ChannelStrip>();
+        strip->setBounds(x, 0, w, 200);
+        strip->setName(client.strName.toStdString());
+
+        mixerContent.addAndMakeVisible(strip.get());
+        channelStrips.push_back(std::move(strip));
+        x += w + 5;
+    }
+
+    mixerContent.setBounds(0, 0, x, 200);
+    resized(); // refresh viewport
+}
+
+void JamulusVSTAudioProcessorEditor::updateLevels(const CVector<uint16_t>& levels)
+{
+    // Map levels to channel strips
+    for (int i = 0; i < levels.Size(); ++i) {
+        if (i < channelStrips.size()) {
+            // Level is roughly 0..??? Jamulus uses uint16.
+            // Need to calibrate. Assuming 0-32768 roughly?
+            // Actually CClient uses levels for LED meter.
+            float norm = static_cast<float>(levels[i]) / 5000.0f; // Guesswork calibration
+            if (norm > 1.0f) norm = 1.0f;
+            channelStrips[i]->setLevel(norm);
+        }
+    }
+}
+
 void JamulusVSTAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
@@ -137,42 +184,39 @@ void JamulusVSTAudioProcessorEditor::resized()
     int margin = 10;
     int y = margin;
 
-    // Directory Row
+    // Header
     directoryLabel.setBounds(margin, y, 80, 24);
     directoryBox.setBounds(margin + 80, y, 200, 24);
     fetchListButton.setBounds(margin + 290, y, 80, 24);
     y += 30;
 
-    // Server List Row
     serverListBox.setBounds(margin, y, 380, 24);
     y += 30;
 
-    // Manual Address Row
     serverAddressLabel.setBounds(margin, y, 80, 24);
     serverAddressEditor.setBounds(margin + 80, y, 200, 24);
     connectButton.setBounds(margin + 290, y, 80, 24);
-    y += 30;
+    disconnectButton.setBounds(margin + 380, y, 80, 24);
+    y += 40;
 
-    disconnectButton.setBounds(margin + 290, y, 80, 24);
-
-    // Fader Area
-    y += 10;
+    // Main Area
+    // Left: My Settings
     inputFaderLabel.setBounds(margin, y, 60, 20);
     inputFader.setBounds(margin, y + 20, 60, 200);
 
-    // Status
-    connectionStatusLabel.setBounds(margin + 80, y + 20, 300, 24);
+    // Right: Mixer
+    mixerViewport.setBounds(margin + 80, y, getWidth() - (margin + 90), 220);
+
+    // Bottom
+    connectionStatusLabel.setBounds(margin, getHeight() - 30, getWidth() - 2*margin, 24);
 }
 
 void JamulusVSTAudioProcessorEditor::timerCallback()
 {
-    // Pump Qt Events
     QCoreApplication::processEvents();
 
-    // Update Status
     if (auto* client = audioProcessor.getClient()) {
         if (client->IsConnected()) {
-            // Fix: Use public accessor and string conversion
             juce::String addr = client->GetServerAddress().toStdString();
             connectionStatusLabel.setText("Connected: " + addr, juce::dontSendNotification);
         } else {
