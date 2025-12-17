@@ -33,12 +33,14 @@ public:
     }
 
     void setName(const juce::String& name) { nameLabel.setText(name, juce::dontSendNotification); }
-    void setLevel(float level) { levelMeter.setProperty("value", level); levelMeter.repaint(); } // Hacky meter update
+
+    // Fix: Update the double variable directly, ProgressBar reads from it reference
+    void setLevel(float level) { levelVal = static_cast<double>(level); levelMeter.repaint(); }
 
     juce::Slider fader;
     juce::Label nameLabel;
-    juce::ProgressBar levelMeter { levelVal };
     double levelVal = 0.0;
+    juce::ProgressBar levelMeter { levelVal };
 };
 
 class JamulusVSTAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer
