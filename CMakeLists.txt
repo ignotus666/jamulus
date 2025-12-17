@@ -5,12 +5,14 @@ project(JamulusVST VERSION 1.0.0 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON) # Enable MOC for Q_OBJECT
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Force -fPIC for all targets
 
 # Definitions
 add_compile_definitions(VST_PLUGIN)
 add_compile_definitions(APP_VERSION="1.0.0")
 add_compile_definitions(CUSTOM_MODES) # For Opus
 add_compile_definitions(HEADLESS)
+add_compile_definitions(JUCE_VST3_CAN_REPLACE_VST2=0)
 
 # JUCE
 include(FetchContent)
@@ -23,6 +25,18 @@ FetchContent_MakeAvailable(juce)
 
 # Qt
 find_package(Qt5 COMPONENTS Core Network Concurrent Xml REQUIRED)
+
+# Linux Dependencies (GTK/Webkit/Curl for JUCE)
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK REQUIRED gtk+-3.0)
+    pkg_check_modules(WEBKIT webkit2gtk-4.1)
+    if(NOT WEBKIT_FOUND)
+        pkg_check_modules(WEBKIT webkit2gtk-4.0)
+    endif()
+
+    find_package(CURL REQUIRED)
+endif()
 
 # Opus
 set(OPUS_CUSTOM_MODES ON CACHE BOOL "" FORCE)
@@ -39,20 +53,22 @@ file(GLOB_RECURSE JAMULUS_SOURCES
 )
 
 # Filter Sources
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/main.cpp")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/asio/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/jack/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/coreaudio-mac/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/coreaudio-ios/.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/sound/oboe/.*")
+# Note: GLOB_RECURSE returns absolute paths, so we use simpler regexes that match any part of the path
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "main\\.cpp$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/asio/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/jack/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-mac/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-ios/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/oboe/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/midi-win/")
 
 # Exclude GUI files
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.cpp")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/.*dlg\\.h")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/analyzerconsole.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/audiomixerboard.*")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/levelmeter_orig\\.h")
-list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "src/multicolorled.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "dlg\\.cpp$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "dlg\\.h$")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "analyzerconsole.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "audiomixerboard.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "levelmeter.*")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "multicolorled.*")
 
 # Plugin Sources
 set(PLUGIN_SOURCES
@@ -84,12 +100,16 @@ target_sources(JamulusVST PRIVATE
 # Include Directories
 target_include_directories(JamulusVST PRIVATE
     src
-    src/sound/vst # Fix: Add sound backend path
-    src/sound/vst/stubs # Include stubs path
+    src/sound/vst
     libs/opus/include
     libs/opus/celt
     libs/opus/src
 )
+
+if(UNIX AND NOT APPLE)
+    target_include_directories(JamulusVST PRIVATE ${GTK_INCLUDE_DIRS} ${WEBKIT_INCLUDE_DIRS})
+    target_link_libraries(JamulusVST PRIVATE ${GTK_LIBRARIES} ${WEBKIT_LIBRARIES} CURL::libcurl)
+endif()
 
 # Link Libraries
 target_link_libraries(JamulusVST PRIVATE
