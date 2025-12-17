@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <iostream>
 
 JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
@@ -35,6 +36,7 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible (connectButton);
     connectButton.onClick = [this] {
         if (auto* client = audioProcessor.getClient()) {
+            std::cout << "[Editor] Connect clicked." << std::endl;
             audioProcessor.setServerAddress(serverAddressEditor.getText());
             client->SetServerAddr(QString::fromStdString(serverAddressEditor.getText().toStdString()));
             client->Start();
@@ -44,10 +46,10 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible (disconnectButton);
     disconnectButton.onClick = [this] {
         if (auto* client = audioProcessor.getClient()) {
+            std::cout << "[Editor] Disconnect clicked." << std::endl;
             client->DisconnectFromHost();
-
-            // Force pump to send packet
-            for(int i=0; i<10; ++i) QCoreApplication::processEvents();
+            // Manually force waiting loop
+            for(int i=0; i<50; ++i) QCoreApplication::processEvents();
         }
     };
 
@@ -70,12 +72,14 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
         bridge = std::make_unique<JamulusBridge>(client,
             // Server List
             [this](const CVector<CServerInfo>& list) {
+                std::cout << "[Editor] Received Server List Callback. Items: " << list.Size() << std::endl;
                 currentServerList.clear();
                 for(int i=0; i<list.Size(); ++i) currentServerList.push_back(list[i]);
                 updateServerListBox();
             },
             // Client List (Participants)
             [this](const CVector<CChannelInfo>& list) {
+                std::cout << "[Editor] Received Client List Callback. Items: " << list.Size() << std::endl;
                 currentClientList.clear();
                 for(int i=0; i<list.Size(); ++i) currentClientList.push_back(list[i]);
                 updateMixerLayout();
@@ -111,18 +115,19 @@ void JamulusVSTAudioProcessorEditor::populateDirectoryBox()
 void JamulusVSTAudioProcessorEditor::fetchServerList()
 {
     if (auto* client = audioProcessor.getClient()) {
-        // ID 1 is AT_DEFAULT (0). ID 8 is AT_CUSTOM (7).
         int id = directoryBox.getSelectedId();
         EDirectoryType type = static_cast<EDirectoryType>(id - 1);
 
         QString dirAddr = NetworkUtil::GetDirectoryAddress(type, "");
-
-        // Debug
-        // std::cout << "Fetching from: " << dirAddr.toStdString() << std::endl;
+        std::cout << "[Editor] Fetching server list from: " << dirAddr.toStdString() << std::endl;
 
         CHostAddress hostAddr;
-        if (NetworkUtil::ParseNetworkAddress(dirAddr, hostAddr, false)) {
+        // Use SrvDiscovery for directory lookups
+        if (NetworkUtil::ParseNetworkAddressWithSrvDiscovery(dirAddr, hostAddr, false)) {
+             std::cout << "[Editor] Resolved to: " << hostAddr.toString().toStdString() << ". Sending Req." << std::endl;
              client->CreateCLReqServerListMes(hostAddr);
+        } else {
+             std::cout << "[Editor] Failed to resolve address." << std::endl;
         }
     }
 }
@@ -135,6 +140,7 @@ void JamulusVSTAudioProcessorEditor::updateServerListBox()
                              juce::String(currentServerList[i].strCity.toStdString()) + "]";
         serverListBox.addItem(label, i + 1);
     }
+    serverListBox.setTextWhenNoChoicesAvailable("Found " + juce::String(currentServerList.size()) + " servers");
 }
 
 void JamulusVSTAudioProcessorEditor::updateMixerLayout()
@@ -164,9 +170,6 @@ void JamulusVSTAudioProcessorEditor::updateLevels(const CVector<uint16_t>& level
     // Map levels to channel strips
     for (int i = 0; i < levels.Size(); ++i) {
         if (i < channelStrips.size()) {
-            // Level is roughly 0..??? Jamulus uses uint16.
-            // Need to calibrate. Assuming 0-32768 roughly?
-            // Actually CClient uses levels for LED meter.
             float norm = static_cast<float>(levels[i]) / 5000.0f; // Guesswork calibration
             if (norm > 1.0f) norm = 1.0f;
             channelStrips[i]->setLevel(norm);
@@ -213,6 +216,7 @@ void JamulusVSTAudioProcessorEditor::resized()
 
 void JamulusVSTAudioProcessorEditor::timerCallback()
 {
+    // Pump Qt Events
     QCoreApplication::processEvents();
 
     if (auto* client = audioProcessor.getClient()) {
