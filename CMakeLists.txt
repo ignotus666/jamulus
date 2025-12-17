@@ -46,6 +46,7 @@ list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/jack/")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-mac/")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/coreaudio-ios/")
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/oboe/")
+list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "/sound/midi-win/") # Exclude Windows MIDI
 
 # Exclude GUI files
 list(FILTER JAMULUS_SOURCES EXCLUDE REGEX "dlg\\.cpp$")
