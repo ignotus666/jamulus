@@ -22,6 +22,23 @@ JamulusVSTAudioProcessor::JamulusVSTAudioProcessor()
     {
         qAppInstance = std::make_unique<QCoreApplication>(argc, argv);
     }
+
+    // Initialize CClient on Main Thread (Constructor)
+    // This ensures CClient lives on the Message Thread, so it can receive signals
+    // from the Network Thread when we pump the event loop.
+    if (!jamulusClient)
+    {
+        jamulusClient = std::make_unique<CClient>(
+            0, // Port
+            0, // QoS
+            "", // Address
+            "", // Midi
+            true, // No auto jack
+            "JamulusVST", // Name
+            false, // IPv6
+            false // Mute me
+        );
+    }
 }
 
 JamulusVSTAudioProcessor::~JamulusVSTAudioProcessor()
@@ -104,26 +121,25 @@ void JamulusVSTAudioProcessor::changeProgramName (int index, const juce::String&
 
 void JamulusVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    if (!jamulusClient)
+    // Start client if not running
+    if (jamulusClient && !jamulusClient->IsRunning())
     {
-        jamulusClient = std::make_unique<CClient>(
-            0, // Port
-            0, // QoS
-            "", // Address
-            "", // Midi
-            true, // No auto jack
-            "JamulusVST", // Name
-            false, // IPv6
-            false // Mute me
-        );
-
+        // CClient::Start() calls Init() which handles buffer sizes
+        // We might need to pass sample rate info if Jamulus wasn't fixed to 48k?
+        // Jamulus is fixed to 48k. If host is not 48k, pitch will be wrong (Resampling needed).
+        // For now, assuming host is 48k or user accepts it.
         jamulusClient->Start();
     }
 }
 
 void JamulusVSTAudioProcessor::releaseResources()
 {
-    if (jamulusClient)
+    // Do NOT stop the client here if we want to keep connection alive across track disable/enable?
+    // VST3 releaseResources is called when processing stops.
+    // If we stop the client, we disconnect.
+    // Ideally we keep it running or reconnect.
+    // Let's stop to be safe and save resources.
+    if (jamulusClient && jamulusClient->IsRunning())
     {
         jamulusClient->Stop();
     }
