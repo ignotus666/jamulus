@@ -13,6 +13,7 @@ add_compile_definitions(APP_VERSION="1.0.0")
 add_compile_definitions(CUSTOM_MODES) # For Opus
 add_compile_definitions(HEADLESS)
 add_compile_definitions(JUCE_VST3_CAN_REPLACE_VST2=0)
+add_compile_definitions(JUCE_WEB_BROWSER=0) # Disable WebKit dependency
 
 # JUCE
 include(FetchContent)
@@ -26,14 +27,12 @@ FetchContent_MakeAvailable(juce)
 # Qt
 find_package(Qt5 COMPONENTS Core Network Concurrent Xml REQUIRED)
 
-# Linux Dependencies (GTK/Webkit/Curl for JUCE)
+# Linux Dependencies (GTK/Curl for JUCE)
 if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK REQUIRED gtk+-3.0)
-    pkg_check_modules(WEBKIT webkit2gtk-4.1)
-    if(NOT WEBKIT_FOUND)
-        pkg_check_modules(WEBKIT webkit2gtk-4.0)
-    endif()
+
+    # WebKit removed as we disabled JUCE_WEB_BROWSER
 
     find_package(CURL REQUIRED)
 endif()
@@ -107,8 +106,8 @@ target_include_directories(JamulusVST PRIVATE
 )
 
 if(UNIX AND NOT APPLE)
-    target_include_directories(JamulusVST PRIVATE ${GTK_INCLUDE_DIRS} ${WEBKIT_INCLUDE_DIRS})
-    target_link_libraries(JamulusVST PRIVATE ${GTK_LIBRARIES} ${WEBKIT_LIBRARIES} CURL::libcurl)
+    target_include_directories(JamulusVST PRIVATE ${GTK_INCLUDE_DIRS})
+    target_link_libraries(JamulusVST PRIVATE ${GTK_LIBRARIES} CURL::libcurl)
 endif()
 
 # Link Libraries
