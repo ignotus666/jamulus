@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include <iostream>
 #include <QThread>
 
 JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioProcessor& p)
@@ -10,7 +9,6 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     if (auto* client = audioProcessor.getClient()) {
         if (client->thread() != QThread::currentThread()) {
             client->moveToThread(QThread::currentThread());
-            std::cout << "[Editor] Moved CClient to Editor Thread" << std::endl;
         }
     }
 

@@ -29,7 +29,6 @@
 #include <QString>
 #include <QDateTime>
 #include <QMutex>
-#include <QDebug>
 #ifdef USE_OPUS_SHARED_LIB
 #    include "opus/opus_custom.h"
 #else
@@ -333,7 +332,6 @@ public:
 
 public slots:
     void OnVSTServerListReceived(CHostAddress InetAddr, CVector<CServerInfo> vecServerInfo) {
-        qInfo() << "[Client] OnVSTServerListReceived: " << vecServerInfo.Size() << " servers.";
         QMutexLocker locker(&vstMutex);
         vstServerList = vecServerInfo;
     }
