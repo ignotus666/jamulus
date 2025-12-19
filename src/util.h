@@ -1364,7 +1364,7 @@ protected:
 
 // Declare Meta Types for Qt Queue Connections
 Q_DECLARE_METATYPE(CVector<uint8_t>)
-Q_DECLARE_METATYPE(CVector<unsigned char>)
+// Removed duplicate declaration for unsigned char
 Q_DECLARE_METATYPE(CHostAddress)
 Q_DECLARE_METATYPE(CVector<CServerInfo>)
 Q_DECLARE_METATYPE(CVector<CChannelInfo>)
