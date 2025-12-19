@@ -140,8 +140,14 @@ CClient::CClient ( const quint16  iPortNumber,
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLMessReadyForSending, this, &CClient::OnSendCLProtMessage );
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLServerListReceived, this, &CClient::CLServerListReceived );
+#ifdef VST_PLUGIN
+    QObject::connect ( &ConnLessProtocol, &CProtocol::CLServerListReceived, this, &CClient::OnVSTServerListReceived );
+#endif
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLRedServerListReceived, this, &CClient::CLRedServerListReceived );
+#ifdef VST_PLUGIN
+    QObject::connect ( &ConnLessProtocol, &CProtocol::CLRedServerListReceived, this, &CClient::OnVSTServerListReceived );
+#endif
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLConnClientsListMesReceived, this, &CClient::CLConnClientsListMesReceived );
 
@@ -296,16 +302,16 @@ void CClient::OnMuteStateHasChangedReceived ( int iServerChanID, bool bIsMuted )
 
 void CClient::OnCLChannelLevelListReceived ( CHostAddress InetAddr, CVector<uint16_t> vecLevelList )
 {
-    // reorder levels from server channel order to client channel order
-
-    if ( ReorderLevelList ( vecLevelList ) )
-    {
-        emit CLChannelLevelListReceived ( InetAddr, vecLevelList );
-    }
+    emit CLChannelLevelListReceived ( InetAddr, vecLevelList );
 }
+
 
 void CClient::OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo )
 {
+#ifdef VST_PLUGIN
+    QMutexLocker locker(&vstMutex);
+    vstClientList = vecChanInfo;
+#endif
     // translate from server channel IDs to client channel IDs
     // ALSO here is where we allocate and free client channels as required
 

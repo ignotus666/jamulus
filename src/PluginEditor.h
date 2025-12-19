@@ -5,7 +5,6 @@
 #include "PluginProcessor.h"
 #include <QTimer>
 #include "client.h"
-#include "JamulusBridge.h"
 
 // Component for a single channel strip
 class ChannelStrip : public juce::Component
@@ -81,16 +80,17 @@ private:
     juce::Component mixerContent;
     std::vector<std::unique_ptr<ChannelStrip>> channelStrips;
 
-    // Logic
-    std::unique_ptr<JamulusBridge> bridge;
+    // State for Polling
     std::vector<CServerInfo> currentServerList;
     std::vector<CChannelInfo> currentClientList;
+    int lastServerListSize = -1;
+    int lastClientListSize = -1;
 
     void populateDirectoryBox();
     void fetchServerList();
     void updateServerListBox();
     void updateMixerLayout();
-    void updateLevels(const CVector<uint16_t>& levels);
+    void updateLevels(CClient* client);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JamulusVSTAudioProcessorEditor)
 };

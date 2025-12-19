@@ -314,6 +314,27 @@ public:
         bJitterBufferOK = true;
         SignalLevelMeter.Reset();
     }
+
+    // VST Polling Support
+    QMutex vstMutex;
+    CVector<CServerInfo> vstServerList;
+    CVector<CChannelInfo> vstClientList;
+
+    CVector<CServerInfo> GetVSTServerList() {
+        QMutexLocker locker(&vstMutex);
+        return vstServerList;
+    }
+
+    CVector<CChannelInfo> GetVSTClientList() {
+        QMutexLocker locker(&vstMutex);
+        return vstClientList;
+    }
+
+public slots:
+    void OnVSTServerListReceived(CHostAddress InetAddr, CVector<CServerInfo> vecServerInfo) {
+        QMutexLocker locker(&vstMutex);
+        vstServerList = vecServerInfo;
+    }
 #endif
 
 protected:

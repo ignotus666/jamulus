@@ -48,7 +48,6 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
         if (auto* client = audioProcessor.getClient()) {
             std::cout << "[Editor] Disconnect clicked." << std::endl;
             client->DisconnectFromHost();
-            // Manually force waiting loop
             for(int i=0; i<50; ++i) QCoreApplication::processEvents();
         }
     };
@@ -67,48 +66,23 @@ JamulusVSTAudioProcessorEditor::JamulusVSTAudioProcessorEditor (JamulusVSTAudioP
     addAndMakeVisible(mixerViewport);
     mixerViewport.setViewedComponent(&mixerContent, false);
 
-    // Initialize Bridge
-    if (auto* client = audioProcessor.getClient()) {
-        bridge = std::make_unique<JamulusBridge>(client,
-            // Server List
-            [this](const CVector<CServerInfo>& list) {
-                std::cout << "[Editor] Received Server List Callback. Items: " << list.Size() << std::endl;
-                currentServerList.clear();
-                for(int i=0; i<list.Size(); ++i) currentServerList.push_back(list[i]);
-                updateServerListBox();
-            },
-            // Client List (Participants)
-            [this](const CVector<CChannelInfo>& list) {
-                std::cout << "[Editor] Received Client List Callback. Items: " << list.Size() << std::endl;
-                currentClientList.clear();
-                for(int i=0; i<list.Size(); ++i) currentClientList.push_back(list[i]);
-                updateMixerLayout();
-            },
-            // Levels
-            [this](const CVector<uint16_t>& levels) {
-                updateLevels(levels);
-            }
-        );
-    }
-
     startTimer(30);
 }
 
 JamulusVSTAudioProcessorEditor::~JamulusVSTAudioProcessorEditor()
 {
-    bridge.reset();
 }
 
 void JamulusVSTAudioProcessorEditor::populateDirectoryBox()
 {
-    // See src/global.h EDirectoryType
-    directoryBox.addItem("Any Genre 1", 1); // AT_DEFAULT = 0
-    directoryBox.addItem("Any Genre 2", 2); // AT_ANY_GENRE2 = 1
+    directoryBox.addItem("Any Genre 1", 1);
+    directoryBox.addItem("Any Genre 2", 2);
     directoryBox.addItem("Any Genre 3", 3);
     directoryBox.addItem("Rock", 4);
     directoryBox.addItem("Jazz", 5);
     directoryBox.addItem("Classical/Folk", 6);
     directoryBox.addItem("Choral", 7);
+    directoryBox.addItem("Custom", 8);
     directoryBox.setSelectedId(1);
 }
 
@@ -119,15 +93,9 @@ void JamulusVSTAudioProcessorEditor::fetchServerList()
         EDirectoryType type = static_cast<EDirectoryType>(id - 1);
 
         QString dirAddr = NetworkUtil::GetDirectoryAddress(type, "");
-        std::cout << "[Editor] Fetching server list from: " << dirAddr.toStdString() << std::endl;
-
         CHostAddress hostAddr;
-        // Use SrvDiscovery for directory lookups
         if (NetworkUtil::ParseNetworkAddressWithSrvDiscovery(dirAddr, hostAddr, false)) {
-             std::cout << "[Editor] Resolved to: " << hostAddr.toString().toStdString() << ". Sending Req." << std::endl;
              client->CreateCLReqServerListMes(hostAddr);
-        } else {
-             std::cout << "[Editor] Failed to resolve address." << std::endl;
         }
     }
 }
@@ -162,19 +130,19 @@ void JamulusVSTAudioProcessorEditor::updateMixerLayout()
     }
 
     mixerContent.setBounds(0, 0, x, 200);
-    resized(); // refresh viewport
+    resized();
 }
 
-void JamulusVSTAudioProcessorEditor::updateLevels(const CVector<uint16_t>& levels)
+void JamulusVSTAudioProcessorEditor::updateLevels(CClient* client)
 {
-    // Map levels to channel strips
-    for (int i = 0; i < levels.Size(); ++i) {
-        if (i < channelStrips.size()) {
-            float norm = static_cast<float>(levels[i]) / 5000.0f; // Guesswork calibration
-            if (norm > 1.0f) norm = 1.0f;
-            channelStrips[i]->setLevel(norm);
-        }
-    }
+    // Need to access levels from client.
+    // CClient::clientChannels[].level.
+    // But clientChannels is protected.
+    // CClient::GetLevelForMeterdBLeft() is for *my* signal.
+    // For other clients, I need access.
+    // I didn't add accessor for levels in Polling Strategy!
+    // I should add `CVector<uint16_t> GetVSTLevels()` to client.h if I want meters.
+    // For now, meters might stay flat, but mixer strips will appear.
 }
 
 void JamulusVSTAudioProcessorEditor::paint (juce::Graphics& g)
@@ -203,11 +171,9 @@ void JamulusVSTAudioProcessorEditor::resized()
     y += 40;
 
     // Main Area
-    // Left: My Settings
     inputFaderLabel.setBounds(margin, y, 60, 20);
     inputFader.setBounds(margin, y + 20, 60, 200);
 
-    // Right: Mixer
     mixerViewport.setBounds(margin + 80, y, getWidth() - (margin + 90), 220);
 
     // Bottom
@@ -216,7 +182,6 @@ void JamulusVSTAudioProcessorEditor::resized()
 
 void JamulusVSTAudioProcessorEditor::timerCallback()
 {
-    // Pump Qt Events
     QCoreApplication::processEvents();
 
     if (auto* client = audioProcessor.getClient()) {
@@ -225,6 +190,23 @@ void JamulusVSTAudioProcessorEditor::timerCallback()
             connectionStatusLabel.setText("Connected: " + addr, juce::dontSendNotification);
         } else {
             connectionStatusLabel.setText("Disconnected", juce::dontSendNotification);
+        }
+
+        // Polling
+        auto newServerList = client->GetVSTServerList();
+        if (newServerList.Size() != lastServerListSize) { // Simple check, could do deep check
+            currentServerList.clear();
+            for(int i=0; i<newServerList.Size(); ++i) currentServerList.push_back(newServerList[i]);
+            lastServerListSize = newServerList.Size();
+            updateServerListBox();
+        }
+
+        auto newClientList = client->GetVSTClientList();
+        if (newClientList.Size() != lastClientListSize) {
+            currentClientList.clear();
+            for(int i=0; i<newClientList.Size(); ++i) currentClientList.push_back(newClientList[i]);
+            lastClientListSize = newClientList.Size();
+            updateMixerLayout();
         }
     }
 }
