@@ -53,6 +53,7 @@
 #include <QElapsedTimer>
 #include <QTextBoundaryFinder>
 #include <QTimer>
+#include <QMetaType> // Added for VST plugin meta type declarations
 #ifndef CLIENT_NO_SRV_CONNECT
 #    include <QDnsLookup>
 #endif
@@ -1360,3 +1361,12 @@ protected:
     bool            bBlockOnDoubleErrors;
     bool            bPreviousState;
 };
+
+// Declare Meta Types for Qt Queue Connections
+Q_DECLARE_METATYPE(CVector<uint8_t>)
+Q_DECLARE_METATYPE(CVector<unsigned char>)
+Q_DECLARE_METATYPE(CHostAddress)
+Q_DECLARE_METATYPE(CVector<CServerInfo>)
+Q_DECLARE_METATYPE(CVector<CChannelInfo>)
+Q_DECLARE_METATYPE(CVector<uint16_t>)
+Q_DECLARE_METATYPE(CVector<double>)

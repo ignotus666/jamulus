@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QThread>
 #include "global.h" // For types
+#include "util.h"
 
 // Static QApp instance
 static int argc = 1;
