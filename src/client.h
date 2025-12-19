@@ -307,6 +307,7 @@ public:
     CSound& GetSound() { return Sound; }
     QString GetServerAddress() { return Channel.GetAddress().toString(); }
     void DisconnectFromHost() {
+        // qInfo() << "Sending disconnect to " << Channel.GetAddress().toString();
         ConnLessProtocol.CreateCLDisconnection(Channel.GetAddress());
         Channel.SetEnable(false);
         // Do NOT stop sound engine, just logic.

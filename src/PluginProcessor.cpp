@@ -25,11 +25,24 @@ JamulusVSTAudioProcessor::JamulusVSTAudioProcessor()
     }
 
     // Register Meta Types for Queued Connections (Network Thread -> Main Thread)
+    // Use both string and template registration to be safe
+    qRegisterMetaType<CVector<uint8_t>>();
     qRegisterMetaType<CVector<uint8_t>>("CVector<uint8_t>");
+    qRegisterMetaType<CVector<unsigned char>>("CVector<unsigned char>");
+
+    qRegisterMetaType<CHostAddress>();
     qRegisterMetaType<CHostAddress>("CHostAddress");
+
+    qRegisterMetaType<CVector<CServerInfo>>();
     qRegisterMetaType<CVector<CServerInfo>>("CVector<CServerInfo>");
+
+    qRegisterMetaType<CVector<CChannelInfo>>();
     qRegisterMetaType<CVector<CChannelInfo>>("CVector<CChannelInfo>");
+
+    qRegisterMetaType<CVector<uint16_t>>();
     qRegisterMetaType<CVector<uint16_t>>("CVector<uint16_t>");
+
+    qRegisterMetaType<CVector<double>>();
     qRegisterMetaType<CVector<double>>("CVector<double>");
 
     // Initialize CClient on Main Thread (Constructor)
