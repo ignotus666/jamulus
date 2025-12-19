@@ -110,7 +110,12 @@ CClient::CClient ( const quint16  iPortNumber,
     // connections for the protocol mechanism
     QObject::connect ( &Channel, &CChannel::MessReadyForSending, this, &CClient::OnSendProtMessage );
 
+#ifdef VST_PLUGIN
+    // Use DirectConnection to bypass event loop for CL messages (Server Lists)
+    QObject::connect ( &Channel, &CChannel::DetectedCLMessage, this, &CClient::OnDetectedCLMessage, Qt::DirectConnection );
+#else
     QObject::connect ( &Channel, &CChannel::DetectedCLMessage, this, &CClient::OnDetectedCLMessage );
+#endif
 
     QObject::connect ( &Channel, &CChannel::ReqJittBufSize, this, &CClient::OnReqJittBufSize );
 
@@ -141,12 +146,14 @@ CClient::CClient ( const quint16  iPortNumber,
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLServerListReceived, this, &CClient::CLServerListReceived );
 #ifdef VST_PLUGIN
-    QObject::connect ( &ConnLessProtocol, &CProtocol::CLServerListReceived, this, &CClient::OnVSTServerListReceived );
+    // DirectConnection to update list even if on worker thread
+    QObject::connect ( &ConnLessProtocol, &CProtocol::CLServerListReceived, this, &CClient::OnVSTServerListReceived, Qt::DirectConnection );
 #endif
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLRedServerListReceived, this, &CClient::CLRedServerListReceived );
 #ifdef VST_PLUGIN
-    QObject::connect ( &ConnLessProtocol, &CProtocol::CLRedServerListReceived, this, &CClient::OnVSTServerListReceived );
+    // DirectConnection to update list even if on worker thread
+    QObject::connect ( &ConnLessProtocol, &CProtocol::CLRedServerListReceived, this, &CClient::OnVSTServerListReceived, Qt::DirectConnection );
 #endif
 
     QObject::connect ( &ConnLessProtocol, &CProtocol::CLConnClientsListMesReceived, this, &CClient::CLConnClientsListMesReceived );
