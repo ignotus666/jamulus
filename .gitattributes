@@ -1,0 +1,3 @@
+# Keep personal modifications to GitHub Actions workflow files
+# This prevents incoming PRs from overwriting customized workflow configurations
+.github/workflows/autobuild.yml merge=ours
