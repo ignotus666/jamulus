@@ -1,42 +1,34 @@
 # Solution: Preventing Merge Conflicts on autobuild.yml
 
-## IMPORTANT: Change PR Base Branch First!
+## The Problem
 
-**The PR must target `my-build`, not `master`!**
+You're trying to merge changes from `master` into your `my-build` branch and getting conflicts on `autobuild.yml`.
 
-If you see "Resolving conflicts between master and my-build and committing changes → master", the PR is targeting the wrong branch.
+## Solution: Manual Conflict Resolution on GitHub
 
-**To fix this:**
-1. Go to your PR page on GitHub
-2. Click "Edit" next to the title (or look for base branch settings)
-3. Change the base branch from `master` to `my-build`
-4. The PR should now show: `my-build ← copilot/update-gitattributes-for-autobuild`
+When merging a PR from `master` to `my-build` on GitHub:
 
-Once the base branch is correct, resolve any conflicts using the instructions below.
-
-## Manual Conflict Resolution - GitHub Web Interface
-
-If you're resolving conflicts **on the GitHub website** when merging this PR into `my-build`:
-
-1. Click "Resolve conflicts" button on the PR
-2. In the conflict editor, you'll see markers like:
+1. Click "Resolve conflicts" button
+2. In the conflict editor, you'll see:
    ```
    <<<<<<< my-build
    [Your custom autobuild.yml content]
    =======
-   [Content from this PR/master]
-   >>>>>>> copilot/update-gitattributes-for-autobuild
+   [Content from master]
+   >>>>>>> master
    ```
-3. **Delete everything EXCEPT your custom content**:
-   - Delete the `<<<<<<< my-build` line
-   - Keep your custom autobuild.yml content (the section between `<<<<<<<` and `=======`)
-   - Delete the `=======` line
-   - Delete all content from the incoming branch (between `=======` and `>>>>>>>`)
-   - Delete the `>>>>>>> copilot/update-gitattributes-for-autobuild` line
+3. **Keep ONLY your custom content:**
+   - Delete the line: `<<<<<<< my-build`
+   - Keep your custom autobuild.yml content (everything between `<<<<<<<` and `=======`)
+   - Delete the line: `=======`
+   - Delete all content from master (everything between `=======` and `>>>>>>>`)
+   - Delete the line: `>>>>>>> master`
 4. Click "Mark as resolved"
 5. Click "Commit merge"
 
-**Result:** Your custom `autobuild.yml` is preserved in the `my-build` branch.
+**Result:** Your my-build version of `autobuild.yml` is kept, master's version is discarded.
+
+The merge will create a new commit on your `my-build` branch. This is correct.
 
 ## Manual Conflict Resolution - Command Line
 
