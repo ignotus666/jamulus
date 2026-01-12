@@ -85,6 +85,24 @@ We're using git to develop Jamulus. To contribute, you should get familiar to gi
 
 Have a look at our [guide for translators](docs/TRANSLATING.md) - especially read the git related part. If you need more in depth information, the [git-scm book](https://git-scm.com/book/en/v2) might also help you getting started. If you have any questions, don't hesitate to ask, as git can be very confusing.
 
+#### Git configuration for custom branches
+
+If you maintain a custom branch with modified workflow files (like `.github/workflows/autobuild.yml`), you may want to preserve your local versions when merging changes from the main branch. The repository includes a `.gitattributes` file that uses a custom merge strategy for these files, but it requires local Git configuration.
+
+Run the setup script once after cloning:
+
+**On Linux/macOS:**
+```bash
+./tools/setup-git-config.sh
+```
+
+**On Windows:**
+```cmd
+tools\setup-git-config.bat
+```
+
+This configures the `merge.ours` driver that tells Git to keep your local version of marked files during merge operations. See [tools/README.md](tools/README.md) for more details.
+
 ### Testing
 
 To check that there are no errors, please run a local (build/feature) test. Keep an eye on the CI checks for quality or compile issues after opening a pull request and fix them as needed. You can also test the build on your repository by naming your branch `autobuild/<branchName>` which will start the building process on your repo.
