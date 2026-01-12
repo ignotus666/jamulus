@@ -1,5 +1,19 @@
 # Solution: Preventing Merge Conflicts on autobuild.yml
 
+## IMPORTANT: Change PR Base Branch First!
+
+**The PR must target `my-build`, not `master`!**
+
+If you see "Resolving conflicts between master and my-build and committing changes → master", the PR is targeting the wrong branch.
+
+**To fix this:**
+1. Go to your PR page on GitHub
+2. Click "Edit" next to the title (or look for base branch settings)
+3. Change the base branch from `master` to `my-build`
+4. The PR should now show: `my-build ← copilot/update-gitattributes-for-autobuild`
+
+Once the base branch is correct, resolve any conflicts using the instructions below.
+
 ## Manual Conflict Resolution - GitHub Web Interface
 
 If you're resolving conflicts **on the GitHub website** when merging this PR into `my-build`:
