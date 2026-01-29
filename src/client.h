@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -259,6 +259,8 @@ public:
     void SetRemoteChanPan ( const int iId, const float fPan );
     void OnTimerRemoteChanGainOrPan();
     void StartTimerGainOrPan();
+
+    void SetControllerInFaderLevel ( int iChannelIdx, int iValue ) { OnControllerInFaderLevel ( iChannelIdx, iValue ); }
 
     void SetInputBoost ( const int iNewBoost ) { iInputBoost = iNewBoost; }
 

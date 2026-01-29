@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2022-2025
+# Copyright (c) 2022-2026
 #
 # Author(s):
 #  Christian Hoffmann
@@ -26,10 +26,10 @@
 
 set -eu
 
-QT_DIR=/opt/qt
+QT_DIR=~/qt
 # The following version pinnings are semi-automatically checked for
 # updates. Verify .github/workflows/bump-dependencies.yaml when changing those manually:
-AQTINSTALL_VERSION=3.1.21
+AQTINSTALL_VERSION=3.3.0
 
 TARGET_ARCHS="${TARGET_ARCHS:-}"
 

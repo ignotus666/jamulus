@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2021-2025
+ * Copyright (c) 2021-2026
  *
  * Author(s):
  *  dtinth
@@ -324,6 +324,33 @@ CClientRpc::CClientRpc ( CClient* pClient, CRpcServer* pRpcServer, QObject* pare
 
         pClient->CreateChatTextMes ( jsonMessage.toString() );
 
+        response["result"] = "ok";
+    } );
+
+    /// @rpc_method jamulusclient/setFaderLevel
+    /// @brief Sets the fader level. Example: {"id":1,"jsonrpc":"2.0","method":"jamulusclient/setFaderLevel","params":{"channelIndex": 0,"level":
+    /// 50}}.
+    /// @param {number} params.channelIndex - The channel index of the fader to be set.
+    /// @param {number} params.level - The fader level in range 0..100.
+    /// @result {string} result - Always "ok".
+    pRpcServer->HandleMethod ( "jamulusclient/setFaderLevel", [=] ( const QJsonObject& params, QJsonObject& response ) {
+        auto jsonChannelIndex = params["channelIndex"];
+        if ( !jsonChannelIndex.isDouble() || ( jsonChannelIndex.toInt() < 0 ) || ( jsonChannelIndex.toInt() > MAX_NUM_CHANNELS ) )
+        {
+            response["error"] =
+                CRpcServer::CreateJsonRpcError ( CRpcServer::iErrInvalidParams, "Invalid params: channelIndex is not a number or out-of-range" );
+            return;
+        }
+
+        auto jsonLevel = params["level"];
+        if ( !jsonLevel.isDouble() || ( jsonLevel.toInt() < 0 ) || ( jsonLevel.toInt() > 100 ) )
+        {
+            response["error"] =
+                CRpcServer::CreateJsonRpcError ( CRpcServer::iErrInvalidParams, "Invalid params: level is not a number or out-of-range" );
+            return;
+        }
+
+        pClient->SetControllerInFaderLevel ( jsonChannelIndex.toInt(), jsonLevel.toInt() );
         response["result"] = "ok";
     } );
 }

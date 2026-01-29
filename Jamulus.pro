@@ -15,7 +15,7 @@ contains(CONFIG, "noupcasename") {
 # allow detailed version info for intermediate builds (#475)
 contains(VERSION, .*dev.*) {
     exists(".git/config") {
-        GIT_DESCRIPTION=$$system(git describe --match=xxxxxxxxxxxxxxxxxxxx --always --abbrev --dirty) # the match should never match
+        GIT_DESCRIPTION=$$system(git describe --match=xxxxxxxxxxxxxxxxxxxx --always --abbrev --dirty):$$system(git show -s "--pretty=format:%ct") # commit_id(-dirty):seconds_since_epoch
         VERSION = "$$VERSION"-$$GIT_DESCRIPTION
         message("building version \"$$VERSION\" (intermediate in git repository)")
     } else {
@@ -52,7 +52,8 @@ contains(CONFIG, "headless") {
 
 # Do not set LRELEASE_DIR explicitly when using embed_translations.
 # It doesn't work with multiple targets or architectures.
-TRANSLATIONS = src/translation/translation_de_DE.ts \
+TRANSLATIONS = src/translation/translation_ja_JP.ts \
+    src/translation/translation_de_DE.ts \
     src/translation/translation_fr_FR.ts \
     src/translation/translation_ko_KR.ts \
     src/translation/translation_pt_PT.ts \
@@ -61,6 +62,7 @@ TRANSLATIONS = src/translation/translation_de_DE.ts \
     src/translation/translation_nb_NO.ts \
     src/translation/translation_nl_NL.ts \
     src/translation/translation_pl_PL.ts \
+    src/translation/translation_ru_RU.ts \
     src/translation/translation_sk_SK.ts \
     src/translation/translation_it_IT.ts \
     src/translation/translation_sv_SE.ts \
@@ -234,6 +236,7 @@ win32 {
     }
 
 } else:ios {
+    CONFIG+=add_ios_ffmpeg_libraries # QTBUG-129651
     QMAKE_ASSET_CATALOGS += src/res/iOSIcons.xcassets
     QMAKE_INFO_PLIST = ios/Info.plist
     OBJECTIVE_SOURCES += src/ios/ios_app_delegate.mm

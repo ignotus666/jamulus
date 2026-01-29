@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -41,6 +41,9 @@
 #include <QSoundEffect>
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
 #    include <QVersionNumber>
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
+#    include <QStyleHints>
 #endif
 #include "global.h"
 #include "util.h"

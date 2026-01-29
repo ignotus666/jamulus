@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -23,6 +23,7 @@
 \******************************************************************************/
 
 #include "client.h"
+#include "util.h"
 
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
@@ -60,7 +61,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bFraSiFactPrefSupported ( false ),
     bFraSiFactDefSupported ( false ),
     bFraSiFactSafeSupported ( false ),
-    eGUIDesign ( GD_ORIGINAL ),
+    eGUIDesign ( GD_DEFAULT ),
     eMeterStyle ( MT_LED_STRIPE ),
     bEnableAudioAlerts ( false ),
     bEnableOPUS64 ( false ),

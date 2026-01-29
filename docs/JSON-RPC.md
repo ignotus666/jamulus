@@ -222,6 +222,24 @@ Results:
 | result | string | Always "ok". |
 
 
+### jamulusclient/setFaderLevel
+
+Sets the fader level. Example: {"id":1,"jsonrpc":"2.0","method":"jamulusclient/setFaderLevel","params":{"channelIndex": 0,"level":  50}}.
+
+Parameters:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| params.channelIndex | number | The channel index of the fader to be set. |
+| params.level | number | The fader level in range 0..100. |
+
+Results:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| result | string | Always "ok". |
+
+
 ### jamulusclient/setName
 
 Sets your name.
@@ -321,6 +339,8 @@ Results:
 | result.city | string | The server city. |
 | result.countryId | number | The server country ID (see QLocale::Country). |
 | result.welcomeMessage | string | The server welcome message. |
+| result.directoryType | string | The directory type as a string (see EDirectoryType and SerializeDirectoryType). |
+| result.directoryAddress | string | The string used to look up the directory address (only assume valid if directoryType is "custom"  and registrationStatus is "registered"). |
 | result.directory | string | The directory with which this server requested registration, or blank if none. |
 | result.registrationStatus | string | The server registration status as string (see ESvrRegStatus and SerializeRegistrationStatus). |
 
@@ -340,6 +360,24 @@ Results:
 | Name | Type | Description |
 | --- | --- | --- |
 | result | string | Always "acknowledged".   To check if the recording was restarted or if there is any error, call `jamulusserver/getRecorderStatus` again. |
+
+
+### jamulusserver/setDirectory
+
+Set the directory type and, for custom, the directory address.
+
+Parameters:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| params.directoryType | string | The directory type as a string (see EDirectoryType and DeserializeDirectoryType). |
+| [params.directoryAddress] | string | (optional) The directory address, required if `directoryType` is "custom". |
+
+Results:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| result | string | Always "ok". |
 
 
 ### jamulusserver/setRecordingDirectory
