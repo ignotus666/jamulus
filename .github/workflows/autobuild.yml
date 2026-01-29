@@ -1,21 +1,8 @@
-# This file builds the source and produces artifacts for every supported platform.
-# For release tags it creates a Github release and uploads the binaries to that releases.
-# The builds are instrumented with CodeQL.
+# Simplified build workflow for custom packages
+# Builds only .exe and .apk packages
+# Triggered manually only for my-build branch
 
-# see analyse_git_reference.py for implementation of the logic:
-#     for every push to a branch starting with "autobuild": (can be used during development for tighter supervision of builds)
-#          - do CodeQl while building for every platform
-#          - publish the created binaries/packs only as artifacts/appendix of the github-action-run (not as release), and only retain those files for limited period
-#     for every pull-request to main:
-#          - do CodeQl while building for every platform
-#          - publish the created binaries/packs only as artifacts/appendix of the github-action-run (not as release), and only retain those files for limited period
-#     for every tag that starts with 'r' and has an arbitrary suffix (e.g. beta1, rc1, etc.)
-#          - do CodeQl while building for every platform
-#          - publish the created binaries/packs only as artifacts/appendix as a prerelease
-#     for every tag that starts with 'r' and does not have any suffix:
-#          - do CodeQl while building for every platform
-#          - publish the created binaries/packs only as artifacts/appendix as a release
-
+name: Build .exe, .apk and macOS packages
 on:
   workflow_dispatch:
     inputs:
@@ -152,46 +139,17 @@ jobs:
               build_all_targets 'true'
             fi
 
-            pr_contains_build_changes() {
-              git fetch origin "${PR_BASE}" "${PR_HEAD}"
-              git diff --name-only "${PR_BASE}..${PR_HEAD}" |
-                grep -qP 'autobuild|windows|linux|mac|ios|android|\.pro'
-            }
-            if pr_contains_build_changes; then
-              echo 'Triggered by a PR with build- or platform-specific changes, building all targets'
-              build_all_targets 'true'
-            fi
-          }
+permissions:
+  contents: write
 
-          case "${GITHUB_EVENT_NAME}" in
-            push)
-              handle_push
-              ;;
-            workflow_dispatch)
-              handle_workflow_dispatch
-              ;;
-            pull_request)
-              handle_pull_request
-              ;;
-          esac
-
-          echo 'default case, not building all targets'
-          build_all_targets 'false'
-
-
-  release_assets:
-    name:                           Build for ${{ matrix.config.config_name }}
-    needs:                          create_release
-    # Set permissions to allow uploading artifact, uploading to release and allowing CodeQl to set security events
-    permissions:
-      checks:                       write
-      contents:                     write
-      security-events:              write
+jobs:
+  build:
+    name: Build ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    if: github.ref == 'refs/heads/my-build'
     strategy:
-      fail-fast:                    false
+      fail-fast: false
       matrix:
-        # Think of this like a foreach loop. Basically runs the steps with every combination of
-        # the contents of this.
         config:
           - config_name:            Android .apk (artifact+codeQL)
             target_os:              android
@@ -331,9 +289,7 @@ jobs:
             C:\Qt
             C:\ChocoCache
             C:\AutobuildCache
-            ${{ github.workspace }}\libs\NSIS\NSIS-source
-            ${{ github.workspace }}\libs\ASIOSDK2
-          key:                      ${{ matrix.config.target_os }}-${{ hashFiles('.github/workflows/autobuild.yml', '.github/autobuild/windows.ps1', 'windows/deploy_windows.ps1') }}-${{ matrix.config.base_command }}
+          key: windows-${{ hashFiles('.github/workflows/autobuild.yml') }}
 
       - name:                       Cache Android dependencies
         if:                         matrix.config.target_os == 'android'
@@ -393,76 +349,29 @@ jobs:
         if:                         steps.get-artifacts.outputs.artifact_2
         uses:                       actions/upload-artifact@v6
         with:
-          name:                     ${{ steps.get-artifacts.outputs.artifact_2 }}
-          path:                     deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
-          retention-days:           31
-          if-no-files-found:        error
+          path: |
+            /opt/qt
+            ~/Library/Cache/jamulus-homebrew-bottles
+          key: macos-${{ hashFiles('.github/workflows/autobuild.yml') }}
 
-      - name:                       Notarize macOS Release Build
-        if:                         >-
-                                    steps.build.outputs.macos_signed == 'true' &&
-                                    needs.create_release.outputs.publish_to_release == 'true' &&
-                                    steps.build.outputs.macos_notarize == 'true'
-        id:                         notarize-macOS-app
-        run:                        ${{ matrix.config.base_command }} notarize
+      - name: Set up build dependencies
+        run: ${{ matrix.config.command }} setup
         env:
-          JAMULUS_BUILD_VERSION:    ${{ needs.create_release.outputs.build_version }}
-          ARTIFACT_PATH:            deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
-          NOTARIZATION_USERNAME:    ${{ secrets.NOTARIZATION_USERNAME }} # Apple ID for notarization
-          NOTARIZATION_PASSWORD:    ${{ secrets.NOTARIZATION_PASSWORD }} # App specific password for Apple ID
-          APPLE_TEAM_ID:            ${{ secrets.NOTARIZATION_TEAM_ID }} # Team ID from App Store Connect
+          JAMULUS_BUILD_VERSION: 3.11.0
 
-      - name:                       Staple macOS Release Build
-        if:                         >-
-                                    steps.build.outputs.macos_signed == 'true' &&
-                                    needs.create_release.outputs.publish_to_release == 'true' &&
-                                    steps.build.outputs.macos_notarize == 'true'
-        id:                         staple-macOS-app
-        run:                        ${{ matrix.config.base_command }} staple
-        env:
-          JAMULUS_BUILD_VERSION:    ${{ needs.create_release.outputs.build_version }}
-          ARTIFACT_PATH:            deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
-
-      - name:                       Deploy Artifact 1 to Release
-        if:                         needs.create_release.outputs.publish_to_release == 'true'
-        id:                         upload-release-asset1
-        run:                        >
-          gh release upload "${{ needs.create_release.outputs.tag_name }}" "deploy/${{ steps.get-artifacts.outputs.artifact_1 }}" --clobber
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-      - name:                       Deploy Artifact 2 to Release
-        if:                         needs.create_release.outputs.publish_to_release == 'true' &&
-                                    steps.get-artifacts.outputs.artifact_2
-        id:                         upload-release-asset2
-        run:                        >
-          gh release upload "${{ needs.create_release.outputs.tag_name }}" "deploy/${{ steps.get-artifacts.outputs.artifact_2 }}" --clobber
+      - name: Build
+        run: ${{ matrix.config.command }} build
         env:
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
       - name:                       Perform CodeQL Analysis
         if:                         matrix.config.run_codeql
         uses:                       github/codeql-action/analyze@v4
 
-  create_deb_repo:
-    name:                           Create files for .deb repository (if requested)
-    runs-on:                        ubuntu-22.04
-    needs:                          [create_release, release_assets]
-    if:                             needs.create_release.outputs.publish_to_release == 'true'
-    # Set permissions to allow uploading artifact, uploading to release
-    permissions:
-      checks:                       write
-      contents:                     write
-    steps:
-      - name:                       Import GPG key
+      - name: Get artifacts
+        id: get-artifacts
+        run: ${{ matrix.config.command }} get-artifacts
         env:
-          GPG_PRIVATE_KEY:          ${{ secrets.GPG_PRIVATE_KEY }}
-        run:                        |
-          set -eu
-
-          [[ "${GPG_PRIVATE_KEY:-}" ]] || {
-              echo "Missing Github secret GPG_PRIVATE_KEY. Please set it on GitHub to enable deb repository releases. Skipping step..."
-              echo "GPG_REPO_KEY_MISSING=true" >> ${GITHUB_ENV}
-              exit 0
-          }
+          JAMULUS_BUILD_VERSION: 3.11.0
 
           echo "GPG_REPO_KEY_MISSING=false" >> ${GITHUB_ENV}
           mkdir -p gpghome
@@ -473,31 +382,16 @@ jobs:
         if:                         env.GPG_REPO_KEY_MISSING == 'false'
         uses:                       actions/download-artifact@v7
         with:
-          path:                     releasedl/
-      - name:                       Create Debian repository
-        if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        run:                        |
-          set -eu
+          name: ${{ steps.get-artifacts.outputs.artifact_1 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
+          retention-days: 31
+          if-no-files-found: error
 
-          # Create and cd into repo directory
-          mkdir repo
-          mv releasedl/*.deb/*.deb repo/
-          pushd repo
-
-          # create repo files
-          apt-ftparchive packages . > Packages
-          apt-ftparchive release . > Release
-          gpg --homedir "../gpghome" --armor --yes --clearsign --output InRelease --detach-sign Release
-          gpg --homedir "../gpghome" --armor --export > "key.asc"
-
-          # remove .deb files as they have been uploaded to the GitHub release already before
-          rm *.deb
-
-          popd
-      - name:                       Upload Debian repository files to release
-        if:                         env.GPG_REPO_KEY_MISSING == 'false'
-        env:
-          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-        run:                        |
-          gh release upload "${{ needs.create_release.outputs.tag_name }}" "repo/InRelease" "repo/key.asc" "repo/Packages" "repo/Release" --clobber -R "${{ github.repository}}"
-
+      - name: Upload secondary artifact
+        if: steps.get-artifacts.outputs.artifact_2
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.get-artifacts.outputs.artifact_2 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
+          retention-days: 31
+          if-no-files-found: error
