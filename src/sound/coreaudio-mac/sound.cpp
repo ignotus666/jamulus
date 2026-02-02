@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -27,10 +27,8 @@
 /* Implementation *************************************************************/
 CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
                  void*          arg,
-                 const QString& strMIDISetup,
-                 const bool,
-                 const QString& ) :
-    CSoundBase ( "CoreAudio", fpNewProcessCallback, arg, strMIDISetup ),
+                 const bool ) :
+    CSoundBase ( "CoreAudio", fpNewProcessCallback, arg ),
     midiClient ( static_cast<MIDIClientRef> ( NULL ) ),
     midiInPortRef ( static_cast<MIDIPortRef> ( NULL ) )
 {

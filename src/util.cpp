@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -559,7 +559,10 @@ CAboutDlg::CAboutDlg ( QWidget* parent ) : CBaseDlg ( parent )
                               "<p>Gary Wang (<a href=\"https://github.com/BLumia\">BLumia</a>)</p>" +
                               "<p><b>" + tr ( "Norwegian Bokmål" ) +
                               "</b></p>"
-                              "<p>Allan Nordhøy (<a href=\"https://hosted.weblate.org/user/kingu/\">kingu</a>)</p>" );
+                              "<p>Allan Nordhøy (<a href=\"https://hosted.weblate.org/user/kingu/\">kingu</a>)</p>" +
+                              "<p><b>" + tr ( "Japanese" ) +
+                              "</b></p>"
+                              "<p>tsukurun (<a href=\"https://github.com/tsukurun\">tsukurun</a>)</p>" );
 
     // set version number in about dialog
     lblVersion->setText ( GetVersionAndNameStr() );
@@ -633,9 +636,13 @@ CHelpMenu::CHelpMenu ( const bool bIsClient, QWidget* parent ) : QMenu ( tr ( "&
     addSeparator();
     addAction ( tr ( "What's &This" ), this, SLOT ( OnHelpWhatsThis() ), QKeySequence ( Qt::SHIFT + Qt::Key_F1 ) );
     addSeparator();
+
+    addAction ( tr ( "P&rivacy policy..." ), this, SLOT ( OnHelpPrivacyPolicy() ) );
+
     pAction = addAction ( tr ( "&About Jamulus..." ), this, SLOT ( OnHelpAbout() ) );
     pAction->setMenuRole ( QAction::AboutRole ); // required for Mac
     pAction = addAction ( tr ( "About &Qt..." ), this, SLOT ( OnHelpAboutQt() ) );
+
     pAction->setMenuRole ( QAction::AboutQtRole ); // required for Mac
 }
 
@@ -743,7 +750,7 @@ bool NetworkUtil::ParseNetworkAddressString ( QString strAddress, QHostAddress& 
     return false;
 }
 
-#ifndef CLIENT_NO_SRV_CONNECT
+#ifndef DISABLE_SRV_DNS
 bool NetworkUtil::ParseNetworkAddressSrv ( QString strAddress, CHostAddress& HostAddress, bool bEnableIPv6 )
 {
     // init requested host address with invalid address first
@@ -799,20 +806,22 @@ bool NetworkUtil::ParseNetworkAddressSrv ( QString strAddress, CHostAddress& Hos
     }
     return false;
 }
+#endif
 
-bool NetworkUtil::ParseNetworkAddressWithSrvDiscovery ( QString strAddress, CHostAddress& HostAddress, bool bEnableIPv6 )
+bool NetworkUtil::ParseNetworkAddress ( QString strAddress, CHostAddress& HostAddress, bool bEnableIPv6 )
 {
+#ifndef DISABLE_SRV_DNS
     // Try SRV-based discovery first:
     if ( ParseNetworkAddressSrv ( strAddress, HostAddress, bEnableIPv6 ) )
     {
         return true;
     }
-    // Try regular connect via plain IP or host name lookup (A/AAAA):
-    return ParseNetworkAddress ( strAddress, HostAddress, bEnableIPv6 );
-}
 #endif
+    // Try regular connect via plain IP or host name lookup (A/AAAA):
+    return ParseNetworkAddressBare ( strAddress, HostAddress, bEnableIPv6 );
+}
 
-bool NetworkUtil::ParseNetworkAddress ( QString strAddress, CHostAddress& HostAddress, bool bEnableIPv6 )
+bool NetworkUtil::ParseNetworkAddressBare ( QString strAddress, CHostAddress& HostAddress, bool bEnableIPv6 )
 {
     QHostAddress InetAddr;
     unsigned int iNetPort = DEFAULT_PORT_NUMBER;
@@ -1571,7 +1580,7 @@ QString GetVersionAndNameStr ( const bool bDisplayInGui )
         strVersionText += "\n *** ";
 #    endif
 #endif
-        strVersionText += "\n *** Copyright © 2005-2025 The Jamulus Development Team";
+        strVersionText += "\n *** Copyright © 2005-2026 The Jamulus Development Team";
         strVersionText += "\n";
     }
 

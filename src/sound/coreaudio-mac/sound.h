@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -40,7 +40,6 @@ class CSound : public CSoundBase
 public:
     CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
              void*          arg,
-             const QString& strMIDISetup,
              const bool,
              const QString& );
 

@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Simon Tomlinson, Volker Fischer
@@ -41,9 +41,7 @@ public:
     static const uint8_t RING_FACTOR;
     CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
              void*          arg,
-             const QString& strMIDISetup,
-             const bool,
-             const QString& );
+             const bool );
     virtual ~CSound() {}
 
     virtual int  Init ( const int iNewPrefMonoBufferSize );

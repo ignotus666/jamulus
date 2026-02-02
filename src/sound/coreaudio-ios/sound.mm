@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  ann0see and ngocdh based on code from Volker Fischer
@@ -30,10 +30,8 @@
 /* Implementation *************************************************************/
 CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
                  void*          arg,
-                 const QString& strMIDISetup,
-                 const bool,
-                 const QString& ) :
-    CSoundBase ( "CoreAudio iOS", fpNewProcessCallback, arg, strMIDISetup ),
+                 const bool ) :
+    CSoundBase ( "CoreAudio iOS", fpNewProcessCallback, arg ),
     isInitialized ( false )
 {
     try

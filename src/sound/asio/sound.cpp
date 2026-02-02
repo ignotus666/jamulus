@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2025
+ * Copyright (c) 2004-2026
  *
  * Author(s):
  *  Volker Fischer
@@ -311,7 +311,7 @@ int CSound::GetActualBufferSize ( const int iDesiredBufferSizeMono )
     // query the usable buffer sizes
     ASIOGetBufferSize ( &HWBufferInfo.lMinSize, &HWBufferInfo.lMaxSize, &HWBufferInfo.lPreferredSize, &HWBufferInfo.lGranularity );
 
-    // ### TEST: BEGIN ###//
+    //### TEST: BEGIN ###//
     /*
     #include <QMessageBox>
     QMessageBox::information ( 0, "APP_NAME", QString("lMinSize: %1, lMaxSize: %2, lPreferredSize: %3, lGranularity: %4").
@@ -319,12 +319,12 @@ int CSound::GetActualBufferSize ( const int iDesiredBufferSizeMono )
     );
     _exit(1);
     */
-    // ### TEST: END ###//
+    //### TEST: END ###//
 
-    // ### TODO: BEGIN ###//
-    //  see https://github.com/EddieRingle/portaudio/blob/master/src/hostapi/asio/pa_asio.cpp#L1654
-    //  (SelectHostBufferSizeForUnspecifiedUserFramesPerBuffer)
-    // ### TODO: END ###//
+    //### TODO: BEGIN ###//
+    // see https://github.com/EddieRingle/portaudio/blob/master/src/hostapi/asio/pa_asio.cpp#L1654
+    // (SelectHostBufferSizeForUnspecifiedUserFramesPerBuffer)
+    //### TODO: END ###//
 
     // calculate "nearest" buffer size and set internal parameter accordingly
     // first check minimum and maximum values
@@ -517,10 +517,8 @@ void CSound::Stop()
 
 CSound::CSound ( void ( *fpNewCallback ) ( CVector<int16_t>& psData, void* arg ),
                  void*          arg,
-                 const QString& strMIDISetup,
-                 const bool,
-                 const QString& ) :
-    CSoundBase ( "ASIO", fpNewCallback, arg, strMIDISetup ),
+                 const bool ) :
+    CSoundBase ( "ASIO", fpNewCallback, arg ),
     lNumInChan ( 0 ),
     lNumInChanPlusAddChan ( 0 ),
     lNumOutChan ( 0 ),
