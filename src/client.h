@@ -1,3 +1,4 @@
+    // ...existing public methods...
 /******************************************************************************\
  * Copyright (c) 2004-2026
  *
@@ -127,7 +128,6 @@ public:
     CClient ( const quint16  iPortNumber,
               const quint16  iQosNumber,
               const QString& strConnOnStartupAddress,
-              const QString& strMIDISetup,
               const bool     bNoAutoJackConnect,
               const QString& strNClientName,
               const bool     bNEnableIPv6,
@@ -293,11 +293,24 @@ public:
     CProtocol* getConnLessProtocol() { return &ConnLessProtocol; }
     //### TODO: END ###//
 
+    // MIDI control
+    void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
+    bool IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
+
     // settings
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;
 
+public:
+    // Assign settings pointer
+    void SetSettings(CClientSettings* settings) { pSettings = settings; }
+
+    // Apply MIDI settings from config
+    void ApplyMidiSettingsFromConfig();
+
 protected:
+    // Pointer to settings for MIDI and other config (must be after pSignalHandler for correct init order)
+    CClientSettings* pSettings;
     // callback function must be static, otherwise it does not work
     static void AudioCallback ( CVector<short>& psData, void* arg );
 
@@ -473,4 +486,8 @@ signals:
     void ControllerInFaderIsSolo ( int iChannelIdx, bool bIsSolo );
     void ControllerInFaderIsMute ( int iChannelIdx, bool bIsMute );
     void ControllerInMuteMyself ( bool bMute );
+    void MidiCCReceived ( int ccNumber );
+
+private slots:
+    void OnMidiCCReceived ( int ccNumber );
 };

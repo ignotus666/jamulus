@@ -102,7 +102,6 @@ int main ( int argc, char** argv )
     QString      strJsonRpcBindIP            = DEFAULT_JSON_RPC_LISTEN_ADDRESS;
     quint16      iQosNumber                  = DEFAULT_QOS_NUMBER;
     ELicenceType eLicenceType                = LT_NO_LICENCE;
-    QString      strMIDISetup                = "";
     QString      strConnOnStartupAddress     = "";
     QString      strIniFileName              = "";
     QString      strHTMLStatusFileName       = "";
@@ -535,20 +534,14 @@ int main ( int argc, char** argv )
             continue;
         }
 
-        // Controller MIDI channel ---------------------------------------------
-        if ( GetStringArgument ( argc,
-                                 argv,
-                                 i,
-                                 "--ctrlmidich", // no short form
-                                 "--ctrlmidich",
-                                 strArgument ) )
+        // MIDI
+        if ( GetStringArgument ( argc, argv, i, "", "--ctrlmidich", strArgument ) )
         {
-            strMIDISetup = strArgument;
-            qInfo() << qUtf8Printable ( QString ( "- MIDI controller settings: %1" ).arg ( strMIDISetup ) );
-            CommandLineOptions << "--ctrlmidich";
+            CommandLineOptions << (QString("--ctrlmidich=") + strArgument);
             ClientOnlyOptions << "--ctrlmidich";
             continue;
         }
+
 
         // Undocumented:
 
@@ -920,25 +913,24 @@ int main ( int argc, char** argv )
 #ifndef SERVER_ONLY
         if ( bIsClient )
         {
-            // Client:
-            // actual client object
             CClient Client ( iPortNumber,
                              iQosNumber,
                              strConnOnStartupAddress,
-                             strMIDISetup,
                              bNoAutoJackConnect,
                              strClientName,
                              bEnableIPv6,
                              bMuteMeInPersonalMix );
 
-            // load settings from init-file (command line options override)
+            // Create Settings with the client pointer
             CClientSettings Settings ( &Client, strIniFileName );
             Settings.Load ( CommandLineOptions );
+            Client.SetSettings ( &Settings );
+            Client.ApplyMidiSettingsFromConfig();
 
 #    ifndef NO_JSON_RPC
             if ( pRpcServer )
             {
-                new CClientRpc ( &Client, pRpcServer, pRpcServer );
+                new CClientRpc ( &Client, &Settings, pRpcServer, pRpcServer );
             }
 #    endif
 
@@ -956,7 +948,6 @@ int main ( int argc, char** argv )
                 CClientDlg ClientDlg ( &Client,
                                        &Settings,
                                        strConnOnStartupAddress,
-                                       strMIDISetup,
                                        bShowComplRegConnList,
                                        bShowAnalyzerConsole,
                                        bMuteStream,
