@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -67,6 +67,7 @@ protected:
     void    UpdateSoundCardFrame();
     void    UpdateDirectoryComboBox();
     void    UpdateAudioFaderSlider();
+    void    ApplyMIDIMappingFromSettings();
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );
@@ -136,7 +137,6 @@ private:
     QPushButton* midiLearnButtons[5];
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
-    void         SetMIDIControlsEnabled ( bool enabled );
 
 private slots:
     void OnLearnButtonClicked();

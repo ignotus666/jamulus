@@ -1,6 +1,5 @@
-    // ...existing public methods...
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -128,6 +127,7 @@ public:
     CClient ( const quint16  iPortNumber,
               const quint16  iQosNumber,
               const QString& strConnOnStartupAddress,
+              const QString& strMIDISetup,
               const bool     bNoAutoJackConnect,
               const QString& strNClientName,
               const bool     bNEnableIPv6,
@@ -260,8 +260,6 @@ public:
     void OnTimerRemoteChanGainOrPan();
     void StartTimerGainOrPan();
 
-    void SetControllerInFaderLevel ( int iChannelIdx, int iValue ) { OnControllerInFaderLevel ( iChannelIdx, iValue ); }
-
     void SetInputBoost ( const int iNewBoost ) { iInputBoost = iNewBoost; }
 
     void SetRemoteInfo() { Channel.SetRemoteInfo ( ChannelInfo ); }
@@ -288,10 +286,10 @@ public:
         Channel.GetBufErrorRates ( vecErrRates, dLimit, dMaxUpLimit );
     }
 
-    //### TODO: BEGIN ###//
-    // Refactor this to use signal/slot mechanism. https://github.com/jamulussoftware/jamulus/pull/3479/files#r1976382416
+    // ### TODO: BEGIN ###//
+    //  Refactor this to use signal/slot mechanism. https://github.com/jamulussoftware/jamulus/pull/3479/files#r1976382416
     CProtocol* getConnLessProtocol() { return &ConnLessProtocol; }
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     // MIDI control
     void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
@@ -301,16 +299,9 @@ public:
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;
 
-public:
-    // Assign settings pointer
-    void SetSettings(CClientSettings* settings) { pSettings = settings; }
-
-    // Apply MIDI settings from config
-    void ApplyMidiSettingsFromConfig();
+    void ApplyMIDIMapping ( const QString& midiMap );
 
 protected:
-    // Pointer to settings for MIDI and other config (must be after pSignalHandler for correct init order)
-    CClientSettings* pSettings;
     // callback function must be static, otherwise it does not work
     static void AudioCallback ( CVector<short>& psData, void* arg );
 

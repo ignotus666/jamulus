@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Simon Tomlinson, Volker Fischer
@@ -31,8 +31,10 @@ const uint8_t CSound::RING_FACTOR = 20;
 
 CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
                  void*          arg,
-                 const bool ) :
-    CSoundBase ( "Oboe", fpNewProcessCallback, arg )
+                 const QString& strMIDISetup,
+                 const bool,
+                 const QString& ) :
+    CSoundBase ( "Oboe", fpNewProcessCallback, arg, strMIDISetup )
 {
 #ifdef ANDROIDDEBUG
     qInstallMessageHandler ( myMessageHandler );

@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -42,9 +42,6 @@
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
 #    include <QVersionNumber>
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
-#    include <QStyleHints>
-#endif
 #include "global.h"
 #include "util.h"
 #include "client.h"
@@ -80,6 +77,7 @@ public:
     CClientDlg ( CClient*         pNCliP,
                  CClientSettings* pNSetP,
                  const QString&   strConnOnStartupAddress,
+                 const QString&   strMIDISetup,
                  const bool       bNewShowComplRegConnList,
                  const bool       bShowAnalyzerConsole,
                  const bool       bMuteStream,
@@ -245,6 +243,7 @@ public slots:
 
     void accept() { close(); } // introduced by pljones
 
+    void OnOpenMidiSettings();
     void OnMIDIControllerUsageChanged ( bool bEnabled );
 
 signals:

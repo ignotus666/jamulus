@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -62,9 +62,10 @@ class CSound : public CSoundBase
 public:
     CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
              void*          arg,
+             const QString& strMIDISetup,
              const bool     bNoAutoJackConnect,
              const QString& strJackClientName ) :
-        CSoundBase ( "Jack", fpNewProcessCallback, arg ),
+        CSoundBase ( "Jack", fpNewProcessCallback, arg, strMIDISetup ),
         iJACKBufferSizeMono ( 0 ),
         bJackWasShutDown ( false ),
         fInOutLatencyMs ( 0.0f )
@@ -126,9 +127,10 @@ class CSound : public CSoundBase
 public:
     CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* pParg ),
              void*          pParg,
+             const QString& strMIDISetup,
              const bool,
              const QString& ) :
-        CSoundBase ( "nosound", fpNewProcessCallback, pParg ),
+        CSoundBase ( "nosound", fpNewProcessCallback, pParg, strMIDISetup ),
         HighPrecisionTimer ( true )
     {
         HighPrecisionTimer.Start();

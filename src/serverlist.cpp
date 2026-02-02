@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -805,9 +805,7 @@ bool CServerListManager::Load()
             continue;
         }
 
-        // This uses ParseNetworkAddressBare because it is just parsing ip:host that was saved to the file.
-        // Therefore no SRV lookup is appropriate.
-        NetworkUtil::ParseNetworkAddressBare ( slLine[0], haServerHostAddr, bEnableIPv6 );
+        NetworkUtil::ParseNetworkAddress ( slLine[0], haServerHostAddr, bEnableIPv6 );
         int iIdx = IndexOf ( haServerHostAddr );
         if ( iIdx != INVALID_INDEX )
         {
@@ -971,23 +969,13 @@ void CServerListManager::SetRegistered ( const bool bIsRegister )
         return;
     }
 
-    // It is very important to unlock the Mutex before doing address resolution,
-    // so that the event loop can run and any other timers that need the mutex
-    // can obtain it. Otherwise there is the possibility of deadlock when doing
-    // the SRV lookup, if another timer fires that needs the same mutex.
-    locker.unlock();
-
     // get the correct directory address
     // Note that we always have to parse the server address again since if
     // it is an URL of a dynamic IP address, the IP address might have
     // changed in the meanwhile.
     // Allow IPv4 only for communicating with Directories
-    // Use SRV DNS discovery for directory connections, fallback to A/AAAA if none.
     const QString strNetworkAddress      = NetworkUtil::GetDirectoryAddress ( DirectoryType, strDirectoryAddress );
-    const bool    bDirectoryAddressValid = NetworkUtil::ParseNetworkAddress ( strNetworkAddress, DirectoryAddress, false );
-
-    // lock the mutex again now that the address has been resolved.
-    locker.relock();
+    const bool    bDirectoryAddressValid = NetworkUtil().ParseNetworkAddress ( strNetworkAddress, DirectoryAddress, false );
 
     if ( bIsRegister )
     {

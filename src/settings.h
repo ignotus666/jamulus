@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -41,20 +41,8 @@
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
-
 {
     Q_OBJECT
-
-public:
-    // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
-    static void ParseCtrlMidiCh(const QString& midiMap,
-        int& midiChannel,
-        int& midiFaderOffset, int& midiFaderCount,
-        int& midiPanOffset, int& midiPanCount,
-        int& midiSoloOffset, int& midiSoloCount,
-        int& midiMuteOffset, int& midiMuteCount,
-        int& midiMuteMyself,
-        bool& bUseMIDIController);
 
 public:
     CSettings() :
@@ -150,7 +138,6 @@ public slots:
 class CClientSettings : public CSettings
 {
 public:
-    void ParseMIDICommandLineParams(const QString& val);
     CClientSettings ( CClient* pNCliP, const QString& sNFiName ) :
         CSettings(),
         vecStoredFaderTags ( MAX_NUM_STORED_FADER_SETTINGS, "" ),

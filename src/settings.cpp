@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -200,54 +200,6 @@ void CSettings::PutIniSetting ( QDomDocument& xmlFile, const QString& sSection, 
     xmlKey.appendChild ( currentValue );
 }
 
-// Parse MIDI commmand line parameters and update MIDI variables
-void CSettings::ParseCtrlMidiCh(const QString& midiMap,
-    int& midiChannel,
-    int& midiFaderOffset, int& midiFaderCount,
-    int& midiPanOffset, int& midiPanCount,
-    int& midiSoloOffset, int& midiSoloCount,
-    int& midiMuteOffset, int& midiMuteCount,
-    int& midiMuteMyself,
-    bool& bUseMIDIController)
-{
-    QStringList parts = midiMap.split(';');
-    if (!parts.isEmpty()) {
-        midiChannel = parts[0].toInt();
-        for (int i = 1; i < parts.size(); ++i) {
-            QString p = parts[i];
-            if (p.startsWith("f")) {
-                QStringList vals = p.mid(1).split('*');
-                if (vals.size() == 2) {
-                    midiFaderOffset = vals[0].toInt();
-                    midiFaderCount = vals[1].toInt();
-                }
-            } else if (p.startsWith("p")) {
-                QStringList vals = p.mid(1).split('*');
-                if (vals.size() == 2) {
-                    midiPanOffset = vals[0].toInt();
-                    midiPanCount = vals[1].toInt();
-                }
-            } else if (p.startsWith("s")) {
-                QStringList vals = p.mid(1).split('*');
-                if (vals.size() == 2) {
-                    midiSoloOffset = vals[0].toInt();
-                    midiSoloCount = vals[1].toInt();
-                }
-            } else if (p.startsWith("m")) {
-                QStringList vals = p.mid(1).split('*');
-                if (vals.size() == 2) {
-                    midiMuteOffset = vals[0].toInt();
-                    midiMuteCount = vals[1].toInt();
-                }
-            } else if (p.startsWith("o")) {
-                midiMuteMyself = p.mid(1).toInt();
-            }
-        }
-        bUseMIDIController = true;
-    }
-}
-
-
 #ifndef SERVER_ONLY
 // Client settings -------------------------------------------------------------
 void CClientSettings::LoadFaderSettings ( const QString& strCurFileName )
@@ -274,7 +226,7 @@ void CClientSettings::SaveFaderSettings ( const QString& strCurFileName )
     WriteToFile ( strCurFileName, IniXMLDocument );
 }
 
-void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& CommandLineOptions )
+void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, const QList<QString>& )
 {
     int  iIdx;
     int  iValue;
@@ -509,46 +461,75 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetAudioQuality ( static_cast<EAudioQuality> ( iValue ) );
     }
 
-
-    // MIDI settings from XML
+    // MIDI settings
     if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
+    {
         midiChannel = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifaderoffset", 0, 127, iValue ) )
-        midiFaderOffset = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifadercount", 0, 127, iValue ) )
-        midiFaderCount = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipanoffset", 0, 127, iValue ) )
-        midiPanOffset = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipancount", 0, 127, iValue ) )
-        midiPanCount = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolooffset", 0, 127, iValue ) )
-        midiSoloOffset = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolocount", 0, 127, iValue ) )
-        midiSoloCount = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimuteoffset", 0, 127, iValue ) )
-        midiMuteOffset = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimutecount", 0, 127, iValue ) )
-        midiMuteCount = iValue;
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", 0, 127, iValue ) )
-        midiMuteMyself = iValue;
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
-        bUseMIDIController = bValue;
+    }
 
-    // Do not enable/disable MIDI here; CClient will handle it after settings are loaded
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifaderoffset", 0, 127, iValue ) )
+    {
+        midiFaderOffset = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midifadercount", 0, 127, iValue ) )
+    {
+        midiFaderCount = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipanoffset", 0, 127, iValue ) )
+    {
+        midiPanOffset = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midipancount", 0, 127, iValue ) )
+    {
+        midiPanCount = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolooffset", 0, 127, iValue ) )
+    {
+        midiSoloOffset = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midisolocount", 0, 127, iValue ) )
+    {
+        midiSoloCount = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimuteoffset", 0, 127, iValue ) )
+    {
+        midiMuteOffset = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimutecount", 0, 127, iValue ) )
+    {
+        midiMuteCount = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", 0, 127, iValue ) )
+    {
+        midiMuteMyself = iValue;
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
+    {
+        bUseMIDIController = bValue;
+    }
 
     // custom directories
 
-    //### TODO: BEGIN ###//
-    // compatibility to old version (< 3.6.1)
+    // ### TODO: BEGIN ###//
+    //  compatibility to old version (< 3.6.1)
     QString strDirectoryAddress = GetIniSetting ( IniXMLDocument, "client", "centralservaddr", "" );
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     for ( iIdx = 0; iIdx < MAX_NUM_SERVER_ADDR_ITEMS; iIdx++ )
     {
-        //### TODO: BEGIN ###//
-        // compatibility to old version (< 3.8.2)
+        // ### TODO: BEGIN ###//
+        //  compatibility to old version (< 3.8.2)
         strDirectoryAddress = GetIniSetting ( IniXMLDocument, "client", QString ( "centralservaddr%1" ).arg ( iIdx ), strDirectoryAddress );
-        //### TODO: END ###//
+        // ### TODO: END ###//
 
         vstrDirectoryAddress[iIdx] = GetIniSetting ( IniXMLDocument, "client", QString ( "directoryaddress%1" ).arg ( iIdx ), strDirectoryAddress );
         strDirectoryAddress        = "";
@@ -556,9 +537,9 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
     // directory type
 
-    //### TODO: BEGIN ###//
-    // compatibility to old version (<3.4.7)
-    // only the case that "centralservaddr" was set in old ini must be considered
+    // ### TODO: BEGIN ###//
+    //  compatibility to old version (<3.4.7)
+    //  only the case that "centralservaddr" was set in old ini must be considered
     if ( !vstrDirectoryAddress[0].isEmpty() && GetFlagIniSet ( IniXMLDocument, "client", "defcentservaddr", bValue ) && !bValue )
     {
         eDirectoryType = AT_CUSTOM;
@@ -568,7 +549,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         eDirectoryType = static_cast<EDirectoryType> ( iValue );
     }
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     else if ( GetNumericIniSet ( IniXMLDocument, "client", "directorytype", 0, static_cast<int> ( AT_CUSTOM ), iValue ) )
     {
@@ -630,23 +611,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
     // fader settings
     ReadFaderSettingsFromXML ( IniXMLDocument );
-    
-    // Apply command-line MIDI parameters if present (overwrite .ini values)
-     for (const QString& option : CommandLineOptions) {
-         if (option.startsWith("--ctrlmidich=")) {
-             QString midiMap = option.section('=', 1);
-             CSettings::ParseCtrlMidiCh(
-                 midiMap,
-                 midiChannel,
-                   midiFaderOffset, midiFaderCount,
-                   midiPanOffset, midiPanCount,
-                   midiSoloOffset, midiSoloCount,
-                   midiMuteOffset, midiMuteCount,
-                midiMuteMyself,
-                bUseMIDIController
-            );
-        }
-     }
 }
 void CClientSettings::ReadFaderSettingsFromXML ( const QDomDocument& IniXMLDocument )
 {
@@ -965,10 +929,10 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         // Server GUI defaults to ""
         QString directoryAddress = "";
 
-        //### TODO: BEGIN ###//
-        // compatibility to old version < 3.8.2
+        // ### TODO: BEGIN ###//
+        //  compatibility to old version < 3.8.2
         directoryAddress = GetIniSetting ( IniXMLDocument, "server", "centralservaddr", directoryAddress );
-        //### TODO: END ###//
+        // ### TODO: END ###//
 
         directoryAddress = GetIniSetting ( IniXMLDocument, "server", "directoryaddress", directoryAddress );
 
@@ -988,20 +952,20 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     }
     else
     {
-        //### TODO: BEGIN ###//
-        // compatibility to old version < 3.4.7
+        // ### TODO: BEGIN ###//
+        //  compatibility to old version < 3.4.7
         if ( GetFlagIniSet ( IniXMLDocument, "server", "defcentservaddr", bValue ) )
         {
             directoryType = bValue ? AT_DEFAULT : AT_CUSTOM;
         }
         else
         {
-            //### TODO: END ###//
+            // ### TODO: END ###//
 
             // if "directorytype" itself is set, use it (note "AT_NONE", "AT_DEFAULT" and "AT_CUSTOM" are min/max directory type here)
 
-            //### TODO: BEGIN ###//
-            // compatibility to old version < 3.8.2
+            // ### TODO: BEGIN ###//
+            //  compatibility to old version < 3.8.2
             if ( GetNumericIniSet ( IniXMLDocument,
                                     "server",
                                     "centservaddrtype",
@@ -1011,7 +975,7 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             {
                 directoryType = static_cast<EDirectoryType> ( iValue );
             }
-            //### TODO: END ###//
+            // ### TODO: END ###//
 
             else
             {
@@ -1027,14 +991,14 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             }
         }
 
-        //### TODO: BEGIN ###//
-        // compatibility to old version < 3.9.0
-        // override type to AT_NONE if servlistenabled exists and is false
+        // ### TODO: BEGIN ###//
+        //  compatibility to old version < 3.9.0
+        //  override type to AT_NONE if servlistenabled exists and is false
         if ( GetFlagIniSet ( IniXMLDocument, "server", "servlistenabled", bValue ) && !bValue )
         {
             directoryType = AT_NONE;
         }
-        //### TODO: END ###//
+        // ### TODO: END ###//
     }
 
     pServer->SetDirectoryType ( directoryType );

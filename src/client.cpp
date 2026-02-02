@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -23,13 +23,12 @@
 \******************************************************************************/
 
 #include "client.h"
-#include "settings.h"
-#include "util.h"
 
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
                    const quint16  iQosNumber,
                    const QString& strConnOnStartupAddress,
+                   const QString& strMIDISetup,
                    const bool     bNoAutoJackConnect,
                    const QString& strNClientName,
                    const bool     bNEnableIPv6,
@@ -49,7 +48,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bMuteOutStream ( false ),
     fMuteOutStreamGain ( 1.0f ),
     Socket ( &Channel, iPortNumber, iQosNumber, "", bNEnableIPv6 ),
-    Sound ( AudioCallback, this, bNoAutoJackConnect, strNClientName ),
+    Sound ( AudioCallback, this, strMIDISetup, bNoAutoJackConnect, strNClientName ),
     iAudioInFader ( AUD_FADER_IN_MIDDLE ),
     bReverbOnLeftChan ( false ),
     iReverbLevel ( 0 ),
@@ -61,7 +60,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bFraSiFactPrefSupported ( false ),
     bFraSiFactDefSupported ( false ),
     bFraSiFactSafeSupported ( false ),
-    eGUIDesign ( GD_DEFAULT ),
+    eGUIDesign ( GD_ORIGINAL ),
     eMeterStyle ( MT_LED_STRIPE ),
     bEnableAudioAlerts ( false ),
     bEnableOPUS64 ( false ),
@@ -70,7 +69,6 @@ CClient::CClient ( const quint16  iPortNumber,
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
     pSignalHandler ( CSignalHandler::getSingletonP() )
-    , pSettings(nullptr)
 {
     int iOpusError;
 
@@ -174,7 +172,7 @@ CClient::CClient ( const quint16  iPortNumber,
 
     QObject::connect ( pSignalHandler, &CSignalHandler::HandledSignal, this, &CClient::OnHandledSignal );
 
-    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, [this] ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); } );
+    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, &CClient::OnMidiCCReceived );
 
     // start timer so that elapsed time works
     PreciseTime.start();
@@ -193,15 +191,6 @@ CClient::CClient ( const quint16  iPortNumber,
     {
         SetServerAddr ( strConnOnStartupAddress );
         Start();
-    }
-}
-
-// MIDI setup will be handled after settings are assigned
-void CClient::ApplyMidiSettingsFromConfig()
-{
-    if (pSettings) {
-        Sound.SetCtrlMIDIChannel(pSettings->midiChannel);
-        Sound.EnableMIDI(pSettings->bUseMIDIController);
     }
 }
 
@@ -582,7 +571,11 @@ void CClient::SetRemoteChanPan ( const int iId, const float fPan )
 bool CClient::SetServerAddr ( QString strNAddr )
 {
     CHostAddress HostAddress;
-    if ( NetworkUtil::ParseNetworkAddress ( strNAddr, HostAddress, bEnableIPv6 ) )
+#ifdef CLIENT_NO_SRV_CONNECT
+    if ( NetworkUtil().ParseNetworkAddress ( strNAddr, HostAddress, bEnableIPv6 ) )
+#else
+    if ( NetworkUtil().ParseNetworkAddressWithSrvDiscovery ( strNAddr, HostAddress, bEnableIPv6 ) )
+#endif
     {
         // apply address to the channel
         Channel.SetAddress ( HostAddress );
@@ -1559,6 +1552,7 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
+void CClient::ApplyMIDIMapping ( const QString& midiMap ) { Sound.SetMIDIMapping ( midiMap ); }
 
 void CClient::OnMidiCCReceived ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); }
 

@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Copyright (c) 2004-2026
+ * Copyright (c) 2004-2025
  *
  * Author(s):
  *  Volker Fischer
@@ -23,12 +23,12 @@
 \******************************************************************************/
 
 #include "clientdlg.h"
-#include "util.h"
 
 /* Implementation *************************************************************/
 CClientDlg::CClientDlg ( CClient*         pNCliP,
                          CClientSettings* pNSetP,
                          const QString&   strConnOnStartupAddress,
+                         const QString&   strMIDISetup,
                          const bool       bNewShowComplRegConnList,
                          const bool       bShowAnalyzerConsole,
                          const bool       bMuteStream,
@@ -41,10 +41,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     bDetectFeedback ( false ),
     bEnableIPv6 ( bNEnableIPv6 ),
     eLastRecorderState ( RS_UNDEFINED ), // for SetMixerBoardDeco
-    eLastDesign ( GD_DEFAULT ),          //          "
+    eLastDesign ( GD_ORIGINAL ),         //          "
     ClientSettingsDlg ( pNCliP, pNSetP, parent ),
     ChatDlg ( parent ),
-    ConnectDlg ( pNSetP, bNewShowComplRegConnList, bNEnableIPv6, parent ),
+    ConnectDlg ( pNSetP, bNewShowComplRegConnList, parent ),
     AnalyzerConsole ( pNCliP, parent )
 {
     setupUi ( this );
@@ -219,7 +219,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     MainMixerBoard->SetNumMixerPanelRows ( pSettings->iNumMixerPanelRows );
 
     // Pass through flag for MIDICtrlUsed
-    MainMixerBoard->SetMIDICtrlUsed ( pSettings->bUseMIDIController );
+    MainMixerBoard->SetMIDICtrlUsed ( !strMIDISetup.isEmpty() );
 
     // reset mixer board
     MainMixerBoard->HideAll();
@@ -400,11 +400,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
-    pSettingsMenu->addAction (
-        tr ( "&MIDI Control Settings..." ),
-        this,
-        [this] { ShowGeneralSettings ( SETTING_TAB_MIDI ); },
-        QKeySequence ( Qt::CTRL + Qt::Key_M ) );
+    pSettingsMenu->addAction ( tr ( "&MIDI Control Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
@@ -595,14 +591,12 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // Send the request to two servers for redundancy if either or both of them
     // has a higher release version number, the reply will trigger the notification.
 
-    // Don't use SRV resolution when resolving update servers.
-
-    if ( NetworkUtil::ParseNetworkAddressBare ( UPDATECHECK1_ADDRESS, UpdateServerHostAddress, bEnableIPv6 ) )
+    if ( NetworkUtil().ParseNetworkAddress ( UPDATECHECK1_ADDRESS, UpdateServerHostAddress, bEnableIPv6 ) )
     {
         pClient->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
 
-    if ( NetworkUtil::ParseNetworkAddressBare ( UPDATECHECK2_ADDRESS, UpdateServerHostAddress, bEnableIPv6 ) )
+    if ( NetworkUtil().ParseNetworkAddress ( UPDATECHECK2_ADDRESS, UpdateServerHostAddress, bEnableIPv6 ) )
     {
         pClient->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
@@ -997,9 +991,8 @@ void CClientDlg::ShowGeneralSettings ( int iTab )
     // open general settings dialog
     emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
-    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
-
     // make sure dialog is upfront and has focus
+    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
     ClientSettingsDlg.raise();
     ClientSettingsDlg.activateWindow();
 }
@@ -1296,11 +1289,11 @@ void CClientDlg::Disconnect()
     TimerDetectFeedback.stop();
     bDetectFeedback = false;
 
-    //### TODO: BEGIN ###//
-    // is this still required???
-    // immediately update status bar
+    // ### TODO: BEGIN ###//
+    //  is this still required???
+    //  immediately update status bar
     OnTimerStatus();
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     // reset LEDs
     ledBuffers->Reset();
@@ -1489,16 +1482,9 @@ void CClientDlg::SetMixerBoardDeco ( const ERecorderState newRecorderState, cons
         }
         else
         {
-#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
-            // for Qt 6.5.0 or later, we use the inbuilt cross platform color scheme picker.
-            if ( QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark )
-#else
-            // for earlier versions, check darkmode as proposed in https://www.qt.io/blog/dark-mode-on-windows-11-with-qt-6.5
-            const QPalette defaultPalette;
-            if ( defaultPalette.color ( QPalette::WindowText ).lightness() > defaultPalette.color ( QPalette::Window ).lightness() )
-#endif
+            if ( palette().color ( QPalette::Window ) == QColor::fromRgbF ( 0.196078, 0.196078, 0.196078, 1 ) )
             {
-                // Dark mode needs a light color
+                // Dark mode on macOS/Linux needs a light color
 
                 sTitleStyle += "color: rgb(220,220,220); }";
             }
@@ -1534,7 +1520,8 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
     ledDelay->SetLight ( eOverallDelayLEDColor );
 }
 
-// OnOpenMidiSettings slot removed; lambda is used in menu action
+void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }
+
 void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 {
     // Update the mixer board's MIDI flag to trigger proper user numbering display
