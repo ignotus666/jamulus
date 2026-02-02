@@ -62,15 +62,21 @@ public:
 };
 
 /* Classes ********************************************************************/
+
+#ifndef SERVER_ONLY
+class CClientSettings;
+#endif
+
 class CSoundBase : public QThread
 {
     Q_OBJECT
-
 public:
+#ifndef SERVER_ONLY
+    static void ParseMIDICommandLineParams ( const QString& strMIDISetup, CClientSettings& Settings );
+#endif
     CSoundBase ( const QString& strNewSystemDriverTechniqueName,
                  void ( *fpNewProcessCallback ) ( CVector<int16_t>& psData, void* pParg ),
-                 void*          pParg,
-                 const QString& strMIDISetup );
+                 void*          pParg );
 
     virtual int  Init ( const int iNewPrefMonoBufferSize ) { return iNewPrefMonoBufferSize; }
     virtual void Start()
@@ -117,7 +123,11 @@ public:
     void EmitReinitRequestSignal ( const ESndCrdResetType eSndCrdResetType ) { emit ReinitRequest ( eSndCrdResetType ); }
 
     // this needs to be public so that it can be called from CMidi
-    void ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes );
+    void         ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes );
+    virtual void EnableMIDI ( bool /* bEnable */ ) {}    // Default empty implementation
+    virtual bool IsMIDIEnabled() const { return false; } // Default false
+
+    void SetCtrlMIDIChannel(int ch) { iCtrlMIDIChannel = ch; }
 
 protected:
     virtual QString  LoadAndInitializeDriver ( QString, bool ) { return ""; }
@@ -179,4 +189,5 @@ signals:
     void ControllerInFaderIsSolo ( int iChannelIdx, bool bIsSolo );
     void ControllerInFaderIsMute ( int iChannelIdx, bool bIsMute );
     void ControllerInMuteMyself ( bool bMute );
+    void MidiCCReceived ( int ccNumber );
 };

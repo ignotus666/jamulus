@@ -41,9 +41,7 @@ public:
     static const uint8_t RING_FACTOR;
     CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
              void*          arg,
-             const QString& strMIDISetup,
-             const bool,
-             const QString& );
+             const bool );
     virtual ~CSound() {}
 
     virtual int  Init ( const int iNewPrefMonoBufferSize );

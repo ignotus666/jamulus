@@ -41,8 +41,20 @@
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
+
 {
     Q_OBJECT
+
+public:
+    // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
+    static void ParseCtrlMidiCh(const QString& midiMap,
+        int& midiChannel,
+        int& midiFaderOffset, int& midiFaderCount,
+        int& midiPanOffset, int& midiPanCount,
+        int& midiSoloOffset, int& midiSoloCount,
+        int& midiMuteOffset, int& midiMuteCount,
+        int& midiMuteMyself,
+        bool& bUseMIDIController);
 
 public:
     CSettings() :
@@ -138,6 +150,7 @@ public slots:
 class CClientSettings : public CSettings
 {
 public:
+    void ParseMIDICommandLineParams(const QString& val);
     CClientSettings ( CClient* pNCliP, const QString& sNFiName ) :
         CSettings(),
         vecStoredFaderTags ( MAX_NUM_STORED_FADER_SETTINGS, "" ),
@@ -200,6 +213,20 @@ public:
     bool       bWindowWasShownChat;
     bool       bWindowWasShownConnect;
     bool       bOwnFaderFirst;
+
+    // MIDI settings
+    int     midiChannel        = 0; // Default MIDI channel 0
+    int     midiMuteMyself     = 0;
+    int     midiFaderOffset    = 0;
+    int     midiFaderCount     = 0;
+    int     midiPanOffset      = 0;
+    int     midiPanCount       = 0;
+    int     midiSoloOffset     = 0;
+    int     midiSoloCount      = 0;
+    int     midiMuteOffset     = 0;
+    int     midiMuteCount      = 0;
+    bool    bUseMIDIController = false;
+    QString GetMIDIMapString() const;
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool isAboutToQuit ) override;
