@@ -232,6 +232,69 @@ QVector<QString> CSoundBase::LoadAndInitializeFirstValidDriver ( const bool bOpe
 * MIDI handling                                                                *
 \******************************************************************************/
 
+void CSoundBase::SetMIDIControllerMapping ( int iFaderOffset,
+                                            int iFaderCount,
+                                            int iPanOffset,
+                                            int iPanCount,
+                                            int iSoloOffset,
+                                            int iSoloCount,
+                                            int iMuteOffset,
+                                            int iMuteCount,
+                                            int iMuteMyselfCC )
+{
+    // Clear all previous MIDI mappings
+    for ( int i = 0; i < aMidiCtls.size(); ++i )
+    {
+        aMidiCtls[i] = { None, 0 };
+    }
+
+    // Map fader controllers
+    for ( int i = 0; i < iFaderCount && i < MAX_NUM_CHANNELS; ++i )
+    {
+        int iCC = iFaderOffset + i;
+        if ( iCC >= 0 && iCC < 128 )
+        {
+            aMidiCtls[iCC] = { Fader, i };
+        }
+    }
+
+    // Map pan controllers
+    for ( int i = 0; i < iPanCount && i < MAX_NUM_CHANNELS; ++i )
+    {
+        int iCC = iPanOffset + i;
+        if ( iCC >= 0 && iCC < 128 )
+        {
+            aMidiCtls[iCC] = { Pan, i };
+        }
+    }
+
+    // Map solo controllers
+    for ( int i = 0; i < iSoloCount && i < MAX_NUM_CHANNELS; ++i )
+    {
+        int iCC = iSoloOffset + i;
+        if ( iCC >= 0 && iCC < 128 )
+        {
+            aMidiCtls[iCC] = { Solo, i };
+        }
+    }
+
+    // Map mute controllers
+    for ( int i = 0; i < iMuteCount && i < MAX_NUM_CHANNELS; ++i )
+    {
+        int iCC = iMuteOffset + i;
+        if ( iCC >= 0 && iCC < 128 )
+        {
+            aMidiCtls[iCC] = { Mute, i };
+        }
+    }
+
+    // Map mute myself controller
+    if ( iMuteMyselfCC >= 0 && iMuteMyselfCC < 128 )
+    {
+        aMidiCtls[iMuteMyselfCC] = { MuteMyself, 0 };
+    }
+}
+
 void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
 {
     if ( vMIDIPaketBytes.Size() > 0 )

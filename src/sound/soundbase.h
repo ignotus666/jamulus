@@ -127,6 +127,16 @@ public:
 
     void SetCtrlMIDIChannel ( int iCh ) { iCtrlMIDIChannel = iCh; }
 
+    void SetMIDIControllerMapping ( int iFaderOffset,
+                                    int iFaderCount,
+                                    int iPanOffset,
+                                    int iPanCount,
+                                    int iSoloOffset,
+                                    int iSoloCount,
+                                    int iMuteOffset,
+                                    int iMuteCount,
+                                    int iMuteMyselfCC );
+
 protected:
     virtual QString  LoadAndInitializeDriver ( QString, bool ) { return ""; }
     virtual void     UnloadCurrentDriver() {}

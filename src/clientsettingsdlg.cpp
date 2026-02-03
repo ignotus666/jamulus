@@ -807,12 +807,17 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     {
         QObject::connect ( mapping.spinBox, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this, mapping] ( int v ) {
             pSettings->*( mapping.member ) = v;
+            // Apply MIDI settings changes immediately
+            pClient->ApplyMidiSettingsFromConfig();
         } );
     }
 
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
         SetMIDIControlsEnabled ( checked );
+
+        // Apply MIDI enable/disable immediately
+        pClient->ApplyMidiSettingsFromConfig();
 
         emit MIDIControllerUsageChanged ( checked );
     } );

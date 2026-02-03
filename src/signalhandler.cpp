@@ -163,12 +163,12 @@ bool CSignalUnix::setSignalHandled ( int sigNum, bool state )
     if ( state )
     {
         sa.sa_handler = CSignalUnix::signalHandler;
-        sa.sa_flags   = SA_RESTART;
+        sa.sa_flags = SA_RESTART;
     }
     else
     {
         sa.sa_handler = SIG_DFL;
-        sa.sa_flags   = 0;
+        sa.sa_flags = 0;
     }
 
     return ::sigaction ( sigNum, &sa, nullptr ) == 0;

@@ -51,7 +51,7 @@ class CMappedTreeWidgetItem : public QTreeWidgetItem
 public:
     explicit CMappedTreeWidgetItem ( QTreeWidget* owner = nullptr );
 
-    bool operator< ( const QTreeWidgetItem& other ) const override;
+    bool operator<( const QTreeWidgetItem& other ) const override;
 
 private:
     QTreeWidget* owner = nullptr;
