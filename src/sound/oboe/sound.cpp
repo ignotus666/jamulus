@@ -29,7 +29,7 @@
 
 const uint8_t CSound::RING_FACTOR = 20;
 
-CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ), void* arg, const bool ) :
+CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ), void* arg, const bool, const QString& ) :
     CSoundBase ( "Oboe", fpNewProcessCallback, arg )
 {
 #ifdef ANDROIDDEBUG
