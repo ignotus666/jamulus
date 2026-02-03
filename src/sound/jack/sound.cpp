@@ -205,6 +205,11 @@ void CSound::CreateMIDIPort()
     if ( pJackClient != nullptr && input_port_midi == nullptr )
     {
         input_port_midi = jack_port_register ( pJackClient, "input midi", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0 );
+
+        if ( input_port_midi == nullptr )
+        {
+            qWarning() << "Failed to create JACK MIDI port at runtime";
+        }
     }
 }
 

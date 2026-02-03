@@ -150,7 +150,6 @@ public slots:
 class CClientSettings : public CSettings
 {
 public:
-    void ParseMIDICommandLineParams ( const QString& strVal );
     CClientSettings ( CClient* pNCliP, const QString& sNFiName ) :
         CSettings(),
         vecStoredFaderTags ( MAX_NUM_STORED_FADER_SETTINGS, "" ),
