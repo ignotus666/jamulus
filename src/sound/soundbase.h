@@ -114,6 +114,7 @@ public:
     virtual void OpenDriverSetup() {}
 
     virtual const QString& GetMIDIDevice() { return strMIDIDevice; }
+    virtual void           SetMIDIDevice ( const QString& strDevice ) { strMIDIDevice = strDevice; }
 
     bool IsRunning() const { return bRun; }
     bool IsCallbackEntered() const { return bCallbackEntered; }

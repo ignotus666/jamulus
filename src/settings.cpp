@@ -212,58 +212,110 @@ void CSettings::ParseCtrlMidiCh ( const QString& midiMap,
                                   int&           iMidiMuteOffset,
                                   int&           iMidiMuteCount,
                                   int&           iMidiMuteMyself,
-                                  bool&          bUseMIDIController )
+                                  bool&          bUseMIDIController,
+                                  QString*       strMIDIDevice )
 {
-    QStringList parts = midiMap.split ( ';' );
-    if ( !parts.isEmpty() )
+    if ( midiMap.isEmpty() )
     {
-        iMidiChannel = parts[0].toInt();
-        for ( int i = 1; i < parts.size(); ++i )
-        {
-            QString p = parts[i];
-            if ( p.startsWith ( "f" ) )
-            {
-                QStringList vals = p.mid ( 1 ).split ( '*' );
-                if ( vals.size() == 2 )
-                {
-                    iMidiFaderOffset = vals[0].toInt();
-                    iMidiFaderCount  = vals[1].toInt();
-                }
-            }
-            else if ( p.startsWith ( "p" ) )
-            {
-                QStringList vals = p.mid ( 1 ).split ( '*' );
-                if ( vals.size() == 2 )
-                {
-                    iMidiPanOffset = vals[0].toInt();
-                    iMidiPanCount  = vals[1].toInt();
-                }
-            }
-            else if ( p.startsWith ( "s" ) )
-            {
-                QStringList vals = p.mid ( 1 ).split ( '*' );
-                if ( vals.size() == 2 )
-                {
-                    iMidiSoloOffset = vals[0].toInt();
-                    iMidiSoloCount  = vals[1].toInt();
-                }
-            }
-            else if ( p.startsWith ( "m" ) )
-            {
-                QStringList vals = p.mid ( 1 ).split ( '*' );
-                if ( vals.size() == 2 )
-                {
-                    iMidiMuteOffset = vals[0].toInt();
-                    iMidiMuteCount  = vals[1].toInt();
-                }
-            }
-            else if ( p.startsWith ( "o" ) )
-            {
-                iMidiMuteMyself = p.mid ( 1 ).toInt();
-            }
-        }
-        bUseMIDIController = true;
+        return;
     }
+
+    QStringList parts = midiMap.split ( ';' );
+    if ( parts.isEmpty() )
+    {
+        return;
+    }
+
+    // Parse MIDI channel (first parameter)
+    iMidiChannel = parts[0].toInt();
+
+    // Check for legacy format: [channel];[offset]
+    // If second parameter is a plain number (no prefix), treat as legacy format
+    if ( parts.size() >= 2 )
+    {
+        bool    bIsNumber = false;
+        QString sParm     = parts[1].trimmed();
+        int     iOffset   = sParm.toInt ( &bIsNumber );
+
+        if ( bIsNumber && !sParm.isEmpty() )
+        {
+            // Legacy format: set up faders from offset to 127 or MAX_NUM_CHANNELS
+            iMidiFaderOffset = iOffset;
+            iMidiFaderCount  = qMin ( MAX_NUM_CHANNELS, 128 - iOffset );
+            bUseMIDIController = true;
+            return;
+        }
+    }
+
+    // Parse named controllers (new format)
+    for ( int i = 1; i < parts.size(); ++i )
+    {
+        QString sParm = parts[i].trimmed();
+        if ( sParm.isEmpty() )
+        {
+            continue;
+        }
+
+        QChar cType = sParm[0];
+
+        // Handle device selection
+        if ( cType == 'd' )
+        {
+            if ( strMIDIDevice != nullptr )
+            {
+                *strMIDIDevice = sParm.mid ( 1 );
+            }
+            continue;
+        }
+
+        // Parse controller specification: [type][offset]*[count]
+        // where [type] is f, p, s, m, or o
+        QStringList vals   = sParm.mid ( 1 ).split ( '*' );
+        int         iFirst = vals[0].toInt();
+        int         iNum   = ( vals.size() > 1 ) ? vals[1].toInt() : 1;
+
+        // Bounds checking
+        if ( iFirst < 0 || iFirst >= 128 )
+        {
+            continue;
+        }
+
+        iNum = qMin ( iNum, MAX_NUM_CHANNELS );
+        iNum = qMin ( iNum, 128 - iFirst );
+
+        if ( iNum <= 0 )
+        {
+            continue;
+        }
+
+        // Assign to appropriate controller type
+        if ( cType == 'f' )
+        {
+            iMidiFaderOffset = iFirst;
+            iMidiFaderCount  = iNum;
+        }
+        else if ( cType == 'p' )
+        {
+            iMidiPanOffset = iFirst;
+            iMidiPanCount  = iNum;
+        }
+        else if ( cType == 's' )
+        {
+            iMidiSoloOffset = iFirst;
+            iMidiSoloCount  = iNum;
+        }
+        else if ( cType == 'm' )
+        {
+            iMidiMuteOffset = iFirst;
+            iMidiMuteCount  = iNum;
+        }
+        else if ( cType == 'o' )
+        {
+            iMidiMuteMyself = iFirst;
+        }
+    }
+
+    bUseMIDIController = true;
 }
 
 #ifndef SERVER_ONLY
@@ -665,7 +717,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                          iMidiMuteOffset,
                                          iMidiMuteCount,
                                          iMidiMuteMyself,
-                                         bUseMIDIController );
+                                         bUseMIDIController,
+                                         &strMidiDevice );
         }
     }
 }

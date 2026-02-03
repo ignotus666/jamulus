@@ -203,6 +203,10 @@ void CClient::ApplyMidiSettingsFromConfig()
     {
         Sound.SetCtrlMIDIChannel ( pSettings->iMidiChannel );
         Sound.EnableMIDI ( pSettings->bUseMIDIController );
+        if ( !pSettings->strMidiDevice.isEmpty() )
+        {
+            Sound.SetMIDIDevice ( pSettings->strMidiDevice );
+        }
     }
 }
 
