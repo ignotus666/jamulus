@@ -36,6 +36,8 @@ CClient::CClient ( const quint16  iPortNumber,
                    const bool     bNMuteMeInPersonalMix ) :
     ChannelInfo(),
     strClientName ( strNClientName ),
+    pSignalHandler ( CSignalHandler::getSingletonP() ),
+    pSettings ( nullptr ),
     Channel ( false ), /* we need a client channel -> "false" */
     CurOpusEncoder ( nullptr ),
     CurOpusDecoder ( nullptr ),
@@ -68,9 +70,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bJitterBufferOK ( true ),
     bEnableIPv6 ( bNEnableIPv6 ),
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
-    iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
-    pSignalHandler ( CSignalHandler::getSingletonP() )
-    , pSettings(nullptr)
+    iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL )
 {
     int iOpusError;
 
@@ -199,9 +199,10 @@ CClient::CClient ( const quint16  iPortNumber,
 // MIDI setup will be handled after settings are assigned
 void CClient::ApplyMidiSettingsFromConfig()
 {
-    if (pSettings) {
-        Sound.SetCtrlMIDIChannel(pSettings->midiChannel);
-        Sound.EnableMIDI(pSettings->bUseMIDIController);
+    if ( pSettings )
+    {
+        Sound.SetCtrlMIDIChannel ( pSettings->iMidiChannel );
+        Sound.EnableMIDI ( pSettings->bUseMIDIController );
     }
 }
 
@@ -1558,7 +1559,6 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
                                     .arg ( iActiveChannels ) );
      */
 }
-
 
 void CClient::OnMidiCCReceived ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); }
 
