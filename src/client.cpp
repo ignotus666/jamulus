@@ -51,7 +51,11 @@ CClient::CClient ( const quint16  iPortNumber,
     bMuteOutStream ( false ),
     fMuteOutStreamGain ( 1.0f ),
     Socket ( &Channel, iPortNumber, iQosNumber, "", bNEnableIPv6 ),
+#ifdef ANDROID
+    Sound ( AudioCallback, this, bNoAutoJackConnect ),
+#else
     Sound ( AudioCallback, this, bNoAutoJackConnect, strNClientName ),
+#endif
     iAudioInFader ( AUD_FADER_IN_MIDDLE ),
     bReverbOnLeftChan ( false ),
     iReverbLevel ( 0 ),
