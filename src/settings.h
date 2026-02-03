@@ -47,17 +47,17 @@ class CSettings : public QObject
 
 public:
     // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
-    static void ParseCtrlMidiCh ( const QString& midiMap,
-                                  int&           midiChannel,
-                                  int&           midiFaderOffset,
-                                  int&           midiFaderCount,
-                                  int&           midiPanOffset,
-                                  int&           midiPanCount,
-                                  int&           midiSoloOffset,
-                                  int&           midiSoloCount,
-                                  int&           midiMuteOffset,
-                                  int&           midiMuteCount,
-                                  int&           midiMuteMyself,
+    static void ParseCtrlMidiCh ( const QString& strMidiMap,
+                                  int&           iMidiChannel,
+                                  int&           iMidiFaderOffset,
+                                  int&           iMidiFaderCount,
+                                  int&           iMidiPanOffset,
+                                  int&           iMidiPanCount,
+                                  int&           iMidiSoloOffset,
+                                  int&           iMidiSoloCount,
+                                  int&           iMidiMuteOffset,
+                                  int&           iMidiMuteCount,
+                                  int&           iMidiMuteMyself,
                                   bool&          bUseMIDIController,
                                   QString*       strMIDIDevice = nullptr );
 
@@ -150,7 +150,7 @@ public slots:
 class CClientSettings : public CSettings
 {
 public:
-    void ParseMIDICommandLineParams ( const QString& val );
+    void ParseMIDICommandLineParams ( const QString& strVal );
     CClientSettings ( CClient* pNCliP, const QString& sNFiName ) :
         CSettings(),
         vecStoredFaderTags ( MAX_NUM_STORED_FADER_SETTINGS, "" ),

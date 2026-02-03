@@ -201,7 +201,7 @@ void CSettings::PutIniSetting ( QDomDocument& xmlFile, const QString& sSection, 
 }
 
 // Parse MIDI commmand line parameters and update MIDI variables
-void CSettings::ParseCtrlMidiCh ( const QString& midiMap,
+void CSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
                                   int&           iMidiChannel,
                                   int&           iMidiFaderOffset,
                                   int&           iMidiFaderCount,
@@ -215,12 +215,12 @@ void CSettings::ParseCtrlMidiCh ( const QString& midiMap,
                                   bool&          bUseMIDIController,
                                   QString*       strMIDIDevice )
 {
-    if ( midiMap.isEmpty() )
+    if ( strMidiMap.isEmpty() )
     {
         return;
     }
 
-    QStringList parts = midiMap.split ( ';' );
+    QStringList parts = strMidiMap.split ( ';' );
     if ( parts.isEmpty() )
     {
         return;
@@ -705,8 +705,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         if ( option.startsWith ( "--ctrlmidich=" ) )
         {
-            QString midiMap = option.section ( '=', 1 );
-            CSettings::ParseCtrlMidiCh ( midiMap,
+            QString strMidiMap = option.section ( '=', 1 );
+            CSettings::ParseCtrlMidiCh ( strMidiMap,
                                          iMidiChannel,
                                          iMidiFaderOffset,
                                          iMidiFaderCount,

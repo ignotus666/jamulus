@@ -71,9 +71,6 @@ class CSoundBase : public QThread
 {
     Q_OBJECT
 public:
-#ifndef SERVER_ONLY
-    static void ParseMIDICommandLineParams ( const QString& strMIDISetup, CClientSettings& Settings );
-#endif
     CSoundBase ( const QString& strNewSystemDriverTechniqueName,
                  void ( *fpNewProcessCallback ) ( CVector<int16_t>& psData, void* pParg ),
                  void*          pParg );
@@ -128,7 +125,7 @@ public:
     virtual void EnableMIDI ( bool /* bEnable */ ) {}    // Default empty implementation
     virtual bool IsMIDIEnabled() const { return false; } // Default false
 
-    void SetCtrlMIDIChannel(int ch) { iCtrlMIDIChannel = ch; }
+    void SetCtrlMIDIChannel ( int iCh ) { iCtrlMIDIChannel = iCh; }
 
 protected:
     virtual QString  LoadAndInitializeDriver ( QString, bool ) { return ""; }
