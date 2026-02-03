@@ -1,4 +1,3 @@
-    // ...existing public methods...
 /******************************************************************************\
  * Copyright (c) 2004-2026
  *
@@ -303,13 +302,15 @@ public:
 
 public:
     // Assign settings pointer
-    void SetSettings(CClientSettings* settings) { pSettings = settings; }
+    void SetSettings ( CClientSettings* settings ) { pSettings = settings; }
 
     // Apply MIDI settings from config
     void ApplyMidiSettingsFromConfig();
 
 protected:
-    // Pointer to settings for MIDI and other config (must be after pSignalHandler for correct init order)
+    // Signal handler must be declared before pSettings for correct init order
+    CSignalHandler* pSignalHandler;
+    // Pointer to settings for MIDI and other config
     CClientSettings* pSettings;
     // callback function must be static, otherwise it does not work
     static void AudioCallback ( CVector<short>& psData, void* arg );
@@ -419,8 +420,6 @@ protected:
     int    minGainOrPanId;
     int    maxGainOrPanId;
     int    iCurPingTime;
-
-    CSignalHandler* pSignalHandler;
 
 protected slots:
     void OnHandledSignal ( int sigNum );

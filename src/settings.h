@@ -47,14 +47,18 @@ class CSettings : public QObject
 
 public:
     // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
-    static void ParseCtrlMidiCh(const QString& midiMap,
-        int& midiChannel,
-        int& midiFaderOffset, int& midiFaderCount,
-        int& midiPanOffset, int& midiPanCount,
-        int& midiSoloOffset, int& midiSoloCount,
-        int& midiMuteOffset, int& midiMuteCount,
-        int& midiMuteMyself,
-        bool& bUseMIDIController);
+    static void ParseCtrlMidiCh ( const QString& midiMap,
+                                  int&           midiChannel,
+                                  int&           midiFaderOffset,
+                                  int&           midiFaderCount,
+                                  int&           midiPanOffset,
+                                  int&           midiPanCount,
+                                  int&           midiSoloOffset,
+                                  int&           midiSoloCount,
+                                  int&           midiMuteOffset,
+                                  int&           midiMuteCount,
+                                  int&           midiMuteMyself,
+                                  bool&          bUseMIDIController );
 
 public:
     CSettings() :
@@ -72,12 +76,7 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect (
-                pGApp,
-                &QGuiApplication::saveStateRequest,
-                this,
-                [=] ( QSessionManager& ) { Save ( false ); },
-                Qt::DirectConnection );
+            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
@@ -150,7 +149,7 @@ public slots:
 class CClientSettings : public CSettings
 {
 public:
-    void ParseMIDICommandLineParams(const QString& val);
+    void ParseMIDICommandLineParams ( const QString& val );
     CClientSettings ( CClient* pNCliP, const QString& sNFiName ) :
         CSettings(),
         vecStoredFaderTags ( MAX_NUM_STORED_FADER_SETTINGS, "" ),
@@ -177,6 +176,17 @@ public:
         bWindowWasShownChat ( false ),
         bWindowWasShownConnect ( false ),
         bOwnFaderFirst ( false ),
+        iMidiChannel ( 0 ),
+        iMidiMuteMyself ( 0 ),
+        iMidiFaderOffset ( 0 ),
+        iMidiFaderCount ( 0 ),
+        iMidiPanOffset ( 0 ),
+        iMidiPanCount ( 0 ),
+        iMidiSoloOffset ( 0 ),
+        iMidiSoloCount ( 0 ),
+        iMidiMuteOffset ( 0 ),
+        iMidiMuteCount ( 0 ),
+        bUseMIDIController ( false ),
         pClient ( pNCliP )
     {
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
@@ -215,17 +225,17 @@ public:
     bool       bOwnFaderFirst;
 
     // MIDI settings
-    int     midiChannel        = 0; // Default MIDI channel 0
-    int     midiMuteMyself     = 0;
-    int     midiFaderOffset    = 0;
-    int     midiFaderCount     = 0;
-    int     midiPanOffset      = 0;
-    int     midiPanCount       = 0;
-    int     midiSoloOffset     = 0;
-    int     midiSoloCount      = 0;
-    int     midiMuteOffset     = 0;
-    int     midiMuteCount      = 0;
-    bool    bUseMIDIController = false;
+    int     iMidiChannel;
+    int     iMidiMuteMyself;
+    int     iMidiFaderOffset;
+    int     iMidiFaderCount;
+    int     iMidiPanOffset;
+    int     iMidiPanCount;
+    int     iMidiSoloOffset;
+    int     iMidiSoloCount;
+    int     iMidiMuteOffset;
+    int     iMidiMuteCount;
+    bool    bUseMIDIController;
     QString GetMIDIMapString() const;
 
 protected:
