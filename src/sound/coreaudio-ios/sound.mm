@@ -28,9 +28,7 @@
 #define kInputBus  1
 
 /* Implementation *************************************************************/
-CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ),
-                 void*          arg,
-                 const bool ) :
+CSound::CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* arg ), void* arg, const bool ) :
     CSoundBase ( "CoreAudio iOS", fpNewProcessCallback, arg ),
     isInitialized ( false )
 {

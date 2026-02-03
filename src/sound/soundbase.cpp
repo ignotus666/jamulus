@@ -40,7 +40,7 @@ char const sMidiCtlChar[] = {
 /* Implementation *************************************************************/
 CSoundBase::CSoundBase ( const QString& strNewSystemDriverTechniqueName,
                          void ( *fpNewProcessCallback ) ( CVector<int16_t>& psData, void* pParg ),
-                         void*          pParg ) :
+                         void* pParg ) :
     fpProcessCallback ( fpNewProcessCallback ),
     pProcessCallbackArg ( pParg ),
     bRun ( false ),

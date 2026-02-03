@@ -124,10 +124,7 @@ class CSound : public CSoundBase
     Q_OBJECT
 
 public:
-    CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* pParg ),
-             void*          pParg,
-             const bool,
-             const QString& ) :
+    CSound ( void ( *fpNewProcessCallback ) ( CVector<short>& psData, void* pParg ), void* pParg, const bool, const QString& ) :
         CSoundBase ( "nosound", fpNewProcessCallback, pParg ),
         HighPrecisionTimer ( true )
     {
