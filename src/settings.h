@@ -58,7 +58,8 @@ public:
                                   int&           midiMuteOffset,
                                   int&           midiMuteCount,
                                   int&           midiMuteMyself,
-                                  bool&          bUseMIDIController );
+                                  bool&          bUseMIDIController,
+                                  QString*       strMIDIDevice = nullptr );
 
 public:
     CSettings() :
@@ -187,6 +188,7 @@ public:
         iMidiMuteOffset ( 0 ),
         iMidiMuteCount ( 0 ),
         bUseMIDIController ( false ),
+        strMidiDevice ( "" ),
         pClient ( pNCliP )
     {
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
@@ -236,6 +238,7 @@ public:
     int     iMidiMuteOffset;
     int     iMidiMuteCount;
     bool    bUseMIDIController;
+    QString strMidiDevice;
     QString GetMIDIMapString() const;
 
 protected:
