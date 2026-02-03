@@ -73,7 +73,7 @@ class CSoundBase : public QThread
 public:
     CSoundBase ( const QString& strNewSystemDriverTechniqueName,
                  void ( *fpNewProcessCallback ) ( CVector<int16_t>& psData, void* pParg ),
-                 void*          pParg );
+                 void* pParg );
 
     virtual int  Init ( const int iNewPrefMonoBufferSize ) { return iNewPrefMonoBufferSize; }
     virtual void Start()

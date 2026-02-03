@@ -240,8 +240,8 @@ void CSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
         if ( bIsNumber && !sParm.isEmpty() )
         {
             // Legacy format: set up faders from offset to 127 or MAX_NUM_CHANNELS
-            iMidiFaderOffset = iOffset;
-            iMidiFaderCount  = qMin ( MAX_NUM_CHANNELS, 128 - iOffset );
+            iMidiFaderOffset   = iOffset;
+            iMidiFaderCount    = qMin ( MAX_NUM_CHANNELS, 128 - iOffset );
             bUseMIDIController = true;
             return;
         }
