@@ -535,9 +535,14 @@ int main ( int argc, char** argv )
         }
 
         // MIDI
-        if ( GetStringArgument ( argc, argv, i, "", "--ctrlmidich", strArgument ) )
+        if ( GetStringArgument ( argc,
+                                 argv,
+                                 i,
+                                 "--ctrlmidich", // no short form
+                                 "--ctrlmidich",
+                                 strArgument ) )
         {
-            CommandLineOptions << ( QString ( "--ctrlmidich=" ) + strArgument );
+            CommandLineOptions << QString ( "--ctrlmidich=%1" ).arg ( strArgument );
             ClientOnlyOptions << "--ctrlmidich";
             continue;
         }

@@ -605,7 +605,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         }
     }
 
-    // Only read MIDI settings from XML if not provided on command line
     if ( !bMidiFromCommandLine )
     {
         if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
