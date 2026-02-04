@@ -918,7 +918,6 @@ int main ( int argc, char** argv )
             CClientSettings Settings ( &Client, strIniFileName );
             Settings.Load ( CommandLineOptions );
             Client.SetSettings ( &Settings );
-            Client.ApplyMidiSettingsFromConfig();
 
 #    ifndef NO_JSON_RPC
             if ( pRpcServer )
