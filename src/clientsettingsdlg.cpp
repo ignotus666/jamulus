@@ -418,10 +418,10 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     lblChannel->setWhatsThis ( strMidiSettings );
     lblMuteMyself->setWhatsThis ( strMidiSettings );
-    faderGroup->setWhatsThis ( strMidiSettings );
-    panGroup->setWhatsThis ( strMidiSettings );
-    soloGroup->setWhatsThis ( strMidiSettings );
-    muteGroup->setWhatsThis ( strMidiSettings );
+    grbMidiFader->setWhatsThis ( strMidiSettings );
+    grbMidiPan->setWhatsThis ( strMidiSettings );
+    grbMidiSolo->setWhatsThis ( strMidiSettings );
+    grbMidiMute->setWhatsThis ( strMidiSettings );
 
     spnChannel->setAccessibleName ( tr ( "MIDI channel spin box" ) );
     spnMuteMyself->setAccessibleName ( tr ( "Mute Myself MIDI CC number spin box" ) );
@@ -807,7 +807,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     {
         QObject::connect ( mapping.spinBox, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this, mapping] ( int v ) {
             pSettings->*( mapping.member ) = v;
-            // Apply MIDI settings changes immediately
             pClient->SetSettings ( pSettings );
         } );
     }
@@ -815,11 +814,27 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
         SetMIDIControlsEnabled ( checked );
-
-        // Apply MIDI enable/disable immediately
         pClient->SetSettings ( pSettings );
 
-        emit MIDIControllerUsageChanged ( checked );
+        // Check if MIDI was actually enabled successfully
+        if ( checked && !pClient->IsMIDIEnabled() )
+        {
+            // MIDI failed to enable - uncheck the box and update settings
+            pSettings->bUseMIDIController = false;
+            chbUseMIDIController->setChecked ( false );
+            SetMIDIControlsEnabled ( false );
+#ifdef _WIN32
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Initialization Failed" ),
+                                   tr ( "No MIDI devices available or failed to open. Ensure MIDI devices are connected and not in use by another application." ) );
+#else
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Initialization Failed" ),
+                                   tr ( "Failed to create MIDI input port. Please check your audio system configuration (JACK, CoreAudio, etc.)." ) );
+#endif
+        }
+
+        emit MIDIControllerUsageChanged ( pSettings->bUseMIDIController );
     } );
 
     // MIDI Learn buttons
@@ -877,6 +892,14 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->iMidiMuteOffset );
     spnMuteCount->setValue ( pSettings->iMidiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+
+    // Check if MIDI is actually enabled (might have failed to open port)
+    if ( pSettings->bUseMIDIController && !pClient->IsMIDIEnabled() )
+    {
+        // MIDI was requested but failed - uncheck and disable
+        pSettings->bUseMIDIController = false;
+        chbUseMIDIController->setChecked ( false );
+    }
 
     SetMIDIControlsEnabled ( chbUseMIDIController->isChecked() );
 
