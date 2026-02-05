@@ -204,18 +204,18 @@ void CSettings::PutIniSetting ( QDomDocument& xmlFile, const QString& sSection, 
 
 // Parse MIDI commmand line parameters and update MIDI variables
 void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
-                                  int&           iMidiChannel,
-                                  int&           iMidiFaderOffset,
-                                  int&           iMidiFaderCount,
-                                  int&           iMidiPanOffset,
-                                  int&           iMidiPanCount,
-                                  int&           iMidiSoloOffset,
-                                  int&           iMidiSoloCount,
-                                  int&           iMidiMuteOffset,
-                                  int&           iMidiMuteCount,
-                                  int&           iMidiMuteMyself,
-                                  bool&          bUseMIDIController,
-                                  QString*       strMIDIDevice )
+                                        int&           iMidiChannel,
+                                        int&           iMidiFaderOffset,
+                                        int&           iMidiFaderCount,
+                                        int&           iMidiPanOffset,
+                                        int&           iMidiPanCount,
+                                        int&           iMidiSoloOffset,
+                                        int&           iMidiSoloCount,
+                                        int&           iMidiMuteOffset,
+                                        int&           iMidiMuteCount,
+                                        int&           iMidiMuteMyself,
+                                        bool&          bUseMIDIController,
+                                        QString*       strMIDIDevice )
 {
     if ( strMidiMap.isEmpty() )
     {
@@ -588,18 +588,18 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         {
             QString strMidiMap = option.section ( '=', 1 );
             CClientSettings::ParseCtrlMidiCh ( strMidiMap,
-                                         iMidiChannel,
-                                         iMidiFaderOffset,
-                                         iMidiFaderCount,
-                                         iMidiPanOffset,
-                                         iMidiPanCount,
-                                         iMidiSoloOffset,
-                                         iMidiSoloCount,
-                                         iMidiMuteOffset,
-                                         iMidiMuteCount,
-                                         iMidiMuteMyself,
-                                         bUseMIDIController,
-                                         &strMidiDevice );
+                                               iMidiChannel,
+                                               iMidiFaderOffset,
+                                               iMidiFaderCount,
+                                               iMidiPanOffset,
+                                               iMidiPanCount,
+                                               iMidiSoloOffset,
+                                               iMidiSoloCount,
+                                               iMidiMuteOffset,
+                                               iMidiMuteCount,
+                                               iMidiMuteMyself,
+                                               bUseMIDIController,
+                                               &strMidiDevice );
             bMidiFromCommandLine = true;
             break;
         }
