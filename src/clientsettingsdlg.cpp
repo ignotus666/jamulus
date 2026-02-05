@@ -823,17 +823,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
             pSettings->bUseMIDIController = false;
             chbUseMIDIController->setChecked ( false );
             SetMIDIControlsEnabled ( false );
-#ifdef _WIN32
-            QMessageBox::warning (
-                this,
-                tr ( "MIDI Initialization Failed" ),
-                tr ( "No MIDI devices available or failed to open. Ensure MIDI devices are connected and not in use by another application." ) );
-#else
-            QMessageBox::warning (
-                this,
-                tr ( "MIDI Initialization Failed" ),
-                tr ( "Failed to create MIDI input port. Please check your audio system configuration (JACK, CoreAudio, etc.)." ) );
-#endif
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Initialization Failed" ),
+                                   tr ( "Failed to open MIDI input port." ) );
         }
 
         emit MIDIControllerUsageChanged ( pSettings->bUseMIDIController );
