@@ -808,7 +808,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         QObject::connect ( mapping.spinBox, static_cast<void ( QSpinBox::* ) ( int )> ( &QSpinBox::valueChanged ), this, [this, mapping] ( int v ) {
             pSettings->*( mapping.member ) = v;
             // Apply MIDI settings changes immediately
-            pClient->ApplyMidiSettingsFromConfig();
+            pClient->SetSettings ( pSettings );
         } );
     }
 
@@ -817,7 +817,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         SetMIDIControlsEnabled ( checked );
 
         // Apply MIDI enable/disable immediately
-        pClient->ApplyMidiSettingsFromConfig();
+        pClient->SetSettings ( pSettings );
 
         emit MIDIControllerUsageChanged ( checked );
     } );
