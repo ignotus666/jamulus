@@ -824,13 +824,15 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
             chbUseMIDIController->setChecked ( false );
             SetMIDIControlsEnabled ( false );
 #ifdef _WIN32
-            QMessageBox::warning ( this,
-                                   tr ( "MIDI Initialization Failed" ),
-                                   tr ( "No MIDI devices available or failed to open. Ensure MIDI devices are connected and not in use by another application." ) );
+            QMessageBox::warning (
+                this,
+                tr ( "MIDI Initialization Failed" ),
+                tr ( "No MIDI devices available or failed to open. Ensure MIDI devices are connected and not in use by another application." ) );
 #else
-            QMessageBox::warning ( this,
-                                   tr ( "MIDI Initialization Failed" ),
-                                   tr ( "Failed to create MIDI input port. Please check your audio system configuration (JACK, CoreAudio, etc.)." ) );
+            QMessageBox::warning (
+                this,
+                tr ( "MIDI Initialization Failed" ),
+                tr ( "Failed to create MIDI input port. Please check your audio system configuration (JACK, CoreAudio, etc.)." ) );
 #endif
         }
 
