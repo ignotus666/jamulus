@@ -396,8 +396,7 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
             { "midiSoloOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloOffset = v.toInt(); } },
             { "midiSoloCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloCount = v.toInt(); } },
             { "midiMuteOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteOffset = v.toInt(); } },
-            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } }
-        };
+            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } } };
 
         for ( auto it = setters.constBegin(); it != setters.constEnd(); ++it )
         {
@@ -415,7 +414,7 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
         {
             // Restore previous state on failure
             m_pSettings->bUseMIDIController = bPreviousMIDIState;
-            response["error"] = CRpcServer::CreateJsonRpcError ( 1, "Failed to open MIDI port" );
+            response["error"]               = CRpcServer::CreateJsonRpcError ( 1, "Failed to open MIDI port" );
             return;
         }
 
