@@ -997,9 +997,8 @@ void CClientDlg::ShowGeneralSettings ( int iTab )
     // open general settings dialog
     emit SendTabChange ( iTab );
     ClientSettingsDlg.show();
-    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
-
     // make sure dialog is upfront and has focus
+    ClientSettingsDlg.setWindowTitle ( MakeClientNameTitle ( tr ( "Settings" ), pClient->strClientName ) );
     ClientSettingsDlg.raise();
     ClientSettingsDlg.activateWindow();
 }
@@ -1296,11 +1295,11 @@ void CClientDlg::Disconnect()
     TimerDetectFeedback.stop();
     bDetectFeedback = false;
 
-    //### TODO: BEGIN ###//
-    // is this still required???
-    // immediately update status bar
+    // ### TODO: BEGIN ###//
+    //  is this still required???
+    //  immediately update status bar
     OnTimerStatus();
-    //### TODO: END ###//
+    // ### TODO: END ###//
 
     // reset LEDs
     ledBuffers->Reset();

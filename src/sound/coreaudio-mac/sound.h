@@ -42,6 +42,8 @@ public:
 
     virtual ~CSound();
 
+    virtual ~CSound();
+
     virtual int  Init ( const int iNewPrefMonoBufferSize );
     virtual void Start();
     virtual void Stop();

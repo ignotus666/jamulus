@@ -1,0 +1,2 @@
+# This prevents incoming PRs from overwriting customized workflow configurations
+.github/workflows/autobuild.yml merge=ours

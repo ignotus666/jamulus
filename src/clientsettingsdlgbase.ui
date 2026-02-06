@@ -2106,6 +2106,7 @@
   <tabstop>spnMuteOffset</tabstop>
   <tabstop>butLearnMuteOffset</tabstop>
   <tabstop>spnMuteCount</tabstop>
+  <tabstop>chbMIDIPickupMode</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
