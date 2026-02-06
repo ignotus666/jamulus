@@ -515,12 +515,8 @@ void CSound::Stop()
     }
 }
 
-CSound::CSound ( void ( *fpNewCallback ) ( CVector<int16_t>& psData, void* arg ),
-                 void*          arg,
-                 const QString& strMIDISetup,
-                 const bool,
-                 const QString& ) :
-    CSoundBase ( "ASIO", fpNewCallback, arg, strMIDISetup ),
+CSound::CSound ( void ( *fpNewCallback ) ( CVector<int16_t>& psData, void* arg ), void* arg, const bool, const QString& ) :
+    CSoundBase ( "ASIO", fpNewCallback, arg ),
     lNumInChan ( 0 ),
     lNumInChanPlusAddChan ( 0 ),
     lNumOutChan ( 0 ),
@@ -637,7 +633,6 @@ void CSound::EnableMIDI ( bool bEnable )
         if ( !bMidiEnabled && iCtrlMIDIChannel != INVALID_MIDI_CH )
         {
             Midi.MidiStart();
-            bMidiEnabled = true;
         }
     }
     else
@@ -646,9 +641,9 @@ void CSound::EnableMIDI ( bool bEnable )
         if ( bMidiEnabled )
         {
             Midi.MidiStop();
-            bMidiEnabled = false;
         }
     }
+    bMidiEnabled = Midi.IsActive();
 }
 
 bool CSound::IsMIDIEnabled() const { return bMidiEnabled; }

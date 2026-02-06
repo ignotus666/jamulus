@@ -29,7 +29,6 @@
 CClientDlg::CClientDlg ( CClient*         pNCliP,
                          CClientSettings* pNSetP,
                          const QString&   strConnOnStartupAddress,
-                         const QString&   strMIDISetup,
                          const bool       bNewShowComplRegConnList,
                          const bool       bShowAnalyzerConsole,
                          const bool       bMuteStream,
@@ -220,7 +219,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     MainMixerBoard->SetNumMixerPanelRows ( pSettings->iNumMixerPanelRows );
 
     // Pass through flag for MIDICtrlUsed
-    MainMixerBoard->SetMIDICtrlUsed ( !strMIDISetup.isEmpty() );
+    MainMixerBoard->SetMIDICtrlUsed ( pSettings->bUseMIDIController );
 
     // reset mixer board
     MainMixerBoard->HideAll();
@@ -401,7 +400,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     pSettingsMenu->addAction ( tr ( "A&dvanced Settings..." ), this, SLOT ( OnOpenAdvancedSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_D ) );
 
-    pSettingsMenu->addAction ( tr ( "&MIDI Control Settings..." ), this, SLOT ( OnOpenMidiSettings() ), QKeySequence ( Qt::CTRL + Qt::Key_M ) );
+    pSettingsMenu->addAction (
+        tr ( "&MIDI Control Settings..." ),
+        this,
+        [this] { ShowGeneralSettings ( SETTING_TAB_MIDI ); },
+        QKeySequence ( Qt::CTRL + Qt::Key_M ) );
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
@@ -1530,8 +1533,7 @@ void CClientDlg::SetPingTime ( const int iPingTime, const int iOverallDelayMs, c
     ledDelay->SetLight ( eOverallDelayLEDColor );
 }
 
-void CClientDlg::OnOpenMidiSettings() { ShowGeneralSettings ( SETTING_TAB_MIDI ); }
-
+// OnOpenMidiSettings slot removed; lambda is used in menu action
 void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 {
     // Update the mixer board's MIDI flag to trigger proper user numbering display

@@ -119,6 +119,8 @@ public:
     // can store here other information about an active channel
 };
 
+class CClientSettings;
+
 class CClient : public QObject
 {
     Q_OBJECT
@@ -127,7 +129,6 @@ public:
     CClient ( const quint16  iPortNumber,
               const quint16  iQosNumber,
               const QString& strConnOnStartupAddress,
-              const QString& strMIDISetup,
               const bool     bNoAutoJackConnect,
               const QString& strNClientName,
               const bool     bNEnableIPv6,
@@ -297,13 +298,22 @@ public:
     void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
     bool IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
 
+    // MIDI control
+    void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
+    bool IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
+
     // settings
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;
 
-    void ApplyMIDIMapping ( const QString& midiMap );
+public:
+    void SetSettings ( CClientSettings* settings );
 
 protected:
+    // Signal handler must be declared before pSettings for correct init order
+    CSignalHandler* pSignalHandler;
+    // Pointer to settings for MIDI and other config
+    CClientSettings* pSettings;
     // callback function must be static, otherwise it does not work
     static void AudioCallback ( CVector<short>& psData, void* arg );
 
@@ -412,8 +422,6 @@ protected:
     int    minGainOrPanId;
     int    maxGainOrPanId;
     int    iCurPingTime;
-
-    CSignalHandler* pSignalHandler;
 
 protected slots:
     void OnHandledSignal ( int sigNum );
