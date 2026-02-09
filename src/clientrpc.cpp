@@ -381,7 +381,7 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
     /// @rpc_method jamulusclient/setMidiSettings
     /// @brief Sets one or more MIDI controller settings.
     /// @param {object} params - Any subset of MIDI settings fields to set.
-    /// @result {string} result - "ok" on success, or error message if MIDI failed to enable.
+    /// @result {string} result - Always "ok".
     pRpcServer->HandleMethod ( "jamulusclient/setMidiSettings", [=] ( const QJsonObject& params, QJsonObject& response ) {
         bool bPreviousMIDIState = m_pSettings->bUseMIDIController;
 

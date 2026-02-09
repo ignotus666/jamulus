@@ -212,11 +212,11 @@ void CClient::SetSettings ( CClientSettings* settings )
                                      pSettings->iMidiMuteOffset,
                                      pSettings->iMidiMuteCount,
                                      pSettings->iMidiMuteMyself );
-    Sound.EnableMIDI ( pSettings->bUseMIDIController );
     if ( !pSettings->strMidiDevice.isEmpty() )
     {
         Sound.SetMIDIDevice ( pSettings->strMidiDevice );
     }
+    Sound.EnableMIDI ( pSettings->bUseMIDIController );
 }
 
 CClient::~CClient()
