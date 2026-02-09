@@ -580,8 +580,33 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetAudioQuality ( static_cast<EAudioQuality> ( iValue ) );
     }
 
-    // MIDI settings: check command line first, then fall back to XML
-    bool bMidiFromCommandLine = false;
+    // MIDI settings: load from XML first, then apply command line overrides
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
+        iMidiChannel = iValue;
+
+    struct MidiSettingEntry
+    {
+        const char* key;
+        int*        variable;
+    };
+    MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
+                                        { "midifadercount", &iMidiFaderCount },
+                                        { "midipanoffset", &iMidiPanOffset },
+                                        { "midipancount", &iMidiPanCount },
+                                        { "midisolooffset", &iMidiSoloOffset },
+                                        { "midisolocount", &iMidiSoloCount },
+                                        { "midimuteoffset", &iMidiMuteOffset },
+                                        { "midimutecount", &iMidiMuteCount },
+                                        { "midimutemyself", &iMidiMuteMyself } };
+    for ( const auto& entry : midiSettings )
+    {
+        if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
+            *( entry.variable ) = iValue;
+    }
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
+        bUseMIDIController = bValue;
+
+    // Apply command line overrides on top of saved settings
     for ( const QString& option : CommandLineOptions )
     {
         if ( option.startsWith ( "--ctrlmidich=" ) )
@@ -600,37 +625,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                                iMidiMuteMyself,
                                                bUseMIDIController,
                                                &strMidiDevice );
-            bMidiFromCommandLine = true;
             break;
         }
-    }
-
-    if ( !bMidiFromCommandLine )
-    {
-        if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
-            iMidiChannel = iValue;
-
-        struct MidiSettingEntry
-        {
-            const char* key;
-            int*        variable;
-        };
-        MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
-                                            { "midifadercount", &iMidiFaderCount },
-                                            { "midipanoffset", &iMidiPanOffset },
-                                            { "midipancount", &iMidiPanCount },
-                                            { "midisolooffset", &iMidiSoloOffset },
-                                            { "midisolocount", &iMidiSoloCount },
-                                            { "midimuteoffset", &iMidiMuteOffset },
-                                            { "midimutecount", &iMidiMuteCount },
-                                            { "midimutemyself", &iMidiMuteMyself } };
-        for ( const auto& entry : midiSettings )
-        {
-            if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
-                *( entry.variable ) = iValue;
-        }
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
-            bUseMIDIController = bValue;
     }
 
     // custom directories
