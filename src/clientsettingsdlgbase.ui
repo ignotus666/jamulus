@@ -2139,6 +2139,7 @@
   <tabstop>chbDetectFeedback</tabstop>
   <tabstop>sldAudioPan</tabstop>
   <tabstop>chbUseMIDIController</tabstop>
+  <tabstop>cbxMidiDevice</tabstop>
   <tabstop>spnChannel</tabstop>
   <tabstop>spnMuteMyself</tabstop>
   <tabstop>butLearnMuteMyself</tabstop>

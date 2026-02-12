@@ -401,6 +401,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // MIDI settings
     chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
     chbUseMIDIController->setAccessibleName ( tr ( "MIDI-in port check box" ) );
+    lblMidiDevice->setWhatsThis ( tr ( "Select MIDI input device" ) );
+    cbxMidiDevice->setAccessibleName ( tr ( "MIDI input device combo box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (0-16) and two parameters you can set "
