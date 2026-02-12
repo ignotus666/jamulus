@@ -580,33 +580,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetAudioQuality ( static_cast<EAudioQuality> ( iValue ) );
     }
 
-    // MIDI settings: load from XML first, then apply command line overrides
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
-        iMidiChannel = iValue;
-
-    struct MidiSettingEntry
-    {
-        const char* key;
-        int*        variable;
-    };
-    MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
-                                        { "midifadercount", &iMidiFaderCount },
-                                        { "midipanoffset", &iMidiPanOffset },
-                                        { "midipancount", &iMidiPanCount },
-                                        { "midisolooffset", &iMidiSoloOffset },
-                                        { "midisolocount", &iMidiSoloCount },
-                                        { "midimuteoffset", &iMidiMuteOffset },
-                                        { "midimutecount", &iMidiMuteCount },
-                                        { "midimutemyself", &iMidiMuteMyself } };
-    for ( const auto& entry : midiSettings )
-    {
-        if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
-            *( entry.variable ) = iValue;
-    }
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
-        bUseMIDIController = bValue;
-
-    // Apply command line overrides on top of saved settings
+    // MIDI settings: check command line first, then fall back to XML
+    bool bMidiFromCommandLine = false;
     for ( const QString& option : CommandLineOptions )
     {
         if ( option.startsWith ( "--ctrlmidich=" ) )
@@ -625,7 +600,43 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                                iMidiMuteMyself,
                                                bUseMIDIController,
                                                &strMidiDevice );
+            bMidiFromCommandLine = true;
             break;
+        }
+    }
+
+    if ( !bMidiFromCommandLine )
+    {
+        if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
+            iMidiChannel = iValue;
+
+        struct MidiSettingEntry
+        {
+            const char* key;
+            int*        variable;
+        };
+        MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
+                                            { "midifadercount", &iMidiFaderCount },
+                                            { "midipanoffset", &iMidiPanOffset },
+                                            { "midipancount", &iMidiPanCount },
+                                            { "midisolooffset", &iMidiSoloOffset },
+                                            { "midisolocount", &iMidiSoloCount },
+                                            { "midimuteoffset", &iMidiMuteOffset },
+                                            { "midimutecount", &iMidiMuteCount },
+                                            { "midimutemyself", &iMidiMuteMyself } };
+        for ( const auto& entry : midiSettings )
+        {
+            if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
+                *( entry.variable ) = iValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
+            bUseMIDIController = bValue;
+
+        // Read MIDI device name from settings
+        strMidiDevice = GetIniSetting ( IniXMLDocument, "client", "mididevice_base64", "" );
+        if ( !strMidiDevice.isEmpty() )
+        {
+            strMidiDevice = FromBase64ToString ( strMidiDevice );
         }
     }
 
@@ -933,6 +944,12 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "midimutecount", iMidiMuteCount );
     SetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", iMidiMuteMyself );
     SetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bUseMIDIController );
+
+    // Save MIDI device name
+    if ( !strMidiDevice.isEmpty() )
+    {
+        PutIniSetting ( IniXMLDocument, "client", "mididevice_base64", ToBase64 ( strMidiDevice ) );
+    }
 
     // fader settings
     WriteFaderSettingsToXML ( IniXMLDocument );

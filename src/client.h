@@ -295,8 +295,11 @@ public:
     //### TODO: END ###//
 
     // MIDI control
-    void EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
-    bool IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
+    void        EnableMIDI ( bool bEnable ) { Sound.EnableMIDI ( bEnable ); }
+    bool        IsMIDIEnabled() const { return Sound.IsMIDIEnabled(); }
+    QStringList GetMIDIDevNames() { return Sound.GetMIDIDevNames(); }
+    QString     GetMIDIDevice() { return Sound.GetMIDIDevice(); }
+    void        SetMIDIDevice ( const QString& strDevice ) { Sound.SetMIDIDevice ( strDevice ); }
 
     // settings
     CChannelCoreInfo ChannelInfo;

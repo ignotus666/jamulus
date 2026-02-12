@@ -648,6 +648,25 @@ void CSound::EnableMIDI ( bool bEnable )
 
 bool CSound::IsMIDIEnabled() const { return bMidiEnabled; }
 
+QStringList CSound::GetMIDIDevNames()
+{
+    QStringList deviceNamesList;
+    int         numDevices = midiInGetNumDevs();
+
+    for ( int i = 0; i < numDevices; i++ )
+    {
+        MIDIINCAPS mic;
+        MMRESULT   result = midiInGetDevCaps ( i, &mic, sizeof ( MIDIINCAPS ) );
+
+        if ( result == MMSYSERR_NOERROR )
+        {
+            deviceNamesList.append ( QString ( mic.szPname ) );
+        }
+    }
+
+    return deviceNamesList;
+}
+
 void CSound::bufferSwitch ( long index, ASIOBool )
 {
     int iCurSample;
