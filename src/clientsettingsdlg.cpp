@@ -812,6 +812,14 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     }
 
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+        // Refresh device list when enabling MIDI to detect newly connected devices (Windows non-JACK only)
+        if ( checked )
+        {
+            UpdateMIDIDeviceSelection();
+        }
+#endif
+
         pSettings->bUseMIDIController = checked;
         pClient->SetSettings ( pSettings );
 
@@ -1370,7 +1378,6 @@ void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
 #if defined( _WIN32 ) && !defined( WITH_JACK )
     // Enable/disable MIDI device combo box based on checkbox state (Windows non-JACK only)
     cbxMidiDevice->setEnabled ( enabled );
-    lblMidiDevice->setEnabled ( enabled );
 #endif
 }
 
@@ -1416,12 +1423,10 @@ void CClientSettingsDlg::UpdateMIDIDeviceSelection()
 
     cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
     cbxMidiDevice->setEnabled ( true );
-    cbxMidiDevice->setVisible ( true );
-    lblMidiDevice->setVisible ( true );
+    wdgMidiDeviceContainer->setVisible ( true );
 #else
-    // For non-Windows or JACK builds, hide the MIDI device selection completely
-    cbxMidiDevice->setVisible ( false );
-    lblMidiDevice->setVisible ( false );
+    // For non-Windows or JACK builds, hide the MIDI device selection container
+    wdgMidiDeviceContainer->setVisible ( false );
 #endif
 
     cbxMidiDevice->blockSignals ( false );
