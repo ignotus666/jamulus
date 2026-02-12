@@ -83,8 +83,9 @@ public:
     virtual float GetInOutLatencyMs() { return fInOutLatencyMs; }
 
     // MIDI port toggle
-    virtual void EnableMIDI ( bool bEnable );
-    virtual bool IsMIDIEnabled() const;
+    virtual void        EnableMIDI ( bool bEnable );
+    virtual bool        IsMIDIEnabled() const;
+    virtual QStringList GetMIDIDevNames();
 
 protected:
     virtual QString LoadAndInitializeDriver ( QString strDriverName, bool bOpenDriverSetup );

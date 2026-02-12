@@ -271,7 +271,7 @@ Results:
 
 | Name | Type | Description |
 | --- | --- | --- |
-| result | string | "ok" on success, or error message if MIDI failed to enable. |
+| result | string | Always "ok". |
 
 
 ### jamulusclient/setName

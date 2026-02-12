@@ -831,6 +831,12 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         }
     } );
 
+    // MIDI Device combo box connection
+    QObject::connect ( cbxMidiDevice,
+                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::currentIndexChanged ),
+                       this,
+                       &CClientSettingsDlg::OnMidiDeviceActivated );
+
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
     midiLearnButtons[1] = butLearnFaderOffset;
@@ -886,6 +892,9 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->iMidiMuteOffset );
     spnMuteCount->setValue ( pSettings->iMidiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+
+    // Update MIDI device combo box
+    UpdateMIDIDeviceSelection();
 
     // Check if MIDI is actually enabled (might have failed to open port)
     if ( pSettings->bUseMIDIController && !pClient->IsMIDIEnabled() )
@@ -1354,7 +1363,110 @@ void CClientSettingsDlg::ResetMidiLearn()
     }
 }
 
-void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { midiControlsContainer->setEnabled ( enabled ); }
+void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
+{
+    midiControlsContainer->setEnabled ( enabled );
+
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+    // Enable/disable MIDI device combo box based on checkbox state (Windows non-JACK only)
+    cbxMidiDevice->setEnabled ( enabled );
+    lblMidiDevice->setEnabled ( enabled );
+#endif
+}
+
+void CClientSettingsDlg::UpdateMIDIDeviceSelection()
+{
+    // Clear and repopulate the combo box
+    cbxMidiDevice->blockSignals ( true );
+    cbxMidiDevice->clear();
+
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+    // Only populate and enable for Windows non-JACK builds
+    QStringList deviceNames = pClient->GetMIDIDevNames();
+
+    // Add "All Devices" as first option
+    cbxMidiDevice->addItem ( tr ( "All Devices" ), QString ( "" ) );
+
+    // Add individual device names
+    for ( const QString& deviceName : deviceNames )
+    {
+        cbxMidiDevice->addItem ( deviceName, deviceName );
+    }
+
+    // Set current selection based on settings
+    QString currentDevice = pSettings->strMidiDevice;
+    int     iCurDevIdx    = 0; // Default to "All Devices"
+
+    if ( !currentDevice.isEmpty() )
+    {
+        iCurDevIdx = cbxMidiDevice->findData ( currentDevice );
+        if ( iCurDevIdx < 0 )
+        {
+            // Device not found - warn user
+            iCurDevIdx = 0; // Fall back to "All Devices"
+            if ( pSettings->bUseMIDIController )
+            {
+                QMessageBox::warning (
+                    this,
+                    tr ( "MIDI Device Not Found" ),
+                    tr ( "The MIDI device \"%1\" could not be found. Using all available devices instead." ).arg ( currentDevice ) );
+            }
+        }
+    }
+
+    cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
+    cbxMidiDevice->setEnabled ( true );
+    cbxMidiDevice->setVisible ( true );
+    lblMidiDevice->setVisible ( true );
+#else
+    // For non-Windows or JACK builds, hide the MIDI device selection completely
+    cbxMidiDevice->setVisible ( false );
+    lblMidiDevice->setVisible ( false );
+#endif
+
+    cbxMidiDevice->blockSignals ( false );
+}
+
+void CClientSettingsDlg::OnMidiDeviceActivated ( int iMidiDevIdx )
+{
+    if ( iMidiDevIdx < 0 || iMidiDevIdx >= cbxMidiDevice->count() )
+    {
+        return;
+    }
+
+    // Get the device name from combo box data
+    QString selectedDevice = cbxMidiDevice->itemData ( iMidiDevIdx ).toString();
+
+    // Update settings
+    pSettings->strMidiDevice = selectedDevice;
+
+    // If MIDI is currently enabled, restart it with the new device
+    if ( pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
+    {
+        // Disable MIDI
+        pClient->EnableMIDI ( false );
+
+        // Set the new device
+        pClient->SetMIDIDevice ( selectedDevice );
+
+        // Re-enable MIDI
+        pClient->EnableMIDI ( true );
+
+        // Check if re-enable was successful
+        if ( !pClient->IsMIDIEnabled() )
+        {
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Device Connection Failed" ),
+                                   tr ( "Could not connect to MIDI device \"%1\". Please check your OS configuration." )
+                                       .arg ( selectedDevice.isEmpty() ? tr ( "All Devices" ) : selectedDevice ) );
+        }
+    }
+    else
+    {
+        // Just update the device setting for next time MIDI is enabled
+        pClient->SetMIDIDevice ( selectedDevice );
+    }
+}
 
 void CClientSettingsDlg::SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton )
 {
