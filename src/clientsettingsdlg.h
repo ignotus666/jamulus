@@ -70,6 +70,7 @@ protected:
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );
+    virtual bool eventFilter ( QObject* obj, QEvent* event ) override;
 
     CClient*         pClient;
     CClientSettings* pSettings;
@@ -138,7 +139,7 @@ private:
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
     void         SetMIDIControlsEnabled ( bool enabled );
-    void         UpdateMIDIDeviceSelection();
+    void         UpdateMIDIDeviceSelection ( bool bShowWarnings = true );
 
 private slots:
     void OnLearnButtonClicked();
