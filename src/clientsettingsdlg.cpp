@@ -437,7 +437,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     grbMidiSolo->setWhatsThis ( strMidiSettings );
     grbMidiMute->setWhatsThis ( strMidiSettings );
 
-    spnChannel->setAccessibleName ( tr ( "MIDI channel spin box" ) );
+    cbxChannel->setAccessibleName ( tr ( "MIDI channel combo box" ) );
     spnMuteMyself->setAccessibleName ( tr ( "Mute Myself MIDI CC number spin box" ) );
     spnFaderOffset->setAccessibleName ( tr ( "Fader offset spin box" ) );
     spnPanOffset->setAccessibleName ( tr ( "Pan offset spin box" ) );
@@ -806,8 +806,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         int CClientSettings::*member;
     };
 
-    const MidiSpinBoxMapping midiMappings[] = { { spnChannel, &CClientSettings::iMidiChannel },
-                                                { spnMuteMyself, &CClientSettings::iMidiMuteMyself },
+    const MidiSpinBoxMapping midiMappings[] = { { spnMuteMyself, &CClientSettings::iMidiMuteMyself },
                                                 { spnFaderOffset, &CClientSettings::iMidiFaderOffset },
                                                 { spnFaderCount, &CClientSettings::iMidiFaderCount },
                                                 { spnPanOffset, &CClientSettings::iMidiPanOffset },
@@ -824,6 +823,12 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
             pClient->SetSettings ( pSettings );
         } );
     }
+
+    // Connect MIDI channel combobox
+    QObject::connect ( cbxChannel, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::currentIndexChanged ), this, [this] ( int index ) {
+        pSettings->iMidiChannel = index;
+        pClient->SetSettings ( pSettings );
+    } );
 
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
@@ -912,7 +917,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     pcbxSkill->setCurrentIndex ( pcbxSkill->findData ( static_cast<int> ( pClient->ChannelInfo.eSkillLevel ) ) );
 
     // MIDI tab: set widgets from settings
-    spnChannel->setValue ( pSettings->iMidiChannel );
+    cbxChannel->setCurrentIndex ( pSettings->iMidiChannel );
     spnMuteMyself->setValue ( pSettings->iMidiMuteMyself );
     spnFaderOffset->setValue ( pSettings->iMidiFaderOffset );
     spnFaderCount->setValue ( pSettings->iMidiFaderCount );
@@ -1421,7 +1426,8 @@ void CClientSettingsDlg::ResetMidiLearn()
 void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
 {
     midiControlsContainer->setEnabled ( enabled );
-    // Enable/disable MIDI device combo box based on checkbox state
+    // Enable/disable MIDI device combo box and label based on checkbox state
+    lblMidiDevice->setEnabled ( enabled );
     cbxMidiDevice->setEnabled ( enabled );
 }
 
