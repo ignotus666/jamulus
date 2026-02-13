@@ -789,10 +789,35 @@ void CSound::CreateMIDIPort()
             return;
         }
 
-        // Note: Unlike the previous implementation, we do NOT automatically connect to all MIDI sources.
-        // Users should manually connect MIDI devices to Jamulus using Audio MIDI Setup or a MIDI patchbay.
-        // This prevents unwanted connections to system MIDI ports (e.g., IAC Driver, network MIDI).
-        qInfo() << "CoreAudio MIDI port created. Use Audio MIDI Setup to connect MIDI devices.";
+        // Connect to selected MIDI device if one is specified
+        if ( !strMIDIDevice.isEmpty() )
+        {
+            // Find the MIDI source by name
+            const int iNMIDISources = MIDIGetNumberOfSources();
+            for ( int i = 0; i < iNMIDISources; i++ )
+            {
+                MIDIEndpointRef src = MIDIGetSource ( i );
+                CFStringRef     deviceName;
+
+                OSStatus nameResult = MIDIObjectGetStringProperty ( src, kMIDIPropertyDisplayName, &deviceName );
+                if ( nameResult == noErr && deviceName != nullptr )
+                {
+                    QString name = QString::fromCFString ( deviceName );
+                    CFRelease ( deviceName );
+
+                    if ( name == strMIDIDevice )
+                    {
+                        // Connect to this source
+                        result = MIDIPortConnectSource ( midiInPortRef, src, nullptr );
+                        if ( result != noErr )
+                        {
+                            qWarning() << "Failed to connect to MIDI source" << strMIDIDevice << ". Error code:" << result;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
