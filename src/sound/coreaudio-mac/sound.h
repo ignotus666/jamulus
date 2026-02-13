@@ -62,8 +62,8 @@ public:
     virtual int     GetRightOutputChannel() { return iSelOutputRightChannel; }
 
     // MIDI functions
-    virtual void EnableMIDI ( const bool bEnable );
-    virtual bool IsMIDIEnabled() const;
+    virtual void        EnableMIDI ( const bool bEnable );
+    virtual bool        IsMIDIEnabled() const;
     virtual QStringList GetMIDIDevNames() override;
 
     // these variables/functions should be protected but cannot since we want

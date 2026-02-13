@@ -742,7 +742,7 @@ QStringList CSound::GetMIDIDevNames()
 
     // Get all available MIDI sources
     const int iNMIDISources = MIDIGetNumberOfSources();
-    
+
     for ( int i = 0; i < iNMIDISources; i++ )
     {
         MIDIEndpointRef src = MIDIGetSource ( i );
