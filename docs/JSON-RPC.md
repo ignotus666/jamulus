@@ -188,6 +188,23 @@ Results:
 | result.clients | array | The client list. See jamulusclient/clientListReceived for the format. |
 
 
+### jamulusclient/getMidiDevices
+
+Returns a list of available MIDI input devices.
+
+Parameters:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| params | object | No parameters (empty object). |
+
+Results:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| result | array | Array of MIDI device name strings. |
+
+
 ### jamulusclient/getMidiSettings
 
 Returns all MIDI controller settings.
