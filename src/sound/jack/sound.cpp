@@ -200,6 +200,31 @@ void CSound::EnableMIDI ( bool bEnable )
 
 bool CSound::IsMIDIEnabled() const { return ( input_port_midi != nullptr ); }
 
+QStringList CSound::GetMIDIDevNames()
+{
+    QStringList deviceNamesList;
+
+    if ( pJackClient == nullptr )
+    {
+        return deviceNamesList;
+    }
+
+    // Get all MIDI output ports (which are inputs from Jamulus' perspective)
+    const char** ports = jack_get_ports ( pJackClient, nullptr, JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput );
+
+    if ( ports != nullptr )
+    {
+        for ( int i = 0; ports[i] != nullptr; i++ )
+        {
+            deviceNamesList.append ( QString ( ports[i] ) );
+        }
+
+        jack_free ( ports );
+    }
+
+    return deviceNamesList;
+}
+
 void CSound::CreateMIDIPort()
 {
     if ( pJackClient != nullptr && input_port_midi == nullptr )
@@ -209,6 +234,17 @@ void CSound::CreateMIDIPort()
         if ( input_port_midi == nullptr )
         {
             qWarning() << "Failed to create JACK MIDI port at runtime";
+            return;
+        }
+
+        // Connect to selected MIDI device if one is specified
+        if ( !strMIDIDevice.isEmpty() )
+        {
+            const char* ourPortName = jack_port_name ( input_port_midi );
+            if ( jack_connect ( pJackClient, strMIDIDevice.toUtf8().constData(), ourPortName ) != 0 )
+            {
+                qWarning() << "Failed to connect JACK MIDI port" << strMIDIDevice << "to" << ourPortName;
+            }
         }
     }
 }

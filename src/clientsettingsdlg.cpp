@@ -401,7 +401,19 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // MIDI settings
     chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
     chbUseMIDIController->setAccessibleName ( tr ( "MIDI-in port check box" ) );
-    lblMidiDevice->setWhatsThis ( tr ( "Select MIDI input device" ) );
+    
+#if defined( WITH_JACK )
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI output port to connect to. "
+                                       "Jamulus will automatically connect its MIDI input port to the selected device when enabled."
+                                       "You can also use your connection manager of choice to manually change connections." ) );
+#elif defined( __APPLE__ )
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI source to connect to. "
+                                       "Jamulus will automatically connect its MIDI input port to the selected device when enabled."
+                                       "You can also use Audio MIDI Setup to manually change connections." ) );
+#else
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI input device(s) Jamulus should listen to. "
+                                       "Select 'All Devices' to receive MIDI from all connected devices, or choose a specific device." ) );
+#endif
     cbxMidiDevice->setAccessibleName ( tr ( "MIDI input device combo box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
@@ -814,25 +826,29 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     }
 
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
-#if defined( _WIN32 ) && !defined( WITH_JACK )
-        // Refresh device list when enabling MIDI to detect newly connected devices (Windows non-JACK only)
-        if ( checked )
-        {
-            UpdateMIDIDeviceSelection();
-        }
-#endif
-
         pSettings->bUseMIDIController = checked;
         pClient->SetSettings ( pSettings );
 
         // Check if MIDI was actually enabled successfully
+        // Note: On Windows, IsMIDIEnabled() returns false if no devices found.
+        // On Linux/macOS (Jack/CoreAudio), MIDI ports can be created even without devices,
+        // so IsMIDIEnabled() should always return true when checked.
         if ( checked && !pClient->IsMIDIEnabled() )
         {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+            // On Windows, MIDI port creation requires actual devices
             // MIDI failed to enable - uncheck the box and update settings
             pSettings->bUseMIDIController = false;
             chbUseMIDIController->setChecked ( false );
             SetMIDIControlsEnabled ( false );
+            QMessageBox::warning ( this, tr ( "Could not open MIDI port" ), tr ( "No MIDI devices found. Please connect a MIDI device and try again." ) );
+#else
+            // On Linux/macOS, this shouldn't happen, but handle it gracefully
+            pSettings->bUseMIDIController = false;
+            chbUseMIDIController->setChecked ( false );
+            SetMIDIControlsEnabled ( false );
             QMessageBox::warning ( this, tr ( "Could not open MIDI port" ), tr ( "Please check your OS configuration." ) );
+#endif
         }
         else
         {
@@ -843,9 +859,12 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MIDI Device combo box connection
     QObject::connect ( cbxMidiDevice,
-                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::currentIndexChanged ),
+                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
                        this,
                        &CClientSettingsDlg::OnMidiDeviceActivated );
+
+    // Install event filter to refresh device list when dropdown is opened
+    cbxMidiDevice->installEventFilter ( this );
 
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
@@ -907,11 +926,20 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     UpdateMIDIDeviceSelection();
 
     // Check if MIDI is actually enabled (might have failed to open port)
+    // Note: On Windows, failure can occur if no MIDI devices are found.
+    // On Linux/macOS, MIDI ports are created regardless of device availability.
     if ( pSettings->bUseMIDIController && !pClient->IsMIDIEnabled() )
     {
-        // MIDI was requested but failed - uncheck and disable
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+        // On Windows, MIDI port creation requires actual devices
+        // MIDI was requested but no devices found - uncheck and disable
         pSettings->bUseMIDIController = false;
         chbUseMIDIController->setChecked ( false );
+#else
+        // On Linux/macOS, this shouldn't happen, but handle it gracefully
+        pSettings->bUseMIDIController = false;
+        chbUseMIDIController->setChecked ( false );
+#endif
     }
 
     SetMIDIControlsEnabled ( chbUseMIDIController->isChecked() );
@@ -920,6 +948,21 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
 
     QDialog::showEvent ( event );
+}
+
+bool CClientSettingsDlg::eventFilter ( QObject* obj, QEvent* event )
+{
+    // Refresh MIDI device list when user clicks on the dropdown
+    if ( obj == cbxMidiDevice )
+    {
+        if ( event->type() == QEvent::MouseButtonPress )
+        {
+            // Refresh the device list without showing warnings (user is just browsing)
+            UpdateMIDIDeviceSelection ( false );
+        }
+    }
+    
+    return QDialog::eventFilter ( obj, event );
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()
@@ -1376,25 +1419,26 @@ void CClientSettingsDlg::ResetMidiLearn()
 void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
 {
     midiControlsContainer->setEnabled ( enabled );
-
-#if defined( _WIN32 ) && !defined( WITH_JACK )
-    // Enable/disable MIDI device combo box based on checkbox state (Windows non-JACK only)
+    // Enable/disable MIDI device combo box based on checkbox state
     cbxMidiDevice->setEnabled ( enabled );
-#endif
 }
 
-void CClientSettingsDlg::UpdateMIDIDeviceSelection()
+void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
 {
     // Clear and repopulate the combo box
     cbxMidiDevice->blockSignals ( true );
     cbxMidiDevice->clear();
 
-#if defined( _WIN32 ) && !defined( WITH_JACK )
-    // Only populate and enable for Windows non-JACK builds
+    // Populate device list (works on all platforms)
     QStringList deviceNames = pClient->GetMIDIDevNames();
 
-    // Add "All Devices" as first option
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+    // Add "All Devices" as first option (Windows only)
     cbxMidiDevice->addItem ( tr ( "All Devices" ), QString ( "" ) );
+#else
+    // Add "No device connected" as first option (Linux/macOS)
+    cbxMidiDevice->addItem ( tr ( "No device connected" ), QString ( "" ) );
+#endif
 
     // Add individual device names
     for ( const QString& deviceName : deviceNames )
@@ -1404,32 +1448,42 @@ void CClientSettingsDlg::UpdateMIDIDeviceSelection()
 
     // Set current selection based on settings
     QString currentDevice = pSettings->strMidiDevice;
-    int     iCurDevIdx    = 0; // Default to "All Devices"
+    int     iCurDevIdx    = 0; // Default to first item (All Devices or No device connected)
 
     if ( !currentDevice.isEmpty() )
     {
         iCurDevIdx = cbxMidiDevice->findData ( currentDevice );
         if ( iCurDevIdx < 0 )
         {
-            // Device not found - warn user
-            iCurDevIdx = 0; // Fall back to "All Devices"
-            if ( pSettings->bUseMIDIController )
+            // Device not found - fall back to "No device connected"
+            iCurDevIdx = 0;
+            
+            // Only show warning at launch if MIDI is enabled and user should know
+            if ( bShowWarnings && pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
             {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+                // On Windows, first item is "All Devices"
                 QMessageBox::warning (
                     this,
                     tr ( "MIDI Device Not Found" ),
                     tr ( "The MIDI device \"%1\" could not be found. Using all available devices instead." ).arg ( currentDevice ) );
+#else
+                // On Linux/macOS, Jamulus will auto-connect to selected device
+                QMessageBox::information (
+                    this,
+                    tr ( "MIDI Device Not Found" ),
+                    tr ( "The MIDI device \"%1\" is not currently available. Select a different device from the dropdown to connect." ).arg ( currentDevice ) );
+#endif
             }
+            
+            // Clear saved device since it's not available
+            pSettings->strMidiDevice = "";
         }
     }
 
     cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
     cbxMidiDevice->setEnabled ( true );
     wdgMidiDeviceContainer->setVisible ( true );
-#else
-    // For non-Windows or JACK builds, hide the MIDI device selection container
-    wdgMidiDeviceContainer->setVisible ( false );
-#endif
 
     cbxMidiDevice->blockSignals ( false );
 }
@@ -1447,7 +1501,7 @@ void CClientSettingsDlg::OnMidiDeviceActivated ( int iMidiDevIdx )
     // Update settings
     pSettings->strMidiDevice = selectedDevice;
 
-    // If MIDI is currently enabled, restart it with the new device
+    // Changing device requires restarting MIDI to reconnect
     if ( pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
     {
         // Disable MIDI
@@ -1462,10 +1516,17 @@ void CClientSettingsDlg::OnMidiDeviceActivated ( int iMidiDevIdx )
         // Check if re-enable was successful
         if ( !pClient->IsMIDIEnabled() )
         {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
             QMessageBox::warning ( this,
                                    tr ( "MIDI Device Connection Failed" ),
                                    tr ( "Could not connect to MIDI device \"%1\". Please check your OS configuration." )
                                        .arg ( selectedDevice.isEmpty() ? tr ( "All Devices" ) : selectedDevice ) );
+#else
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Device Connection Failed" ),
+                                   tr ( "Could not connect to MIDI device \"%1\". Please check that the device is available." )
+                                       .arg ( selectedDevice ) );
+#endif
         }
     }
     else

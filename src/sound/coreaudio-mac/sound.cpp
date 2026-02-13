@@ -736,6 +736,36 @@ void CSound::EnableMIDI ( bool bEnable )
 
 bool CSound::IsMIDIEnabled() const { return ( midiInPortRef != static_cast<MIDIPortRef> ( NULL ) ); }
 
+QStringList CSound::GetMIDIDevNames()
+{
+    QStringList deviceNamesList;
+
+    // Get all available MIDI sources
+    const int iNMIDISources = MIDIGetNumberOfSources();
+    
+    for ( int i = 0; i < iNMIDISources; i++ )
+    {
+        MIDIEndpointRef src = MIDIGetSource ( i );
+        CFStringRef     deviceName;
+
+        // Get the name of the MIDI source
+        OSStatus result = MIDIObjectGetStringProperty ( src, kMIDIPropertyDisplayName, &deviceName );
+        if ( result == noErr && deviceName != nullptr )
+        {
+            QString name = QString::fromCFString ( deviceName );
+            deviceNamesList.append ( name );
+            CFRelease ( deviceName );
+        }
+        else
+        {
+            // Fallback to generic name if display name not available
+            deviceNamesList.append ( QString ( "MIDI Source %1" ).arg ( i ) );
+        }
+    }
+
+    return deviceNamesList;
+}
+
 void CSound::CreateMIDIPort()
 {
     if ( midiClient == static_cast<MIDIClientRef> ( NULL ) )
@@ -759,15 +789,10 @@ void CSound::CreateMIDIPort()
             return;
         }
 
-        // Connect to all available MIDI sources
-        const int iNMIDISources = MIDIGetNumberOfSources();
-        for ( int i = 0; i < iNMIDISources; i++ )
-        {
-            MIDIEndpointRef src = MIDIGetSource ( i );
-            MIDIPortConnectSource ( midiInPortRef, src, NULL );
-        }
-
-        qInfo() << "CoreAudio MIDI port created and connected to" << iNMIDISources << "sources";
+        // Note: Unlike the previous implementation, we do NOT automatically connect to all MIDI sources.
+        // Users should manually connect MIDI devices to Jamulus using Audio MIDI Setup or a MIDI patchbay.
+        // This prevents unwanted connections to system MIDI ports (e.g., IAC Driver, network MIDI).
+        qInfo() << "CoreAudio MIDI port created. Use Audio MIDI Setup to connect MIDI devices.";
     }
 }
 
@@ -775,15 +800,7 @@ void CSound::DestroyMIDIPort()
 {
     if ( midiInPortRef != static_cast<MIDIPortRef> ( NULL ) )
     {
-        // Disconnect from all sources before disposing
-        const int iNMIDISources = MIDIGetNumberOfSources();
-        for ( int i = 0; i < iNMIDISources; i++ )
-        {
-            MIDIEndpointRef src = MIDIGetSource ( i );
-            MIDIPortDisconnectSource ( midiInPortRef, src );
-        }
-
-        // Dispose of the MIDI input port
+        // Dispose of the MIDI input port (connections are automatically cleaned up)
         OSStatus result = MIDIPortDispose ( midiInPortRef );
         if ( result != noErr )
         {

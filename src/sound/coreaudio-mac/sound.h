@@ -64,6 +64,7 @@ public:
     // MIDI functions
     virtual void EnableMIDI ( const bool bEnable );
     virtual bool IsMIDIEnabled() const;
+    virtual QStringList GetMIDIDevNames() override;
 
     // these variables/functions should be protected but cannot since we want
     // to access them from the callback function

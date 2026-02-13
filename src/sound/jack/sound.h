@@ -88,6 +88,7 @@ public:
     virtual float GetInOutLatencyMs() { return fInOutLatencyMs; }
     virtual void  EnableMIDI ( bool bEnable ) override;
     virtual bool  IsMIDIEnabled() const override;
+    virtual QStringList GetMIDIDevNames() override;
 
     // these variables should be protected but cannot since we want
     // to access them from the callback function
