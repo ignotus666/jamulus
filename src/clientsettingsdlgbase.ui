@@ -1565,7 +1565,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QGroupBox" name="chanMuteGroup">
+           <widget class="QGroupBox" name="grbMidiMuteMyself">
             <property name="font">
              <font>
               <weight>75</weight>
@@ -1573,13 +1573,22 @@
              </font>
             </property>
             <property name="title">
-             <string/>
+             <string>Mute Myself</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_20">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_16">
                <item>
-                <widget class="QLabel" name="lblMuteMyself">
+                <widget class="QLabel" name="lblMuteMyselfCC">
+                 <property name="minimumSize">
+                  <size>
+                   <width>103</width>
+                   <height>0</height>
+                  </size>
+                 </property>
                  <property name="font">
                   <font>
                    <weight>50</weight>
@@ -1587,7 +1596,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Mute Myself</string>
+                  <string>MIDI CC</string>
                  </property>
                 </widget>
                </item>
@@ -1682,6 +1691,9 @@
               </property>
               <property name="title">
                <string>Fader</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_19">
                <item>
@@ -1797,6 +1809,9 @@
               </property>
               <property name="title">
                <string>Mute</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_18">
                <item>
@@ -1926,6 +1941,9 @@
               <property name="title">
                <string>Solo</string>
               </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
               <layout class="QHBoxLayout" name="horizontalLayout_21">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_14">
@@ -2040,6 +2058,9 @@
               </property>
               <property name="title">
                <string>Pan</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_22">
                <item>

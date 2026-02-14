@@ -431,7 +431,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                                    "number will be detected and saved." );
 
     lblChannel->setWhatsThis ( strMidiSettings );
-    lblMuteMyself->setWhatsThis ( strMidiSettings );
+    grbMidiMuteMyself->setWhatsThis ( strMidiSettings );
     grbMidiFader->setWhatsThis ( strMidiSettings );
     grbMidiPan->setWhatsThis ( strMidiSettings );
     grbMidiSolo->setWhatsThis ( strMidiSettings );
@@ -830,6 +830,32 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         pClient->SetSettings ( pSettings );
     } );
 
+    // Connect groupbox enable/disable checkboxes
+    QObject::connect ( grbMidiFader, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiFaderEnabled = checked;
+        pClient->SetSettings ( pSettings );
+    } );
+
+    QObject::connect ( grbMidiPan, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiPanEnabled = checked;
+        pClient->SetSettings ( pSettings );
+    } );
+
+    QObject::connect ( grbMidiSolo, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiSoloEnabled = checked;
+        pClient->SetSettings ( pSettings );
+    } );
+
+    QObject::connect ( grbMidiMute, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiMuteEnabled = checked;
+        pClient->SetSettings ( pSettings );
+    } );
+
+    QObject::connect ( grbMidiMuteMyself, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiMuteMyselfEnabled = checked;
+        pClient->SetSettings ( pSettings );
+    } );
+
     QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
         pClient->SetSettings ( pSettings );
@@ -850,7 +876,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                                    tr ( "Could not open MIDI port" ),
                                    tr ( "No MIDI devices found. Please connect a MIDI device and try again." ) );
 #else
-            // On Linux/macOS, this shouldn't happen, but handle it gracefully
+            // On Linux/macOS, this shouldn't happen, but handle it anyway
             pSettings->bUseMIDIController = false;
             chbUseMIDIController->setChecked ( false );
             SetMIDIControlsEnabled ( false );
@@ -929,21 +955,28 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteCount->setValue ( pSettings->iMidiMuteCount );
     chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
 
+    // Initialize groupbox checked states
+    grbMidiFader->setChecked ( pSettings->bMidiFaderEnabled );
+    grbMidiPan->setChecked ( pSettings->bMidiPanEnabled );
+    grbMidiSolo->setChecked ( pSettings->bMidiSoloEnabled );
+    grbMidiMute->setChecked ( pSettings->bMidiMuteEnabled );
+    grbMidiMuteMyself->setChecked ( pSettings->bMidiMuteMyselfEnabled );
+
     // Update MIDI device combo box
     UpdateMIDIDeviceSelection();
 
     // Check if MIDI is actually enabled (might have failed to open port)
-    // Note: On Windows, failure can occur if no MIDI devices are found.
+    // Note: On Windows, failure will occur if no MIDI devices are found.
     // On Linux/macOS, MIDI ports are created regardless of device availability.
     if ( pSettings->bUseMIDIController && !pClient->IsMIDIEnabled() )
     {
 #if defined( _WIN32 ) && !defined( WITH_JACK )
         // On Windows, MIDI port creation requires actual devices
-        // MIDI was requested but no devices found - uncheck and disable
+        // If MIDI was requested but no devices found - uncheck and disable
         pSettings->bUseMIDIController = false;
         chbUseMIDIController->setChecked ( false );
 #else
-        // On Linux/macOS, this shouldn't happen, but handle it gracefully
+        // On Linux/macOS, this shouldn't happen, but handle it anyway
         pSettings->bUseMIDIController = false;
         chbUseMIDIController->setChecked ( false );
 #endif
@@ -951,7 +984,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
 
     SetMIDIControlsEnabled ( chbUseMIDIController->isChecked() );
 
-    // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
+    // Signal to propagate MIDI state at startup
     emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
 
     QDialog::showEvent ( event );

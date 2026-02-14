@@ -214,6 +214,11 @@ void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
                                         int&           iMidiMuteOffset,
                                         int&           iMidiMuteCount,
                                         int&           iMidiMuteMyself,
+                                        bool&          bMidiFaderEnabled,
+                                        bool&          bMidiPanEnabled,
+                                        bool&          bMidiSoloEnabled,
+                                        bool&          bMidiMuteEnabled,
+                                        bool&          bMidiMuteMyselfEnabled,
                                         bool&          bUseMIDIController,
                                         QString*       strMIDIDevice )
 {
@@ -293,27 +298,32 @@ void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
         // Assign to appropriate controller type
         if ( cType == 'f' )
         {
-            iMidiFaderOffset = iFirst;
-            iMidiFaderCount  = iNum;
+            iMidiFaderOffset  = iFirst;
+            iMidiFaderCount   = iNum;
+            bMidiFaderEnabled = true;
         }
         else if ( cType == 'p' )
         {
-            iMidiPanOffset = iFirst;
-            iMidiPanCount  = iNum;
+            iMidiPanOffset  = iFirst;
+            iMidiPanCount   = iNum;
+            bMidiPanEnabled = true;
         }
         else if ( cType == 's' )
         {
-            iMidiSoloOffset = iFirst;
-            iMidiSoloCount  = iNum;
+            iMidiSoloOffset  = iFirst;
+            iMidiSoloCount   = iNum;
+            bMidiSoloEnabled = true;
         }
         else if ( cType == 'm' )
         {
-            iMidiMuteOffset = iFirst;
-            iMidiMuteCount  = iNum;
+            iMidiMuteOffset  = iFirst;
+            iMidiMuteCount   = iNum;
+            bMidiMuteEnabled = true;
         }
         else if ( cType == 'o' )
         {
-            iMidiMuteMyself = iFirst;
+            iMidiMuteMyself        = iFirst;
+            bMidiMuteMyselfEnabled = true;
         }
     }
 
@@ -598,6 +608,11 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                                iMidiMuteOffset,
                                                iMidiMuteCount,
                                                iMidiMuteMyself,
+                                               bMidiFaderEnabled,
+                                               bMidiPanEnabled,
+                                               bMidiSoloEnabled,
+                                               bMidiMuteEnabled,
+                                               bMidiMuteMyselfEnabled,
                                                bUseMIDIController,
                                                &strMidiDevice );
             bMidiFromCommandLine = true;
@@ -631,6 +646,18 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         }
         if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
             bUseMIDIController = bValue;
+
+        // Read enable flags
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bValue ) )
+            bMidiFaderEnabled = bValue;
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bValue ) )
+            bMidiPanEnabled = bValue;
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bValue ) )
+            bMidiSoloEnabled = bValue;
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "midimuteenabled", bValue ) )
+            bMidiMuteEnabled = bValue;
+        if ( GetFlagIniSet ( IniXMLDocument, "client", "midimutemyselfenabled", bValue ) )
+            bMidiMuteMyselfEnabled = bValue;
 
         // Read MIDI device name from settings
         strMidiDevice = GetIniSetting ( IniXMLDocument, "client", "mididevice_base64", "" );
@@ -944,6 +971,11 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "midimutecount", iMidiMuteCount );
     SetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", iMidiMuteMyself );
     SetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bUseMIDIController );
+    SetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bMidiFaderEnabled );
+    SetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bMidiPanEnabled );
+    SetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bMidiSoloEnabled );
+    SetFlagIniSet ( IniXMLDocument, "client", "midimuteenabled", bMidiMuteEnabled );
+    SetFlagIniSet ( IniXMLDocument, "client", "midimutemyselfenabled", bMidiMuteMyselfEnabled );
 
     // Save MIDI device name
     if ( !strMidiDevice.isEmpty() )

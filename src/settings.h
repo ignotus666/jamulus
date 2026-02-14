@@ -41,7 +41,6 @@
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
-
 {
     Q_OBJECT
 
@@ -175,6 +174,11 @@ public:
         iMidiSoloCount ( 0 ),
         iMidiMuteOffset ( 0 ),
         iMidiMuteCount ( 0 ),
+        bMidiFaderEnabled ( false ),
+        bMidiPanEnabled ( false ),
+        bMidiSoloEnabled ( false ),
+        bMidiMuteEnabled ( false ),
+        bMidiMuteMyselfEnabled ( false ),
         bUseMIDIController ( false ),
         strMidiDevice ( "" ),
         pClient ( pNCliP )
@@ -197,6 +201,11 @@ public:
                                   int&           iMidiMuteOffset,
                                   int&           iMidiMuteCount,
                                   int&           iMidiMuteMyself,
+                                  bool&          bMidiFaderEnabled,
+                                  bool&          bMidiPanEnabled,
+                                  bool&          bMidiSoloEnabled,
+                                  bool&          bMidiMuteEnabled,
+                                  bool&          bMidiMuteMyselfEnabled,
                                   bool&          bUseMIDIController,
                                   QString*       strMIDIDevice = nullptr );
 
@@ -240,6 +249,11 @@ public:
     int     iMidiSoloCount;
     int     iMidiMuteOffset;
     int     iMidiMuteCount;
+    bool    bMidiFaderEnabled;
+    bool    bMidiPanEnabled;
+    bool    bMidiSoloEnabled;
+    bool    bMidiMuteEnabled;
+    bool    bMidiMuteMyselfEnabled;
     bool    bUseMIDIController;
     QString strMidiDevice;
 
