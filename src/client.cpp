@@ -204,14 +204,14 @@ void CClient::SetSettings ( CClientSettings* settings )
     // Apply MIDI settings
     Sound.SetCtrlMIDIChannel ( pSettings->iMidiChannel );
     Sound.SetMIDIControllerMapping ( pSettings->iMidiFaderOffset,
-                                     pSettings->iMidiFaderCount,
+                                     pSettings->bMidiFaderEnabled ? pSettings->iMidiFaderCount : 0,
                                      pSettings->iMidiPanOffset,
-                                     pSettings->iMidiPanCount,
+                                     pSettings->bMidiPanEnabled ? pSettings->iMidiPanCount : 0,
                                      pSettings->iMidiSoloOffset,
-                                     pSettings->iMidiSoloCount,
+                                     pSettings->bMidiSoloEnabled ? pSettings->iMidiSoloCount : 0,
                                      pSettings->iMidiMuteOffset,
-                                     pSettings->iMidiMuteCount,
-                                     pSettings->iMidiMuteMyself );
+                                     pSettings->bMidiMuteEnabled ? pSettings->iMidiMuteCount : 0,
+                                     pSettings->bMidiMuteMyselfEnabled ? pSettings->iMidiMuteMyself : -1 );
     if ( !pSettings->strMidiDevice.isEmpty() )
     {
         Sound.SetMIDIDevice ( pSettings->strMidiDevice );
