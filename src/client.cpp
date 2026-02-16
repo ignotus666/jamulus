@@ -211,7 +211,7 @@ void CClient::SetSettings ( CClientSettings* settings )
                                      pSettings->bMidiSoloEnabled ? pSettings->iMidiSoloCount : 0,
                                      pSettings->iMidiMuteOffset,
                                      pSettings->bMidiMuteEnabled ? pSettings->iMidiMuteCount : 0,
-                                     pSettings->bMidiMuteMyselfEnabled ? pSettings->iMidiMuteMyself : -1 );
+                                     pSettings->bMidiMuteMyselfEnabled ? pSettings->iMidiMuteMyself : 0 );
     if ( !pSettings->strMidiDevice.isEmpty() )
     {
         Sound.SetMIDIDevice ( pSettings->strMidiDevice );
