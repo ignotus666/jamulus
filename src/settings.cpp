@@ -590,13 +590,66 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetAudioQuality ( static_cast<EAudioQuality> ( iValue ) );
     }
 
-    // MIDI settings: check command line first, then fall back to XML
-    bool bMidiFromCommandLine = false;
+    // MIDI settings: Always read from XML first to preserve values
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
+        iMidiChannel = iValue;
+
+    struct MidiSettingEntry
+    {
+        const char* key;
+        int*        variable;
+    };
+    MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
+                                        { "midifadercount", &iMidiFaderCount },
+                                        { "midipanoffset", &iMidiPanOffset },
+                                        { "midipancount", &iMidiPanCount },
+                                        { "midisolooffset", &iMidiSoloOffset },
+                                        { "midisolocount", &iMidiSoloCount },
+                                        { "midimuteoffset", &iMidiMuteOffset },
+                                        { "midimutecount", &iMidiMuteCount },
+                                        { "midimutemyself", &iMidiMuteMyself } };
+    for ( const auto& entry : midiSettings )
+    {
+        if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
+            *( entry.variable ) = iValue;
+    }
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
+        bUseMIDIController = bValue;
+
+    // Read enable flags
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bValue ) )
+        bMidiFaderEnabled = bValue;
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bValue ) )
+        bMidiPanEnabled = bValue;
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bValue ) )
+        bMidiSoloEnabled = bValue;
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midimuteenabled", bValue ) )
+        bMidiMuteEnabled = bValue;
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midimutemyselfenabled", bValue ) )
+        bMidiMuteMyselfEnabled = bValue;
+
+    // Read MIDI device name from settings
+    strMidiDevice = GetIniSetting ( IniXMLDocument, "client", "mididevice_base64", "" );
+    if ( !strMidiDevice.isEmpty() )
+    {
+        strMidiDevice = FromBase64ToString ( strMidiDevice );
+    }
+
+    // Command line overrides: disable all controls, then re-enable only those specified
     for ( const QString& option : CommandLineOptions )
     {
         if ( option.startsWith ( "--ctrlmidich=" ) )
         {
             QString strMidiMap = option.section ( '=', 1 );
+
+            // Disable all controls first - command line will only enable what's specified
+            bMidiFaderEnabled      = false;
+            bMidiPanEnabled        = false;
+            bMidiSoloEnabled       = false;
+            bMidiMuteEnabled       = false;
+            bMidiMuteMyselfEnabled = false;
+
+            // Parse command line - this will re-enable specified controls and update their values
             CClientSettings::ParseCtrlMidiCh ( strMidiMap,
                                                iMidiChannel,
                                                iMidiFaderOffset,
@@ -615,55 +668,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                                bMidiMuteMyselfEnabled,
                                                bUseMIDIController,
                                                &strMidiDevice );
-            bMidiFromCommandLine = true;
             break;
-        }
-    }
-
-    if ( !bMidiFromCommandLine )
-    {
-        if ( GetNumericIniSet ( IniXMLDocument, "client", "midichannel", 0, 16, iValue ) )
-            iMidiChannel = iValue;
-
-        struct MidiSettingEntry
-        {
-            const char* key;
-            int*        variable;
-        };
-        MidiSettingEntry midiSettings[] = { { "midifaderoffset", &iMidiFaderOffset },
-                                            { "midifadercount", &iMidiFaderCount },
-                                            { "midipanoffset", &iMidiPanOffset },
-                                            { "midipancount", &iMidiPanCount },
-                                            { "midisolooffset", &iMidiSoloOffset },
-                                            { "midisolocount", &iMidiSoloCount },
-                                            { "midimuteoffset", &iMidiMuteOffset },
-                                            { "midimutecount", &iMidiMuteCount },
-                                            { "midimutemyself", &iMidiMuteMyself } };
-        for ( const auto& entry : midiSettings )
-        {
-            if ( GetNumericIniSet ( IniXMLDocument, "client", entry.key, 0, 127, iValue ) )
-                *( entry.variable ) = iValue;
-        }
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bValue ) )
-            bUseMIDIController = bValue;
-
-        // Read enable flags
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bValue ) )
-            bMidiFaderEnabled = bValue;
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bValue ) )
-            bMidiPanEnabled = bValue;
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bValue ) )
-            bMidiSoloEnabled = bValue;
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "midimuteenabled", bValue ) )
-            bMidiMuteEnabled = bValue;
-        if ( GetFlagIniSet ( IniXMLDocument, "client", "midimutemyselfenabled", bValue ) )
-            bMidiMuteMyselfEnabled = bValue;
-
-        // Read MIDI device name from settings
-        strMidiDevice = GetIniSetting ( IniXMLDocument, "client", "mididevice_base64", "" );
-        if ( !strMidiDevice.isEmpty() )
-        {
-            strMidiDevice = FromBase64ToString ( strMidiDevice );
         }
     }
 
