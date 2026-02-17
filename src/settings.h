@@ -180,6 +180,7 @@ public:
         bMidiMuteEnabled ( false ),
         bMidiMuteMyselfEnabled ( false ),
         bUseMIDIController ( false ),
+        bMIDIPickupMode ( false ),
         strMidiDevice ( "" ),
         pClient ( pNCliP )
     {
@@ -255,6 +256,7 @@ public:
     bool    bMidiMuteEnabled;
     bool    bMidiMuteMyselfEnabled;
     bool    bUseMIDIController;
+    bool    bMIDIPickupMode; // Enable pickup mode for fader and pan
     QString strMidiDevice;
 
 protected:

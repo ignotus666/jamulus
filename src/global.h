@@ -166,6 +166,15 @@ LED bar:      lbr
 #define AUD_MIX_FADER_MAX 100
 #define AUD_MIX_PAN_MAX   100
 
+// MIDI pickup mode tolerance (in fader/pan units, 0-100)
+#define MIDI_PICKUP_TOLERANCE 2
+
+// Number of recent MIDI values to track for pickup logic
+#define MIDI_PICKUP_HISTORY 2
+
+// Time of inactivity before pickup mode resets (ms)
+#define MIDI_PICKUP_INACTIVITY_TIMEOUT_MS 1000
+
 // range of audio mixer fader
 #define AUD_MIX_FADER_RANGE_DB 35.0f
 
