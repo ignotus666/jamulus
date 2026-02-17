@@ -619,7 +619,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // Read enable flags
     if ( GetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bValue ) )
         bMidiFaderEnabled = bValue;
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bValue ) )
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "midipanenabled", bValue ) )
         bMidiPanEnabled = bValue;
     if ( GetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bValue ) )
         bMidiSoloEnabled = bValue;
@@ -977,7 +977,7 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "midimutemyself", iMidiMuteMyself );
     SetFlagIniSet ( IniXMLDocument, "client", "usemidicontroller", bUseMIDIController );
     SetFlagIniSet ( IniXMLDocument, "client", "midifaderenabled", bMidiFaderEnabled );
-    SetFlagIniSet ( IniXMLDocument, "client", "midipanenable", bMidiPanEnabled );
+    SetFlagIniSet ( IniXMLDocument, "client", "midipanenabled", bMidiPanEnabled );
     SetFlagIniSet ( IniXMLDocument, "client", "midisoloenabled", bMidiSoloEnabled );
     SetFlagIniSet ( IniXMLDocument, "client", "midimuteenabled", bMidiMuteEnabled );
     SetFlagIniSet ( IniXMLDocument, "client", "midimutemyselfenabled", bMidiMuteMyselfEnabled );

@@ -1535,7 +1535,7 @@
                 <widget class="QLabel" name="lblMuteMyselfCC">
                  <property name="minimumSize">
                   <size>
-                   <width>103</width>
+                   <width>105</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -1666,6 +1666,12 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_11">
                  <item>
                   <widget class="QLabel" name="lblFaderOffset">
+                   <property name="minimumSize">
+                    <size>
+                     <width>105</width>
+                     <height>0</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <weight>50</weight>
@@ -1784,6 +1790,12 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_15">
                  <item>
                   <widget class="QLabel" name="lblMuteOffset">
+                   <property name="minimumSize">
+                    <size>
+                     <width>105</width>
+                     <height>0</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <weight>50</weight>
@@ -1915,6 +1927,12 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_14">
                  <item>
                   <widget class="QLabel" name="lblSoloOffset">
+                   <property name="minimumSize">
+                    <size>
+                     <width>105</width>
+                     <height>0</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <weight>50</weight>
@@ -2033,6 +2051,12 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_13">
                  <item>
                   <widget class="QLabel" name="lblPanOffset">
+                   <property name="minimumSize">
+                    <size>
+                     <width>105</width>
+                     <height>0</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <weight>50</weight>
