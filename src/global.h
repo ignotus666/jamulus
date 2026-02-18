@@ -68,7 +68,7 @@ LED bar:      lbr
 
 /* Definitions ****************************************************************/
 // define this macro to get debug output
-// #define _DEBUG_
+//#define _DEBUG_
 #undef _DEBUG_
 
 // version and application name (use version from qt prject file)
@@ -166,13 +166,13 @@ LED bar:      lbr
 #define AUD_MIX_FADER_MAX 100
 #define AUD_MIX_PAN_MAX   100
 
-// MIDI pickup mode tolerance (in MIDI units, 0-127)
+// MIDI pickup mode tolerance (in fader/pan units, 0-100)
 #define MIDI_PICKUP_TOLERANCE 2
 
 // Number of recent MIDI values to track for pickup logic
 #define MIDI_PICKUP_HISTORY 2
 
-// Time of inactivity before pickup mode kicks in again
+// Time of inactivity before pickup mode resets (ms)
 #define MIDI_PICKUP_INACTIVITY_TIMEOUT_MS 1000
 
 // range of audio mixer fader
@@ -211,9 +211,9 @@ LED bar:      lbr
 #define UPPER_BOUND_SIG_METER ( 0.0 )   // dB
 
 // defines for LED level meter CLevelMeter
-#define NUM_STEPS_LED_BAR    15
-#define RED_BOUND_LED_BAR    14
-#define YELLOW_BOUND_LED_BAR 9
+#define NUM_STEPS_LED_BAR    8
+#define RED_BOUND_LED_BAR    7
+#define YELLOW_BOUND_LED_BAR 5
 
 // maximum number of connected clients at the server (must not be larger than 256)
 #define MAX_NUM_CHANNELS 150 // max number channels for server

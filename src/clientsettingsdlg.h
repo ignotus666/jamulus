@@ -67,10 +67,10 @@ protected:
     void    UpdateSoundCardFrame();
     void    UpdateDirectoryComboBox();
     void    UpdateAudioFaderSlider();
-    void    ApplyMIDIMappingFromSettings();
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );
+    virtual bool eventFilter ( QObject* obj, QEvent* event ) override;
 
     CClient*         pClient;
     CClientSettings* pSettings;
@@ -107,6 +107,7 @@ public slots:
     void OnTabChanged();
     void OnMakeTabChange ( int iTabIdx );
     void OnAudioPanValueChanged ( int value );
+    void OnMidiDeviceActivated ( int iMidiDevIdx );
 
 #if defined( _WIN32 ) && !defined( WITH_JACK )
     // Only include this slot for Windows when JACK is NOT used
@@ -138,8 +139,10 @@ private:
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
     void         SetMIDIControlsEnabled ( bool enabled );
+    void         UpdateMIDIDeviceSelection ( bool bShowWarnings = true );
 
 private slots:
     void OnLearnButtonClicked();
     void OnMidiCCReceived ( int ccNumber );
+    void OnMIDIPickupModeToggled ( bool checked );
 };

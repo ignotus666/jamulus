@@ -107,6 +107,7 @@ public:
 
     virtual const QString& GetMIDIDevice() { return strMIDIDevice; }
     virtual void           SetMIDIDevice ( const QString& strDevice ) { strMIDIDevice = strDevice; }
+    virtual QStringList    GetMIDIDevNames() { return QStringList(); } // Base class default (overridden by platform implementations)
 
     bool IsRunning() const { return bRun; }
     bool IsCallbackEntered() const { return bCallbackEntered; }

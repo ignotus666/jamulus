@@ -364,6 +364,7 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
     /// @result {object} result - MIDI settings object.
     pRpcServer->HandleMethod ( "jamulusclient/getMidiSettings", [=] ( const QJsonObject& params, QJsonObject& response ) {
         QJsonObject jsonMidiParams{ { "bUseMIDIController", m_pSettings->bUseMIDIController },
+                                    { "midiDevice", m_pSettings->strMidiDevice },
                                     { "midiChannel", m_pSettings->iMidiChannel },
                                     { "midiMuteMyself", m_pSettings->iMidiMuteMyself },
                                     { "midiFaderOffset", m_pSettings->iMidiFaderOffset },
@@ -373,7 +374,13 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
                                     { "midiSoloOffset", m_pSettings->iMidiSoloOffset },
                                     { "midiSoloCount", m_pSettings->iMidiSoloCount },
                                     { "midiMuteOffset", m_pSettings->iMidiMuteOffset },
-                                    { "midiMuteCount", m_pSettings->iMidiMuteCount } };
+                                    { "midiMuteCount", m_pSettings->iMidiMuteCount },
+                                    { "bMidiFaderEnabled", m_pSettings->bMidiFaderEnabled },
+                                    { "bMidiPanEnabled", m_pSettings->bMidiPanEnabled },
+                                    { "bMidiSoloEnabled", m_pSettings->bMidiSoloEnabled },
+                                    { "bMidiMuteEnabled", m_pSettings->bMidiMuteEnabled },
+                                    { "bMidiMuteMyselfEnabled", m_pSettings->bMidiMuteMyselfEnabled },
+                                    { "bMIDIPickupMode", m_pSettings->bMIDIPickupMode } };
         response["result"] = jsonMidiParams;
         Q_UNUSED ( params );
     } );
@@ -381,12 +388,13 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
     /// @rpc_method jamulusclient/setMidiSettings
     /// @brief Sets one or more MIDI controller settings.
     /// @param {object} params - Any subset of MIDI settings fields to set.
-    /// @result {string} result - "ok" on success, or error message if MIDI failed to enable.
+    /// @result {string} result - Always "ok".
     pRpcServer->HandleMethod ( "jamulusclient/setMidiSettings", [=] ( const QJsonObject& params, QJsonObject& response ) {
         bool bPreviousMIDIState = m_pSettings->bUseMIDIController;
 
         QHash<QString, std::function<void ( const QJsonValue& )>> setters = {
             { "bUseMIDIController", [this] ( const QJsonValue& v ) { m_pSettings->bUseMIDIController = v.toBool(); } },
+            { "midiDevice", [this] ( const QJsonValue& v ) { m_pSettings->strMidiDevice = v.toString(); } },
             { "midiChannel", [this] ( const QJsonValue& v ) { m_pSettings->iMidiChannel = v.toInt(); } },
             { "midiMuteMyself", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteMyself = v.toInt(); } },
             { "midiFaderOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiFaderOffset = v.toInt(); } },
@@ -396,7 +404,13 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
             { "midiSoloOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloOffset = v.toInt(); } },
             { "midiSoloCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloCount = v.toInt(); } },
             { "midiMuteOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteOffset = v.toInt(); } },
-            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } } };
+            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } },
+            { "bMidiFaderEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiFaderEnabled = v.toBool(); } },
+            { "bMidiPanEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiPanEnabled = v.toBool(); } },
+            { "bMidiSoloEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiSoloEnabled = v.toBool(); } },
+            { "bMidiMuteEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiMuteEnabled = v.toBool(); } },
+            { "bMidiMuteMyselfEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiMuteMyselfEnabled = v.toBool(); } },
+            { "bMIDIPickupMode", [this] ( const QJsonValue& v ) { m_pSettings->bMIDIPickupMode = v.toBool(); } } };
 
         for ( auto it = setters.constBegin(); it != setters.constEnd(); ++it )
         {
@@ -406,7 +420,33 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
             }
         }
 
-        // Apply settings to actually enable/disable MIDI
+        // If midiDevice was changed and MIDI is currently enabled, restart MIDI to reconnect
+        bool bDeviceChanged = params.contains ( "midiDevice" );
+        if ( bDeviceChanged && m_pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
+        {
+            // Disable MIDI
+            pClient->EnableMIDI ( false );
+
+            // Set the new device
+            pClient->SetMIDIDevice ( m_pSettings->strMidiDevice );
+
+            // Re-enable MIDI
+            pClient->EnableMIDI ( true );
+
+            // Check if reconnection was successful
+            if ( !pClient->IsMIDIEnabled() )
+            {
+                response["error"] = CRpcServer::CreateJsonRpcError ( 1, "Failed to connect to MIDI device" );
+                return;
+            }
+        }
+        else if ( bDeviceChanged )
+        {
+            // Just update the device setting for next time MIDI is enabled
+            pClient->SetMIDIDevice ( m_pSettings->strMidiDevice );
+        }
+
+        // Apply other settings to actually enable/disable MIDI
         pClient->SetSettings ( m_pSettings );
 
         // Check if MIDI was requested but failed to enable
@@ -419,6 +459,21 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
         }
 
         response["result"] = "ok";
+    } );
+
+    /// @rpc_method jamulusclient/getMidiDevices
+    /// @brief Returns a list of available MIDI input devices.
+    /// @param {object} params - No parameters (empty object).
+    /// @result {array} result - Array of MIDI device name strings.
+    pRpcServer->HandleMethod ( "jamulusclient/getMidiDevices", [=] ( const QJsonObject& params, QJsonObject& response ) {
+        QStringList deviceNames = pClient->GetMIDIDevNames();
+        QJsonArray  jsonDevices;
+        for ( const QString& deviceName : deviceNames )
+        {
+            jsonDevices.append ( deviceName );
+        }
+        response["result"] = jsonDevices;
+        Q_UNUSED ( params );
     } );
 }
 

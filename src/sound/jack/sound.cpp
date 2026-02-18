@@ -200,6 +200,31 @@ void CSound::EnableMIDI ( bool bEnable )
 
 bool CSound::IsMIDIEnabled() const { return ( input_port_midi != nullptr ); }
 
+QStringList CSound::GetMIDIDevNames()
+{
+    QStringList deviceNamesList;
+
+    if ( pJackClient == nullptr )
+    {
+        return deviceNamesList;
+    }
+
+    // Get all MIDI output ports (which are inputs from Jamulus' perspective)
+    const char** ports = jack_get_ports ( pJackClient, nullptr, JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput );
+
+    if ( ports != nullptr )
+    {
+        for ( int i = 0; ports[i] != nullptr; i++ )
+        {
+            deviceNamesList.append ( QString ( ports[i] ) );
+        }
+
+        jack_free ( ports );
+    }
+
+    return deviceNamesList;
+}
+
 void CSound::CreateMIDIPort()
 {
     if ( pJackClient != nullptr && input_port_midi == nullptr )
@@ -209,6 +234,17 @@ void CSound::CreateMIDIPort()
         if ( input_port_midi == nullptr )
         {
             qWarning() << "Failed to create JACK MIDI port at runtime";
+            return;
+        }
+
+        // Connect to selected MIDI device if one is specified
+        if ( !strMIDIDevice.isEmpty() )
+        {
+            const char* ourPortName = jack_port_name ( input_port_midi );
+            if ( jack_connect ( pJackClient, strMIDIDevice.toUtf8().constData(), ourPortName ) != 0 )
+            {
+                qWarning() << "Failed to connect JACK MIDI port" << strMIDIDevice << "to" << ourPortName;
+            }
         }
     }
 }
@@ -231,13 +267,13 @@ void CSound::DestroyMIDIPort()
 int CSound::Init ( const int /* iNewPrefMonoBufferSize */ )
 {
 
-    // ### TODO: BEGIN ###//
-    //  try setting buffer size seems not to work! -> no audio after this operation!
-    //  Doesn't this give an infinite loop? The set buffer size function will call our
-    //  registered callback which calls "EmitReinitRequestSignal()". In that function
-    //  this CSound::Init() function is called...
-    //  jack_set_buffer_size ( pJackClient, iNewPrefMonoBufferSize );
-    // ### TODO: END ###//
+    //### TODO: BEGIN ###//
+    // try setting buffer size seems not to work! -> no audio after this operation!
+    // Doesn't this give an infinite loop? The set buffer size function will call our
+    // registered callback which calls "EmitReinitRequestSignal()". In that function
+    // this CSound::Init() function is called...
+    // jack_set_buffer_size ( pJackClient, iNewPrefMonoBufferSize );
+    //### TODO: END ###//
 
     // without a Jack server, Jamulus makes no sense to run, throw an error message
     if ( bJackWasShutDown )
@@ -341,10 +377,10 @@ int CSound::process ( jack_nframes_t nframes, void* arg )
 
                 // copy packet and send it to the MIDI parser
 
-                // ### TODO: BEGIN ###//
-                //  do not call malloc in real-time callback
+                //### TODO: BEGIN ###//
+                // do not call malloc in real-time callback
                 CVector<uint8_t> vMIDIPaketBytes ( in_event.size );
-                // ### TODO: END ###//
+                //### TODO: END ###//
 
                 for ( i = 0; i < static_cast<int> ( in_event.size ); i++ )
                 {

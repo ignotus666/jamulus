@@ -399,8 +399,28 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     chbAudioAlerts->setAccessibleName ( tr ( "Audio Alerts check box" ) );
 
     // MIDI settings
-    chbUseMIDIController->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
-    chbUseMIDIController->setAccessibleName ( tr ( "MIDI-in port check box" ) );
+    grbMidiControls->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
+    grbMidiControls->setAccessibleName ( tr ( "MIDI-in port check box" ) );
+
+    chbMIDIPickupMode->setWhatsThis ( "<b>" + tr ( "Pickup Mode" ) + ":</b> " +
+                                      tr ( "When enabled, MIDI fader and pan controls will wait until the physical controller "
+                                           "position matches the current software value before responding. This prevents sudden "
+                                           "jumps when your physical controller is out of sync with the software." ) );
+    chbMIDIPickupMode->setAccessibleName ( tr ( "Pickup Mode check box" ) );
+
+#if defined( WITH_JACK )
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI output port to connect to. "
+                                       "Jamulus will automatically connect its MIDI input port to the selected device when enabled."
+                                       "You can also use your connection manager of choice to manually change connections." ) );
+#elif defined( __APPLE__ )
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI source to connect to. "
+                                       "Jamulus will automatically connect its MIDI input port to the selected device when enabled."
+                                       "You can also use Audio MIDI Setup to manually change connections." ) );
+#else
+    lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI input device(s) Jamulus should listen to. "
+                                       "Select 'All Devices' to receive MIDI from all connected devices, or choose a specific device." ) );
+#endif
+    cbxMidiDevice->setAccessibleName ( tr ( "MIDI input device combo box" ) );
 
     QString strMidiSettings = "<b>" + tr ( "MIDI controller settings" ) + ":</b> " +
                               tr ( "There is one global MIDI channel parameter (0-16) and two parameters you can set "
@@ -417,13 +437,13 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                                    "number will be detected and saved." );
 
     lblChannel->setWhatsThis ( strMidiSettings );
-    lblMuteMyself->setWhatsThis ( strMidiSettings );
+    grbMidiMuteMyself->setWhatsThis ( strMidiSettings );
     grbMidiFader->setWhatsThis ( strMidiSettings );
     grbMidiPan->setWhatsThis ( strMidiSettings );
     grbMidiSolo->setWhatsThis ( strMidiSettings );
     grbMidiMute->setWhatsThis ( strMidiSettings );
 
-    spnChannel->setAccessibleName ( tr ( "MIDI channel spin box" ) );
+    cbxChannel->setAccessibleName ( tr ( "MIDI channel combo box" ) );
     spnMuteMyself->setAccessibleName ( tr ( "Mute Myself MIDI CC number spin box" ) );
     spnFaderOffset->setAccessibleName ( tr ( "Fader offset spin box" ) );
     spnPanOffset->setAccessibleName ( tr ( "Pan offset spin box" ) );
@@ -792,8 +812,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         int CClientSettings::*member;
     };
 
-    const MidiSpinBoxMapping midiMappings[] = { { spnChannel, &CClientSettings::iMidiChannel },
-                                                { spnMuteMyself, &CClientSettings::iMidiMuteMyself },
+    const MidiSpinBoxMapping midiMappings[] = { { spnMuteMyself, &CClientSettings::iMidiMuteMyself },
                                                 { spnFaderOffset, &CClientSettings::iMidiFaderOffset },
                                                 { spnFaderCount, &CClientSettings::iMidiFaderCount },
                                                 { spnPanOffset, &CClientSettings::iMidiPanOffset },
@@ -811,18 +830,71 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         } );
     }
 
-    QObject::connect ( chbUseMIDIController, &QCheckBox::toggled, this, [this] ( bool checked ) {
+    // Connect MIDI channel combobox
+    QObject::connect ( cbxChannel, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::currentIndexChanged ), this, [this] ( int index ) {
+        pSettings->iMidiChannel = index;
+        pClient->SetSettings ( pSettings );
+    } );
+
+    // Connect groupbox enable/disable checkboxes
+    QObject::connect ( grbMidiFader, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiFaderEnabled = checked;
+        pClient->SetSettings ( pSettings );
+        butLearnFaderOffset->setEnabled ( checked );
+    } );
+
+    QObject::connect ( grbMidiPan, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiPanEnabled = checked;
+        pClient->SetSettings ( pSettings );
+        butLearnPanOffset->setEnabled ( checked );
+    } );
+
+    QObject::connect ( grbMidiSolo, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiSoloEnabled = checked;
+        pClient->SetSettings ( pSettings );
+        butLearnSoloOffset->setEnabled ( checked );
+    } );
+
+    QObject::connect ( grbMidiMute, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiMuteEnabled = checked;
+        pClient->SetSettings ( pSettings );
+        butLearnMuteOffset->setEnabled ( checked );
+    } );
+
+    QObject::connect ( grbMidiMuteMyself, &QGroupBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bMidiMuteMyselfEnabled = checked;
+        pClient->SetSettings ( pSettings );
+        butLearnMuteMyself->setEnabled ( checked );
+    } );
+
+    QObject::connect ( chbMIDIPickupMode, &QCheckBox::toggled, this, &CClientSettingsDlg::OnMIDIPickupModeToggled );
+
+    QObject::connect ( grbMidiControls, &QGroupBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
         pClient->SetSettings ( pSettings );
 
         // Check if MIDI was actually enabled successfully
+        // Note: On Windows, IsMIDIEnabled() returns false if no devices found.
+        // On Linux/macOS (Jack/CoreAudio), MIDI ports can be created even without devices,
+        // so IsMIDIEnabled() should always return true when checked.
         if ( checked && !pClient->IsMIDIEnabled() )
         {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+            // On Windows, MIDI port creation requires actual devices
             // MIDI failed to enable - uncheck the box and update settings
             pSettings->bUseMIDIController = false;
-            chbUseMIDIController->setChecked ( false );
+            grbMidiControls->setChecked ( false );
+            SetMIDIControlsEnabled ( false );
+            QMessageBox::warning ( this,
+                                   tr ( "Could not open MIDI port" ),
+                                   tr ( "No MIDI devices found. Please connect a MIDI device and try again." ) );
+#else
+            // On Linux/macOS, this shouldn't happen, but handle it anyway
+            pSettings->bUseMIDIController = false;
+            grbMidiControls->setChecked ( false );
             SetMIDIControlsEnabled ( false );
             QMessageBox::warning ( this, tr ( "Could not open MIDI port" ), tr ( "Please check your OS configuration." ) );
+#endif
         }
         else
         {
@@ -830,6 +902,15 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
             emit MIDIControllerUsageChanged ( pSettings->bUseMIDIController );
         }
     } );
+
+    // MIDI Device combo box connection
+    QObject::connect ( cbxMidiDevice,
+                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
+                       this,
+                       &CClientSettingsDlg::OnMidiDeviceActivated );
+
+    // Install event filter to refresh device list when dropdown is opened
+    cbxMidiDevice->installEventFilter ( this );
 
     // MIDI Learn buttons
     midiLearnButtons[0] = butLearnMuteMyself;
@@ -875,7 +956,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     pcbxSkill->setCurrentIndex ( pcbxSkill->findData ( static_cast<int> ( pClient->ChannelInfo.eSkillLevel ) ) );
 
     // MIDI tab: set widgets from settings
-    spnChannel->setValue ( pSettings->iMidiChannel );
+    cbxChannel->setCurrentIndex ( pSettings->iMidiChannel );
     spnMuteMyself->setValue ( pSettings->iMidiMuteMyself );
     spnFaderOffset->setValue ( pSettings->iMidiFaderOffset );
     spnFaderCount->setValue ( pSettings->iMidiFaderCount );
@@ -885,22 +966,64 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnSoloCount->setValue ( pSettings->iMidiSoloCount );
     spnMuteOffset->setValue ( pSettings->iMidiMuteOffset );
     spnMuteCount->setValue ( pSettings->iMidiMuteCount );
-    chbUseMIDIController->setChecked ( pSettings->bUseMIDIController );
+    grbMidiControls->setChecked ( pSettings->bUseMIDIController );
+    chbMIDIPickupMode->setChecked ( pSettings->bMIDIPickupMode );
+
+    // Initialize groupbox checked states
+    grbMidiFader->setChecked ( pSettings->bMidiFaderEnabled );
+    grbMidiPan->setChecked ( pSettings->bMidiPanEnabled );
+    grbMidiSolo->setChecked ( pSettings->bMidiSoloEnabled );
+    grbMidiMute->setChecked ( pSettings->bMidiMuteEnabled );
+    grbMidiMuteMyself->setChecked ( pSettings->bMidiMuteMyselfEnabled );
+
+    // Initialize learn button states based on groupbox states
+    butLearnFaderOffset->setEnabled ( pSettings->bMidiFaderEnabled );
+    butLearnPanOffset->setEnabled ( pSettings->bMidiPanEnabled );
+    butLearnSoloOffset->setEnabled ( pSettings->bMidiSoloEnabled );
+    butLearnMuteOffset->setEnabled ( pSettings->bMidiMuteEnabled );
+    butLearnMuteMyself->setEnabled ( pSettings->bMidiMuteMyselfEnabled );
+
+    // Update MIDI device combo box
+    UpdateMIDIDeviceSelection();
 
     // Check if MIDI is actually enabled (might have failed to open port)
+    // Note: On Windows, failure will occur if no MIDI devices are found.
+    // On Linux/macOS, MIDI ports are created regardless of device availability.
     if ( pSettings->bUseMIDIController && !pClient->IsMIDIEnabled() )
     {
-        // MIDI was requested but failed - uncheck and disable
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+        // On Windows, MIDI port creation requires actual devices
+        // If MIDI was requested but no devices found - uncheck and disable
         pSettings->bUseMIDIController = false;
-        chbUseMIDIController->setChecked ( false );
+        grbMidiControls->setChecked ( false );
+#else
+        // On Linux/macOS, this shouldn't happen, but handle it anyway
+        pSettings->bUseMIDIController = false;
+        grbMidiControls->setChecked ( false );
+#endif
     }
 
-    SetMIDIControlsEnabled ( chbUseMIDIController->isChecked() );
+    SetMIDIControlsEnabled ( grbMidiControls->isChecked() );
 
-    // Emit MIDIControllerUsageChanged signal to propagate MIDI state at startup
-    emit MIDIControllerUsageChanged ( chbUseMIDIController->isChecked() );
+    // Signal to propagate MIDI state at startup
+    emit MIDIControllerUsageChanged ( grbMidiControls->isChecked() );
 
     QDialog::showEvent ( event );
+}
+
+bool CClientSettingsDlg::eventFilter ( QObject* obj, QEvent* event )
+{
+    // Refresh MIDI device list when user clicks on the dropdown
+    if ( obj == cbxMidiDevice )
+    {
+        if ( event->type() == QEvent::MouseButtonPress )
+        {
+            // Refresh the device list without showing warnings (user is just browsing)
+            UpdateMIDIDeviceSelection ( false );
+        }
+    }
+
+    return QDialog::eventFilter ( obj, event );
 }
 
 void CClientSettingsDlg::UpdateJitterBufferFrame()
@@ -1347,14 +1470,132 @@ void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 void CClientSettingsDlg::ResetMidiLearn()
 {
     midiLearnTarget = None;
-    for ( QPushButton* button : midiLearnButtons )
+
+    // Groupboxes corresponding to each learn button
+    QGroupBox* groupBoxes[5] = { grbMidiMuteMyself, grbMidiFader, grbMidiPan, grbMidiSolo, grbMidiMute };
+
+    for ( int i = 0; i < 5; i++ )
     {
-        button->setText ( tr ( "Learn" ) );
-        button->setEnabled ( true );
+        midiLearnButtons[i]->setText ( tr ( "Learn" ) );
+        // Only enable learn button if the corresponding groupbox is checked
+        midiLearnButtons[i]->setEnabled ( groupBoxes[i]->isChecked() );
     }
 }
 
-void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { midiControlsContainer->setEnabled ( enabled ); }
+void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { Q_UNUSED ( enabled ); }
+
+void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
+{
+    // Clear and repopulate the combo box
+    cbxMidiDevice->blockSignals ( true );
+    cbxMidiDevice->clear();
+
+    // Populate device list (works on all platforms)
+    QStringList deviceNames = pClient->GetMIDIDevNames();
+
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+    // Add "All Devices" as first option (Windows only)
+    cbxMidiDevice->addItem ( tr ( "All Devices" ), QString ( "" ) );
+#else
+    // Add "No device connected" as first option (Linux/macOS)
+    cbxMidiDevice->addItem ( tr ( "No device connected" ), QString ( "" ) );
+#endif
+
+    // Add individual device names
+    for ( const QString& deviceName : deviceNames )
+    {
+        cbxMidiDevice->addItem ( deviceName, deviceName );
+    }
+
+    // Set current selection based on settings
+    QString currentDevice = pSettings->strMidiDevice;
+    int     iCurDevIdx    = 0; // Default to first item (All Devices or No device connected)
+
+    if ( !currentDevice.isEmpty() )
+    {
+        iCurDevIdx = cbxMidiDevice->findData ( currentDevice );
+        if ( iCurDevIdx < 0 )
+        {
+            // Device not found - fall back to "No device connected"
+            iCurDevIdx = 0;
+
+            // Only show warning at launch if MIDI is enabled and user should know
+            if ( bShowWarnings && pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
+            {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+                // On Windows, first item is "All Devices"
+                QMessageBox::warning (
+                    this,
+                    tr ( "MIDI Device Not Found" ),
+                    tr ( "The MIDI device \"%1\" could not be found. Using all available devices instead." ).arg ( currentDevice ) );
+#else
+                // On Linux/macOS, Jamulus will auto-connect to selected device
+                QMessageBox::information (
+                    this,
+                    tr ( "MIDI Device Not Found" ),
+                    tr ( "The MIDI device \"%1\" is not currently available. Select a different device from the dropdown to connect." )
+                        .arg ( currentDevice ) );
+#endif
+            }
+
+            // Clear saved device since it's not available
+            pSettings->strMidiDevice = "";
+        }
+    }
+
+    cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
+    cbxMidiDevice->setEnabled ( true );
+
+    cbxMidiDevice->blockSignals ( false );
+}
+
+void CClientSettingsDlg::OnMidiDeviceActivated ( int iMidiDevIdx )
+{
+    if ( iMidiDevIdx < 0 || iMidiDevIdx >= cbxMidiDevice->count() )
+    {
+        return;
+    }
+
+    // Get the device name from combo box data
+    QString selectedDevice = cbxMidiDevice->itemData ( iMidiDevIdx ).toString();
+
+    // Update settings
+    pSettings->strMidiDevice = selectedDevice;
+
+    // Changing device requires restarting MIDI to reconnect
+    if ( pSettings->bUseMIDIController && pClient->IsMIDIEnabled() )
+    {
+        // Disable MIDI
+        pClient->EnableMIDI ( false );
+
+        // Set the new device
+        pClient->SetMIDIDevice ( selectedDevice );
+
+        // Re-enable MIDI
+        pClient->EnableMIDI ( true );
+
+        // Check if re-enable was successful
+        if ( !pClient->IsMIDIEnabled() )
+        {
+#if defined( _WIN32 ) && !defined( WITH_JACK )
+            QMessageBox::warning ( this,
+                                   tr ( "MIDI Device Connection Failed" ),
+                                   tr ( "Could not connect to MIDI device \"%1\". Please check your OS configuration." )
+                                       .arg ( selectedDevice.isEmpty() ? tr ( "All Devices" ) : selectedDevice ) );
+#else
+            QMessageBox::warning (
+                this,
+                tr ( "MIDI Device Connection Failed" ),
+                tr ( "Could not connect to MIDI device \"%1\". Please check that the device is available." ).arg ( selectedDevice ) );
+#endif
+        }
+    }
+    else
+    {
+        // Just update the device setting for next time MIDI is enabled
+        pClient->SetMIDIDevice ( selectedDevice );
+    }
+}
 
 void CClientSettingsDlg::SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton )
 {
@@ -1409,3 +1650,5 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
 
     ResetMidiLearn();
 }
+
+void CClientSettingsDlg::OnMIDIPickupModeToggled ( bool checked ) { pSettings->bMIDIPickupMode = checked; }

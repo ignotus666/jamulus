@@ -379,13 +379,3 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
         }
     }
 }
-
-void CSoundBase::SetMIDIMapping ( const QString& strMIDISetup )
-{
-    // Parse the MIDI mapping
-    ParseCommandLineArgument ( strMIDISetup );
-
-    // Enable/disable MIDI port based on whether mapping is empty
-    bool bShouldEnable = !strMIDISetup.isEmpty();
-    EnableMIDI ( bShouldEnable );
-}

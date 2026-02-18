@@ -311,7 +311,7 @@ int CSound::GetActualBufferSize ( const int iDesiredBufferSizeMono )
     // query the usable buffer sizes
     ASIOGetBufferSize ( &HWBufferInfo.lMinSize, &HWBufferInfo.lMaxSize, &HWBufferInfo.lPreferredSize, &HWBufferInfo.lGranularity );
 
-    // ### TEST: BEGIN ###//
+    //### TEST: BEGIN ###//
     /*
     #include <QMessageBox>
     QMessageBox::information ( 0, "APP_NAME", QString("lMinSize: %1, lMaxSize: %2, lPreferredSize: %3, lGranularity: %4").
@@ -319,12 +319,12 @@ int CSound::GetActualBufferSize ( const int iDesiredBufferSizeMono )
     );
     _exit(1);
     */
-    // ### TEST: END ###//
+    //### TEST: END ###//
 
-    // ### TODO: BEGIN ###//
-    //  see https://github.com/EddieRingle/portaudio/blob/master/src/hostapi/asio/pa_asio.cpp#L1654
-    //  (SelectHostBufferSizeForUnspecifiedUserFramesPerBuffer)
-    // ### TODO: END ###//
+    //### TODO: BEGIN ###//
+    // see https://github.com/EddieRingle/portaudio/blob/master/src/hostapi/asio/pa_asio.cpp#L1654
+    // (SelectHostBufferSizeForUnspecifiedUserFramesPerBuffer)
+    //### TODO: END ###//
 
     // calculate "nearest" buffer size and set internal parameter accordingly
     // first check minimum and maximum values
@@ -647,6 +647,25 @@ void CSound::EnableMIDI ( bool bEnable )
 }
 
 bool CSound::IsMIDIEnabled() const { return bMidiEnabled; }
+
+QStringList CSound::GetMIDIDevNames()
+{
+    QStringList deviceNamesList;
+    int         numDevices = midiInGetNumDevs();
+
+    for ( int i = 0; i < numDevices; i++ )
+    {
+        MIDIINCAPS mic;
+        MMRESULT   result = midiInGetDevCaps ( i, &mic, sizeof ( MIDIINCAPS ) );
+
+        if ( result == MMSYSERR_NOERROR )
+        {
+            deviceNamesList.append ( QString ( mic.szPname ) );
+        }
+    }
+
+    return deviceNamesList;
+}
 
 void CSound::bufferSwitch ( long index, ASIOBool )
 {
