@@ -34,13 +34,7 @@ override_dh_auto_configure:
 	mkdir -p build-gui && cd build-gui && $(QMAKE) "CONFIG+=noupcasename" PREFIX=/usr ../Jamulus.pro
 
 override_dh_auto_build:
-	# nuke any prior build to ensure a truly clean rebuild
-	rm -rf build-gui
-	# reconfigure & build
-	mkdir -p build-gui
-	cd build-gui && $(QMAKE) "CONFIG+=noupcasename" PREFIX=/usr ../Jamulus.pro
-	cd build-gui && make -j"$(nproc)"
-
+	cd build-gui && make -j "$$(nproc)"
 
 override_dh_auto_install:
 	cd build-gui && make install INSTALL_ROOT=../debian/tmp
@@ -49,5 +43,6 @@ override_dh_auto_clean:
 	rm -rf build-gui
 	dh_clean
 
+
 override_dh_shlibdeps:
-	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+	dh_shlibdeps -l/usr/lib/x86_64-linux-gnu

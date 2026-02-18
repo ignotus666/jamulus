@@ -402,11 +402,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     grbMidiControls->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
     grbMidiControls->setAccessibleName ( tr ( "MIDI-in port check box" ) );
 
-    chbMIDIPickupMode->setWhatsThis ( "<b>" + tr ( "Pickup Mode" ) + ":</b> " +
+    chbMIDIPickupMode->setWhatsThis ( "<b>" + tr ( "Pick-up Mode" ) + ":</b> " +
                                       tr ( "When enabled, MIDI fader and pan controls will wait until the physical controller "
                                            "position matches the current software value before responding. This prevents sudden "
                                            "jumps when your physical controller is out of sync with the software." ) );
-    chbMIDIPickupMode->setAccessibleName ( tr ( "Pickup Mode check box" ) );
+    chbMIDIPickupMode->setAccessibleName ( tr ( "Pick-up Mode check box" ) );
 
 #if defined( WITH_JACK )
     lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI output port to connect to. "

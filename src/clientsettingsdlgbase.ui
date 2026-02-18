@@ -1515,7 +1515,7 @@
             <item>
              <widget class="QCheckBox" name="chbMIDIPickupMode">
               <property name="text">
-               <string>Pickup Mode</string>
+               <string>Pick-up Mode</string>
               </property>
              </widget>
             </item>
