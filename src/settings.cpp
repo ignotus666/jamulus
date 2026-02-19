@@ -239,7 +239,7 @@ void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
 
     // Parse MIDI channel (first parameter) - must be a valid number
     bool bIsNumber = false;
-    iMidiChannel = parts[0].trimmed().toInt( &bIsNumber );
+    iMidiChannel   = parts[0].trimmed().toInt ( &bIsNumber );
 
     // Validate MIDI channel (0 = all channels, 1-16 = specific channel)
     if ( !bIsNumber || iMidiChannel < 0 || iMidiChannel > 16 )
@@ -665,12 +665,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             QString strMidiMap = option.section ( '=', 1 );
 
             // Check if channel is valid before disabling section flags
-            bool     bValidChannel  = false;
-            QStringList parts       = strMidiMap.split ( ';' );
+            bool        bValidChannel = false;
+            QStringList parts         = strMidiMap.split ( ';' );
             if ( !parts.isEmpty() && !strMidiMap.isEmpty() )
             {
                 bool bIsNumber = false;
-                int iChannel = parts[0].trimmed().toInt( &bIsNumber );
+                int  iChannel  = parts[0].trimmed().toInt ( &bIsNumber );
                 if ( bIsNumber && iChannel >= 0 && iChannel <= 16 )
                 {
                     bValidChannel = true;
