@@ -374,7 +374,13 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
                                     { "midiSoloOffset", m_pSettings->iMidiSoloOffset },
                                     { "midiSoloCount", m_pSettings->iMidiSoloCount },
                                     { "midiMuteOffset", m_pSettings->iMidiMuteOffset },
-                                    { "midiMuteCount", m_pSettings->iMidiMuteCount } };
+                                    { "midiMuteCount", m_pSettings->iMidiMuteCount },
+                                    { "bMidiFaderEnabled", m_pSettings->bMidiFaderEnabled },
+                                    { "bMidiPanEnabled", m_pSettings->bMidiPanEnabled },
+                                    { "bMidiSoloEnabled", m_pSettings->bMidiSoloEnabled },
+                                    { "bMidiMuteEnabled", m_pSettings->bMidiMuteEnabled },
+                                    { "bMidiMuteMyselfEnabled", m_pSettings->bMidiMuteMyselfEnabled },
+                                    { "bMIDIPickupMode", m_pSettings->bMIDIPickupMode } };
         response["result"] = jsonMidiParams;
         Q_UNUSED ( params );
     } );
@@ -398,7 +404,13 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
             { "midiSoloOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloOffset = v.toInt(); } },
             { "midiSoloCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiSoloCount = v.toInt(); } },
             { "midiMuteOffset", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteOffset = v.toInt(); } },
-            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } } };
+            { "midiMuteCount", [this] ( const QJsonValue& v ) { m_pSettings->iMidiMuteCount = v.toInt(); } },
+            { "bMidiFaderEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiFaderEnabled = v.toBool(); } },
+            { "bMidiPanEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiPanEnabled = v.toBool(); } },
+            { "bMidiSoloEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiSoloEnabled = v.toBool(); } },
+            { "bMidiMuteEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiMuteEnabled = v.toBool(); } },
+            { "bMidiMuteMyselfEnabled", [this] ( const QJsonValue& v ) { m_pSettings->bMidiMuteMyselfEnabled = v.toBool(); } },
+            { "bMIDIPickupMode", [this] ( const QJsonValue& v ) { m_pSettings->bMIDIPickupMode = v.toBool(); } } };
 
         for ( auto it = setters.constBegin(); it != setters.constEnd(); ++it )
         {

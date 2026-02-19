@@ -180,6 +180,7 @@ public:
         bMidiMuteEnabled ( false ),
         bMidiMuteMyselfEnabled ( false ),
         bUseMIDIController ( false ),
+        bMIDIPickupMode ( false ),
         strMidiDevice ( "" ),
         pClient ( pNCliP )
     {
@@ -207,6 +208,7 @@ public:
                                   bool&          bMidiMuteEnabled,
                                   bool&          bMidiMuteMyselfEnabled,
                                   bool&          bUseMIDIController,
+                                  bool&          bMIDIPickupMode,
                                   QString*       strMIDIDevice = nullptr );
 
     // general settings
@@ -255,6 +257,7 @@ public:
     bool    bMidiMuteEnabled;
     bool    bMidiMuteMyselfEnabled;
     bool    bUseMIDIController;
+    bool    bMIDIPickupMode;
     QString strMidiDevice;
 
 protected:

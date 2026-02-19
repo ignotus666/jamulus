@@ -716,9 +716,9 @@ void CSound::Stop()
 
 void CSound::EnableMIDI ( bool bEnable )
 {
-    if ( bEnable && ( iCtrlMIDIChannel != INVALID_MIDI_CH ) )
+    if ( bEnable )
     {
-        // Create MIDI port if we have valid MIDI channel and no port exists
+        // Create MIDI port if no port exists
         if ( midiInPortRef == static_cast<MIDIPortRef> ( NULL ) )
         {
             CreateMIDIPort();
@@ -789,11 +789,14 @@ void CSound::CreateMIDIPort()
             return;
         }
 
+        // Log available MIDI devices
+        const int iNMIDISources = MIDIGetNumberOfSources();
+        qInfo() << qUtf8Printable ( QString ( "- MIDI devices found: %1" ).arg ( iNMIDISources ) );
+
         // Connect to selected MIDI device if one is specified
         if ( !strMIDIDevice.isEmpty() )
         {
             // Find the MIDI source by name
-            const int iNMIDISources = MIDIGetNumberOfSources();
             for ( int i = 0; i < iNMIDISources; i++ )
             {
                 MIDIEndpointRef src = MIDIGetSource ( i );
@@ -807,14 +810,47 @@ void CSound::CreateMIDIPort()
 
                     if ( name == strMIDIDevice )
                     {
+                        qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( name ) );
+
                         // Connect to this source
                         result = MIDIPortConnectSource ( midiInPortRef, src, nullptr );
                         if ( result != noErr )
                         {
                             qWarning() << "Failed to connect to MIDI source" << strMIDIDevice << ". Error code:" << result;
                         }
-                        break;
                     }
+                    else
+                    {
+                        qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( name ) );
+                    }
+                }
+                else
+                {
+                    // Fallback to generic name if display name not available
+                    QString fallbackName = QString ( "MIDI Source %1" ).arg ( i );
+                    qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( fallbackName ) );
+                }
+            }
+        }
+        else
+        {
+            // No specific device selected, list all available devices
+            for ( int i = 0; i < iNMIDISources; i++ )
+            {
+                MIDIEndpointRef src = MIDIGetSource ( i );
+                CFStringRef     deviceName;
+
+                OSStatus nameResult = MIDIObjectGetStringProperty ( src, kMIDIPropertyDisplayName, &deviceName );
+                if ( nameResult == noErr && deviceName != nullptr )
+                {
+                    QString name = QString::fromCFString ( deviceName );
+                    qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( name ) );
+                    CFRelease ( deviceName );
+                }
+                else
+                {
+                    // Fallback to generic name if display name not available
+                    qInfo() << qUtf8Printable ( QString ( "  %1: MIDI Source %1" ).arg ( i ) );
                 }
             }
         }

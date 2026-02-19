@@ -402,6 +402,12 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     grbMidiControls->setWhatsThis ( tr ( "Enable/disable MIDI-in port" ) );
     grbMidiControls->setAccessibleName ( tr ( "MIDI-in port check box" ) );
 
+    chbMIDIPickupMode->setWhatsThis ( "<b>" + tr ( "Pick-up Mode" ) + ":</b> " +
+                                      tr ( "When enabled, MIDI fader and pan controls will wait until the physical controller "
+                                           "position matches the current software value before responding. This prevents sudden "
+                                           "jumps when your physical controller is out of sync with the software." ) );
+    chbMIDIPickupMode->setAccessibleName ( tr ( "Pick-up Mode check box" ) );
+
 #if defined( WITH_JACK )
     lblMidiDevice->setWhatsThis ( tr ( "Select which MIDI output port to connect to. "
                                        "Jamulus will automatically connect its MIDI input port to the selected device when enabled."
@@ -861,6 +867,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         butLearnMuteMyself->setEnabled ( checked );
     } );
 
+    QObject::connect ( chbMIDIPickupMode, &QCheckBox::toggled, this, &CClientSettingsDlg::OnMIDIPickupModeToggled );
+
     QObject::connect ( grbMidiControls, &QGroupBox::toggled, this, [this] ( bool checked ) {
         pSettings->bUseMIDIController = checked;
         pClient->SetSettings ( pSettings );
@@ -959,6 +967,7 @@ void CClientSettingsDlg::showEvent ( QShowEvent* event )
     spnMuteOffset->setValue ( pSettings->iMidiMuteOffset );
     spnMuteCount->setValue ( pSettings->iMidiMuteCount );
     grbMidiControls->setChecked ( pSettings->bUseMIDIController );
+    chbMIDIPickupMode->setChecked ( pSettings->bMIDIPickupMode );
 
     // Initialize groupbox checked states
     grbMidiFader->setChecked ( pSettings->bMidiFaderEnabled );
@@ -1009,8 +1018,12 @@ bool CClientSettingsDlg::eventFilter ( QObject* obj, QEvent* event )
     {
         if ( event->type() == QEvent::MouseButtonPress )
         {
-            // Refresh the device list without showing warnings (user is just browsing)
-            UpdateMIDIDeviceSelection ( false );
+            // Only refresh if MIDI is enabled
+            if ( grbMidiControls->isChecked() )
+            {
+                // Refresh the device list without showing warnings (user is just browsing)
+                UpdateMIDIDeviceSelection ( false );
+            }
         }
     }
 
@@ -1473,7 +1486,23 @@ void CClientSettingsDlg::ResetMidiLearn()
     }
 }
 
-void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { Q_UNUSED ( enabled ); }
+void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
+{
+    // Enable/disable all MIDI controls within the MIDI group box
+    cbxMidiDevice->setEnabled ( enabled );
+    lblMidiDevice->setEnabled ( enabled );
+    lblChannel->setEnabled ( enabled );
+    cbxChannel->setEnabled ( enabled );
+    chbMIDIPickupMode->setEnabled ( enabled );
+
+    // Group boxes and their Learn buttons are handled by their toggled signals,
+    // but should also respect the master enabled state
+    grbMidiFader->setEnabled ( enabled );
+    grbMidiPan->setEnabled ( enabled );
+    grbMidiSolo->setEnabled ( enabled );
+    grbMidiMute->setEnabled ( enabled );
+    grbMidiMuteMyself->setEnabled ( enabled );
+}
 
 void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
 {
@@ -1535,7 +1564,8 @@ void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
     }
 
     cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
-    cbxMidiDevice->setEnabled ( true );
+    // Only enable if MIDI is enabled (don't override disabled state)
+    cbxMidiDevice->setEnabled ( grbMidiControls->isChecked() );
 
     cbxMidiDevice->blockSignals ( false );
 }
@@ -1641,3 +1671,5 @@ void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
 
     ResetMidiLearn();
 }
+
+void CClientSettingsDlg::OnMIDIPickupModeToggled ( bool checked ) { pSettings->bMIDIPickupMode = checked; }

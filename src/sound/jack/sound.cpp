@@ -180,9 +180,9 @@ void CSound::Stop()
 
 void CSound::EnableMIDI ( bool bEnable )
 {
-    if ( bEnable && ( iCtrlMIDIChannel != INVALID_MIDI_CH ) )
+    if ( bEnable )
     {
-        // Create MIDI port if we have a valid MIDI channel and no port exists
+        // Create MIDI port if no port exists
         if ( input_port_midi == nullptr )
         {
             CreateMIDIPort();
@@ -235,6 +235,41 @@ void CSound::CreateMIDIPort()
         {
             qWarning() << "Failed to create JACK MIDI port at runtime";
             return;
+        }
+
+        // Log available MIDI devices
+        const char** ports      = jack_get_ports ( pJackClient, nullptr, JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput );
+        int          numDevices = 0;
+
+        if ( ports != nullptr )
+        {
+            // Count devices
+            while ( ports[numDevices] != nullptr )
+            {
+                numDevices++;
+            }
+
+            qInfo() << qUtf8Printable ( QString ( "- MIDI devices found: %1" ).arg ( numDevices ) );
+
+            // List all devices
+            for ( int i = 0; i < numDevices; i++ )
+            {
+                QString deviceName = QString ( ports[i] );
+                if ( !strMIDIDevice.isEmpty() && strMIDIDevice != deviceName )
+                {
+                    qInfo() << qUtf8Printable ( QString ( "  %1: %2 (ignored)" ).arg ( i ).arg ( deviceName ) );
+                }
+                else
+                {
+                    qInfo() << qUtf8Printable ( QString ( "  %1: %2" ).arg ( i ).arg ( deviceName ) );
+                }
+            }
+
+            jack_free ( ports );
+        }
+        else
+        {
+            qInfo() << "- MIDI devices found: 0";
         }
 
         // Connect to selected MIDI device if one is specified
