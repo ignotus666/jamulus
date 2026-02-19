@@ -1018,8 +1018,12 @@ bool CClientSettingsDlg::eventFilter ( QObject* obj, QEvent* event )
     {
         if ( event->type() == QEvent::MouseButtonPress )
         {
-            // Refresh the device list without showing warnings (user is just browsing)
-            UpdateMIDIDeviceSelection ( false );
+            // Only refresh if MIDI is enabled
+            if ( grbMidiControls->isChecked() )
+            {
+                // Refresh the device list without showing warnings (user is just browsing)
+                UpdateMIDIDeviceSelection ( false );
+            }
         }
     }
 
@@ -1482,7 +1486,23 @@ void CClientSettingsDlg::ResetMidiLearn()
     }
 }
 
-void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled ) { Q_UNUSED ( enabled ); }
+void CClientSettingsDlg::SetMIDIControlsEnabled ( bool enabled )
+{
+    // Enable/disable all MIDI controls within the MIDI group box
+    cbxMidiDevice->setEnabled ( enabled );
+    lblMidiDevice->setEnabled ( enabled );
+    lblChannel->setEnabled ( enabled );
+    cbxChannel->setEnabled ( enabled );
+    chbMIDIPickupMode->setEnabled ( enabled );
+
+    // Group boxes and their Learn buttons are handled by their toggled signals,
+    // but should also respect the master enabled state
+    grbMidiFader->setEnabled ( enabled );
+    grbMidiPan->setEnabled ( enabled );
+    grbMidiSolo->setEnabled ( enabled );
+    grbMidiMute->setEnabled ( enabled );
+    grbMidiMuteMyself->setEnabled ( enabled );
+}
 
 void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
 {
@@ -1544,7 +1564,8 @@ void CClientSettingsDlg::UpdateMIDIDeviceSelection ( bool bShowWarnings )
     }
 
     cbxMidiDevice->setCurrentIndex ( iCurDevIdx );
-    cbxMidiDevice->setEnabled ( true );
+    // Only enable if MIDI is enabled (don't override disabled state)
+    cbxMidiDevice->setEnabled ( grbMidiControls->isChecked() );
 
     cbxMidiDevice->blockSignals ( false );
 }

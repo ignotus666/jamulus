@@ -225,17 +225,29 @@ void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
 {
     if ( strMidiMap.isEmpty() )
     {
+        // Empty string explicitly disables MIDI, but preserves section settings
+        bUseMIDIController = false;
         return;
     }
 
     QStringList parts = strMidiMap.split ( ';' );
     if ( parts.isEmpty() )
     {
+        bUseMIDIController = false;
         return;
     }
 
-    // Parse MIDI channel (first parameter)
-    iMidiChannel = parts[0].toInt();
+    // Parse MIDI channel (first parameter) - must be a valid number
+    bool bIsNumber = false;
+    iMidiChannel   = parts[0].trimmed().toInt ( &bIsNumber );
+
+    // Validate MIDI channel (0 = all channels, 1-16 = specific channel)
+    if ( !bIsNumber || iMidiChannel < 0 || iMidiChannel > 16 )
+    {
+        // Invalid channel disables MIDI, but preserves section settings
+        bUseMIDIController = false;
+        return;
+    }
 
     // Check for legacy format: [channel];[offset]
     // If second parameter is a plain number (no prefix), treat as legacy format
@@ -276,8 +288,8 @@ void CClientSettings::ParseCtrlMidiCh ( const QString& strMidiMap,
             continue;
         }
 
-        // Handle MIDI pickup mode (mp)
-        if ( sParm == "mp" )
+        // Handle MIDI pickup mode (u)
+        if ( sParm == "u" )
         {
             bMIDIPickupMode = true;
             continue;
@@ -652,15 +664,34 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         {
             QString strMidiMap = option.section ( '=', 1 );
 
-            // Disable all controls first - command line will only enable what's specified
-            bMidiFaderEnabled      = false;
-            bMidiPanEnabled        = false;
-            bMidiSoloEnabled       = false;
-            bMidiMuteEnabled       = false;
-            bMidiMuteMyselfEnabled = false;
-            bMIDIPickupMode        = false;
+            // Check if channel is valid before disabling section flags
+            bool        bValidChannel = false;
+            QStringList parts         = strMidiMap.split ( ';' );
+            if ( !parts.isEmpty() && !strMidiMap.isEmpty() )
+            {
+                bool bIsNumber = false;
+                int  iChannel  = parts[0].trimmed().toInt ( &bIsNumber );
+                if ( bIsNumber && iChannel >= 0 && iChannel <= 16 )
+                {
+                    bValidChannel = true;
+                }
+            }
 
-            // Parse command line - this will re-enable specified controls and update their values
+            // Only disable section flags if channel is valid - this allows command line
+            // to specify which sections to enable. If channel is invalid/empty, preserve
+            // ini file section settings but disable MIDI.
+            if ( bValidChannel )
+            {
+                bMidiFaderEnabled      = false;
+                bMidiPanEnabled        = false;
+                bMidiSoloEnabled       = false;
+                bMidiMuteEnabled       = false;
+                bMidiMuteMyselfEnabled = false;
+                bMIDIPickupMode        = false;
+            }
+
+            // Parse command line - this will update channel, enable/disable MIDI,
+            // and re-enable any specified sections
             CClientSettings::ParseCtrlMidiCh ( strMidiMap,
                                                iMidiChannel,
                                                iMidiFaderOffset,

@@ -45,8 +45,7 @@ std::vector<bool>            g_midiPickupWaitingForPickup ( MAX_NUM_CHANNELS, fa
 static void midiPickupInactivityCheck ( int                                    iChannelIdx,
                                         std::chrono::steady_clock::time_point& lastMidiTime,
                                         std::deque<int>&                       pickupBuffer,
-                                        std::vector<bool>&                     waitingFlag,
-                                        int                                    currentValue )
+                                        std::vector<bool>&                     waitingFlag )
 {
     auto now = std::chrono::steady_clock::now();
     if ( lastMidiTime.time_since_epoch().count() > 0 )
@@ -1445,8 +1444,7 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
                 midiPickupInactivityCheck ( iChannelIdx,
                                             midiState.lastMidiTimeFader,
                                             midiState.recentFader,
-                                            g_midiPickupWaitingForPickup,
-                                            vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetFaderLevel() );
+                                            g_midiPickupWaitingForPickup );
             }
 
             if ( pSettings && pSettings->bMIDIPickupMode )
@@ -1488,8 +1486,7 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
                 midiPickupInactivityCheck ( iChannelIdx,
                                             midiState.lastMidiTimePan,
                                             midiState.recentPan,
-                                            g_midiPickupWaitingForPickup,
-                                            vecpChanFader[static_cast<size_t> ( iChannelIdx )]->GetPanValue() );
+                                            g_midiPickupWaitingForPickup );
             }
 
             if ( pSettings && pSettings->bMIDIPickupMode )
