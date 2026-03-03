@@ -20,9 +20,30 @@
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_outer">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>3</number>
+   </property>
+   <property name="bottomMargin">
+    <number>3</number>
+   </property>
    <item>
-    <widget class="QTreeWidget" name="lvwClients">
+    <widget class="QFrame" name="backgroundFrame">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_inner">
+      <item>
+       <widget class="QTreeWidget" name="lvwClients">
      <property name="rootIsDecorated">
       <bool>false</bool>
      </property>
@@ -339,6 +360,9 @@
      </property>
     </widget>
    </item>
+      </layout>
+     </widget>
+    </item>
   </layout>
  </widget>
  <customwidgets>

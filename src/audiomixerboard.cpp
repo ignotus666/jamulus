@@ -1441,10 +1441,7 @@ void CAudioMixerBoard::SetFaderLevel ( const int iChannelIdx, const int iValue )
             if ( pSettings && pSettings->bMIDIPickupMode && g_midiPickupInitialized[iChannelIdx] )
             {
                 auto& midiState = g_midiPickupStates[iChannelIdx];
-                midiPickupInactivityCheck ( iChannelIdx,
-                                            midiState.lastMidiTimeFader,
-                                            midiState.recentFader,
-                                            g_midiPickupWaitingForPickup );
+                midiPickupInactivityCheck ( iChannelIdx, midiState.lastMidiTimeFader, midiState.recentFader, g_midiPickupWaitingForPickup );
             }
 
             if ( pSettings && pSettings->bMIDIPickupMode )
@@ -1483,10 +1480,7 @@ void CAudioMixerBoard::SetPanValue ( const int iChannelIdx, const int iValue )
             if ( pSettings && pSettings->bMIDIPickupMode && g_midiPickupInitialized[iChannelIdx] )
             {
                 auto& midiState = g_midiPickupStates[iChannelIdx];
-                midiPickupInactivityCheck ( iChannelIdx,
-                                            midiState.lastMidiTimePan,
-                                            midiState.recentPan,
-                                            g_midiPickupWaitingForPickup );
+                midiPickupInactivityCheck ( iChannelIdx, midiState.lastMidiTimePan, midiState.recentPan, g_midiPickupWaitingForPickup );
             }
 
             if ( pSettings && pSettings->bMIDIPickupMode )
