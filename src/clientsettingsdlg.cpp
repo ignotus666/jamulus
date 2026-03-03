@@ -33,21 +33,6 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 {
     setupUi ( this );
 
-    backgroundFrame->setStyleSheet (
-    "QFrame#backgroundFrame { border-image:  url(:/png/fader/res/mixerboardbackground.png) 34px 30px 40px 40px;"
-    "                         border-top:    34px transparent;"
-    "                         border-bottom: 40px transparent;"
-    "                         border-left:   30px transparent;"
-    "                         border-right:  40px transparent;"
-    "                         padding:       -5px;"
-    "                         margin:        -5px, -5px, 0px, 0px; }"
-    "QLabel {                 color:          rgb(220, 220, 220); }"
-    "QRadioButton {           color:          rgb(220, 220, 220); }"
-    "QScrollArea {            background:     transparent; }"
-    ".QWidget {               background:     transparent; }"
-    "QGroupBox {              background:     transparent; }"
-    "QGroupBox::title {       color:          rgb(220, 220, 220); }" );
-
 #if defined( Q_OS_IOS )
     // iOS needs menu to close
     QMenuBar* pMenu  = new QMenuBar ( this );
