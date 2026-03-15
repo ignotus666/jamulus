@@ -103,17 +103,17 @@ pass_artifacts_to_job() {
 
     # Try to move headless artifact, but don't fail if it doesn't exist
     local artifact_1="jamulus-headless_${JAMULUS_BUILD_VERSION}_ubuntu_${TARGET_ARCH}.deb"
-    if compgen -G "../jamulus-headless*_${TARGET_ARCH}.deb" > /dev/null; then
-        echo "Moving headless build artifact to deploy/${artifact_1}"
-        mv ../jamulus-headless*"_${TARGET_ARCH}.deb" "./deploy/${artifact_1}"
+        if compgen -G "jamulus-headless*_${TARGET_ARCH}.deb" > /dev/null; then
+            echo "Moving headless build artifact to deploy/${artifact_1}"
+            mv jamulus-headless*"_${TARGET_ARCH}.deb" "./deploy/${artifact_1}"
         echo "artifact_1=${artifact_1}" >> "$GITHUB_OUTPUT"
     else
         echo "No headless artifact found, skipping."
     fi
 
     local artifact_2="jamulus_${JAMULUS_BUILD_VERSION}_ubuntu_${TARGET_ARCH}.deb"
-    echo "Moving regular build artifact to deploy/${artifact_2}"
-    mv ../jamulus*_'"${TARGET_ARCH}".deb' "./deploy/${artifact_2}"
+        echo "Moving regular build artifact to deploy/${artifact_2}"
+        mv jamulus*_"${TARGET_ARCH}".deb "./deploy/${artifact_2}"
     echo "artifact_2=${artifact_2}" >> "$GITHUB_OUTPUT"
 }
 
