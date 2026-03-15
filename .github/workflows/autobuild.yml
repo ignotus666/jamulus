@@ -40,6 +40,11 @@ jobs:
         env:
           JAMULUS_BUILD_VERSION: "3.12.1"
 
+      - name: List all files for debug
+        run: |
+          echo "Listing all files in workspace after build:"
+          find . -type f | sort
+
       - name: Get artifacts
         id: get-artifacts
         run: ./.github/autobuild/linux_deb.sh get-artifacts
