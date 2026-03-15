@@ -7,10 +7,7 @@ on:
   push:
     branches:
       - my-build
-
-name:                               Auto-Build
-permissions:                        {}
-jobs:
+permissions: {}
 jobs:
   build-deb-x86:
     name: Build Linux .deb amd64
