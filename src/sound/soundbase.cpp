@@ -326,10 +326,11 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
                     // make sure packet is long enough
                     if ( vMIDIPaketBytes.Size() > 2 && vMIDIPaketBytes[1] <= uint8_t ( 127 ) && vMIDIPaketBytes[2] <= uint8_t ( 127 ) )
                     {
-                        const CMidiCtlEntry& cCtrl  = aMidiCtls[vMIDIPaketBytes[1]];
-                        const int            iValue = vMIDIPaketBytes[2];
+                        const CMidiCtlEntry& cCtrl    = aMidiCtls[vMIDIPaketBytes[1]];
+                        const int            iValue   = vMIDIPaketBytes[2];
+                        const int            iChannel = vMIDIPaketBytes[0] & 0x0F;
 
-                        emit MidiCCReceived ( vMIDIPaketBytes[1] );
+                        emit MidiCCReceived ( iChannel, vMIDIPaketBytes[1] );
 
                         switch ( cCtrl.eType )
                         {

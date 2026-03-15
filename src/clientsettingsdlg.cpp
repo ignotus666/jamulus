@@ -924,6 +924,16 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         QObject::connect ( button, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
     }
 
+    // MIDI activity indicator timer
+    MidiActivityTimer.setSingleShot ( true );
+    MidiActivityTimer.setInterval ( 100 );
+    lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+    lblMidiActivityValue->setText ( "---" );
+
+    QObject::connect ( &MidiActivityTimer, &QTimer::timeout, this, [this] {
+        lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+    } );
+
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
     QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
@@ -1648,17 +1658,22 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     SetMidiLearnTarget ( buttonToTarget.value ( sender, None ), sender );
 }
 
-void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
+void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber )
 {
-    if ( midiLearnTarget == None )
-        return;
-
     // Validate MIDI CC number is within valid range (0-127)
     if ( ccNumber < 0 || ccNumber > 127 )
     {
-        qWarning() << "CClientSettingsDlg::OnMidiCCReceived: Invalid MIDI CC number received:" << ccNumber;
+        qWarning() << "CClientSettingsDlg::OnMidiCCReceived: Invalid MIDI CC number received:" << ccNumber << "on channel" << channel;
         return;
     }
+
+    // Update MIDI activity indicator
+    lblMidiActivityValue->setText ( tr ( "Ch %1 CC %2" ).arg ( channel + 1 ).arg ( ccNumber ) );
+    lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDGreenSmall.png" ) );
+    MidiActivityTimer.start();
+
+    if ( midiLearnTarget == None )
+        return;
 
     static const QMap<MidiLearnTarget, QSpinBox*> midiTargetToSpinBox = { { Fader, spnFaderOffset },
                                                                           { Pan, spnPanOffset },

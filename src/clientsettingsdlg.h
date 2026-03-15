@@ -136,6 +136,7 @@ private:
     MidiLearnTarget midiLearnTarget;
 
     QPushButton* midiLearnButtons[5];
+    QTimer       MidiActivityTimer;
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
     void         SetMIDIControlsEnabled ( bool enabled );
@@ -143,6 +144,6 @@ private:
 
 private slots:
     void OnLearnButtonClicked();
-    void OnMidiCCReceived ( int ccNumber );
+    void OnMidiCCReceived ( int channel, int ccNumber );
     void OnMIDIPickupModeToggled ( bool checked );
 };

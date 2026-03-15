@@ -486,8 +486,8 @@ signals:
     void ControllerInFaderIsSolo ( int iChannelIdx, bool bIsSolo );
     void ControllerInFaderIsMute ( int iChannelIdx, bool bIsMute );
     void ControllerInMuteMyself ( bool bMute );
-    void MidiCCReceived ( int ccNumber );
+    void MidiCCReceived ( int channel, int ccNumber );
 
 private slots:
-    void OnMidiCCReceived ( int ccNumber );
+    void OnMidiCCReceived ( int channel, int ccNumber );
 };

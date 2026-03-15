@@ -174,7 +174,10 @@ CClient::CClient ( const quint16  iPortNumber,
 
     QObject::connect ( pSignalHandler, &CSignalHandler::HandledSignal, this, &CClient::OnHandledSignal );
 
-    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, [this] ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); } );
+    QObject::connect ( &Sound,
+                       &CSoundBase::MidiCCReceived,
+                       this,
+                       [this] ( int channel, int ccNumber ) { emit MidiCCReceived ( channel, ccNumber ); } );
 
     // start timer so that elapsed time works
     PreciseTime.start();
@@ -1573,7 +1576,7 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
-void CClient::OnMidiCCReceived ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); }
+void CClient::OnMidiCCReceived ( int channel, int ccNumber ) { emit MidiCCReceived ( channel, ccNumber ); }
 
 // find, and optionally create, a client channel for the supplied server channel ID
 // returns a client channel ID or INVALID_INDEX
