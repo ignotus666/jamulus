@@ -1,3 +1,7 @@
+      - name: Debug: find all jamulus .deb files
+        run: |
+          echo "Searching for jamulus .deb files in workspace:"
+          find . -name 'jamulus*.deb' -print
 # Simplified build workflow for custom packages
 # Builds only .deb package
 # Triggered manually only for my-build branch
