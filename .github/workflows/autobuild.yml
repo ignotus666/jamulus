@@ -51,6 +51,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: jamulus-deb
-          path: deploy/jamulus*_*.deb
+          path: deploy/jamulus_*.deb
           retention-days: 31
           if-no-files-found: error

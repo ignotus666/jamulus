@@ -113,7 +113,7 @@ pass_artifacts_to_job() {
 
     # Find any jamulus .deb file for this arch
     local found_deb
-    found_deb=$(ls jamulus*_*.deb 2>/dev/null | grep _${TARGET_ARCH}\.deb$ | head -n1 || true)
+    found_deb=$(ls jamulus_*.deb 2>/dev/null | head -n1 || true)
     if [[ -n "$found_deb" ]]; then
         echo "Moving regular build artifact to deploy/$found_deb"
         mv "$found_deb" "./deploy/$found_deb"
