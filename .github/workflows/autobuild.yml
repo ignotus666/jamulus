@@ -41,7 +41,7 @@ jobs:
         env:
           JAMULUS_BUILD_VERSION: "3.11.0dev"
 
-      - name: Debug: find all jamulus .deb files
+      - name: find all jamulus .deb files
         run: |
           echo "Searching for jamulus .deb files in workspace:"
           find . -name 'jamulus*.deb' -print
