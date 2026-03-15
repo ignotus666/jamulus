@@ -40,10 +40,6 @@ jobs:
         env:
           JAMULUS_BUILD_VERSION: "3.12.1"
 
-      - name: List all files for debug
-        run: |
-          echo "Listing all files in workspace after build:"
-          find . -type f | sort
 
       - name: Get artifacts
         id: get-artifacts
@@ -54,7 +50,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.get-artifacts.outputs.artifact_2 }}
-          path: deploy/${{ steps.get-artifacts.outputs.artifact_2 }}
+          name: jamulus-deb
+          path: deploy/jamulus*_amd64.deb
           retention-days: 31
           if-no-files-found: error

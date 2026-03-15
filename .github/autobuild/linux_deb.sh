@@ -111,10 +111,17 @@ pass_artifacts_to_job() {
         echo "No headless artifact found, skipping."
     fi
 
-    local artifact_2="jamulus_${JAMULUS_BUILD_VERSION}_ubuntu_${TARGET_ARCH}.deb"
-        echo "Moving regular build artifact to deploy/${artifact_2}"
-        mv jamulus*_"${TARGET_ARCH}".deb "./deploy/${artifact_2}"
-    echo "artifact_2=${artifact_2}" >> "$GITHUB_OUTPUT"
+    # Find any jamulus .deb file for this arch
+    local found_deb
+    found_deb=$(ls jamulus*_${TARGET_ARCH}.deb 2>/dev/null | head -n1 || true)
+    if [[ -n "$found_deb" ]]; then
+        echo "Moving regular build artifact to deploy/$found_deb"
+        mv "$found_deb" "./deploy/$found_deb"
+        echo "artifact_2=$found_deb" >> "$GITHUB_OUTPUT"
+    else
+        echo "No jamulus .deb artifact found for arch ${TARGET_ARCH}!"
+        exit 1
+    fi
 }
 
 case "${1:-}" in
