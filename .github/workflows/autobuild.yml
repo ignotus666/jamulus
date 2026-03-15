@@ -18,6 +18,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Extract version from Jamulus.pro
+        id: get-version
+        run: |
+          VERSION=$(grep -oP 'VERSION = \K\S+' Jamulus.pro | head -n1)
+          echo "JAMULUS_BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Set up base dependencies
         run: |
           set -eu
@@ -34,23 +40,18 @@ jobs:
       - name: Set up build dependencies
         run: ./.github/autobuild/linux_deb.sh setup
         env:
-          JAMULUS_BUILD_VERSION: "3.11.0dev"
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
 
       - name: Build .deb package
         run: ./.github/autobuild/linux_deb.sh build
         env:
-          JAMULUS_BUILD_VERSION: "3.11.0dev"
-
-      - name: find all jamulus .deb files
-        run: |
-          echo "Searching for jamulus .deb files in workspace:"
-          find . -name 'jamulus*.deb' -print
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
 
       - name: Get artifacts
         id: get-artifacts
         run: ./.github/autobuild/linux_deb.sh get-artifacts
         env:
-          JAMULUS_BUILD_VERSION: "3.11.0dev"
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
