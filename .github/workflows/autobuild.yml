@@ -32,13 +32,19 @@ jobs:
 
       - name: Set up build dependencies
         run: ./.github/autobuild/linux_deb.sh setup
+        env:
+          JAMULUS_BUILD_VERSION: "dev"
 
       - name: Build .deb package
         run: ./.github/autobuild/linux_deb.sh build
+        env:
+          JAMULUS_BUILD_VERSION: "dev"
 
       - name: Get artifacts
         id: get-artifacts
         run: ./.github/autobuild/linux_deb.sh get-artifacts
+        env:
+          JAMULUS_BUILD_VERSION: "dev"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
