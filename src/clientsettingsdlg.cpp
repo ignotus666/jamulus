@@ -927,11 +927,14 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // MIDI activity indicator timer
     MidiActivityTimer.setSingleShot ( true );
     MidiActivityTimer.setInterval ( 100 );
-    lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
-    lblMidiActivityValue->setText ( "---" );
+// Initial state: dark LED, no activity yet
+    lblMidiActivityLED->setPixmap( QPixmap( ":/png/LEDs/res/CLEDBlackBig.png" ) );
+    const QString noActivity = tr( "No MIDI activity yet" );
+    lblMidiActivity->setToolTip( noActivity );
+    lblMidiActivityLED->setToolTip( noActivity );
 
     QObject::connect ( &MidiActivityTimer, &QTimer::timeout, this, [this] {
-        lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+        lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackBig.png" ) );
     } );
 
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
@@ -1668,9 +1671,14 @@ void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber )
     }
 
     // Update MIDI activity indicator
-    lblMidiActivityValue->setText ( tr ( "Ch %1 CC %2" ).arg ( channel + 1 ).arg ( ccNumber ) );
-    lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDGreenSmall.png" ) );
-    MidiActivityTimer.start();
+const QString activityText = tr( "Ch %1, CC %2" ).arg( channel + 1 ).arg( ccNumber );
+
+// Set tooltips on both LED and label so hover shows details.
+lblMidiActivity->setToolTip( activityText );
+lblMidiActivityLED->setToolTip( activityText );
+// LED flash behavior stays the same:
+lblMidiActivityLED->setPixmap( QPixmap( ":/png/LEDs/res/IndicatorGreen.png" ) );
+MidiActivityTimer.start();
 
     if ( midiLearnTarget == None )
         return;
