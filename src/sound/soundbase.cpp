@@ -330,7 +330,7 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
                         const int            iValue   = vMIDIPaketBytes[2];
                         const int            iChannel = vMIDIPaketBytes[0] & 0x0F;
 
-                        emit MidiCCReceived ( iChannel, vMIDIPaketBytes[1] );
+                        emit MidiCCReceived ( iChannel, vMIDIPaketBytes[1], iValue );
 
                         switch ( cCtrl.eType )
                         {

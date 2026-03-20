@@ -23,6 +23,7 @@
 \******************************************************************************/
 
 #include "clientsettingsdlg.h"
+#include <QAbstractItemView>
 
 /* Implementation *************************************************************/
 CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
@@ -924,18 +925,22 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         QObject::connect ( button, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
     }
 
-    // MIDI activity indicator timer
+    // MIDI activity indicator / log
     MidiActivityTimer.setSingleShot ( true );
-    MidiActivityTimer.setInterval ( 100 );
-// Initial state: dark LED, no activity yet
-    lblMidiActivityLED->setPixmap( QPixmap( ":/png/LEDs/res/CLEDBlackBig.png" ) );
-    const QString noActivity = tr( "No MIDI activity yet" );
-    lblMidiActivity->setToolTip( noActivity );
-    lblMidiActivityLED->setToolTip( noActivity );
+    MidiActivityTimer.setInterval ( 50 );
+
+    lstMidiActivityLog->setSelectionMode ( QAbstractItemView::NoSelection );
+    lstMidiActivityLog->setFocusPolicy ( Qt::NoFocus );
+    butClearMidiActivityLog->setAccessibleName ( tr ( "Clear MIDI activity log button" ) );
+    butClearMidiActivityLog->setToolTip ( tr ( "Clear MIDI activity log" ) );
+    butClearMidiActivityLog->setText ( u8"\U0001F5D1" );
+    ResetMidiActivityLog();
 
     QObject::connect ( &MidiActivityTimer, &QTimer::timeout, this, [this] {
-        lblMidiActivityLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackBig.png" ) );
+        lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
     } );
+
+    QObject::connect ( butClearMidiActivityLog, &QPushButton::clicked, this, &CClientSettingsDlg::OnClearMidiActivityLogClicked );
 
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
@@ -1661,7 +1666,21 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     SetMidiLearnTarget ( buttonToTarget.value ( sender, None ), sender );
 }
 
-void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber )
+void CClientSettingsDlg::ResetMidiActivityLog()
+{
+    midiActivityLog.clear();
+    lstMidiActivityLog->clear();
+    MidiActivityTimer.stop();
+
+    lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+}
+
+void CClientSettingsDlg::OnClearMidiActivityLogClicked()
+{
+    ResetMidiActivityLog();
+}
+
+void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber, int midiValue )
 {
     // Validate MIDI CC number is within valid range (0-127)
     if ( ccNumber < 0 || ccNumber > 127 )
@@ -1670,15 +1689,39 @@ void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber )
         return;
     }
 
-    // Update MIDI activity indicator
-const QString activityText = tr( "Ch %1, CC %2" ).arg( channel + 1 ).arg( ccNumber );
+    // Update MIDI activity indicator / log (newest on top)
+    const QString chStyle = "<span style=\"color:#D219E0;\">%1</span>";
+    const QString ccStyle = "<span style=\"color:#006AF1;\">%1</span>";
+    const QString vStyle  = "<span style=\"color:#14E81D;\">%1</span>";
 
-// Set tooltips on both LED and label so hover shows details.
-lblMidiActivity->setToolTip( activityText );
-lblMidiActivityLED->setToolTip( activityText );
-// LED flash behavior stays the same:
-lblMidiActivityLED->setPixmap( QPixmap( ":/png/LEDs/res/IndicatorGreen.png" ) );
-MidiActivityTimer.start();
+    const QString activityText =
+        tr ( "Ch %1, CC %2, V %3" )
+            .arg ( chStyle.arg ( channel + 1 ) )
+            .arg ( ccStyle.arg ( ccNumber ) )
+            .arg ( vStyle.arg ( midiValue ) );
+
+    midiActivityLog.append ( activityText );
+    while ( midiActivityLog.size() > 15 )
+    {
+        midiActivityLog.removeFirst();
+    }
+
+    lstMidiActivityLog->clear();
+    for ( const QString& itemText : midiActivityLog )
+    {
+        auto* item  = new QListWidgetItem();
+        auto* label = new QLabel ( itemText );
+
+        label->setTextFormat ( Qt::RichText );
+        label->setTextInteractionFlags ( Qt::NoTextInteraction );
+
+        item->setSizeHint ( label->sizeHint() );
+        lstMidiActivityLog->addItem ( item );
+        lstMidiActivityLog->setItemWidget ( item, label );
+    }
+
+    lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDGreenSmall.png" ) );
+    MidiActivityTimer.start();
 
     if ( midiLearnTarget == None )
         return;

@@ -37,6 +37,7 @@
 #include <QLayout>
 #include <QButtonGroup>
 #include <QMessageBox>
+#include <QStringList>
 #include "global.h"
 #include "util.h"
 #include "client.h"
@@ -137,13 +138,16 @@ private:
 
     QPushButton* midiLearnButtons[5];
     QTimer       MidiActivityTimer;
+    QStringList  midiActivityLog;
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
     void         SetMIDIControlsEnabled ( bool enabled );
     void         UpdateMIDIDeviceSelection ( bool bShowWarnings = true );
+    void         ResetMidiActivityLog();
 
 private slots:
     void OnLearnButtonClicked();
-    void OnMidiCCReceived ( int channel, int ccNumber );
+    void OnMidiCCReceived ( int channel, int ccNumber, int midiValue );
     void OnMIDIPickupModeToggled ( bool checked );
+    void OnClearMidiActivityLogClicked();
 };
