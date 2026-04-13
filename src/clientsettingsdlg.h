@@ -68,6 +68,7 @@ protected:
     void    UpdateSoundCardFrame();
     void    UpdateDirectoryComboBox();
     void    UpdateAudioFaderSlider();
+    void    UpdateAudioPanVisibility();
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* );
@@ -97,6 +98,7 @@ public slots:
     void OnAudioChannelsActivated ( int iChanIdx );
     void OnAudioQualityActivated ( int iQualityIdx );
     void OnGUIDesignActivated ( int iDesignIdx );
+    void OnUIThemeActivated ( int iThemeIdx );
     void OnMeterStyleActivated ( int iMeterStyleIdx );
     void OnAudioAlertsChanged ( int value );
     void OnLanguageChanged ( QString strLanguage ) { pSettings->strLanguage = strLanguage; }
@@ -117,6 +119,7 @@ public slots:
 
 signals:
     void GUIDesignChanged();
+    void UIThemeChanged();
     void MeterStyleChanged();
     void AudioAlertsChanged();
     void AudioChannelsChanged();

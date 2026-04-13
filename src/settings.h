@@ -36,8 +36,11 @@
 #ifndef SERVER_ONLY
 #    include "client.h"
 #endif
+#include "plugins/audioequalizer.h"
 #include "server.h"
 #include "util.h"
+
+#define MAX_NUM_EQ_USER_PRESETS 12
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
@@ -154,14 +157,41 @@ public:
         eChannelSortType ( ST_NO_SORT ),
         iNumMixerPanelRows ( 1 ),
         vstrDirectoryAddress ( MAX_NUM_SERVER_ADDR_ITEMS, "" ),
+        vstrEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
         eDirectoryType ( AT_DEFAULT ),
         bEnableFeedbackDetection ( true ),
         bEnableAudioAlerts ( false ),
+        bEQBypass ( false ),
+        aiEQBandGainDb { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        iReverbPreDelayMs ( 0 ),
+        iReverbRoomSize ( 60 ),
+        iReverbDamping ( 30 ),
+        iReverbWetMix ( 25 ),
+        iReverbEarlyLevel ( 30 ),
+        iReverbWidth ( 100 ),
+        bReverbEarlyEnabled ( true ),
+        bReverbFreeze ( false ),
+        bReverbBypass ( false ),
+        bCompressorBypass ( false ),
+        fCompressorThresholdDb ( -12.0f ),
+        fCompressorRatio ( 3.0f ),
+        fCompressorAttackMs ( 5.0f ),
+        fCompressorReleaseMs ( 120.0f ),
+        fCompressorMakeupDb ( 3.0f ),
+        bCompressorLimiterEnabled ( true ),
+        bFilterBypass ( false ),
+        bHighPassEnabled ( false ),
+        bLowPassEnabled ( false ),
+        iHighPassCutoffHz ( 80 ),
+        iLowPassCutoffHz ( 12000 ),
+        eUITheme ( UIT_SYSTEM ),
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
+        vecWindowPosEffects(),  // empty array
         vecWindowPosConnect(),  // empty array
         bWindowWasShownSettings ( false ),
         bWindowWasShownChat ( false ),
+        bWindowWasShownEffects ( false ),
         bWindowWasShownConnect ( false ),
         bOwnFaderFirst ( false ),
         iMidiChannel ( 0 ),
@@ -184,6 +214,14 @@ public:
         strMidiDevice ( "" ),
         pClient ( pNCliP )
     {
+        for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
+        {
+            for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+            {
+                aiEQPresetBandGainDb[iPreset][iBand] = 0;
+            }
+        }
+
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
     }
 
@@ -226,17 +264,45 @@ public:
     EChSortType      eChannelSortType;
     int              iNumMixerPanelRows;
     CVector<QString> vstrDirectoryAddress;
+    CVector<QString> vstrEQPresetNames;
+    int              aiEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     EDirectoryType   eDirectoryType;
     int              iCustomDirectoryIndex; // index of selected custom directory
     bool             bEnableFeedbackDetection;
     bool             bEnableAudioAlerts;
+    bool             bEQBypass;
+    int              aiEQBandGainDb[CAudioEqualizer::NUM_BANDS];
+    int              iReverbPreDelayMs;
+    int              iReverbRoomSize;
+    int              iReverbDamping;
+    int              iReverbWetMix;
+    int              iReverbEarlyLevel;
+    int              iReverbWidth;
+    bool             bReverbEarlyEnabled;
+    bool             bReverbFreeze;
+    bool             bReverbBypass;
+    bool             bCompressorBypass;
+    float            fCompressorThresholdDb;
+    float            fCompressorRatio;
+    float            fCompressorAttackMs;
+    float            fCompressorReleaseMs;
+    float            fCompressorMakeupDb;
+    bool             bCompressorLimiterEnabled;
+    bool             bFilterBypass;
+    bool             bHighPassEnabled;
+    bool             bLowPassEnabled;
+    int              iHighPassCutoffHz;
+    int              iLowPassCutoffHz;
+    EUITheme         eUITheme;
 
     // window position/state settings
     QByteArray vecWindowPosSettings;
     QByteArray vecWindowPosChat;
+    QByteArray vecWindowPosEffects;
     QByteArray vecWindowPosConnect;
     bool       bWindowWasShownSettings;
     bool       bWindowWasShownChat;
+    bool       bWindowWasShownEffects;
     bool       bWindowWasShownConnect;
     bool       bOwnFaderFirst;
 
@@ -274,10 +340,12 @@ protected:
 class CServerSettings : public CSettings
 {
 public:
-    CServerSettings ( CServer* pNSerP, const QString& sNFiName ) : CSettings(), pServer ( pNSerP )
+    CServerSettings ( CServer* pNSerP, const QString& sNFiName ) : CSettings(), eUITheme ( UIT_SYSTEM ), pServer ( pNSerP )
     {
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME_SERVER );
     }
+
+    EUITheme eUITheme;
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool isAboutToQuit ) override;

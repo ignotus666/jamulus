@@ -39,6 +39,9 @@
 #include "channel.h"
 #include "util.h"
 #include "plugins/audioreverb.h"
+#include "plugins/audioequalizer.h"
+#include "plugins/audiocompressor.h"
+#include "plugins/audiofilter.h"
 #include "buffer.h"
 #include "signalhandler.h"
 
@@ -73,6 +76,12 @@
 
 // audio reverberation range
 #define AUD_REVERB_MAX 100
+#define REVERB_PRE_DELAY_MAX_MS 120
+#define REVERB_ROOM_SIZE_MAX    100
+#define REVERB_DAMPING_MAX      100
+#define REVERB_WET_MIX_MAX      100
+#define REVERB_EARLY_LEVEL_MAX  100
+#define REVERB_WIDTH_MAX        100
 
 // default delay period between successive gain updates (ms)
 // this will be increased to double the ping time if connected to a distant server
@@ -144,6 +153,7 @@ public:
 
     double GetLevelForMeterdBLeft() { return SignalLevelMeter.GetLevelForMeterdBLeftOrMono(); }
     double GetLevelForMeterdBRight() { return SignalLevelMeter.GetLevelForMeterdBRight(); }
+    void   GetOutputBandLevels ( CVector<float>& vecOutLevels );
 
     bool GetAndResetbJitterBufferOKFlag();
 
@@ -167,6 +177,33 @@ public:
     int  GetReverbLevel() const { return iReverbLevel; }
     void SetReverbLevel ( const int iNL ) { iReverbLevel = iNL; }
 
+    bool GetReverbBypass() const { return bReverbBypass; }
+    void SetReverbBypass ( const bool bBypass ) { bReverbBypass = bBypass; }
+
+    int  GetReverbPreDelayMs() const { return iReverbPreDelayMs; }
+    void SetReverbPreDelayMs ( const int iMs ) { iReverbPreDelayMs = iMs; }
+
+    int  GetReverbRoomSize() const { return iReverbRoomSize; }
+    void SetReverbRoomSize ( const int iValue ) { iReverbRoomSize = iValue; }
+
+    int  GetReverbDamping() const { return iReverbDamping; }
+    void SetReverbDamping ( const int iValue ) { iReverbDamping = iValue; }
+
+    int  GetReverbWetMix() const { return iReverbWetMix; }
+    void SetReverbWetMix ( const int iValue ) { iReverbWetMix = iValue; }
+
+    int  GetReverbEarlyLevel() const { return iReverbEarlyLevel; }
+    void SetReverbEarlyLevel ( const int iValue ) { iReverbEarlyLevel = iValue; }
+
+    bool GetReverbEarlyEnabled() const { return bReverbEarlyEnabled; }
+    void SetReverbEarlyEnabled ( const bool bEnabled ) { bReverbEarlyEnabled = bEnabled; }
+
+    int  GetReverbWidth() const { return iReverbWidth; }
+    void SetReverbWidth ( const int iValue ) { iReverbWidth = iValue; }
+
+    bool GetReverbFreeze() const { return bReverbFreeze; }
+    void SetReverbFreeze ( const bool bEnabled ) { bReverbFreeze = bEnabled; }
+
     bool IsReverbOnLeftChan() const { return bReverbOnLeftChan; }
     void SetReverbOnLeftChan ( const bool bIL )
     {
@@ -176,6 +213,38 @@ public:
 
     void SetDoAutoSockBufSize ( const bool bValue );
     bool GetDoAutoSockBufSize() const { return Channel.GetDoAutoSockBufSize(); }
+
+    void SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
+    void SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
+    void ResetEQ() { AudioEqualizer.Reset(); }
+    bool GetEQBypass() const { return AudioEqualizer.GetBypass(); }
+    int  GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
+
+    void SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
+    bool GetCompressorBypass() const { return AudioCompressor.GetBypass(); }
+    void SetCompressorThresholdDb ( const float fDb ) { AudioCompressor.SetThresholdDb ( fDb ); }
+    float GetCompressorThresholdDb() const { return AudioCompressor.GetThresholdDb(); }
+    void SetCompressorRatio ( const float fValue ) { AudioCompressor.SetRatio ( fValue ); }
+    float GetCompressorRatio() const { return AudioCompressor.GetRatio(); }
+    void SetCompressorAttackMs ( const float fMs ) { AudioCompressor.SetAttackMs ( fMs ); }
+    float GetCompressorAttackMs() const { return AudioCompressor.GetAttackMs(); }
+    void SetCompressorReleaseMs ( const float fMs ) { AudioCompressor.SetReleaseMs ( fMs ); }
+    float GetCompressorReleaseMs() const { return AudioCompressor.GetReleaseMs(); }
+    void SetCompressorMakeupDb ( const float fDb ) { AudioCompressor.SetMakeupDb ( fDb ); }
+    float GetCompressorMakeupDb() const { return AudioCompressor.GetMakeupDb(); }
+    void SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
+    bool GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
+
+    void SetFilterBypass ( const bool bNBypass ) { AudioFilter.SetBypass ( bNBypass ); }
+    bool GetFilterBypass() const { return AudioFilter.GetBypass(); }
+    void SetHighPassEnabled ( const bool bEnabled ) { AudioFilter.SetHighPassEnabled ( bEnabled ); }
+    bool GetHighPassEnabled() const { return AudioFilter.GetHighPassEnabled(); }
+    void SetLowPassEnabled ( const bool bEnabled ) { AudioFilter.SetLowPassEnabled ( bEnabled ); }
+    bool GetLowPassEnabled() const { return AudioFilter.GetLowPassEnabled(); }
+    void SetHighPassCutoffHz ( const int iHz ) { AudioFilter.SetHighPassCutoffHz ( iHz ); }
+    void SetLowPassCutoffHz ( const int iHz ) { AudioFilter.SetLowPassCutoffHz ( iHz ); }
+    int  GetHighPassCutoffHz() const { return AudioFilter.GetHighPassCutoffHz(); }
+    int  GetLowPassCutoffHz() const { return AudioFilter.GetLowPassCutoffHz(); }
 
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }
@@ -319,6 +388,7 @@ protected:
     void Init();
     void ProcessSndCrdAudioData ( CVector<short>& vecsStereoSndCrd );
     void ProcessAudioDataIntern ( CVector<short>& vecsStereoSndCrd );
+    void UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd );
 
     int  PreparePingMessage();
     int  EvaluatePingMessage ( const int iMs );
@@ -378,7 +448,19 @@ protected:
     int          iAudioInFader;
     bool         bReverbOnLeftChan;
     int          iReverbLevel;
+    int          iReverbPreDelayMs;
+    int          iReverbRoomSize;
+    int          iReverbDamping;
+    int          iReverbWetMix;
+    int          iReverbEarlyLevel;
+    int          iReverbWidth;
+    bool         bReverbEarlyEnabled;
+    bool         bReverbFreeze;
+    bool         bReverbBypass;
     CAudioReverb AudioReverb;
+    CAudioEqualizer AudioEqualizer;
+    CAudioCompressor AudioCompressor;
+    CAudioFilter AudioFilter;
     int          iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;
@@ -408,6 +490,8 @@ protected:
     bool   bEnableIPv6;
     bool   bMuteMeInPersonalMix;
     QMutex MutexDriverReinit;
+    QMutex MutexOutputBandLevels;
+    float  afOutputBandLevels[16];
 
     // server settings
     int iServerSockBufNumFrames;

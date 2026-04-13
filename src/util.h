@@ -64,6 +64,8 @@
 #    include <QMenu>
 #    include <QWhatsThis>
 #    include <QTextBrowser>
+#    include <QGuiApplication>
+#    include <QPalette>
 #    include <QLabel>
 #    include <QCheckBox>
 #    include <QComboBox>
@@ -521,10 +523,35 @@ enum EGetDataStat
 enum EGUIDesign
 {
     // used for settings -> enum values should be fixed
-    GD_STANDARD  = 0,
+    GD_STANDARD  = 0, // legacy value, treated as GD_ORIGINAL
     GD_ORIGINAL  = 1,
     GD_SLIMFADER = 2
 };
+
+// UI theme enum ---------------------------------------------------------------
+enum EUITheme
+{
+    UIT_LIGHT  = 0,
+    UIT_DARK   = 1,
+    UIT_SYSTEM = 2
+};
+
+inline bool IsDarkUITheme ( const EUITheme eTheme )
+{
+    if ( eTheme == UIT_SYSTEM )
+    {
+#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
+        return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+#else
+        const QPalette defaultPalette;
+        return defaultPalette.color ( QPalette::WindowText ).lightness() > defaultPalette.color ( QPalette::Window ).lightness();
+#endif
+    }
+
+    return eTheme == UIT_DARK;
+}
+
+inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme ( eTheme ) ? UIT_DARK : UIT_LIGHT; }
 
 // Default, fallback skin if no skin was selected
 #if defined( Q_OS_IOS ) || defined( ANDROID ) || defined( Q_OS_ANDROID )
@@ -540,9 +567,9 @@ enum EMeterStyle
     // used for settings -> enum values should be fixed
     MT_BAR_NARROW      = 0,
     MT_BAR_WIDE        = 1,
-    MT_LED_STRIPE      = 2,
-    MT_LED_ROUND_SMALL = 3,
-    MT_LED_ROUND_BIG   = 4
+    MT_LED_STRIPE      = 2, // legacy value, treated as bar wide
+    MT_LED_ROUND_SMALL = 3, // legacy value, treated as bar narrow
+    MT_LED_ROUND_BIG   = 4  // legacy value, treated as bar wide
 };
 
 // Server licence type enum ----------------------------------------------------

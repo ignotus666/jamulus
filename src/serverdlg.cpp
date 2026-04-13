@@ -24,6 +24,173 @@
 
 #include "serverdlg.h"
 
+namespace
+{
+QString BuildServerDialogStyleSheet ( const EUITheme eTheme )
+{
+    if ( IsDarkUITheme ( eTheme ) )
+    {
+        return QString::fromUtf8 ( R"CSS(
+QDialog,
+QWidget { background-color: rgb(11, 16, 24);
+          color: rgb(220, 220, 220); }
+QLabel { color: rgb(220, 220, 220); }
+QGroupBox { border: 1px solid rgb(40, 50, 60);
+            margin-top: 8px; }
+QGroupBox::title { subcontrol-origin: margin;
+                   subcontrol-position: top left;
+                   padding: 0 4px;
+                   color: rgb(220, 220, 220); }
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QTextBrowser { background-color: rgb(20, 26, 34);
+               border: 1px solid rgb(58, 76, 94);
+               border-radius: 4px;
+               color: rgb(220, 232, 242);
+               selection-background-color: rgb(54, 207, 255);
+               selection-color: rgb(8, 12, 18); }
+QComboBox,
+QSpinBox,
+QDoubleSpinBox { background-color: rgb(20, 26, 34);
+                 border: 1px solid rgb(58, 76, 94);
+                 border-radius: 4px;
+                 padding: 2px 6px;
+                 padding-right: 18px;
+                 color: rgb(220, 232, 242); }
+QComboBox::drop-down { subcontrol-origin: padding;
+                       subcontrol-position: top right;
+                       width: 18px;
+                       border-left: 1px solid rgb(58, 76, 94);
+                       background-color: rgb(20, 26, 34);
+                       border-top-right-radius: 4px;
+                       border-bottom-right-radius: 4px; }
+QComboBox::down-arrow { width: 0px;
+                        height: 0px;
+                        border-left: 4px solid transparent;
+                        border-right: 4px solid transparent;
+                        border-top: 6px solid rgb(140, 156, 176); }
+QComboBox QAbstractItemView { background-color: rgb(20, 26, 34);
+                              color: rgb(220, 232, 242);
+                              selection-background-color: rgb(54, 207, 255);
+                              selection-color: rgb(8, 12, 18); }
+QComboBox QAbstractItemView::item:hover { background-color: rgb(40, 60, 84);
+                                          color: rgb(220, 232, 242); }
+QAbstractItemView { background-color: rgb(20, 26, 34);
+                    border: 1px solid rgb(58, 76, 94);
+                    color: rgb(220, 232, 242);
+                    selection-background-color: rgb(54, 207, 255);
+                    selection-color: rgb(8, 12, 18); }
+QTabWidget::pane { border: 1px solid rgb(40, 50, 60);
+                   top: -1px; }
+QTabBar::tab { background: rgb(22, 30, 40);
+               color: rgb(220, 232, 242);
+               border: 1px solid rgb(40, 50, 60);
+               padding: 4px 10px; }
+QTabBar::tab:selected { background: rgb(36, 46, 58);
+                        border: 1px solid rgb(58, 76, 94); }
+QPushButton { color: rgb(220, 232, 242);
+              font: bold;
+              border: 1px solid rgb(58, 76, 94);
+              border-radius: 6px;
+              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                           stop:0 rgb(36, 46, 58),
+                                           stop:1 rgb(22, 30, 40));
+              padding: 4px 10px; }
+QPushButton:hover { border: 2px solid rgb(54, 207, 255);
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                 stop:0 rgb(48, 60, 74),
+                                                 stop:1 rgb(28, 38, 50)); }
+QPushButton:pressed { border: 2px solid rgb(54, 207, 255);
+                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                   stop:0 rgb(20, 30, 40),
+                                                   stop:1 rgb(14, 20, 28)); }
+QCheckBox,
+QRadioButton { color: rgb(220, 220, 220); }
+)CSS" );
+    }
+
+    return QString::fromUtf8 ( R"CSS(
+QDialog,
+QWidget { background-color: rgb(247, 248, 250);
+          color: rgb(28, 34, 42); }
+QLabel { color: rgb(28, 34, 42); }
+QGroupBox { border: 1px solid rgb(196, 202, 210);
+            margin-top: 8px; }
+QGroupBox::title { subcontrol-origin: margin;
+                   subcontrol-position: top left;
+                   padding: 0 4px;
+                   color: rgb(28, 34, 42); }
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QTextBrowser { background-color: rgb(255, 255, 255);
+               border: 1px solid rgb(180, 188, 198);
+               border-radius: 4px;
+               color: rgb(28, 34, 42);
+               selection-background-color: rgb(46, 132, 198);
+               selection-color: rgb(255, 255, 255); }
+QComboBox,
+QSpinBox,
+QDoubleSpinBox { background-color: rgb(255, 255, 255);
+                 border: 1px solid rgb(180, 188, 198);
+                 border-radius: 4px;
+                 padding: 2px 6px;
+                 padding-right: 18px;
+                 color: rgb(28, 34, 42); }
+QComboBox::drop-down { subcontrol-origin: padding;
+                       subcontrol-position: top right;
+                       width: 18px;
+                       border-left: 1px solid rgb(180, 188, 198);
+                       background-color: rgb(255, 255, 255);
+                       border-top-right-radius: 4px;
+                       border-bottom-right-radius: 4px; }
+QComboBox::down-arrow { width: 0px;
+                        height: 0px;
+                        border-left: 4px solid transparent;
+                        border-right: 4px solid transparent;
+                        border-top: 6px solid rgb(96, 106, 118); }
+QComboBox QAbstractItemView { background-color: rgb(255, 255, 255);
+                              color: rgb(28, 34, 42);
+                              selection-background-color: rgb(46, 132, 198);
+                              selection-color: rgb(255, 255, 255); }
+QComboBox QAbstractItemView::item:hover { background-color: rgb(232, 240, 250);
+                                          color: rgb(28, 34, 42); }
+QAbstractItemView { background-color: rgb(255, 255, 255);
+                    border: 1px solid rgb(180, 188, 198);
+                    color: rgb(28, 34, 42);
+                    selection-background-color: rgb(46, 132, 198);
+                    selection-color: rgb(255, 255, 255); }
+QTabWidget::pane { border: 1px solid rgb(196, 202, 210);
+                   top: -1px; }
+QTabBar::tab { background: rgb(242, 244, 248);
+               color: rgb(28, 34, 42);
+               border: 1px solid rgb(196, 202, 210);
+               padding: 4px 10px; }
+QTabBar::tab:selected { background: rgb(255, 255, 255);
+                        border: 1px solid rgb(180, 188, 198); }
+QPushButton { color: rgb(28, 34, 42);
+              font: bold;
+              border: 1px solid rgb(180, 188, 198);
+              border-radius: 6px;
+              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                           stop:0 rgb(255, 255, 255),
+                                           stop:1 rgb(232, 236, 242));
+              padding: 4px 10px; }
+QPushButton:hover { border: 2px solid rgb(46, 132, 198);
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                 stop:0 rgb(246, 249, 252),
+                                                 stop:1 rgb(220, 227, 236)); }
+QPushButton:pressed { border: 2px solid rgb(46, 132, 198);
+                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                   stop:0 rgb(224, 230, 238),
+                                                   stop:1 rgb(208, 216, 226)); }
+QCheckBox,
+QRadioButton { color: rgb(28, 34, 42); }
+)CSS" );
+}
+} // namespace
+
 /* Implementation *************************************************************/
 CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool bStartMinimized, QWidget* parent ) :
     CBaseDlg ( parent, Qt::Window ), // use Qt::Window to get min/max window buttons
@@ -36,6 +203,8 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     bSystemTrayIconAvailable = SystemTrayIcon.isSystemTrayAvailable();
 
     setupUi ( this );
+
+    ApplyTheme();
 
     // always start on the main tab
     tabWidget->setCurrentIndex ( 0 );
@@ -170,6 +339,11 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     cbxLanguage->setWhatsThis ( strWTLanguage );
 
     cbxLanguage->setAccessibleName ( tr ( "Language combo box" ) );
+
+    QString strWTTheme = "<b>" + tr ( "Theme" ) + ":</b> " + tr ( "Select the color theme for this window." );
+    lblTheme->setWhatsThis ( strWTTheme );
+    cbxTheme->setWhatsThis ( strWTTheme );
+    cbxTheme->setAccessibleName ( tr ( "Theme combo box" ) );
 
     // recording directory
     pbtRecordingDir->setAccessibleName ( tr ( "Display dialog to select recording directory button" ) );
@@ -340,6 +514,13 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     // language combo box (corrects the setting if language not found)
     cbxLanguage->Init ( pSettings->strLanguage );
 
+    // UI theme combo box
+    cbxTheme->clear();
+    cbxTheme->addItem ( tr ( "System" ) );
+    cbxTheme->addItem ( tr ( "Light" ) );
+    cbxTheme->addItem ( tr ( "Dark" ) );
+    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_SYSTEM ? 0 : ( pSettings->eUITheme == UIT_LIGHT ? 1 : 2 ) );
+
     // recorder options
     pbtRecordingDir->setAutoDefault ( false );
     tbtClearRecordingDir->setText ( u8"\u232B" );
@@ -436,6 +617,10 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
                        &CServerDlg::OnLocationCountryCurrentIndexChanged );
 
     QObject::connect ( cbxLanguage, &CLanguageComboBox::LanguageChanged, this, &CServerDlg::OnLanguageChanged );
+    QObject::connect ( cbxTheme,
+                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
+                       this,
+                       &CServerDlg::OnUIThemeActivated );
 
     // push buttons
     QObject::connect ( pbtNewRecording, &QPushButton::released, this, &CServerDlg::OnNewRecordingClicked );
@@ -493,6 +678,18 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     {
         pServer->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
+}
+
+void CServerDlg::ApplyTheme()
+{
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    setStyleSheet ( BuildServerDialogStyleSheet ( eResolvedTheme ) );
+}
+
+void CServerDlg::OnUIThemeActivated ( int iThemeIdx )
+{
+    pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    ApplyTheme();
 }
 
 void CServerDlg::closeEvent ( QCloseEvent* Event )
