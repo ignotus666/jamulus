@@ -388,6 +388,9 @@ FORMS_GUI = src/aboutdlgbase.ui \
 }
 
 HEADERS += src/plugins/audioreverb.h \
+    src/plugins/audioequalizer.h \
+    src/plugins/audiocompressor.h \
+    src/plugins/audiofilter.h \
     src/buffer.h \
     src/channel.h \
     src/global.h \
@@ -414,12 +417,16 @@ HEADERS += src/plugins/audioreverb.h \
 HEADERS_GUI = src/serverdlg.h
 
 !contains(CONFIG, "serveronly") {
-    HEADERS_GUI += src/audiomixerboard.h \
+    HEADERS_GUI += src/customslider.h \
+        src/customknob.h \
+        src/audiomixerboard.h \
         src/chatdlg.h \
+        src/effectsdlg.h \
         src/clientsettingsdlg.h \
         src/connectdlg.h \
         src/clientdlg.h \
         src/levelmeter.h \
+        src/outputbandmeter.h \
         src/analyzerconsole.h \
         src/multicolorled.h
 }
@@ -496,6 +503,9 @@ HEADERS_OPUS_X86 = libs/opus/celt/x86/celt_lpc_sse.h \
     $$files(libs/opus/silk/x86/*.h)
 
 SOURCES += src/plugins/audioreverb.cpp \
+    src/plugins/audioequalizer.cpp \
+    src/plugins/audiocompressor.cpp \
+    src/plugins/audiofilter.cpp \
     src/buffer.cpp \
     src/channel.cpp \
     src/main.cpp \
@@ -522,11 +532,15 @@ SOURCES_GUI = src/serverdlg.cpp
 !contains(CONFIG, "serveronly") {
     SOURCES_GUI += src/audiomixerboard.cpp \
         src/chatdlg.cpp \
+        src/effectsdlg.cpp \
         src/clientsettingsdlg.cpp \
         src/connectdlg.cpp \
         src/clientdlg.cpp \
         src/multicolorled.cpp \
         src/levelmeter.cpp \
+        src/outputbandmeter.cpp \
+        src/customslider.cpp \
+        src/customknob.cpp \
         src/analyzerconsole.cpp
 }
 
@@ -740,9 +754,6 @@ DISTFILES += ChangeLog \
     src/res/IndicatorRed.png \
     src/res/IndicatorYellowFancy.png \
     src/res/IndicatorRedFancy.png \
-    src/res/faderbackground.png \
-    src/res/faderhandle.png \
-    src/res/faderhandlesmall.png \
     src/res/HLEDGreen.png \
     src/res/HLEDBlack.png \
     src/res/HLEDRed.png \
@@ -753,8 +764,6 @@ DISTFILES += ChangeLog \
     src/res/HLEDGreySrc.png \
     src/res/HLEDRedSrc.png \
     src/res/HLEDYellowSrc.png \
-    src/res/ledbuttonnotpressed.png \
-    src/res/ledbuttonpressed.png \
     src/res/fronticon.png \
     src/res/fronticonserver.png \
     src/res/mixerboardbackground.png \
