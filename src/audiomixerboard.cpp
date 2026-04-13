@@ -25,6 +25,7 @@
 #include "audiomixerboard.h"
 #include <chrono>
 #include <deque>
+#include <QTimer>
 
 namespace
 {
@@ -114,9 +115,10 @@ static bool midiPickupTryApply ( int midiValue, int currentValue, int tolerance,
 * CChanneFader                                                                 *
 \******************************************************************************/
 CChannelFader::CChannelFader ( QWidget* pNW ) :
-    eDesign ( GD_STANDARD ),
-    BitmapMutedIcon ( QString::fromUtf8 ( ":/png/fader/res/mutediconorange.png" ) ),
-    bMIDICtrlUsed ( false )
+    eDesign ( GD_ORIGINAL ),
+    BitmapMutedIcon ( QString::fromUtf8 ( ":/png/mixer/res/mutediconorange.png" ) ),
+    bMIDICtrlUsed ( false ),
+    bPanIsDragging ( false )
 {
     // create new GUI control objects and store pointers to them (note that
     // QWidget takes the ownership of the pMainGrid so that this only has
@@ -125,15 +127,21 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
 
     pLevelsBox       = new QWidget ( pFrame );
     plbrChannelLevel = new CLevelMeter ( pLevelsBox );
-    pFader           = new QSlider ( Qt::Vertical, pLevelsBox );
-    pPan             = new QDial ( pLevelsBox );
+    pFader           = new CCustomSlider ( Qt::Vertical, pLevelsBox );
+    pPan             = new CCustomKnob ( pLevelsBox );
     pPanLabel        = new QLabel ( tr ( "Pan" ), pLevelsBox );
     pInfoLabel       = new QLabel ( "", pLevelsBox );
 
     pMuteSoloBox = new QWidget ( pFrame );
-    pcbMute      = new QCheckBox ( tr ( "Mute" ), pMuteSoloBox );
-    pcbSolo      = new QCheckBox ( tr ( "Solo" ), pMuteSoloBox );
-    pcbGroup     = new QCheckBox ( "", pMuteSoloBox );
+    pcbMute      = new QPushButton ( tr ( "Mute" ), pMuteSoloBox );
+    pcbSolo      = new QPushButton ( tr ( "Solo" ), pMuteSoloBox );
+    pcbGroup     = new QPushButton ( "", pMuteSoloBox );
+    pcbMute->setCheckable ( true );
+    pcbSolo->setCheckable ( true );
+    pcbGroup->setCheckable ( true );
+    pcbMute->setObjectName ( "pcbMute" );
+    pcbSolo->setObjectName ( "pcbSolo" );
+    pcbGroup->setObjectName ( "pcbGroup" );
 
     pLabelInstBox   = new QGroupBox ( pFrame );
     plblLabel       = new QLabel ( "", pFrame );
@@ -160,17 +168,20 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
 #endif
 
     // setup channel level
-    plbrChannelLevel->setContentsMargins ( 0, 3, 2, 3 );
+    // Match CCustomSlider vertical track geometry:
+    // track starts/ends with a 20px inset from top/bottom.
+    plbrChannelLevel->setContentsMargins ( 0, 20, 2, 20 );
+    plbrChannelLevel->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
     // setup slider
     pFader->setPageStep ( 1 );
     pFader->setRange ( 0, AUD_MIX_FADER_MAX );
     pFader->setTickInterval ( AUD_MIX_FADER_MAX / 9 );
+    pFader->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
     // setup panning control and info label
     pPan->setRange ( 0, AUD_MIX_PAN_MAX );
     pPan->setValue ( AUD_MIX_PAN_MAX / 2 );
-    pPan->setNotchesVisible ( true );
     pInfoLabel->setMinimumHeight ( 14 ); // prevents jitter when muting/unmuting (#811)
     pInfoLabel->setAlignment ( Qt::AlignTop );
     pPanInfoGrid->addWidget ( pPanLabel, 0, Qt::AlignLeft | Qt::AlignTop );
@@ -212,7 +223,7 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pMuteSoloGrid->addWidget ( pcbSolo, 0, Qt::AlignLeft );
 
     pMainGrid->addLayout ( pPanGrid );
-    pMainGrid->addWidget ( pLevelsBox, 0, Qt::AlignHCenter );
+    pMainGrid->addWidget ( pLevelsBox, 1, Qt::AlignHCenter );
     pMainGrid->addWidget ( pMuteSoloBox, 0, Qt::AlignHCenter );
     pMainGrid->addWidget ( pLabelInstBox );
 
@@ -274,38 +285,35 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     plblCountryFlag->setAccessibleName ( tr ( "Mixer channel country/region flag" ) );
 
     // Connections -------------------------------------------------------------
-    QObject::connect ( pFader, &QSlider::valueChanged, this, &CChannelFader::OnLevelValueChanged );
+    QObject::connect ( pFader, &CCustomSlider::valueChanged, this, &CChannelFader::OnLevelValueChanged );
 
-    QObject::connect ( pPan, &QDial::valueChanged, this, &CChannelFader::OnPanValueChanged );
+    QObject::connect ( pPan, &CCustomKnob::valueChanged, this, &CChannelFader::OnPanValueChanged );
 
-    QObject::connect ( pcbMute, &QCheckBox::stateChanged, this, &CChannelFader::OnMuteStateChanged );
+    QObject::connect ( pPan, &CCustomKnob::sliderPressed, this, [this] { bPanIsDragging = true; } );
 
-    QObject::connect ( pcbSolo, &QCheckBox::stateChanged, this, &CChannelFader::soloStateChanged );
+    QObject::connect ( pPan, &CCustomKnob::sliderReleased, this, [this] { bPanIsDragging = false; } );
 
-    QObject::connect ( pcbGroup, &QCheckBox::stateChanged, this, &CChannelFader::OnGroupStateChanged );
+    QObject::connect ( pcbMute, &QPushButton::toggled, this, &CChannelFader::OnMuteStateChanged );
+
+    QObject::connect ( pcbSolo, &QPushButton::toggled, this, &CChannelFader::soloStateChanged );
+
+    QObject::connect ( pcbGroup, &QPushButton::toggled, this, &CChannelFader::OnGroupStateChanged );
 }
 
 void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
     eDesign = eNewDesign;
+    plbrChannelLevel->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
 
     switch ( eNewDesign )
     {
+    case GD_STANDARD:
     case GD_ORIGINAL:
-        pFader->setStyleSheet ( "QSlider { width:         45px;"
-                                "          border-image:  url(:/png/fader/res/faderbackground.png) repeat;"
-                                "          border-top:    10px transparent;"
-                                "          border-bottom: 10px transparent;"
-                                "          border-left:   20px transparent;"
-                                "          border-right:  -25px transparent; }"
-                                "QSlider::groove { image:          url(:/png/fader/res/transparent1x1.png);"
-                                "                  padding-left:   -34px;"
-                                "                  padding-top:    -10px;"
-                                "                  padding-bottom: -15px; }"
-                                "QSlider::handle { image: url(:/png/fader/res/faderhandle.png); }" );
-
+        pFader->setStyleSheet ( "" );  // Custom slider handles its own rendering
+        pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
         pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
+        pLabelInstBox->setMaximumWidth ( QWIDGETSIZE_MAX );
         pPan->setFixedSize ( 50, 50 );
         pPanLabel->setText ( tr ( "PAN" ) );
         pcbMute->setText ( tr ( "MUTE" ) );
@@ -317,9 +325,11 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
         pLabelInstBox->setMinimumHeight ( 130 );                      // maximum height of the instrument+flag+label
-        pPan->setFixedSize ( 28, 28 );
+        pLabelInstBox->setMaximumWidth ( 70 );
+        pPan->setFixedSize ( 34, 34 );
         pFader->setTickPosition ( QSlider::NoTicks );
         pFader->setStyleSheet ( "" );
+        pFader->SetCompactMode ( true );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "M" ) );
         pcbSolo->setText ( tr ( "S" ) );
@@ -331,8 +341,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         // reset style sheet and set original parameters
         pFader->setTickPosition ( QSlider::TicksBothSides );
         pFader->setStyleSheet ( "" );
+        pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
         pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
+        pLabelInstBox->setMaximumWidth ( QWIDGETSIZE_MAX );
         pPan->setFixedSize ( 50, 50 );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "Mute" ) );
@@ -347,44 +359,33 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 
     // the instrument picture might need scaling after a style change
     SetChannelInfos ( cReceivedChanInfo );
+
+    // Defer a second pass to let layouts settle before sizing the buttons.
+    QTimer::singleShot ( 0, pFrame, [this] { UpdateGroupIDDependencies(); } );
 }
 
 void CChannelFader::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {
     eMeterStyle = eNewMeterStyle;
 
-    switch ( eNewMeterStyle )
+    // Mixer meters are bar-only: only MT_BAR_NARROW maps to narrow, everything else maps to wide.
+    if ( eNewMeterStyle == MT_BAR_NARROW )
     {
-    case MT_BAR_NARROW:
+        const int iControlHeight = 85;
         plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_NARROW );
-        // Fader height controls the distribution of the LEDs, if the value is too small the fader might not be movable
-        pFader->setMinimumHeight ( 85 );
-        break;
-
-    case MT_BAR_WIDE:
+        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
+        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
+        plbrChannelLevel->setMinimumHeight ( iControlHeight );
+        pFader->setMinimumHeight ( iControlHeight );
+    }
+    else
+    {
+        const int iControlHeight = 120;
         plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        // Fader height controls the distribution of the LEDs, if the value is too small the fader might not be movable
-        pFader->setMinimumHeight ( 120 );
-        break;
-
-    case MT_LED_ROUND_SMALL:
-        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_SMALL );
-        // Fader height controls the distribution of the LEDs, if the value is too small the fader might not be movable
-        pFader->setMinimumHeight ( 85 );
-        break;
-
-    case MT_LED_ROUND_BIG:
-        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_BIG );
-        // Fader height controls the distribution of the LEDs, if the value is too small the fader might not be movable
-        pFader->setMinimumHeight ( 162 );
-        break;
-
-    default:
-        // reset style sheet and set original parameters
-        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_LED_STRIPE );
-        // Fader height controls the distribution of the LEDs, if the value is too small the fader might not be movable
-        pFader->setMinimumHeight ( 120 );
-        break;
+        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
+        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
+        plbrChannelLevel->setMinimumHeight ( iControlHeight );
+        pFader->setMinimumHeight ( iControlHeight );
     }
 }
 
@@ -394,8 +395,19 @@ bool CChannelFader::GetDisplayChannelLevel() { return !plbrChannelLevel->isHidde
 
 void CChannelFader::SetDisplayPans ( const bool eNDP )
 {
-    pPanLabel->setHidden ( !eNDP );
-    pPan->setHidden ( !eNDP );
+    if ( eNDP )
+    {
+        pPanLabel->setVisible ( true );
+        pPan->setVisible ( true );
+        pPan->setEnabled ( true );
+        pPanLabel->setText ( ( eDesign == GD_ORIGINAL ) ? tr ( "PAN" ) : tr ( "Pan" ) );
+    }
+    else
+    {
+        pPanLabel->setVisible ( false );
+        pPan->setVisible ( false );
+        pPan->setEnabled ( false );
+    }
 }
 
 void CChannelFader::SetupFaderTag ( const ESkillLevel eSkillLevel )
@@ -568,6 +580,9 @@ void CChannelFader::SetPanValue ( const int iPan )
     // first make a range check
     if ( ( iPan >= 0 ) && ( iPan <= AUD_MIX_PAN_MAX ) )
     {
+        if ( bPanIsDragging )
+            return;
+
         // we set the new fader level in the GUI (slider control) which then
         // emits to signal to tell the server about the change (implicitly)
         pPan->setValue ( iPan );
@@ -605,7 +620,7 @@ void CChannelFader::SendFaderLevelToServer ( const double dLevel, const bool bIs
     // if mute flag is set or other channel is on solo, do not apply the new
     // fader value to the server (exception: we are on solo, in that case we
     // ignore the "other channel is on solo" flag)
-    const bool bSuppressServerUpdate = !( ( pcbMute->checkState() == Qt::Unchecked ) && ( !bOtherChannelIsSolo || IsSolo() ) );
+    const bool bSuppressServerUpdate = !( ( !pcbMute->isChecked() ) && ( !bOtherChannelIsSolo || IsSolo() ) );
 
     // emit signal for new fader gain value
     emit gainValueChanged ( MathUtils::CalcFaderGain ( static_cast<float> ( dLevel ) ),
@@ -644,10 +659,10 @@ void CChannelFader::OnPanValueChanged ( int value )
     SendPanValueToServer ( value );
 }
 
-void CChannelFader::OnMuteStateChanged ( int value )
+void CChannelFader::OnMuteStateChanged ( bool bChecked )
 {
     // call muting function
-    SetMute ( static_cast<Qt::CheckState> ( value ) == Qt::Checked );
+    SetMute ( bChecked );
 }
 
 void CChannelFader::SetGroupID ( const int iNGroupID )
@@ -662,11 +677,11 @@ void CChannelFader::UpdateGroupIDDependencies()
     pcbGroup->blockSignals ( true ); // make sure no signals are fired
     if ( iGroupID == INVALID_INDEX )
     {
-        pcbGroup->setCheckState ( Qt::Unchecked );
+        pcbGroup->setChecked ( false );
     }
     else
     {
-        pcbGroup->setCheckState ( Qt::Checked );
+        pcbGroup->setChecked ( true );
     }
     pcbGroup->blockSignals ( false );
 
@@ -679,6 +694,26 @@ void CChannelFader::UpdateGroupIDDependencies()
     {
         pcbGroup->setText ( strGroupBaseText );
     }
+
+    // Match GRP/MUTE/SOLO controls to the info-box width.
+    const int iInfoBoxWidth = qMax ( pLabelInstBox->width(), pLabelInstBox->sizeHint().width() );
+
+    int iButtonWidth = iInfoBoxWidth;
+    if ( eDesign != GD_SLIMFADER )
+    {
+        // Ensure translated text still fits in non-compact mode.
+        iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
+        iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
+        iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
+    }
+
+    pcbGroup->setFixedWidth ( iButtonWidth );
+    pcbMute->setFixedWidth ( iButtonWidth );
+    pcbSolo->setFixedWidth ( iButtonWidth );
+    pcbGroup->setFixedHeight ( 25 );
+    pcbMute->setFixedHeight ( 25 );
+    pcbSolo->setFixedHeight ( 25 );
+    pMuteSoloBox->setFixedWidth ( iButtonWidth );
 
     // if the group is disable for this fader, reset the previous fader level
     if ( iGroupID == INVALID_INDEX )
@@ -699,7 +734,7 @@ void CChannelFader::UpdateGroupIDDependencies()
     SetupFaderTag ( cReceivedChanInfo.eSkillLevel );
 }
 
-void CChannelFader::OnGroupStateChanged ( int )
+void CChannelFader::OnGroupStateChanged ( bool )
 {
     // we want a popup menu shown if the user presses the group checkbox but
     // we want to make sure that the checkbox state represents the current group
@@ -961,6 +996,9 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
     pcbGroup->setAccessibleName ( "Group " + strAliasAccessible + ", " + strInstrumentAccessible );
     dynamic_cast<QWidget*> ( plblLabel->parent() )
         ->setAccessibleName ( strAliasAccessible + ", " + strInstrumentAccessible + ", " + strLocationAccessible );
+
+    // Name/instrument/flag changes can alter info-box width; keep control width in sync.
+    UpdateGroupIDDependencies();
 }
 
 /******************************************************************************\
@@ -1075,6 +1113,8 @@ void CAudioMixerBoard::SetServerName ( const QString& strNewServerName )
 
 void CAudioMixerBoard::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
+    const bool bDarkTheme = ( pSettings == nullptr ) || IsDarkUITheme ( pSettings->eUITheme );
+
     // move the channels tighter together in slim fader mode
     if ( eNewDesign == GD_SLIMFADER )
     {
@@ -1088,6 +1128,7 @@ void CAudioMixerBoard::SetGUIDesign ( const EGUIDesign eNewDesign )
     // apply GUI design to child GUI controls
     for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
     {
+        vecpChanFader[i]->SetDarkTheme ( bDarkTheme );
         vecpChanFader[i]->SetGUIDesign ( eNewDesign );
     }
 }
@@ -1107,7 +1148,7 @@ void CAudioMixerBoard::SetDisplayPans ( const bool eNDP )
 
     for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
     {
-        vecpChanFader[i]->SetDisplayPans ( eNDP && bIsPanSupported );
+        vecpChanFader[i]->SetDisplayPans ( eNDP );
     }
 }
 

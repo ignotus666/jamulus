@@ -68,6 +68,7 @@ protected:
     virtual void closeEvent ( QCloseEvent* Event );
 
     void UpdateGUIDependencies();
+    void ApplyTheme();
     void UpdateSystemTrayIcon ( const bool bIsActive );
     void ShowWindowInForeground()
     {
@@ -104,6 +105,7 @@ public slots:
     void OnWelcomeMessageChanged() { pServer->SetWelcomeMessage ( tedWelcomeMessage->toPlainText() ); }
 
     void OnLanguageChanged ( QString strLanguage ) { pSettings->strLanguage = strLanguage; }
+    void OnUIThemeActivated ( int iThemeIdx );
     void OnCustomDirectoryEditingFinished();
     void OnRecordingDirClicked();
     void OnClearRecordingDirClicked();

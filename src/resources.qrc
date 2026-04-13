@@ -20,12 +20,7 @@
         <file>res/CLEDRedSmall.png</file>
         <file>res/CLEDYellowSmall.png</file>
     </qresource>
-    <qresource prefix="/png/fader">
-        <file>res/faderbackground.png</file>
-        <file>res/faderhandle.png</file>
-        <file>res/faderhandlesmall.png</file>
-        <file>res/ledbuttonnotpressed.png</file>
-        <file>res/ledbuttonpressed.png</file>
+    <qresource prefix="/png/mixer">
         <file>res/mixerboardbackground.png</file>
         <file>res/transparent1x1.png</file>
         <file>res/mutediconorange.png</file>

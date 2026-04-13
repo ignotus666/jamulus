@@ -28,11 +28,11 @@
 #include <QScrollArea>
 #include <QGroupBox>
 #include <QLabel>
-#include <QCheckBox>
+#include <QPushButton>
 #include <QLayout>
 #include <QString>
-#include <QSlider>
-#include <QDial>
+#include "customslider.h"
+#include "customknob.h"
 #include <QSizePolicy>
 #include <QHostAddress>
 #include <QListWidget>
@@ -69,6 +69,12 @@ public:
     bool    GetDisplayChannelLevel();
     void    SetDisplayPans ( const bool eNDP );
     QFrame* GetMainWidget() { return pFrame; }
+    void SetDarkTheme ( const bool bEnable )
+    {
+        pFader->SetDarkTheme ( bEnable );
+        pPan->SetDarkTheme ( bEnable );
+        plbrChannelLevel->SetDarkTheme ( bEnable );
+    }
 
     void SetPanValue ( const int iPan );
     void SetFaderIsSolo ( const bool bIsSolo );
@@ -99,19 +105,19 @@ protected:
 
     QFrame* pFrame;
 
-    QWidget*     pLevelsBox;
-    QWidget*     pMuteSoloBox;
-    CLevelMeter* plbrChannelLevel;
-    QSlider*     pFader;
-    QDial*       pPan;
+    QWidget*        pLevelsBox;
+    QWidget*        pMuteSoloBox;
+    CLevelMeter*    plbrChannelLevel;
+    CCustomSlider*  pFader;
+    CCustomKnob*    pPan;
     QLabel*      pPanLabel;
     QLabel*      pInfoLabel;
     QHBoxLayout* pLabelGrid;
     QVBoxLayout* pLabelPictGrid;
 
-    QCheckBox* pcbMute;
-    QCheckBox* pcbSolo;
-    QCheckBox* pcbGroup;
+    QPushButton* pcbMute;
+    QPushButton* pcbSolo;
+    QPushButton* pcbGroup;
     QMenu*     pGroupPopupMenu;
 
     QGroupBox* pLabelInstBox;
@@ -133,6 +139,7 @@ protected:
     EMeterStyle eMeterStyle;
     QPixmap     BitmapMutedIcon;
     bool        bMIDICtrlUsed;
+    bool        bPanIsDragging;
 
 public slots:
     void OnLevelValueChanged ( int value )
@@ -143,8 +150,8 @@ public slots:
     }
 
     void OnPanValueChanged ( int value );
-    void OnMuteStateChanged ( int value );
-    void OnGroupStateChanged ( int );
+    void OnMuteStateChanged ( bool bChecked );
+    void OnGroupStateChanged ( bool );
 
     void OnGroupMenuGrp ( int iGrp ) { SetGroupID ( iGrp ); }
 
@@ -152,7 +159,7 @@ signals:
     void gainValueChanged ( float value, bool bIsMyOwnFader, bool bIsGroupUpdate, bool bSuppressServerUpdate, double dLevelRatio );
 
     void panValueChanged ( float value );
-    void soloStateChanged ( int value );
+    void soloStateChanged ( bool bChecked );
 };
 
 template<unsigned int slotId>
