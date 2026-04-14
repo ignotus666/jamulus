@@ -9,9 +9,9 @@ const float CAudioEqualizer::afBandFrequencies[NUM_BANDS] = { 63.0f, 89.0f, 125.
                                                              1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
 
 CAudioEqualizer::CAudioEqualizer() :
-    bBypass ( false ),
-    fWetMixCurrent ( 1.0f ),
-    fWetMixTarget ( 1.0f ),
+    bBypass ( true ),
+    fWetMixCurrent ( 0.0f ),
+    fWetMixTarget ( 0.0f ),
     iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ )
 {
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )

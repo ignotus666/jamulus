@@ -31,34 +31,6 @@
 
 namespace
 {
-struct SEQBuiltInPreset
-{
-    const char* strName;
-    int         aiGains[CAudioEqualizer::NUM_BANDS];
-};
-
-const SEQBuiltInPreset acBuiltInPresets[] = {
-    { "Flat", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
-    { "Vocal Clarity", { -2, -2, -1, -1, 1, 1, 3, 3, 4, 4, 3, 3, 1, 1, -1, -1 } },
-    { "Bright", { -2, -2, -1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4 } },
-    { "Warm", { 2, 2, 2, 2, 1, 1, 0, 0, -1, -1, -1, -1, -2, -2, -2, -2 } },
-    { "Low Cut", { -6, -6, -5, -5, -3, -3, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0 } }
-};
-
-constexpr int NUM_BUILTIN_EQ_PRESETS = static_cast<int> ( sizeof ( acBuiltInPresets ) / sizeof ( acBuiltInPresets[0] ) );
-
-bool IsBuiltInPresetName ( const QString& strName )
-{
-    for ( int iBuiltIn = 0; iBuiltIn < NUM_BUILTIN_EQ_PRESETS; ++iBuiltIn )
-    {
-        if ( strName.compare ( QString::fromUtf8 ( acBuiltInPresets[iBuiltIn].strName ), Qt::CaseInsensitive ) == 0 )
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
 } // namespace
 
 CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
@@ -69,6 +41,11 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     setWindowTitle ( tr ( "Effects" ) );
 
     pTabs = new QTabWidget ( this );
+
+    pCbxEffectsPresets = new QComboBox ( this );
+    pButEffectsSavePreset = new QPushButton ( tr ( "Save" ), this );
+    pButEffectsSaveAsPreset = new QPushButton ( tr ( "Save As..." ), this );
+    pButEffectsDeletePreset = new QPushButton ( tr ( "Delete" ), this );
 
     QWidget*     pReverbTab    = new QWidget ( pTabs );
     QVBoxLayout* pReverbLayout = new QVBoxLayout ( pReverbTab );
@@ -115,6 +92,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pChbReverbBypass = new QCheckBox ( tr ( "Bypass Reverb" ), pReverbTab );
     pChbReverbEarly = new QCheckBox ( tr ( "Early Reflections" ), pReverbTab );
     pChbReverbFreeze = new QCheckBox ( tr ( "Freeze" ), pReverbTab );
+    pButReverbReset = new QPushButton ( tr ( "Reset Reverb" ), pReverbTab );
 
     pReverbLayout->addWidget ( pChbReverbBypass );
     pReverbLayout->addWidget ( pLblReverb );
@@ -125,6 +103,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pReverbLayout->addWidget ( pLblStereoHint );
     pReverbLayout->addWidget ( pRbtReverbSelL );
     pReverbLayout->addWidget ( pRbtReverbSelR );
+    pReverbLayout->addWidget ( pButReverbReset, 0, Qt::AlignRight );
     pReverbLayout->addStretch();
 
     pTabs->addTab ( pReverbTab, tr ( "Reverb" ) );
@@ -135,6 +114,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pChbFilterBypass = new QCheckBox ( tr ( "Bypass Filters" ), pFilterTab );
     pChbHighPass = new QCheckBox ( tr ( "High-Pass" ), pFilterTab );
     pChbLowPass = new QCheckBox ( tr ( "Low-Pass" ), pFilterTab );
+    pButFilterReset = new QPushButton ( tr ( "Reset Filters" ), pFilterTab );
 
     QGridLayout* pFilterGrid = new QGridLayout();
     pFilterGrid->setColumnStretch ( 1, 1 );
@@ -165,6 +145,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pFilterLayout->addWidget ( pChbHighPass );
     pFilterLayout->addWidget ( pChbLowPass );
     pFilterLayout->addLayout ( pFilterGrid );
+    pFilterLayout->addWidget ( pButFilterReset, 0, Qt::AlignRight );
     pFilterLayout->addStretch();
 
     pTabs->addTab ( pFilterTab, tr ( "Filters" ) );
@@ -174,6 +155,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     pChbCompressorBypass = new QCheckBox ( tr ( "Bypass Compressor" ), pCompressorTab );
     pChbCompressorLimiter = new QCheckBox ( tr ( "Limiter" ), pCompressorTab );
+    pButCompressorReset = new QPushButton ( tr ( "Reset Compressor" ), pCompressorTab );
 
     QGridLayout* pCompressorGrid = new QGridLayout();
     pCompressorGrid->setColumnStretch ( 1, 1 );
@@ -206,6 +188,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pCompressorLayout->addWidget ( pChbCompressorBypass );
     pCompressorLayout->addLayout ( pCompressorGrid );
     pCompressorLayout->addWidget ( pChbCompressorLimiter );
+    pCompressorLayout->addWidget ( pButCompressorReset, 0, Qt::AlignRight );
     pCompressorLayout->addStretch();
 
     pTabs->addTab ( pCompressorTab, tr ( "Compressor" ) );
@@ -294,7 +277,16 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     setMinimumHeight ( 380 );
 
+    QHBoxLayout* pEffectsPresetRow = new QHBoxLayout();
+    QLabel* pLblEffectsPreset = new QLabel ( tr ( "Effects Preset:" ), this );
+    pEffectsPresetRow->addWidget ( pLblEffectsPreset );
+    pEffectsPresetRow->addWidget ( pCbxEffectsPresets, 1 );
+    pEffectsPresetRow->addWidget ( pButEffectsSavePreset );
+    pEffectsPresetRow->addWidget ( pButEffectsSaveAsPreset );
+    pEffectsPresetRow->addWidget ( pButEffectsDeletePreset );
+
     QVBoxLayout* pMainLayout = new QVBoxLayout ( this );
+    pMainLayout->addLayout ( pEffectsPresetRow );
     pMainLayout->addWidget ( pTabs );
 
     QObject::connect ( pSldReverb, &QSlider::valueChanged, this, &CEffectsDlg::ReverbValueChanged );
@@ -330,16 +322,17 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         emit ReverbEarlyEnabledChanged ( enabled );
     } );
     QObject::connect ( pChbReverbFreeze, &QCheckBox::toggled, this, &CEffectsDlg::ReverbFreezeChanged );
+    QObject::connect ( pButReverbReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetReverbClicked );
     QObject::connect ( pChbFilterBypass, &QCheckBox::toggled, this, [this] ( bool bypassed ) {
         emit FilterBypassChanged ( bypassed );
         UpdateFilterControls();
     } );
     QObject::connect ( pChbHighPass, &QCheckBox::toggled, this, [this] ( bool enabled ) {
-        pSldHighPassCutoff->setEnabled ( enabled && !pChbFilterBypass->isChecked() );
+        pSldHighPassCutoff->setEnabled ( enabled );
         emit HighPassEnabledChanged ( enabled );
     } );
     QObject::connect ( pChbLowPass, &QCheckBox::toggled, this, [this] ( bool enabled ) {
-        pSldLowPassCutoff->setEnabled ( enabled && !pChbFilterBypass->isChecked() );
+        pSldLowPassCutoff->setEnabled ( enabled );
         emit LowPassEnabledChanged ( enabled );
     } );
     QObject::connect ( pSldHighPassCutoff, &QSlider::valueChanged, this, [this] ( int value ) {
@@ -350,6 +343,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         pLblLowPassValue->setText ( QString::number ( value ) + tr ( " Hz" ) );
         emit LowPassCutoffChanged ( value );
     } );
+    QObject::connect ( pButFilterReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetFilterClicked );
     QObject::connect ( pChbCompressorBypass, &QCheckBox::toggled, this, &CEffectsDlg::CompressorBypassChanged );
     QObject::connect ( pChbCompressorLimiter, &QCheckBox::toggled, this, &CEffectsDlg::CompressorLimiterChanged );
     QObject::connect ( pSldCompressorThreshold, &QSlider::valueChanged, this, [this] ( int value ) {
@@ -372,7 +366,15 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         pLblCompressorMakeupValue->setText ( QString::number ( value ) + tr ( " dB" ) );
         emit CompressorMakeupChanged ( value );
     } );
+    QObject::connect ( pButCompressorReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetCompressorClicked );
     QObject::connect ( pChbEQBypass, &QCheckBox::toggled, this, &CEffectsDlg::EQBypassChanged );
+    QObject::connect ( pCbxEffectsPresets,
+                       QOverload<int>::of ( &QComboBox::currentIndexChanged ),
+                       this,
+                       &CEffectsDlg::ApplyEffectsPresetFromComboIndex );
+    QObject::connect ( pButEffectsSavePreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveEffectsPresetClicked );
+    QObject::connect ( pButEffectsSaveAsPreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveAsEffectsPresetClicked );
+    QObject::connect ( pButEffectsDeletePreset, &QPushButton::clicked, this, &CEffectsDlg::OnDeleteEffectsPresetClicked );
     QObject::connect ( pCbxEQPresets,
                        QOverload<int>::of ( &QComboBox::currentIndexChanged ),
                        this,
@@ -386,6 +388,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     UpdateFilterControls();
     UpdateCompressorControls();
     UpdateEQReadouts();
+    PopulateEffectsPresetCombo();
     PopulateEQPresetCombo();
     UpdateEQPresetSelection();
 }
@@ -400,6 +403,7 @@ void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
+    PopulateEffectsPresetCombo();
     UpdateReverbControls();
     UpdateFilterControls();
     UpdateCompressorControls();
@@ -431,10 +435,11 @@ void CEffectsDlg::UpdateFilterControls()
     pSldLowPassCutoff->blockSignals ( false );
 
     const bool bBypass = pClient->GetFilterBypass();
-    pChbHighPass->setEnabled ( !bBypass );
-    pChbLowPass->setEnabled ( !bBypass );
-    pSldHighPassCutoff->setEnabled ( !bBypass && pClient->GetHighPassEnabled() );
-    pSldLowPassCutoff->setEnabled ( !bBypass && pClient->GetLowPassEnabled() );
+    (void) bBypass;
+    pChbHighPass->setEnabled ( true );
+    pChbLowPass->setEnabled ( true );
+    pSldHighPassCutoff->setEnabled ( pClient->GetHighPassEnabled() );
+    pSldLowPassCutoff->setEnabled ( pClient->GetLowPassEnabled() );
 
     pLblHighPassValue->setText ( QString::number ( pSldHighPassCutoff->value() ) + tr ( " Hz" ) );
     pLblLowPassValue->setText ( QString::number ( pSldLowPassCutoff->value() ) + tr ( " Hz" ) );
@@ -471,12 +476,13 @@ void CEffectsDlg::UpdateCompressorControls()
     pSldCompressorMakeup->blockSignals ( false );
 
     const bool bBypass = pClient->GetCompressorBypass();
-    pSldCompressorThreshold->setEnabled ( !bBypass );
-    pSldCompressorRatio->setEnabled ( !bBypass );
-    pSldCompressorAttack->setEnabled ( !bBypass );
-    pSldCompressorRelease->setEnabled ( !bBypass );
-    pSldCompressorMakeup->setEnabled ( !bBypass );
-    pChbCompressorLimiter->setEnabled ( !bBypass );
+    (void) bBypass;
+    pSldCompressorThreshold->setEnabled ( true );
+    pSldCompressorRatio->setEnabled ( true );
+    pSldCompressorAttack->setEnabled ( true );
+    pSldCompressorRelease->setEnabled ( true );
+    pSldCompressorMakeup->setEnabled ( true );
+    pChbCompressorLimiter->setEnabled ( true );
 
     pLblCompressorThresholdValue->setText ( QString::number ( pSldCompressorThreshold->value() ) + tr ( " dB" ) );
     pLblCompressorRatioValue->setText ( QString::number ( pSldCompressorRatio->value() ) + tr ( ":1" ) );
@@ -529,17 +535,18 @@ void CEffectsDlg::UpdateReverbControls()
     pChbReverbFreeze->blockSignals ( false );
 
     const bool bBypass = pClient->GetReverbBypass();
-    pSldReverb->setEnabled ( !bBypass );
-    pSldReverbPreDelay->setEnabled ( !bBypass );
-    pSldReverbRoom->setEnabled ( !bBypass );
-    pSldReverbDamping->setEnabled ( !bBypass );
-    pSldReverbWet->setEnabled ( !bBypass );
-    pSldReverbEarly->setEnabled ( !bBypass && pClient->GetReverbEarlyEnabled() );
-    pSldReverbWidth->setEnabled ( !bBypass );
-    pChbReverbEarly->setEnabled ( !bBypass );
-    pChbReverbFreeze->setEnabled ( !bBypass );
-    pRbtReverbSelL->setEnabled ( !bBypass );
-    pRbtReverbSelR->setEnabled ( !bBypass );
+    (void) bBypass;
+    pSldReverb->setEnabled ( true );
+    pSldReverbPreDelay->setEnabled ( true );
+    pSldReverbRoom->setEnabled ( true );
+    pSldReverbDamping->setEnabled ( true );
+    pSldReverbWet->setEnabled ( true );
+    pSldReverbEarly->setEnabled ( pClient->GetReverbEarlyEnabled() );
+    pSldReverbWidth->setEnabled ( true );
+    pChbReverbEarly->setEnabled ( true );
+    pChbReverbFreeze->setEnabled ( true );
+    pRbtReverbSelL->setEnabled ( true );
+    pRbtReverbSelR->setEnabled ( true );
 
     pLblReverbPreDelayValue->setText ( QString::number ( pSldReverbPreDelay->value() ) + tr ( " ms" ) );
     pLblReverbRoomValue->setText ( QString::number ( pSldReverbRoom->value() ) + tr ( " %" ) );
@@ -591,42 +598,324 @@ void CEffectsDlg::UpdateEQControls()
     UpdateEQReadouts();
 }
 
+void CEffectsDlg::PopulateEffectsPresetCombo()
+{
+    const bool bBlocked = pCbxEffectsPresets->blockSignals ( true );
+    pCbxEffectsPresets->clear();
+
+    for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
+    {
+        const QString strName = pSettings->vstrEffectsPresetNames[iPreset];
+        if ( strName.isEmpty() )
+        {
+            continue;
+        }
+
+        pCbxEffectsPresets->addItem ( strName );
+        pCbxEffectsPresets->setItemData ( pCbxEffectsPresets->count() - 1, iPreset, Qt::UserRole );
+    }
+
+    pCbxEffectsPresets->blockSignals ( bBlocked );
+}
+
+void CEffectsDlg::ApplyEffectsPresetFromComboIndex ( const int iPresetIndex )
+{
+    if ( iPresetIndex < 0 )
+    {
+        return;
+    }
+
+    const int iPresetSlot = pCbxEffectsPresets->itemData ( iPresetIndex, Qt::UserRole ).toInt();
+    ApplyEffectsPresetFromSlot ( iPresetSlot );
+}
+
+void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
+{
+    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EFFECT_PRESETS )
+    {
+        return;
+    }
+
+    pClient->SetReverbLevel ( pSettings->iEffectsPresetReverbLevel[iPresetSlot] );
+    pClient->SetReverbOnLeftChan ( pSettings->bEffectsPresetReverbOnLeftChan[iPresetSlot] );
+    pClient->SetReverbPreDelayMs ( pSettings->iEffectsPresetReverbPreDelayMs[iPresetSlot] );
+    pClient->SetReverbRoomSize ( pSettings->iEffectsPresetReverbRoomSize[iPresetSlot] );
+    pClient->SetReverbDamping ( pSettings->iEffectsPresetReverbDamping[iPresetSlot] );
+    pClient->SetReverbWetMix ( pSettings->iEffectsPresetReverbWetMix[iPresetSlot] );
+    pClient->SetReverbEarlyLevel ( pSettings->iEffectsPresetReverbEarlyLevel[iPresetSlot] );
+    pClient->SetReverbWidth ( pSettings->iEffectsPresetReverbWidth[iPresetSlot] );
+    pClient->SetReverbEarlyEnabled ( pSettings->bEffectsPresetReverbEarlyEnabled[iPresetSlot] );
+    pClient->SetReverbFreeze ( pSettings->bEffectsPresetReverbFreeze[iPresetSlot] );
+    pClient->SetReverbBypass ( pSettings->bEffectsPresetReverbBypass[iPresetSlot] );
+
+    pClient->SetCompressorBypass ( pSettings->bEffectsPresetCompressorBypass[iPresetSlot] );
+    pClient->SetCompressorThresholdDb ( static_cast<float> ( pSettings->iEffectsPresetCompressorThresholdDb[iPresetSlot] ) );
+    pClient->SetCompressorRatio ( static_cast<float> ( pSettings->iEffectsPresetCompressorRatio[iPresetSlot] ) );
+    pClient->SetCompressorAttackMs ( static_cast<float> ( pSettings->iEffectsPresetCompressorAttackMs[iPresetSlot] ) );
+    pClient->SetCompressorReleaseMs ( static_cast<float> ( pSettings->iEffectsPresetCompressorReleaseMs[iPresetSlot] ) );
+    pClient->SetCompressorMakeupDb ( static_cast<float> ( pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot] ) );
+    pClient->SetCompressorLimiterEnabled ( pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] );
+
+    pClient->SetFilterBypass ( pSettings->bEffectsPresetFilterBypass[iPresetSlot] );
+    pClient->SetHighPassEnabled ( pSettings->bEffectsPresetHighPassEnabled[iPresetSlot] );
+    pClient->SetLowPassEnabled ( pSettings->bEffectsPresetLowPassEnabled[iPresetSlot] );
+    pClient->SetHighPassCutoffHz ( pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] );
+    pClient->SetLowPassCutoffHz ( pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot] );
+
+    pClient->SetEQBypass ( pSettings->bEffectsPresetEQBypass[iPresetSlot] );
+    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    {
+        pClient->SetEQBandGainDb ( iBand, pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] );
+    }
+
+    UpdateReverbControls();
+    UpdateFilterControls();
+    UpdateCompressorControls();
+    UpdateEQControls();
+    UpdateEQPresetSelection();
+}
+
+int CEffectsDlg::FindEffectsPresetSlotByName ( const QString& strName ) const
+{
+    for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
+    {
+        if ( pSettings->vstrEffectsPresetNames[iPreset].compare ( strName, Qt::CaseInsensitive ) == 0 )
+        {
+            return iPreset;
+        }
+    }
+
+    return INVALID_INDEX;
+}
+
+int CEffectsDlg::FindFreeEffectsPresetSlot() const
+{
+    for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
+    {
+        if ( pSettings->vstrEffectsPresetNames[iPreset].isEmpty() )
+        {
+            return iPreset;
+        }
+    }
+
+    return INVALID_INDEX;
+}
+
+void CEffectsDlg::OnSaveEffectsPresetClicked()
+{
+    const int iComboIndex = pCbxEffectsPresets->currentIndex();
+    if ( iComboIndex < 0 )
+    {
+        return;
+    }
+
+    const int iPresetSlot = pCbxEffectsPresets->itemData ( iComboIndex, Qt::UserRole ).toInt();
+    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EFFECT_PRESETS )
+    {
+        return;
+    }
+
+    const QString strName = pCbxEffectsPresets->itemText ( iComboIndex );
+    pSettings->vstrEffectsPresetNames[iPresetSlot] = strName;
+
+    pSettings->bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
+    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    {
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = pClient->GetEQBandGainDb ( iBand );
+    }
+
+    pSettings->iEffectsPresetReverbLevel[iPresetSlot] = pClient->GetReverbLevel();
+    pSettings->bEffectsPresetReverbOnLeftChan[iPresetSlot] = pClient->IsReverbOnLeftChan();
+    pSettings->iEffectsPresetReverbPreDelayMs[iPresetSlot] = pClient->GetReverbPreDelayMs();
+    pSettings->iEffectsPresetReverbRoomSize[iPresetSlot] = pClient->GetReverbRoomSize();
+    pSettings->iEffectsPresetReverbDamping[iPresetSlot] = pClient->GetReverbDamping();
+    pSettings->iEffectsPresetReverbWetMix[iPresetSlot] = pClient->GetReverbWetMix();
+    pSettings->iEffectsPresetReverbEarlyLevel[iPresetSlot] = pClient->GetReverbEarlyLevel();
+    pSettings->iEffectsPresetReverbWidth[iPresetSlot] = pClient->GetReverbWidth();
+    pSettings->bEffectsPresetReverbEarlyEnabled[iPresetSlot] = pClient->GetReverbEarlyEnabled();
+    pSettings->bEffectsPresetReverbFreeze[iPresetSlot] = pClient->GetReverbFreeze();
+    pSettings->bEffectsPresetReverbBypass[iPresetSlot] = pClient->GetReverbBypass();
+
+    pSettings->bEffectsPresetCompressorBypass[iPresetSlot] = pClient->GetCompressorBypass();
+    pSettings->iEffectsPresetCompressorThresholdDb[iPresetSlot] = static_cast<int> ( pClient->GetCompressorThresholdDb() );
+    pSettings->iEffectsPresetCompressorRatio[iPresetSlot] = static_cast<int> ( pClient->GetCompressorRatio() );
+    pSettings->iEffectsPresetCompressorAttackMs[iPresetSlot] = static_cast<int> ( pClient->GetCompressorAttackMs() );
+    pSettings->iEffectsPresetCompressorReleaseMs[iPresetSlot] = static_cast<int> ( pClient->GetCompressorReleaseMs() );
+    pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot] = static_cast<int> ( pClient->GetCompressorMakeupDb() );
+    pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = pClient->GetCompressorLimiterEnabled();
+
+    pSettings->bEffectsPresetFilterBypass[iPresetSlot] = pClient->GetFilterBypass();
+    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot] = pClient->GetHighPassEnabled();
+    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot] = pClient->GetLowPassEnabled();
+    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
+    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot] = pClient->GetLowPassCutoffHz();
+
+    PopulateEffectsPresetCombo();
+    const int iUpdatedIndex = pCbxEffectsPresets->findText ( strName );
+    if ( iUpdatedIndex >= 0 )
+    {
+        pCbxEffectsPresets->setCurrentIndex ( iUpdatedIndex );
+    }
+}
+
+void CEffectsDlg::OnResetReverbClicked()
+{
+    pClient->SetReverbLevel ( 0 );
+    pClient->SetReverbOnLeftChan ( false );
+    pClient->SetReverbPreDelayMs ( 0 );
+    pClient->SetReverbRoomSize ( 60 );
+    pClient->SetReverbDamping ( 30 );
+    pClient->SetReverbWetMix ( 25 );
+    pClient->SetReverbEarlyLevel ( 30 );
+    pClient->SetReverbWidth ( 100 );
+    pClient->SetReverbEarlyEnabled ( true );
+    pClient->SetReverbFreeze ( false );
+    pClient->SetReverbBypass ( true );
+
+    UpdateReverbControls();
+}
+
+void CEffectsDlg::OnResetFilterClicked()
+{
+    pClient->SetFilterBypass ( true );
+    pClient->SetHighPassEnabled ( false );
+    pClient->SetLowPassEnabled ( false );
+    pClient->SetHighPassCutoffHz ( 80 );
+    pClient->SetLowPassCutoffHz ( 12000 );
+
+    UpdateFilterControls();
+}
+
+void CEffectsDlg::OnResetCompressorClicked()
+{
+    pClient->SetCompressorBypass ( true );
+    pClient->SetCompressorThresholdDb ( -12.0f );
+    pClient->SetCompressorRatio ( 3.0f );
+    pClient->SetCompressorAttackMs ( 5.0f );
+    pClient->SetCompressorReleaseMs ( 120.0f );
+    pClient->SetCompressorMakeupDb ( 3.0f );
+    pClient->SetCompressorLimiterEnabled ( true );
+
+    UpdateCompressorControls();
+}
+
+void CEffectsDlg::OnSaveAsEffectsPresetClicked()
+{
+    bool    bOk     = false;
+    QString strName = QInputDialog::getText ( this, tr ( "Save Effects Preset" ), tr ( "Preset name:" ), QLineEdit::Normal, "", &bOk ).trimmed();
+
+    if ( !bOk || strName.isEmpty() )
+    {
+        return;
+    }
+
+    int iPresetSlot = FindEffectsPresetSlotByName ( strName );
+    if ( iPresetSlot == INVALID_INDEX )
+    {
+        iPresetSlot = FindFreeEffectsPresetSlot();
+    }
+
+    if ( iPresetSlot == INVALID_INDEX )
+    {
+        QMessageBox::warning ( this,
+                               tr ( "Preset Limit Reached" ),
+                               tr ( "No free preset slot is available. Delete an existing preset first." ) );
+        return;
+    }
+
+    pSettings->vstrEffectsPresetNames[iPresetSlot] = strName;
+    pSettings->bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
+    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    {
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = pClient->GetEQBandGainDb ( iBand );
+    }
+
+    pSettings->iEffectsPresetReverbLevel[iPresetSlot] = pClient->GetReverbLevel();
+    pSettings->bEffectsPresetReverbOnLeftChan[iPresetSlot] = pClient->IsReverbOnLeftChan();
+    pSettings->iEffectsPresetReverbPreDelayMs[iPresetSlot] = pClient->GetReverbPreDelayMs();
+    pSettings->iEffectsPresetReverbRoomSize[iPresetSlot] = pClient->GetReverbRoomSize();
+    pSettings->iEffectsPresetReverbDamping[iPresetSlot] = pClient->GetReverbDamping();
+    pSettings->iEffectsPresetReverbWetMix[iPresetSlot] = pClient->GetReverbWetMix();
+    pSettings->iEffectsPresetReverbEarlyLevel[iPresetSlot] = pClient->GetReverbEarlyLevel();
+    pSettings->iEffectsPresetReverbWidth[iPresetSlot] = pClient->GetReverbWidth();
+    pSettings->bEffectsPresetReverbEarlyEnabled[iPresetSlot] = pClient->GetReverbEarlyEnabled();
+    pSettings->bEffectsPresetReverbFreeze[iPresetSlot] = pClient->GetReverbFreeze();
+    pSettings->bEffectsPresetReverbBypass[iPresetSlot] = pClient->GetReverbBypass();
+
+    pSettings->bEffectsPresetCompressorBypass[iPresetSlot] = pClient->GetCompressorBypass();
+    pSettings->iEffectsPresetCompressorThresholdDb[iPresetSlot] = static_cast<int> ( pClient->GetCompressorThresholdDb() );
+    pSettings->iEffectsPresetCompressorRatio[iPresetSlot] = static_cast<int> ( pClient->GetCompressorRatio() );
+    pSettings->iEffectsPresetCompressorAttackMs[iPresetSlot] = static_cast<int> ( pClient->GetCompressorAttackMs() );
+    pSettings->iEffectsPresetCompressorReleaseMs[iPresetSlot] = static_cast<int> ( pClient->GetCompressorReleaseMs() );
+    pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot] = static_cast<int> ( pClient->GetCompressorMakeupDb() );
+    pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = pClient->GetCompressorLimiterEnabled();
+
+    pSettings->bEffectsPresetFilterBypass[iPresetSlot] = pClient->GetFilterBypass();
+    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot] = pClient->GetHighPassEnabled();
+    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot] = pClient->GetLowPassEnabled();
+    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
+    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot] = pClient->GetLowPassCutoffHz();
+
+    PopulateEffectsPresetCombo();
+    const int iSavedIndex = pCbxEffectsPresets->findText ( strName );
+    if ( iSavedIndex >= 0 )
+    {
+        pCbxEffectsPresets->setCurrentIndex ( iSavedIndex );
+    }
+}
+
+void CEffectsDlg::OnDeleteEffectsPresetClicked()
+{
+    const int iPresetSlot = pCbxEffectsPresets->currentData ( Qt::UserRole ).toInt();
+    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EFFECT_PRESETS )
+    {
+        return;
+    }
+
+    pSettings->vstrEffectsPresetNames[iPresetSlot].clear();
+    pSettings->bEffectsPresetEQBypass[iPresetSlot] = true;
+    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    {
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = 0;
+    }
+
+    pSettings->iEffectsPresetReverbLevel[iPresetSlot] = 0;
+    pSettings->iEffectsPresetReverbPreDelayMs[iPresetSlot] = 0;
+    pSettings->iEffectsPresetReverbRoomSize[iPresetSlot] = 60;
+    pSettings->iEffectsPresetReverbDamping[iPresetSlot] = 30;
+    pSettings->iEffectsPresetReverbWetMix[iPresetSlot] = 25;
+    pSettings->iEffectsPresetReverbEarlyLevel[iPresetSlot] = 30;
+    pSettings->iEffectsPresetReverbWidth[iPresetSlot] = 100;
+    pSettings->bEffectsPresetReverbEarlyEnabled[iPresetSlot] = true;
+    pSettings->bEffectsPresetReverbFreeze[iPresetSlot] = false;
+    pSettings->bEffectsPresetReverbBypass[iPresetSlot] = true;
+    pSettings->bEffectsPresetReverbOnLeftChan[iPresetSlot] = false;
+
+    pSettings->bEffectsPresetCompressorBypass[iPresetSlot] = true;
+    pSettings->iEffectsPresetCompressorThresholdDb[iPresetSlot] = -12;
+    pSettings->iEffectsPresetCompressorRatio[iPresetSlot] = 3;
+    pSettings->iEffectsPresetCompressorAttackMs[iPresetSlot] = 5;
+    pSettings->iEffectsPresetCompressorReleaseMs[iPresetSlot] = 120;
+    pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot] = 3;
+    pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = true;
+
+    pSettings->bEffectsPresetFilterBypass[iPresetSlot] = true;
+    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot] = false;
+    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot] = false;
+    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = 80;
+    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot] = 12000;
+
+    PopulateEffectsPresetCombo();
+}
+
 void CEffectsDlg::PopulateEQPresetCombo()
 {
     pCbxEQPresets->clear();
 
-    for ( int iBuiltIn = 0; iBuiltIn < NUM_BUILTIN_EQ_PRESETS; ++iBuiltIn )
-    {
-        const auto& cPreset = acBuiltInPresets[iBuiltIn];
-        const int   iOverrideSlot = FindPresetSlotByName ( QString::fromUtf8 ( cPreset.strName ) );
-
-        QString strGains;
-        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-        {
-            if ( !strGains.isEmpty() )
-            {
-                strGains += ",";
-            }
-
-            if ( iOverrideSlot != INVALID_INDEX )
-            {
-                strGains += QString::number ( pSettings->aiEQPresetBandGainDb[iOverrideSlot][iBand] );
-            }
-            else
-            {
-                strGains += QString::number ( cPreset.aiGains[iBand] );
-            }
-        }
-
-        pCbxEQPresets->addItem ( tr ( cPreset.strName ) );
-        pCbxEQPresets->setItemData ( pCbxEQPresets->count() - 1, strGains, Qt::UserRole );
-        pCbxEQPresets->setItemData ( pCbxEQPresets->count() - 1, iOverrideSlot, Qt::UserRole + 1 );
-    }
-
     for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
     {
         const QString strName = pSettings->vstrEQPresetNames[iPreset];
-        if ( strName.isEmpty() || IsBuiltInPresetName ( strName ) )
+        if ( strName.isEmpty() )
         {
             continue;
         }
@@ -745,21 +1034,14 @@ void CEffectsDlg::OnSaveEQPresetClicked()
     const int iComboIndex = pCbxEQPresets->currentIndex();
     if ( iComboIndex < 0 )
     {
+        QMessageBox::warning ( this,
+                               tr ( "No Preset Selected" ),
+                               tr ( "Select an existing preset to overwrite, or use Save As... to create a new one." ) );
         return;
     }
 
-    int     iPresetSlot = pCbxEQPresets->itemData ( iComboIndex, Qt::UserRole + 1 ).toInt();
-    QString strName     = pCbxEQPresets->itemText ( iComboIndex );
-
-    // Built-in presets are stored as user overrides with the same name.
-    if ( iComboIndex < NUM_BUILTIN_EQ_PRESETS )
-    {
-        iPresetSlot = FindPresetSlotByName ( strName );
-        if ( iPresetSlot == INVALID_INDEX )
-        {
-            iPresetSlot = FindFreePresetSlot();
-        }
-    }
+    const int iPresetSlot = pCbxEQPresets->itemData ( iComboIndex, Qt::UserRole + 1 ).toInt();
+    const QString strName = pCbxEQPresets->itemText ( iComboIndex );
 
     if ( iPresetSlot == INVALID_INDEX )
     {

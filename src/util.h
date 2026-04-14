@@ -65,6 +65,7 @@
 #    include <QWhatsThis>
 #    include <QTextBrowser>
 #    include <QGuiApplication>
+#    include <QIcon>
 #    include <QPalette>
 #    include <QLabel>
 #    include <QCheckBox>
@@ -376,7 +377,10 @@ class CBaseDlg : public QDialog
     Q_OBJECT
 
 public:
-    CBaseDlg ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags() ) : QDialog ( parent, flags ) {}
+    CBaseDlg ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags() ) : QDialog ( parent, flags )
+    {
+        setWindowIcon ( QIcon ( QString::fromUtf8 ( ":/png/main/res/fronticon.png" ) ) );
+    }
 
 public slots:
     void keyPressEvent ( QKeyEvent* pEvent )

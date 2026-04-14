@@ -90,6 +90,10 @@ private:
     CClient*      pClient;
     CClientSettings* pSettings;
     QTabWidget*   pTabs;
+    QComboBox*    pCbxEffectsPresets;
+    QPushButton*  pButEffectsSavePreset;
+    QPushButton*  pButEffectsSaveAsPreset;
+    QPushButton*  pButEffectsDeletePreset;
     QSlider*      pSldReverb;
     QSlider*      pSldReverbPreDelay;
     QSlider*      pSldReverbRoom;
@@ -109,9 +113,11 @@ private:
     QCheckBox*    pChbReverbEarly;
     QCheckBox*    pChbReverbFreeze;
     QCheckBox*    pChbReverbBypass;
+    QPushButton*  pButReverbReset;
 
     QCheckBox*    pChbCompressorBypass;
     QCheckBox*    pChbCompressorLimiter;
+    QPushButton*  pButCompressorReset;
     QSlider*      pSldCompressorThreshold;
     QSlider*      pSldCompressorRatio;
     QSlider*      pSldCompressorAttack;
@@ -126,6 +132,7 @@ private:
     QCheckBox*    pChbFilterBypass;
     QCheckBox*    pChbHighPass;
     QCheckBox*    pChbLowPass;
+    QPushButton*  pButFilterReset;
     QSlider*      pSldHighPassCutoff;
     QSlider*      pSldLowPassCutoff;
     QLabel*       pLblHighPassValue;
@@ -142,6 +149,11 @@ private:
     QLabel*       pLblOutputBandTitle;
     COutputBandMeter* pOutputBandMeter;
 
+    void PopulateEffectsPresetCombo();
+    void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
+    void ApplyEffectsPresetFromSlot ( const int iPresetSlot );
+    int  FindEffectsPresetSlotByName ( const QString& strName ) const;
+    int  FindFreeEffectsPresetSlot() const;
     void PopulateEQPresetCombo();
     void ApplyPresetFromComboIndex ( const int iPresetIndex );
     void UpdateEQPresetSelection();
@@ -149,6 +161,12 @@ private:
     int  FindFreePresetSlot() const;
 
 private slots:
+    void OnResetReverbClicked();
+    void OnResetFilterClicked();
+    void OnResetCompressorClicked();
+    void OnSaveEffectsPresetClicked();
+    void OnSaveAsEffectsPresetClicked();
+    void OnDeleteEffectsPresetClicked();
     void OnResetEQClicked();
     void OnSaveEQPresetClicked();
     void OnSaveAsEQPresetClicked();

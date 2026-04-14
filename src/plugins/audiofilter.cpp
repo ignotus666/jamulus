@@ -7,7 +7,7 @@
 #include <algorithm>
 
 CAudioFilter::CAudioFilter() :
-    bBypass ( false ),
+    bBypass ( true ),
     bHighPassEnabled ( false ),
     bLowPassEnabled ( false ),
     iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ ),

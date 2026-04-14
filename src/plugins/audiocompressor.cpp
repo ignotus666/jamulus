@@ -6,7 +6,7 @@
 #include <cmath>
 
 CAudioCompressor::CAudioCompressor() :
-    bBypass ( false ),
+    bBypass ( true ),
     bLimiterEnabled ( true ),
     iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ ),
     fThresholdDb ( -12.0f ),
