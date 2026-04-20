@@ -24,472 +24,120 @@
 
 #include "clientdlg.h"
 #include <QBoxLayout>
+#include <QFile>
 #include "util.h"
 
 namespace
 {
-QString BuildClientDlgStyleSheet ( const EUITheme eTheme )
+QString LoadStyleSheetResource ( const char* resourcePath )
 {
-    if ( IsDarkUITheme ( eTheme ) )
+    QFile file ( QString::fromLatin1 ( resourcePath ) );
+    if ( !file.open ( QIODevice::ReadOnly | QIODevice::Text ) )
     {
-        return QString::fromUtf8 ( R"CSS(
-QFrame#backgroundFrame { background-color: rgb(11, 16, 24);
-                         border:           1px solid rgb(40, 50, 60);
-                         border-radius:    4px;
-                         margin:           0px;
-                         padding:          5px; }
-QPushButton#butConnect {
-                         color:             rgb(220, 232, 242);
-                         font:              bold;
-                         border:            2px solid rgb(58, 76, 94);
-                         border-radius:     6px;
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(36, 46, 58),
-                                                           stop:1 rgb(22, 30, 40));
-                         padding:           4px 10px;
-                         min-height:        40px;
-                         max-height:        40px; }
-QPushButton#butConnect:hover {
-                         border:            2px solid rgb(54, 207, 255);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(48, 60, 74),
-                                                           stop:1 rgb(28, 38, 50)); }
-QPushButton#butConnect:pressed {
-                         border:            2px solid rgb(54, 207, 255);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(20, 30, 40),
-                                                           stop:1 rgb(14, 20, 28)); }
-QPushButton#butConnect[connectedState="true"]:hover {
-                         border:            2px solid rgb(222, 88, 96);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(74, 48, 56),
-                                                           stop:1 rgb(50, 30, 36)); }
-QPushButton#butConnect[connectedState="true"]:pressed {
-                         border:            2px solid rgb(232, 108, 116);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(58, 34, 40),
-                                                           stop:1 rgb(42, 24, 30)); }
-QLabel {                 color:          rgb(220, 220, 220);
-                         font:           bold; }
-QLabel#lblInputLEDMeter,
-QLabel#lblOutput,
-QLabel#lblPing,
-QLabel#lblPingVal,
-QLabel#lblPingUnit,
-QLabel#lblDelay,
-QLabel#lblDelayVal,
-QLabel#lblDelayUnit,
-QLabel#lblBuffers,
-QLabel#pOutputBandMeterTitle { font:      normal 10px; }
-QRadioButton {           color:          rgb(220, 220, 220);
-                         font:           bold; }
-QScrollArea {            background:     transparent; }
-.QWidget {               background:     transparent; }
-QGroupBox {              background:     transparent; }
-QGroupBox::title {       color:          rgb(220, 220, 220); }
-QFrame#lineMeter,
-QFrame#lineUpperLowerLeft,
-QFrame#lineUpperLowerLeft_2 { background-color: rgb(34, 42, 52);
-                              color:           rgb(34, 42, 52); }
-QPushButton#chbLocalMute,
-QPushButton#chbSettings,
-QPushButton#chbChat,
-QPushButton#butEffects,
-QPushButton#pcbGroup,
-QPushButton#pcbMute,
-QPushButton#pcbSolo {    color:          rgb(220, 220, 220);
-                         font:           bold;
-                         spacing:        0px;
-                         padding:        4px 10px;
-                         border:         1px solid rgb(58, 76, 94);
-                         border-radius:  6px;
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(36, 46, 58),
-                                                        stop:1 rgb(22, 30, 40));
-                         min-height:     20px;
-                         max-height:     20px;
-                         text-align:     center;
-                         margin:         0px; }
-QPushButton#chbLocalMute:disabled,
-QPushButton#chbSettings:disabled,
-QPushButton#chbChat:disabled,
-QPushButton#butEffects:disabled,
-QPushButton#pcbGroup:disabled,
-QPushButton#pcbMute:disabled,
-QPushButton#pcbSolo:disabled { color:     rgb(166, 176, 188);
-                         border:         1px solid rgb(88, 102, 118);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(30, 38, 48),
-                                                        stop:1 rgb(20, 26, 34)); }
-QPushButton#chbLocalMute:hover,
-QPushButton#chbSettings:hover,
-QPushButton#chbChat:hover,
-QPushButton#butEffects:hover { border:       2px solid rgb(90, 210, 116);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(48, 60, 74),
-                                                        stop:1 rgb(28, 38, 50)); }
-QPushButton#pcbGroup:hover,
-QPushButton#pcbMute:hover,
-QPushButton#pcbSolo:hover { border:       2px solid rgb(222, 126, 255);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(98, 36, 132),
-                                                        stop:1 rgb(70, 22, 96)); }
-QPushButton#chbLocalMute:checked,
-QPushButton#chbSettings:checked,
-QPushButton#chbChat:checked,
-QPushButton#butEffects:checked,
-QPushButton#pcbGroup:checked,
-QPushButton#pcbMute:checked,
-QPushButton#pcbSolo:checked { color:      rgb(162, 240, 176);
-                         border:         2px solid rgb(90, 210, 116);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(44, 108, 58),
-                                                        stop:1 rgb(30, 82, 45)); }
-QPushButton#chbLocalMute:checked:hover,
-QPushButton#chbSettings:checked:hover,
-QPushButton#chbChat:checked:hover,
-QPushButton#butEffects:checked:hover,
-QPushButton#pcbGroup:checked:hover,
-QPushButton#pcbMute:checked:hover,
-QPushButton#pcbSolo:checked:hover { border: 1px solid rgb(118, 232, 140);
-                          background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(52, 122, 66),
-                                                        stop:1 rgb(36, 92, 52)); }
-QPushButton#pcbGroup:checked,
-QPushButton#pcbMute:checked,
-QPushButton#pcbSolo:checked { color:      rgb(240, 220, 255);
-                         border:         2px solid rgb(222, 126, 255);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(120, 44, 156),
-                                                        stop:1 rgb(88, 30, 118)); }
-QPushButton#pcbGroup:checked:hover,
-QPushButton#pcbMute:checked:hover,
-QPushButton#pcbSolo:checked:hover { border: 1px solid rgb(238, 160, 255);
-                          background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(140, 52, 176),
-                                                        stop:1 rgb(100, 34, 132)); }
-QPushButton#chbLocalMute::indicator,
-QPushButton#chbSettings::indicator,
-QPushButton#chbChat::indicator { width:    0px;
-                         height:         0px;
-                         margin:         0px;
-                         border:         0px;
-                         background:     transparent; }
-)CSS" );
+        return QString();
     }
 
-    return QString::fromUtf8 ( R"CSS(
-QFrame#backgroundFrame { background-color: rgb(247, 248, 250);
-                         border:           1px solid rgb(196, 202, 210);
-                         border-radius:    4px;
-                         margin:           0px;
-                         padding:          5px; }
-QPushButton#butConnect {
-                         color:             rgb(28, 34, 42);
-                         font:              bold;
-                         border:            2px solid rgb(180, 188, 198);
-                         border-radius:     6px;
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(255, 255, 255),
-                                                           stop:1 rgb(232, 236, 242));
-                         padding:           4px 10px;
-                         min-height:        40px;
-                         max-height:        40px; }
-QPushButton#butConnect:hover {
-                         border:            2px solid rgb(46, 132, 198);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(246, 249, 252),
-                                                           stop:1 rgb(220, 227, 236)); }
-QPushButton#butConnect:pressed {
-                         border:            2px solid rgb(46, 132, 198);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(224, 230, 238),
-                                                           stop:1 rgb(208, 216, 226)); }
-QPushButton#butConnect[connectedState="true"]:hover {
-                         border:            2px solid rgb(196, 86, 92);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(248, 236, 238),
-                                                           stop:1 rgb(232, 212, 216)); }
-QPushButton#butConnect[connectedState="true"]:pressed {
-                         border:            2px solid rgb(182, 72, 80);
-                         background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                           stop:0 rgb(236, 218, 222),
-                                                           stop:1 rgb(224, 202, 208)); }
-QLabel {                 color:          rgb(28, 34, 42);
-                         font:           bold; }
-QLabel#lblInputLEDMeter,
-QLabel#lblOutput,
-QLabel#lblPing,
-QLabel#lblPingVal,
-QLabel#lblPingUnit,
-QLabel#lblDelay,
-QLabel#lblDelayVal,
-QLabel#lblDelayUnit,
-QLabel#lblBuffers,
-QLabel#pOutputBandMeterTitle { font:      normal 10px; }
-QRadioButton {           color:          rgb(28, 34, 42);
-                         font:           bold; }
-QScrollArea {            background:     transparent; }
-.QWidget {               background:     transparent; }
-QGroupBox {              background:     transparent; }
-QGroupBox::title {       color:          rgb(28, 34, 42); }
-QFrame#lineMeter,
-QFrame#lineUpperLowerLeft,
-QFrame#lineUpperLowerLeft_2 { background-color: rgb(140, 148, 160);
-                              color:           rgb(140, 148, 160); }
-QPushButton#chbLocalMute,
-QPushButton#chbSettings,
-QPushButton#chbChat,
-QPushButton#butEffects,
-QPushButton#pcbGroup,
-QPushButton#pcbMute,
-QPushButton#pcbSolo {    color:          rgb(28, 34, 42);
-                         font:           bold;
-                         spacing:        0px;
-                         padding:        4px 10px;
-                         border:         1px solid rgb(180, 188, 198);
-                         border-radius:  6px;
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(255, 255, 255),
-                                                        stop:1 rgb(232, 236, 242));
-                         min-height:     20px;
-                         max-height:     20px;
-                         text-align:     center; }
-QPushButton#chbLocalMute:hover,
-QPushButton#chbSettings:hover,
-QPushButton#chbChat:hover,
-QPushButton#butEffects:hover { border:       2px solid rgb(74, 168, 102);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(246, 249, 252),
-                                                        stop:1 rgb(220, 227, 236)); }
-QPushButton#pcbGroup:hover,
-QPushButton#pcbMute:hover,
-QPushButton#pcbSolo:hover { border:       2px solid rgb(222, 126, 255);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(176, 86, 224),
-                                                        stop:1 rgb(128, 58, 176)); }
-QPushButton#chbLocalMute:checked,
-QPushButton#chbSettings:checked,
-QPushButton#chbChat:checked,
-QPushButton#pcbGroup:checked,
-QPushButton#pcbMute:checked,
-QPushButton#pcbSolo:checked { color:      rgb(24, 104, 50);
-                         border:         2px solid rgb(82, 180, 110);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(202, 244, 212),
-                                                        stop:1 rgb(172, 230, 186)); }
-QPushButton#chbLocalMute:checked:hover,
-QPushButton#chbSettings:checked:hover,
-QPushButton#chbChat:checked:hover,
-QPushButton#pcbGroup:checked:hover,
-QPushButton#pcbMute:checked:hover,
-QPushButton#pcbSolo:checked:hover { border: 1px solid rgb(64, 158, 94);
-                          background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(190, 238, 202),
-                                                        stop:1 rgb(162, 224, 178)); }
-QPushButton#pcbGroup:checked,
-QPushButton#pcbMute:checked,
-QPushButton#pcbSolo:checked { color:      rgb(244, 224, 255);
-                         border:         2px solid rgb(222, 126, 255);
-                         background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(194, 94, 240),
-                                                        stop:1 rgb(138, 64, 194)); }
-QPushButton#pcbGroup:checked:hover,
-QPushButton#pcbMute:checked:hover,
-QPushButton#pcbSolo:checked:hover { border: 1px solid rgb(238, 160, 255);
-                          background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                        stop:0 rgb(210, 104, 255),
-                                                        stop:1 rgb(150, 72, 210)); }
-QPushButton#chbLocalMute::indicator,
-QPushButton#chbSettings::indicator,
-QPushButton#chbChat::indicator { width:    0px;
-                         height:         0px;
-                         margin:         0px;
-                         border:         0px;
-                         background:     transparent; }
-)CSS" );
+    return QString::fromUtf8 ( file.readAll() );
+}
+
+QString BuildClientDlgStyleSheet ( const EUITheme eTheme )
+{
+    const char* path = IsDarkUITheme ( eTheme ) ? ":/styles/clientdlg_dark.qss" : ":/styles/clientdlg_light.qss";
+    return LoadStyleSheetResource ( path );
 }
 
 QString BuildDialogStyleSheet ( const EUITheme eTheme )
 {
+    const bool bDark = IsDarkUITheme ( eTheme );
+    QString     styleSheet = LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
+    styleSheet += LoadStyleSheetResource ( bDark ? ":/styles/dialog_dark.qss" : ":/styles/dialog_light.qss" );
+    return styleSheet;
+}
+
+QString BuildMainMenuStyleSheet ( const EUITheme eTheme )
+{
     if ( IsDarkUITheme ( eTheme ) )
     {
-        return QString::fromUtf8 ( R"CSS(
-QDialog,
-QWidget { background-color: rgb(11, 16, 24);
-          color: rgb(220, 220, 220); }
-QLabel { color: rgb(220, 220, 220); }
-QGroupBox { border: 1px solid rgb(40, 50, 60);
-            margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin;
-                   subcontrol-position: top left;
-                   padding: 0 4px;
-                   color: rgb(220, 220, 220); }
-QLineEdit,
-QTextEdit,
-QPlainTextEdit,
-QTextBrowser { background-color: rgb(20, 26, 34);
-               border: 1px solid rgb(58, 76, 94);
-               border-radius: 4px;
-               color: rgb(220, 232, 242);
-               selection-background-color: rgb(54, 207, 255);
-               selection-color: rgb(8, 12, 18); }
-QComboBox,
-QSpinBox,
-QDoubleSpinBox { background-color: rgb(20, 26, 34);
-                 border: 1px solid rgb(58, 76, 94);
-                 border-radius: 4px;
-                 padding: 2px 6px;
-                 padding-right: 18px;
-                 color: rgb(220, 232, 242); }
-QComboBox::drop-down { subcontrol-origin: padding;
-                       subcontrol-position: top right;
-                       width: 18px;
-                       border-left: 1px solid rgb(58, 76, 94);
-                       background-color: rgb(20, 26, 34);
-                       border-top-right-radius: 4px;
-                       border-bottom-right-radius: 4px; }
-QComboBox::down-arrow { width: 0px;
-                        height: 0px;
-                        border-left: 4px solid transparent;
-                        border-right: 4px solid transparent;
-                        border-top: 6px solid rgb(140, 156, 176); }
-QComboBox QAbstractItemView { background-color: rgb(20, 26, 34);
-                              color: rgb(220, 232, 242);
-                              selection-background-color: rgb(54, 207, 255);
-                              selection-color: rgb(8, 12, 18); }
-QComboBox QAbstractItemView::item:hover { background-color: rgb(40, 60, 84);
-                                          color: rgb(220, 232, 242); }
-QAbstractItemView { background-color: rgb(20, 26, 34);
-                    border: 1px solid rgb(58, 76, 94);
-                    color: rgb(220, 232, 242);
-                    selection-background-color: rgb(54, 207, 255);
-                    selection-color: rgb(8, 12, 18); }
-QTabWidget::pane { border: 1px solid rgb(40, 50, 60);
-                   top: -1px; }
-QTabBar::tab { background: rgb(22, 30, 40);
-               color: rgb(220, 232, 242);
-               border: 1px solid rgb(40, 50, 60);
-               padding: 4px 10px; }
-QTabBar::tab:selected { background: rgb(36, 46, 58);
-                        border: 1px solid rgb(58, 76, 94); }
-QPushButton { color: rgb(220, 232, 242);
-              font: bold;
-              border: 1px solid rgb(58, 76, 94);
-              border-radius: 6px;
-              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                           stop:0 rgb(36, 46, 58),
-                                           stop:1 rgb(22, 30, 40));
-              padding: 4px 10px; }
-QPushButton[learnActive="true"] { color: rgb(210, 242, 220);
-                                   border: 2px solid rgb(90, 210, 116);
-                                   background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                                stop:0 rgb(44, 108, 58),
-                                                                stop:1 rgb(30, 82, 45)); }
-QPushButton[learnActive="true"]:hover { border: 2px solid rgb(118, 232, 140);
-                                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                                      stop:0 rgb(52, 122, 66),
-                                                                      stop:1 rgb(36, 92, 52)); }
-QPushButton:hover { border: 2px solid rgb(54, 207, 255);
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                 stop:0 rgb(48, 60, 74),
-                                                 stop:1 rgb(28, 38, 50)); }
-QPushButton:pressed { border: 2px solid rgb(54, 207, 255);
-                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                   stop:0 rgb(20, 30, 40),
-                                                   stop:1 rgb(14, 20, 28)); }
-QCheckBox,
-QRadioButton { color: rgb(220, 220, 220); }
-)CSS" );
+        return QString::fromLatin1 (
+            "QMenuBar { background-color: rgb(28, 28, 31); color: rgb(220, 232, 242); border: 1px solid rgb(58, 58, 62); }"
+            "QMenuBar::item { background: transparent; color: rgb(220, 232, 242); padding: 3px 8px; }"
+            "QMenuBar::item:selected, QMenuBar::item:pressed { background: rgb(52, 52, 56); color: rgb(220, 232, 242); }"
+            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
+            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
+            "QMenu::item:hover { background-color: rgb(60, 60, 65); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::item:selected { background-color: rgb(60, 60, 65); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
     }
 
-    return QString::fromUtf8 ( R"CSS(
-QDialog,
-QWidget { background-color: rgb(247, 248, 250);
-          color: rgb(28, 34, 42); }
-QLabel { color: rgb(28, 34, 42); }
-QGroupBox { border: 1px solid rgb(196, 202, 210);
-            margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin;
-                   subcontrol-position: top left;
-                   padding: 0 4px;
-                   color: rgb(28, 34, 42); }
-QLineEdit,
-QTextEdit,
-QPlainTextEdit,
-QTextBrowser { background-color: rgb(255, 255, 255);
-               border: 1px solid rgb(180, 188, 198);
-               border-radius: 4px;
-               color: rgb(28, 34, 42);
-               selection-background-color: rgb(46, 132, 198);
-               selection-color: rgb(255, 255, 255); }
-QComboBox,
-QSpinBox,
-QDoubleSpinBox { background-color: rgb(255, 255, 255);
-                 border: 1px solid rgb(180, 188, 198);
-                 border-radius: 4px;
-                 padding: 2px 6px;
-                 padding-right: 18px;
-                 color: rgb(28, 34, 42); }
-QComboBox::drop-down { subcontrol-origin: padding;
-                       subcontrol-position: top right;
-                       width: 18px;
-                       border-left: 1px solid rgb(180, 188, 198);
-                       background-color: rgb(255, 255, 255);
-                       border-top-right-radius: 4px;
-                       border-bottom-right-radius: 4px; }
-QComboBox::down-arrow { width: 0px;
-                        height: 0px;
-                        border-left: 4px solid transparent;
-                        border-right: 4px solid transparent;
-                        border-top: 6px solid rgb(96, 106, 118); }
-QComboBox QAbstractItemView { background-color: rgb(255, 255, 255);
-                              color: rgb(28, 34, 42);
-                              selection-background-color: rgb(46, 132, 198);
-                              selection-color: rgb(255, 255, 255); }
-QComboBox QAbstractItemView::item:hover { background-color: rgb(232, 240, 250);
-                                          color: rgb(28, 34, 42); }
-QAbstractItemView { background-color: rgb(255, 255, 255);
-                    border: 1px solid rgb(180, 188, 198);
-                    color: rgb(28, 34, 42);
-                    selection-background-color: rgb(46, 132, 198);
-                    selection-color: rgb(255, 255, 255); }
-QTabWidget::pane { border: 1px solid rgb(196, 202, 210);
-                   top: -1px; }
-QTabBar::tab { background: rgb(242, 244, 248);
-               color: rgb(28, 34, 42);
-               border: 1px solid rgb(196, 202, 210);
-               padding: 4px 10px; }
-QTabBar::tab:selected { background: rgb(255, 255, 255);
-                        border: 1px solid rgb(180, 188, 198); }
-QPushButton { color: rgb(28, 34, 42);
-              font: bold;
-              border: 1px solid rgb(180, 188, 198);
-              border-radius: 6px;
-              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                           stop:0 rgb(255, 255, 255),
-                                           stop:1 rgb(232, 236, 242));
-              padding: 4px 10px; }
-QPushButton[learnActive="true"] { color: rgb(24, 104, 50);
-                                   border: 2px solid rgb(82, 180, 110);
-                                   background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                                stop:0 rgb(202, 244, 212),
-                                                                stop:1 rgb(172, 230, 186)); }
-QPushButton[learnActive="true"]:hover { border: 2px solid rgb(64, 158, 94);
-                                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                                      stop:0 rgb(190, 238, 202),
-                                                                      stop:1 rgb(162, 224, 178)); }
-QPushButton:hover { border: 2px solid rgb(46, 132, 198);
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                 stop:0 rgb(246, 249, 252),
-                                                 stop:1 rgb(220, 227, 236)); }
-QPushButton:pressed { border: 2px solid rgb(46, 132, 198);
-                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                   stop:0 rgb(224, 230, 238),
-                                                   stop:1 rgb(208, 216, 226)); }
-QCheckBox,
-QRadioButton { color: rgb(28, 34, 42); }
-)CSS" );
+    return QString::fromLatin1 (
+        "QMenuBar { background-color: rgb(247, 248, 250); color: rgb(28, 34, 42); border: 1px solid rgb(196, 202, 210); }"
+        "QMenuBar::item { background: transparent; color: rgb(28, 34, 42); padding: 3px 8px; }"
+        "QMenuBar::item:selected, QMenuBar::item:pressed { background: rgb(232, 238, 246); color: rgb(28, 34, 42); }"
+        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
+        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
+        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
+}
+
+QString BuildMainPopupMenuStyleSheet ( const EUITheme eTheme )
+{
+    if ( IsDarkUITheme ( eTheme ) )
+    {
+        return QString::fromLatin1 (
+            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
+            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
+            "QMenu::item:hover { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::item:selected { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
+    }
+
+    return QString::fromLatin1 (
+        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
+        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
+        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
+}
+
+void ApplyMainPopupMenuStyle ( QMenu* pMenu, const EUITheme eTheme )
+{
+    if ( pMenu == nullptr )
+    {
+        return;
+    }
+
+    pMenu->setStyleSheet ( BuildMainPopupMenuStyleSheet ( eTheme ) );
+}
+
+void ApplyApplicationHighlightPalette ( const EUITheme eTheme )
+{
+    QPalette pal = QApplication::palette();
+
+    if ( IsDarkUITheme ( eTheme ) )
+    {
+        const QColor cHighlight ( 64, 64, 70 );
+        const QColor cText ( 220, 232, 242 );
+        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
+    }
+    else
+    {
+        const QColor cHighlight ( 46, 132, 198 );
+        const QColor cText ( 255, 255, 255 );
+        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
+    }
+
+    QApplication::setPalette ( pal );
 }
 } // namespace
 
@@ -519,8 +167,16 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 {
     setupUi ( this );
 
-    // Move input meters under the app icon and center them in the row.
+    // Keep the input-meter local separator hidden and add a full-height divider
+    // between the whole left control section and the mixer area.
     lineMeter->hide();
+    QFrame* pMainDivider = new QFrame ( backgroundFrame );
+    pMainDivider->setObjectName ( "lineMainDivider" );
+    pMainDivider->setFrameShape ( QFrame::NoFrame );
+    pMainDivider->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
+    pMainDivider->setMinimumWidth ( 1 );
+    pMainDivider->setMaximumWidth ( 1 );
+    horizontalLayout_2->insertWidget ( 1, pMainDivider );
 
     QWidget*     pMetersContainer = new QWidget ( backgroundFrame );
     QHBoxLayout* pMetersRow       = new QHBoxLayout ( pMetersContainer );
@@ -599,11 +255,13 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     lbrInputLevelR->setEnabled ( false );
 
     // connect/disconnect button
-    butConnect->setWhatsThis ( "<b>" + tr ( "Connect/Disconnect Button" ) + ":</b> " +
-                               tr ( "Opens a dialog where you can select a server to connect to. "
-                                    "If you are connected, pressing this button will end the session." ) );
 
-    butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
+        butConnect->setWhatsThis ( "<b>" + tr ( "Connect/Disconnect Button" ) + ":</b> " +
+                             tr ( "Opens a dialog where you can select a server to connect to. "
+                                 "If you are connected, pressing this button will end the session." ) );
+
+        butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
+        // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
         butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
                              tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
@@ -813,6 +471,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pFileMenu->addSeparator();
 
     pFileMenu->addAction ( tr ( "E&xit" ), this, SLOT ( close() ), QKeySequence ( Qt::CTRL + Qt::Key_Q ) );
+    ApplyMainPopupMenuStyle ( pFileMenu, ResolveUITheme ( pSettings->eUITheme ) );
 
     // Edit menu  --------------------------------------------------------------
     QMenu* pEditMenu = new QMenu ( tr ( "&Edit" ), this );
@@ -825,6 +484,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
                            QKeySequence ( Qt::CTRL + Qt::Key_L ) );
 
     pEditMenu->addAction ( tr ( "Auto-Adjust all &Faders" ), this, SLOT ( OnAutoAdjustAllFaderLevels() ), QKeySequence ( Qt::CTRL + Qt::Key_F ) );
+    ApplyMainPopupMenuStyle ( pEditMenu, ResolveUITheme ( pSettings->eUITheme ) );
 
     // View menu  --------------------------------------------------------------
     QMenu* pViewMenu = new QMenu ( tr ( "&View" ), this );
@@ -907,6 +567,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     {
         pViewMenu->addAction ( tr ( "&Analyzer Console..." ), this, SLOT ( OnOpenAnalyzerConsole() ) );
     }
+    ApplyMainPopupMenuStyle ( pViewMenu, ResolveUITheme ( pSettings->eUITheme ) );
 
     pViewMenu->addSeparator();
 
@@ -924,15 +585,22 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         this,
         [this] { ShowGeneralSettings ( SETTING_TAB_MIDI ); },
         QKeySequence ( Qt::CTRL + Qt::Key_M ) );
+    ApplyMainPopupMenuStyle ( pSettingsMenu, ResolveUITheme ( pSettings->eUITheme ) );
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
+    pMenu->setNativeMenuBar ( false );
 
     pMenu->addMenu ( pFileMenu );
     pMenu->addMenu ( pEditMenu );
     pMenu->addMenu ( pViewMenu );
     pMenu->addMenu ( pSettingsMenu );
-    pMenu->addMenu ( new CHelpMenu ( true, this ) );
+    CHelpMenu* pHelpMenu = new CHelpMenu ( true, this );
+    ApplyMainPopupMenuStyle ( pHelpMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    pMenu->addMenu ( pHelpMenu );
+    pMenu->setObjectName ( "mainMenuBar" );
+    pMenu->setAttribute ( Qt::WA_StyledBackground, true );
+    pMenu->setStyleSheet ( BuildMainMenuStyleSheet ( ResolveUITheme ( pSettings->eUITheme ) ) );
 
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
@@ -1962,6 +1630,7 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     lbrInputLevelL->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
     lbrInputLevelR->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    ApplyApplicationHighlightPalette ( eResolvedTheme );
     lbrInputLevelL->SetDarkTheme ( eResolvedTheme == UIT_DARK );
     lbrInputLevelR->SetDarkTheme ( eResolvedTheme == UIT_DARK );
     backgroundFrame->setStyleSheet ( BuildClientDlgStyleSheet ( eResolvedTheme ) );
@@ -1970,6 +1639,15 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     EffectsDlg.setStyleSheet ( sDialogStyle );
     ConnectDlg.setStyleSheet ( sDialogStyle );
     ChatDlg.setStyleSheet ( sDialogStyle );
+    if ( QMenuBar* pMainMenu = findChild<QMenuBar*> ( "mainMenuBar" ) )
+    {
+        pMainMenu->setStyleSheet ( BuildMainMenuStyleSheet ( eResolvedTheme ) );
+        const QList<QMenu*> vecMenus      = pMainMenu->findChildren<QMenu*>();
+        for ( QMenu* pPopupMenu : vecMenus )
+        {
+            ApplyMainPopupMenuStyle ( pPopupMenu, eResolvedTheme );
+        }
+    }
 
     // apply GUI design to current window
     switch ( eNewDesign )

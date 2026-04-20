@@ -23,171 +23,87 @@
 \******************************************************************************/
 
 #include "serverdlg.h"
+#include <QFile>
 
 namespace
 {
+QString LoadStyleSheetResource ( const char* resourcePath )
+{
+    QFile file ( QString::fromLatin1 ( resourcePath ) );
+    if ( !file.open ( QIODevice::ReadOnly | QIODevice::Text ) )
+    {
+        return QString();
+    }
+
+    return QString::fromUtf8 ( file.readAll() );
+}
+
 QString BuildServerDialogStyleSheet ( const EUITheme eTheme )
+{
+    const bool bDark = IsDarkUITheme ( eTheme );
+    QString     styleSheet = LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
+    styleSheet += LoadStyleSheetResource ( bDark ? ":/styles/serverdlg_dark.qss" : ":/styles/serverdlg_light.qss" );
+    return styleSheet;
+}
+
+QString BuildPopupMenuStyleSheet ( const EUITheme eTheme )
 {
     if ( IsDarkUITheme ( eTheme ) )
     {
-        return QString::fromUtf8 ( R"CSS(
-QDialog,
-QWidget { background-color: rgb(11, 16, 24);
-          color: rgb(220, 220, 220); }
-QLabel { color: rgb(220, 220, 220); }
-QGroupBox { border: 1px solid rgb(40, 50, 60);
-            margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin;
-                   subcontrol-position: top left;
-                   padding: 0 4px;
-                   color: rgb(220, 220, 220); }
-QLineEdit,
-QTextEdit,
-QPlainTextEdit,
-QTextBrowser { background-color: rgb(20, 26, 34);
-               border: 1px solid rgb(58, 76, 94);
-               border-radius: 4px;
-               color: rgb(220, 232, 242);
-               selection-background-color: rgb(54, 207, 255);
-               selection-color: rgb(8, 12, 18); }
-QComboBox,
-QSpinBox,
-QDoubleSpinBox { background-color: rgb(20, 26, 34);
-                 border: 1px solid rgb(58, 76, 94);
-                 border-radius: 4px;
-                 padding: 2px 6px;
-                 padding-right: 18px;
-                 color: rgb(220, 232, 242); }
-QComboBox::drop-down { subcontrol-origin: padding;
-                       subcontrol-position: top right;
-                       width: 18px;
-                       border-left: 1px solid rgb(58, 76, 94);
-                       background-color: rgb(20, 26, 34);
-                       border-top-right-radius: 4px;
-                       border-bottom-right-radius: 4px; }
-QComboBox::down-arrow { width: 0px;
-                        height: 0px;
-                        border-left: 4px solid transparent;
-                        border-right: 4px solid transparent;
-                        border-top: 6px solid rgb(140, 156, 176); }
-QComboBox QAbstractItemView { background-color: rgb(20, 26, 34);
-                              color: rgb(220, 232, 242);
-                              selection-background-color: rgb(54, 207, 255);
-                              selection-color: rgb(8, 12, 18); }
-QComboBox QAbstractItemView::item:hover { background-color: rgb(40, 60, 84);
-                                          color: rgb(220, 232, 242); }
-QAbstractItemView { background-color: rgb(20, 26, 34);
-                    border: 1px solid rgb(58, 76, 94);
-                    color: rgb(220, 232, 242);
-                    selection-background-color: rgb(54, 207, 255);
-                    selection-color: rgb(8, 12, 18); }
-QTabWidget::pane { border: 1px solid rgb(40, 50, 60);
-                   top: -1px; }
-QTabBar::tab { background: rgb(22, 30, 40);
-               color: rgb(220, 232, 242);
-               border: 1px solid rgb(40, 50, 60);
-               padding: 4px 10px; }
-QTabBar::tab:selected { background: rgb(36, 46, 58);
-                        border: 1px solid rgb(58, 76, 94); }
-QPushButton { color: rgb(220, 232, 242);
-              font: bold;
-              border: 1px solid rgb(58, 76, 94);
-              border-radius: 6px;
-              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                           stop:0 rgb(36, 46, 58),
-                                           stop:1 rgb(22, 30, 40));
-              padding: 4px 10px; }
-QPushButton:hover { border: 2px solid rgb(54, 207, 255);
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                 stop:0 rgb(48, 60, 74),
-                                                 stop:1 rgb(28, 38, 50)); }
-QPushButton:pressed { border: 2px solid rgb(54, 207, 255);
-                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                   stop:0 rgb(20, 30, 40),
-                                                   stop:1 rgb(14, 20, 28)); }
-QCheckBox,
-QRadioButton { color: rgb(220, 220, 220); }
-)CSS" );
+        return QString::fromLatin1 (
+            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
+            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
+            "QMenu::item:hover { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::item:selected { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
+            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
     }
 
-    return QString::fromUtf8 ( R"CSS(
-QDialog,
-QWidget { background-color: rgb(247, 248, 250);
-          color: rgb(28, 34, 42); }
-QLabel { color: rgb(28, 34, 42); }
-QGroupBox { border: 1px solid rgb(196, 202, 210);
-            margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin;
-                   subcontrol-position: top left;
-                   padding: 0 4px;
-                   color: rgb(28, 34, 42); }
-QLineEdit,
-QTextEdit,
-QPlainTextEdit,
-QTextBrowser { background-color: rgb(255, 255, 255);
-               border: 1px solid rgb(180, 188, 198);
-               border-radius: 4px;
-               color: rgb(28, 34, 42);
-               selection-background-color: rgb(46, 132, 198);
-               selection-color: rgb(255, 255, 255); }
-QComboBox,
-QSpinBox,
-QDoubleSpinBox { background-color: rgb(255, 255, 255);
-                 border: 1px solid rgb(180, 188, 198);
-                 border-radius: 4px;
-                 padding: 2px 6px;
-                 padding-right: 18px;
-                 color: rgb(28, 34, 42); }
-QComboBox::drop-down { subcontrol-origin: padding;
-                       subcontrol-position: top right;
-                       width: 18px;
-                       border-left: 1px solid rgb(180, 188, 198);
-                       background-color: rgb(255, 255, 255);
-                       border-top-right-radius: 4px;
-                       border-bottom-right-radius: 4px; }
-QComboBox::down-arrow { width: 0px;
-                        height: 0px;
-                        border-left: 4px solid transparent;
-                        border-right: 4px solid transparent;
-                        border-top: 6px solid rgb(96, 106, 118); }
-QComboBox QAbstractItemView { background-color: rgb(255, 255, 255);
-                              color: rgb(28, 34, 42);
-                              selection-background-color: rgb(46, 132, 198);
-                              selection-color: rgb(255, 255, 255); }
-QComboBox QAbstractItemView::item:hover { background-color: rgb(232, 240, 250);
-                                          color: rgb(28, 34, 42); }
-QAbstractItemView { background-color: rgb(255, 255, 255);
-                    border: 1px solid rgb(180, 188, 198);
-                    color: rgb(28, 34, 42);
-                    selection-background-color: rgb(46, 132, 198);
-                    selection-color: rgb(255, 255, 255); }
-QTabWidget::pane { border: 1px solid rgb(196, 202, 210);
-                   top: -1px; }
-QTabBar::tab { background: rgb(242, 244, 248);
-               color: rgb(28, 34, 42);
-               border: 1px solid rgb(196, 202, 210);
-               padding: 4px 10px; }
-QTabBar::tab:selected { background: rgb(255, 255, 255);
-                        border: 1px solid rgb(180, 188, 198); }
-QPushButton { color: rgb(28, 34, 42);
-              font: bold;
-              border: 1px solid rgb(180, 188, 198);
-              border-radius: 6px;
-              background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                           stop:0 rgb(255, 255, 255),
-                                           stop:1 rgb(232, 236, 242));
-              padding: 4px 10px; }
-QPushButton:hover { border: 2px solid rgb(46, 132, 198);
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                 stop:0 rgb(246, 249, 252),
-                                                 stop:1 rgb(220, 227, 236)); }
-QPushButton:pressed { border: 2px solid rgb(46, 132, 198);
-                      background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                                   stop:0 rgb(224, 230, 238),
-                                                   stop:1 rgb(208, 216, 226)); }
-QCheckBox,
-QRadioButton { color: rgb(28, 34, 42); }
-)CSS" );
+    return QString::fromLatin1 (
+        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
+        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
+        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
+        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
+}
+
+void ApplyPopupMenuStyle ( QMenu* pMenu, const EUITheme eTheme )
+{
+    if ( pMenu == nullptr )
+    {
+        return;
+    }
+
+    pMenu->setStyleSheet ( BuildPopupMenuStyleSheet ( eTheme ) );
+}
+
+void ApplyApplicationHighlightPalette ( const EUITheme eTheme )
+{
+    QPalette pal = QApplication::palette();
+
+    if ( IsDarkUITheme ( eTheme ) )
+    {
+        const QColor cHighlight ( 64, 64, 70 );
+        const QColor cText ( 220, 232, 242 );
+        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
+    }
+    else
+    {
+        const QColor cHighlight ( 46, 132, 198 );
+        const QColor cText ( 255, 255, 255 );
+        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
+        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
+        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
+    }
+
+    QApplication::setPalette ( pal );
 }
 } // namespace
 
@@ -196,6 +112,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     CBaseDlg ( parent, Qt::Window ), // use Qt::Window to get min/max window buttons
     pServer ( pNServP ),
     pSettings ( pNSetP ),
+    pMenu ( nullptr ),
     BitmapSystemTrayInactive ( QString::fromUtf8 ( ":/png/main/res/servertrayiconinactive.png" ) ),
     BitmapSystemTrayActive ( QString::fromUtf8 ( ":/png/main/res/servertrayiconactive.png" ) )
 {
@@ -578,7 +495,12 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     pMenu = new QMenuBar ( this );
 
     pMenu->addMenu ( pViewMenu );
-    pMenu->addMenu ( new CHelpMenu ( false, this ) );
+    CHelpMenu* pHelpMenu = new CHelpMenu ( false, this );
+    pMenu->addMenu ( pHelpMenu );
+
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    ApplyPopupMenuStyle ( pViewMenu, eResolvedTheme );
+    ApplyPopupMenuStyle ( pHelpMenu, eResolvedTheme );
 
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
@@ -683,7 +605,17 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
 void CServerDlg::ApplyTheme()
 {
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    ApplyApplicationHighlightPalette ( eResolvedTheme );
     setStyleSheet ( BuildServerDialogStyleSheet ( eResolvedTheme ) );
+
+    if ( pMenu != nullptr )
+    {
+        const QList<QMenu*> vecMenus = pMenu->findChildren<QMenu*>();
+        for ( QMenu* pPopupMenu : vecMenus )
+        {
+            ApplyPopupMenuStyle ( pPopupMenu, eResolvedTheme );
+        }
+    }
 }
 
 void CServerDlg::OnUIThemeActivated ( int iThemeIdx )
@@ -806,6 +738,8 @@ void CServerDlg::OnRecordingDirClicked()
         pServer->SetRecordingDir ( newRecordingDir );
         UpdateRecorderStatus ( QString() );
     }
+    // Always return focus to the line edit to prevent button focus outline
+    edtRecordingDir->setFocus();
 }
 
 void CServerDlg::OnClearRecordingDirClicked()
@@ -835,6 +769,8 @@ void CServerDlg::OnServerListPersistenceClicked()
             UpdateGUIDependencies();
         }
     }
+    // Always return focus to the line edit to prevent button focus outline
+    edtServerListPersistence->setFocus();
 }
 
 void CServerDlg::OnClearServerListPersistenceClicked()

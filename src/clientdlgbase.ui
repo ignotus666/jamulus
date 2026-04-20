@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>511</width>
-    <height>490</height>
+    <width>640</width>
+    <height>443</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -231,9 +231,12 @@
              </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="butEffects">
+             <widget class="QPushButton" name="chbLocalMute">
               <property name="text">
-               <string>&amp;Effects</string>
+               <string>&amp;Mute Myself</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -415,32 +418,29 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="chbLocalMute">
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
+             <widget class="QPushButton" name="butEffects">
               <property name="text">
-               <string>&amp;Mute Myself</string>
+               <string>&amp;Effects</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="chbSettings">
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
               <property name="text">
                <string>&amp;Settings</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="chbChat">
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
               <property name="text">
                <string>&amp;Chat</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -563,10 +563,8 @@
  </customwidgets>
  <tabstops>
   <tabstop>butConnect</tabstop>
-  <tabstop>chbLocalMute</tabstop>
   <tabstop>chbSettings</tabstop>
   <tabstop>chbChat</tabstop>
-    <tabstop>butEffects</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

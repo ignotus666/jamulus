@@ -1,0 +1,560 @@
+QCheckBox::indicator:hover {
+    border: 1.5px solid rgb(46, 132, 198);
+}
+
+QPushButton[learnActive="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(210, 255, 210),
+        stop:1 rgb(120, 220, 120));
+    color: rgb(28, 34, 42);
+    border: 2px solid rgb(60, 180, 90);
+}
+QSpinBox:disabled,
+QDoubleSpinBox:disabled,
+QComboBox:disabled {
+    color: rgb(180, 188, 198);
+    background-color: rgb(245, 247, 250);
+    border: 1px solid rgb(210, 216, 224);
+}
+
+QLabel:disabled {
+    color: rgb(180, 188, 198);
+}
+
+QGroupBox::title:disabled {
+    color: rgb(180, 188, 198);
+}
+/* Modern light theme QPushButton styles */
+QPushButton {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(255, 255, 255),
+        stop:1 rgb(232, 236, 242));
+    color: rgb(28, 34, 42);
+    border: 1.5px solid rgb(158, 190, 224);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-weight: 500;
+    transition: border 0.2s, background 0.2s;
+}
+QPushButton:hover {
+    background: rgb(220, 236, 252);
+    border: 2px solid rgb(46, 132, 198);
+}
+QPushButton:pressed, QPushButton:checked {
+    background: rgb(198, 220, 245);
+    border: 2px solid rgb(46, 132, 198);
+    color: rgb(28, 34, 42);
+}
+QPushButton:disabled {
+    background: rgb(245, 247, 250);
+    color: rgb(180, 188, 198);
+    border: 1px solid rgb(210, 216, 224);
+}
+
+QSlider {
+    background: transparent;
+}
+QSlider::groove:horizontal {
+    height: 6px;
+    border: 1px solid rgb(180, 188, 198);
+    border-radius: 3px;
+    background: rgb(210, 216, 224);
+}
+QSlider::groove:vertical {
+    width: 6px;
+    border: 1px solid rgb(180, 188, 198);
+    border-radius: 3px;
+    background: rgb(210, 216, 224);
+}
+QSlider::sub-page:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                 stop:0 rgb(118, 180, 255),
+                                 stop:0.55 rgb(80, 160, 255),
+                                 stop:1 rgb(46, 132, 198));
+    border-radius: 3px;
+}
+QSlider::sub-page:vertical {
+    background: rgb(220, 225, 233);
+    border-radius: 3px;
+}
+QSlider::add-page:horizontal {
+    background: rgb(220, 225, 233);
+    border-radius: 3px;
+}
+QSlider::add-page:vertical {
+    background: qlineargradient(x1:0, y1:1, x2:0, y2:0,
+                                 stop:0 rgb(118, 180, 255),
+                                 stop:0.55 rgb(80, 160, 255),
+                                 stop:1 rgb(46, 132, 198));
+    border-radius: 3px;
+}
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(214, 221, 228));
+    border: 1px solid rgb(145, 155, 165);
+    width: 14px;
+    margin: -6px 0;
+    border-radius: 7px;
+    transition: border 0.2s;
+}
+QSlider::handle:horizontal:hover {
+    border: 2px solid rgb(46, 132, 198);
+}
+QSlider::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(214, 221, 228));
+    border: 1px solid rgb(145, 155, 165);
+    height: 14px;
+    margin: 0 -6px;
+    border-radius: 7px;
+    transition: border 0.2s;
+}
+QSlider::handle:vertical:hover {
+    border: 2px solid rgb(46, 132, 198);
+}
+
+
+/* QTabBar tabs and selected/hovered states */
+QTabBar::tab {
+    background: rgb(242, 244, 248);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(196, 202, 210);
+    padding: 4px 10px;
+}
+QTabBar::tab:selected {
+    background: rgb(255, 255, 255);
+    border: 1px solid rgb(180, 188, 198);
+    color: rgb(28, 34, 42);
+}
+QTabBar::tab:hover {
+    background: rgb(220, 236, 252);
+    color: rgb(28, 34, 42);
+}
+
+/* QCheckBox background and indicator */
+QCheckBox {
+    background: transparent;
+    color: rgb(28, 34, 42);
+}
+QCheckBox:disabled {
+    color: rgb(180, 188, 198);
+}
+QDialog,
+QWidget {
+    background-color: rgb(247, 248, 250);
+    color: rgb(28, 34, 42);
+}
+
+QLabel {
+    color: rgb(28, 34, 42);
+}
+
+QGroupBox {
+    border: 1px solid rgb(196, 202, 210);
+    margin-top: 8px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 4px;
+    color: rgb(28, 34, 42);
+}
+
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QTextBrowser {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(180, 188, 198);
+    border-radius: 4px;
+    color: rgb(28, 34, 42);
+    selection-background-color: rgb(46, 132, 198);
+    selection-color: rgb(255, 255, 255);
+}
+
+QComboBox,
+QSpinBox,
+QDoubleSpinBox {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(180, 188, 198);
+    border-radius: 4px;
+    padding: 2px 6px;
+    padding-right: 18px;
+    color: rgb(28, 34, 42);
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 18px;
+    border-left: 1px solid rgb(180, 188, 198);
+    background-color: rgb(255, 255, 255);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+QComboBox::down-arrow {
+    image: url(:/styles/down_arrow_light.svg);
+    width: 10px;
+    height: 6px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: rgb(255, 255, 255);
+    color: rgb(28, 34, 42);
+    selection-background-color: rgb(46, 132, 198);
+    selection-color: rgb(255, 255, 255);
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: rgb(202, 224, 246);
+    color: rgb(28, 34, 42);
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QComboBox QAbstractItemView::item:selected:hover {
+    background-color: rgb(38, 118, 186);
+    color: rgb(255, 255, 255);
+}
+
+QAbstractItemView {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(180, 188, 198);
+    color: rgb(28, 34, 42);
+    selection-background-color: rgb(46, 132, 198);
+    selection-color: rgb(255, 255, 255);
+}
+
+QAbstractItemView::item:hover {
+    background-color: rgb(202, 224, 246);
+    color: rgb(28, 34, 42);
+}
+
+QComboBox QListView::item:selected:hover {
+    background-color: rgb(26, 118, 194);
+    color: rgb(255, 255, 255);
+}
+
+QAbstractItemView::item:selected {
+    background-color: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QAbstractItemView::item:selected:hover {
+    background-color: rgb(38, 118, 186);
+    color: rgb(255, 255, 255);
+}
+
+QTreeWidget,
+QTreeView,
+QListView,
+QTableView {
+    background-color: rgb(255, 255, 255);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(180, 188, 198);
+    gridline-color: rgb(220, 225, 233);
+    alternate-background-color: rgb(246, 248, 252);
+    selection-background-color: rgb(46, 132, 198);
+    selection-color: rgb(255, 255, 255);
+}
+
+QTreeWidget::item:hover,
+QTreeView::item:hover,
+QListView::item:hover,
+QTableView::item:hover {
+    background: rgb(214, 232, 248);
+    color: rgb(28, 34, 42);
+}
+
+QTreeWidget::item:selected,
+QTreeView::item:selected,
+QListView::item:selected,
+QTableView::item:selected {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QHeaderView::section {
+    background-color: rgb(242, 244, 248);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(196, 202, 210);
+    padding: 2px 6px;
+}
+
+QTreeWidget::indicator,
+QTreeView::indicator,
+QListView::indicator,
+QTableView::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgb(165, 175, 185);
+    border-radius: 3px;
+    background: rgb(255, 255, 255);
+}
+
+QTreeWidget::indicator:unchecked,
+QTreeView::indicator:unchecked,
+QListView::indicator:unchecked,
+QTableView::indicator:unchecked {
+    image: none;
+    background: rgb(255, 255, 255);
+}
+
+QTreeWidget::indicator:checked,
+QTreeView::indicator:checked,
+QListView::indicator:checked,
+QTableView::indicator:checked {
+    background: rgb(50, 150, 200);
+    border: 1px solid rgb(46, 132, 198);
+    image: url(:/styles/checkmark_light.svg);
+}
+                                 stop:0 rgb(118, 244, 255),
+                                 stop:0.55 rgb(80, 220, 255),
+                                 stop:1 rgb(40, 160, 220));
+    border-radius: 3px;
+}
+
+QSlider::sub-page:vertical {
+    background: rgb(210, 216, 224);
+    border-radius: 3px;
+}
+
+QSlider::add-page:horizontal {
+    background: rgb(210, 216, 224);
+    border-radius: 3px;
+}
+
+QSlider::add-page:vertical {
+    background: qlineargradient(x1:0, y1:1, x2:0, y2:0,
+                                 stop:0 rgb(118, 244, 255),
+                                 stop:0.55 rgb(80, 220, 255),
+                                 stop:1 rgb(40, 160, 220));
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(214, 221, 228));
+    border: 1px solid rgb(145, 155, 165);
+    width: 14px;
+    margin: -6px 0;
+    border-radius: 7px;
+}
+
+QSlider::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(214, 221, 228));
+    border: 1px solid rgb(145, 155, 165);
+    height: 14px;
+    margin: 0 -6px;
+    border-radius: 7px;
+}
+
+QCheckBox,
+QRadioButton {
+    color: rgb(28, 34, 42);
+    background: transparent;
+    spacing: 6px;
+}
+
+QCheckBox::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgb(165, 175, 185);
+    border-radius: 3px;
+    background: rgb(255, 255, 255);
+}
+
+QCheckBox::indicator:unchecked {
+    image: none;
+    background: rgb(255, 255, 255);
+}
+
+QCheckBox::indicator:hover {
+    border: 1px solid rgb(46, 132, 198);
+}
+
+QCheckBox::indicator:checked {
+    background: rgb(50, 150, 200);
+    border: 1px solid rgb(46, 132, 198);
+    image: url(:/styles/checkmark_light.svg);
+}
+
+QCheckBox::indicator:checked:disabled {
+    background: rgb(120, 170, 205);
+    border: 1px solid rgb(130, 145, 160);
+    image: url(:/styles/checkmark_light.svg);
+}
+
+QCheckBox::indicator:unchecked:disabled {
+    background: rgb(245, 247, 250);
+    border: 1px solid rgb(205, 210, 218);
+    image: none;
+}
+
+QCheckBox::indicator:disabled {
+    background: rgb(232, 236, 242);
+    border: 1px solid rgb(200, 206, 214);
+}
+
+QCheckBox::indicator:disabled:hover {
+    border: 1.5px solid rgb(46, 132, 198);
+    background: rgb(232, 236, 242);
+}
+
+QGroupBox::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgb(165, 175, 185);
+    border-radius: 3px;
+    background: rgb(255, 255, 255);
+}
+
+QGroupBox::indicator:unchecked {
+    image: none;
+    background: rgb(255, 255, 255);
+}
+
+QGroupBox::indicator:checked {
+    background: rgb(50, 150, 200);
+    border: 1px solid rgb(46, 132, 198);
+    image: url(:/styles/checkmark_light.svg);
+}
+
+QTabWidget::pane {
+    border: 1px solid rgb(196, 202, 210);
+    top: -1px;
+}
+
+QTabBar::tab {
+    background: rgb(242, 244, 248);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(196, 202, 210);
+    padding: 4px 10px;
+}
+
+QTabBar::tab:selected {
+    background: rgb(255, 255, 255);
+    border: 1px solid rgb(180, 188, 198);
+}
+
+QMenuBar {
+    background-color: rgb(247, 248, 250);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(196, 202, 210);
+}
+
+QMenuBar::item {
+    background: transparent;
+    color: rgb(28, 34, 42);
+    padding: 3px 8px;
+}
+
+QMenuBar::item:selected,
+QMenuBar::item:pressed {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QMenuBar::item:hover {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QMenu {
+    background-color: rgb(255, 255, 255);
+    color: rgb(28, 34, 42);
+    border: 1px solid rgb(180, 188, 198);
+}
+
+QMenu::item {
+    padding: 4px 16px;
+    background: transparent;
+}
+
+QMenu::item:hover {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QMenu::item:selected {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QMenu::item:selected:hover {
+    background: rgb(46, 132, 198);
+    color: rgb(255, 255, 255);
+}
+
+QMenu::separator {
+    height: 1px;
+    background: rgb(196, 202, 210);
+    margin: 4px 8px;
+}
+
+QPushButton {
+    color: rgb(28, 34, 42);
+    font: bold;
+    border: 2px solid rgb(180, 188, 198);
+    border-radius: 5px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(232, 236, 242));
+    padding: 3px 9px;
+    min-height: 22px;
+}
+
+QPushButton:default,
+QPushButton:focus {
+    border: 2px solid rgb(46, 132, 198);
+    outline: none;
+}
+
+QPushButton:hover {
+    border: 2px solid rgb(46, 132, 198);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(246, 249, 252),
+                                 stop:1 rgb(220, 227, 236));
+}
+
+QPushButton:pressed {
+    border: 2px solid rgb(46, 132, 198);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(224, 230, 238),
+                                 stop:1 rgb(208, 216, 226));
+}
+
+QToolButton {
+    color: rgb(28, 34, 42);
+    font: bold;
+    border: 1px solid rgb(180, 188, 198);
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(255, 255, 255),
+                                 stop:1 rgb(232, 236, 242));
+    padding: 2px 6px;
+}
+
+QToolButton:hover {
+    border: 2px solid rgb(46, 132, 198);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(246, 249, 252),
+                                 stop:1 rgb(220, 227, 236));
+}
+
+QToolButton:pressed {
+    border: 2px solid rgb(46, 132, 198);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                 stop:0 rgb(224, 230, 238),
+                                 stop:1 rgb(208, 216, 226));
+}

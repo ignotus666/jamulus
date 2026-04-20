@@ -93,6 +93,8 @@ public:
     void   SetIsMyOwnFader() { bIsMyOwnFader = true; }
     bool   GetIsMyOwnFader() { return bIsMyOwnFader; }
     void   UpdateSoloState ( const bool bNewOtherSoloState );
+    int    GetMuteSoloButtonWidthHint() const;
+    void   SetMuteSoloButtonWidth ( const int iButtonWidth );
 
     void SetMIDICtrlUsed ( const bool isMIDICtrlUsed ) { bMIDICtrlUsed = isMIDICtrlUsed; }
 
@@ -265,6 +267,7 @@ protected:
 
     void StoreFaderSettings ( CChannelFader* pChanFader );
     void UpdateSoloStates();
+    void NormalizeVisibleFaderButtonWidths();
     void UpdateTitle();
 
     CClientSettings*        pSettings;

@@ -773,6 +773,8 @@ void CEffectsDlg::OnResetReverbClicked()
     pClient->SetReverbBypass ( true );
 
     UpdateReverbControls();
+    // Remove focus from the button to prevent blue outline
+    pTabs->setFocus();
 }
 
 void CEffectsDlg::OnResetFilterClicked()
@@ -784,6 +786,8 @@ void CEffectsDlg::OnResetFilterClicked()
     pClient->SetLowPassCutoffHz ( 12000 );
 
     UpdateFilterControls();
+    // Remove focus from the button to prevent blue outline
+    pTabs->setFocus();
 }
 
 void CEffectsDlg::OnResetCompressorClicked()
@@ -797,6 +801,8 @@ void CEffectsDlg::OnResetCompressorClicked()
     pClient->SetCompressorLimiterEnabled ( true );
 
     UpdateCompressorControls();
+    // Remove focus from the button to prevent blue outline
+    pTabs->setFocus();
 }
 
 void CEffectsDlg::OnSaveAsEffectsPresetClicked()
@@ -1027,6 +1033,8 @@ void CEffectsDlg::OnResetEQClicked()
     }
 
     emit EQResetRequested();
+    // Remove focus from the button to prevent blue outline
+    pTabs->setFocus();
 }
 
 void CEffectsDlg::OnSaveEQPresetClicked()

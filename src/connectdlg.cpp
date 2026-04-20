@@ -114,6 +114,7 @@ CConnectDlg::CConnectDlg ( CClientSettings* pNSetP, const bool bNewShowCompleteR
     bEnableIPv6 ( bNEnableIPv6 )
 {
     setupUi ( this );
+    setSizeGripEnabled ( false );
 
     // Add help text to controls -----------------------------------------------
     // directory
@@ -202,6 +203,12 @@ CConnectDlg::CConnectDlg ( CClientSettings* pNSetP, const bool bNewShowCompleteR
 
     // make sure we do not get a too long horizontal scroll bar
     lvwServers->header()->setStretchLastSection ( false );
+
+    // Prevent native auto-default frame artifacts; we style button focus/default via QSS.
+    butConnect->setAutoDefault ( false );
+    butCancel->setAutoDefault ( false );
+    butConnect->setDefault ( false );
+    butCancel->setDefault ( false );
 
     // add invisible columns which are used for sorting the list and storing
     // the current/maximum number of clients

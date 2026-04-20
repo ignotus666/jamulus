@@ -26,6 +26,7 @@
 #include <chrono>
 #include <deque>
 #include <QTimer>
+#include <QStyle>
 
 namespace
 {
@@ -734,6 +735,32 @@ void CChannelFader::UpdateGroupIDDependencies()
     SetupFaderTag ( cReceivedChanInfo.eSkillLevel );
 }
 
+int CChannelFader::GetMuteSoloButtonWidthHint() const
+{
+    const int iInfoBoxWidth = qMax ( pLabelInstBox->width(), pLabelInstBox->sizeHint().width() );
+
+    int iButtonWidth = iInfoBoxWidth;
+    if ( eDesign != GD_SLIMFADER )
+    {
+        iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
+        iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
+        iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
+    }
+
+    return iButtonWidth;
+}
+
+void CChannelFader::SetMuteSoloButtonWidth ( const int iButtonWidth )
+{
+    pcbGroup->setFixedWidth ( iButtonWidth );
+    pcbMute->setFixedWidth ( iButtonWidth );
+    pcbSolo->setFixedWidth ( iButtonWidth );
+    pcbGroup->setFixedHeight ( 25 );
+    pcbMute->setFixedHeight ( 25 );
+    pcbSolo->setFixedHeight ( 25 );
+    pMuteSoloBox->setFixedWidth ( iButtonWidth );
+}
+
 void CChannelFader::OnGroupStateChanged ( bool )
 {
     // we want a popup menu shown if the user presses the group checkbox but
@@ -813,7 +840,9 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
     if ( eDesign == GD_SLIMFADER )
     {
         // in slim mode use a non-bold font (smaller width font)
-        plblLabel->setStyleSheet ( "QLabel { color: black; }" );
+        plblLabel->setProperty ( "channelLabelStyle", "slim" );
+        plblLabel->style()->unpolish ( plblLabel );
+        plblLabel->style()->polish ( plblLabel );
 
         // break at every 4th character
         iBreakPos = 4;
@@ -821,7 +850,9 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
     else
     {
         // in normal mode use bold font
-        plblLabel->setStyleSheet ( "QLabel { color: black; font: bold; }" );
+        plblLabel->setProperty ( "channelLabelStyle", "normal" );
+        plblLabel->style()->unpolish ( plblLabel );
+        plblLabel->style()->polish ( plblLabel );
 
         // break text at predefined position
         iBreakPos = MAX_LEN_FADER_TAG / 2;
@@ -1338,6 +1369,32 @@ void CAudioMixerBoard::SetRecorderState ( const ERecorderState newRecorderState 
     UpdateTitle();
 }
 
+void CAudioMixerBoard::NormalizeVisibleFaderButtonWidths()
+{
+    int iSharedWidth = 0;
+
+    for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
+    {
+        if ( vecpChanFader[i]->IsVisible() )
+        {
+            iSharedWidth = qMax ( iSharedWidth, vecpChanFader[i]->GetMuteSoloButtonWidthHint() );
+        }
+    }
+
+    if ( iSharedWidth == 0 )
+    {
+        return;
+    }
+
+    for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
+    {
+        if ( vecpChanFader[i]->IsVisible() )
+        {
+            vecpChanFader[i]->SetMuteSoloButtonWidth ( iSharedWidth );
+        }
+    }
+}
+
 void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInfo )
 {
     // get number of connected clients
@@ -1466,6 +1523,10 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
 
     // sort the channels according to the selected sorting type
     ChangeFaderOrder ( eChSortType );
+
+    // Keep GRP/MUTE/SOLO button widths consistent across all visible strips.
+    NormalizeVisibleFaderButtonWidths();
+    QTimer::singleShot ( 0, this, [this] { NormalizeVisibleFaderButtonWidths(); } );
 
     // emit status of connected clients
     emit NumClientsChanged ( static_cast<int> ( iNumConnectedClients ) );

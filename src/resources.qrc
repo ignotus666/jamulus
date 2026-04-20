@@ -20,6 +20,19 @@
         <file>res/CLEDRedSmall.png</file>
         <file>res/CLEDYellowSmall.png</file>
     </qresource>
+    <qresource prefix="/styles">
+        <file alias="clientdlg_dark.qss">../res/styles/clientdlg_dark.qss</file>
+        <file alias="clientdlg_light.qss">../res/styles/clientdlg_light.qss</file>
+        <file alias="dialog_common_dark.qss">../res/styles/dialog_common_dark.qss</file>
+        <file alias="dialog_common_light.qss">../res/styles/dialog_common_light.qss</file>
+        <file alias="dialog_dark.qss">../res/styles/dialog_dark.qss</file>
+        <file alias="dialog_light.qss">../res/styles/dialog_light.qss</file>
+        <file alias="serverdlg_dark.qss">../res/styles/serverdlg_dark.qss</file>
+        <file alias="serverdlg_light.qss">../res/styles/serverdlg_light.qss</file>
+        <file alias="checkmark_light.svg">../res/styles/checkmark_light.svg</file>
+        <file alias="down_arrow_light.svg">../res/styles/down_arrow_light.svg</file>
+        <file alias="down_arrow_dark.svg">../res/styles/down_arrow_dark.svg</file>
+    </qresource>
     <qresource prefix="/png/mixer">
         <file>res/mixerboardbackground.png</file>
         <file>res/transparent1x1.png</file>

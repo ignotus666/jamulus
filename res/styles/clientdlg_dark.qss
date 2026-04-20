@@ -1,0 +1,291 @@
+QFrame#backgroundFrame {
+    background-color: rgb(28, 28, 31);
+    border:           1px solid rgb(58, 58, 62);
+    border-radius:    4px;
+    margin:           0px;
+    padding:          5px;
+}
+QMenuBar {
+    background-color: rgb(28, 28, 31);
+    color:           rgb(220, 232, 242);
+    border:          1px solid rgb(58, 58, 62);
+}
+QMenuBar::item {
+    background:      transparent;
+    color:           rgb(220, 232, 242);
+    padding:         3px 8px;
+}
+QMenuBar::item:selected,
+QMenuBar::item:pressed {
+    background:     rgb(52, 52, 56);
+    color:           rgb(220, 232, 242);
+}
+QMenuBar::item:hover {
+    background:      rgb(52, 52, 56);
+    color:           rgb(220, 232, 242);
+}
+QMenu {
+    background-color: rgb(37, 37, 40);
+    color:           rgb(220, 232, 242);
+    border:          1px solid rgb(88, 88, 92);
+}
+QMenu::item {
+    padding:         4px 16px;
+    background:      transparent;
+    color:           rgb(220, 232, 242);
+}
+QMenu::item:hover {
+    background:      rgb(60, 60, 65);
+    color:           rgb(220, 232, 242);
+}
+QMenu::item:selected {
+    background:      rgb(52, 52, 56);
+    color:           rgb(220, 232, 242);
+}
+QMenu::item:selected:hover {
+    background:   rgb(60, 60, 65);
+    color:        rgb(220, 232, 242);
+}
+QMenu::separator {
+    height:          1px;
+    background:      rgb(58, 58, 62);
+    margin:          4px 8px;
+}
+QLabel {
+    color:          rgb(220, 220, 220);
+    font:           bold;
+}
+QLabel#lblInputLEDMeter,
+QLabel#lblPing,
+QLabel#lblPingVal,
+QLabel#lblPingUnit,
+QLabel#lblDelay,
+QLabel#lblDelayVal,
+QLabel#lblDelayUnit,
+QLabel#lblBuffers {
+    font:      bold 11px;
+}
+QLabel#lblOutput,
+QLabel#pOutputBandMeterTitle {
+    font:      normal 10px;
+}
+QLabel[channelLabelStyle="slim"] {
+    color: rgb(0, 0, 0);
+}
+QLabel[channelLabelStyle="normal"] {
+    color: rgb(0, 0, 0); font: bold;
+}
+QRadioButton {
+    color:          rgb(220, 220, 220);
+    font:           bold;
+}
+QScrollArea {
+    background:     transparent;
+}
+.QWidget {
+    background:     transparent;
+}
+QGroupBox {
+    background:     transparent;
+}
+QGroupBox::title {
+    color:          rgb(220, 220, 220);
+}
+QFrame#lineMeter,
+QFrame#lineMainDivider,
+QFrame#lineUpperLowerLeft,
+QFrame#lineUpperLowerLeft_2 {
+    background-color: rgb(58, 58, 62);
+    color:           rgb(58, 58, 62);
+}
+
+QPushButton#chbLocalMute,
+QPushButton#chbSettings,
+QPushButton#chbChat,
+QPushButton#butEffects {
+    color: rgb(220, 220, 220);
+    font: bold;
+    spacing: 0px;
+    padding: 4px 10px;
+    border: 1px solid rgb(88, 88, 92);
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(54, 54, 58),
+        stop:1 rgb(38, 38, 42));
+    min-height: 20px;
+    max-height: 20px;
+    text-align: center;
+    margin: 0px;
+}
+QPushButton#chbLocalMute:checked,
+QPushButton#chbSettings:checked,
+QPushButton#chbChat:checked,
+QPushButton#butEffects:checked {
+    border: 2px solid rgb(82, 180, 110);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(60, 80, 60),
+        stop:1 rgb(40, 60, 40));
+    color: rgb(220, 220, 220);
+}
+QPushButton#chbLocalMute:hover,
+QPushButton#chbSettings:hover,
+QPushButton#chbChat:hover,
+QPushButton#butEffects:hover {
+    border: 2px solid rgb(82, 180, 110);
+    background: none;
+}
+QPushButton#chbLocalMute:checked:hover,
+QPushButton#chbSettings:checked:hover,
+QPushButton#chbChat:checked:hover,
+QPushButton#butEffects:checked:hover {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(82, 180, 110);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(202, 233, 202),
+        stop:1 rgb(173, 245, 173));
+}
+QPushButton#chbLocalMute:pressed,
+QPushButton#chbSettings:pressed,
+QPushButton#chbChat:pressed,
+QPushButton#butEffects:pressed {
+    border: 2px solid rgb(64, 158, 94);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(50, 100, 50),
+        stop:1 rgb(30, 60, 30));
+}
+QPushButton#butConnect:hover {
+    border: 2px solid rgb(110, 194, 248);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(64, 64, 68),
+        stop:1 rgb(46, 46, 50));
+}
+QPushButton#butConnect:pressed {
+    border: 2px solid rgb(92, 180, 242);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(52, 52, 56),
+        stop:1 rgb(38, 38, 42));
+}
+QPushButton#butConnect {
+    color:             rgb(220, 220, 220);
+    font:              bold;
+    border:            2px solid rgb(78, 166, 232);
+    border-radius:     6px;
+    background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(58, 58, 62),
+        stop:1 rgb(42, 42, 46));
+    padding:           4px 10px;
+    min-height:        40px;
+    max-height:        40px;
+}
+QPushButton#butConnect[connectedState="true"] {
+    color:             rgb(244, 206, 210);
+    border:            2px solid rgb(222, 88, 96);
+    background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(243, 202, 207),
+        stop:1 rgb(241, 93, 118));
+}
+QPushButton#butConnect[connectedState="true"]:hover {
+    border:            2px solid rgb(222, 88, 96);
+    background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(243, 201, 206),
+        stop:1 rgb(247, 94, 119));
+}
+QPushButton#butConnect[connectedState="true"]:pressed {
+    border:            2px solid rgb(232, 108, 116);
+    background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(58, 46, 48),
+        stop:1 rgb(42, 34, 36));
+}
+
+/* Mixer strip buttons */
+
+QPushButton#pcbGroup,
+QPushButton#pcbMute,
+QPushButton#pcbSolo {
+    color: rgb(220, 220, 220);
+    font: bold;
+    spacing: 0px;
+    padding: 4px 10px;
+    border: 1.5px solid rgb(88, 88, 92);
+    border-radius: 6px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(54, 54, 58),
+        stop:1 rgb(38, 38, 42));
+    min-height: 20px;
+    max-height: 20px;
+    text-align: center;
+    margin: 0px;
+}
+QPushButton#pcbGroup:checked {
+    color: rgb(220, 220, 220);
+    border: 2px solid rgb(43, 147, 212);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(80, 160, 220),
+        stop:1 rgb(40, 80, 110));
+}
+QPushButton#pcbGroup:hover {
+    border: 2px solid rgb(43, 102, 212);
+    background: none;
+}
+QPushButton#pcbGroup:checked:hover {
+    border: 2px solid rgb(12, 51, 228);
+    background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(141, 141, 241),
+        stop:1 rgb(98, 98, 236));
+}
+QPushButton#pcbMute:checked {
+    color: rgb(220, 220, 220);
+    border: 2px solid rgb(220, 0, 0);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(180, 80, 80),
+        stop:1 rgb(120, 60, 60));
+}
+QPushButton#pcbMute:hover {
+    border: 2px solid rgb(220, 0, 0);
+    background: none;
+}
+QPushButton#pcbMute:checked:hover {
+    border: 1px solid rgb(122, 6, 31);
+    background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(236, 171, 196),
+        stop:1 rgb(236, 79, 126));
+}
+QPushButton#pcbSolo:checked {
+    color: rgb(220, 220, 220);
+    border: 2px solid rgb(222, 126, 255);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(180, 80, 180),
+        stop:1 rgb(120, 60, 120));
+}
+QPushButton#pcbSolo:hover {
+    border: 2px solid rgb(222, 126, 255);
+    background: none;
+}
+QPushButton#pcbSolo:checked:hover {
+    border: 1px solid rgb(140, 9, 170);
+    background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(243, 184, 238),
+        stop:1 rgb(231, 121, 241));
+}
+QPushButton#chbLocalMute:disabled,
+QPushButton#chbSettings:disabled,
+QPushButton#chbChat:disabled,
+QPushButton#butEffects:disabled,
+QPushButton#pcbGroup:disabled,
+QPushButton#pcbMute:disabled,
+QPushButton#pcbSolo:disabled {
+    color:     rgb(166, 176, 188);
+    border:         1px solid rgb(96, 96, 100);
+    background:     qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(46, 46, 50),
+        stop:1 rgb(32, 32, 36));
+}
+QPushButton#chbLocalMute::indicator,
+QPushButton#chbSettings::indicator,
+QPushButton#chbChat::indicator {
+    width:    0px;
+    height:         0px;
+    margin:         0px;
+    border:         0px;
+    background:     transparent;
+}

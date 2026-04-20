@@ -1,0 +1,10 @@
+QPushButton[learnActive="true"] { color: rgb(24, 104, 50);
+                                   border: 2px solid rgb(82, 180, 110);
+                                   background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                                stop:0 rgb(202, 244, 212),
+                                                                stop:1 rgb(172, 230, 186)); }
+QPushButton[learnActive="true"]:hover { border: 2px solid rgb(64, 158, 94);
+                                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                                      stop:0 rgb(190, 238, 202),
+                                                                      stop:1 rgb(162, 224, 178)); }
+

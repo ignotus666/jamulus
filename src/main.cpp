@@ -862,10 +862,10 @@ int main ( int argc, char** argv )
     activity.BeginActivity();
 #endif
 
+#ifndef SERVER_ONLY
     // init resources
     Q_INIT_RESOURCE ( resources );
 
-#ifndef SERVER_ONLY
     //### TEST: BEGIN ###//
     // activate the following line to activate the test bench,
     // CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
