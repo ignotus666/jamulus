@@ -102,6 +102,12 @@
                <layout class="QVBoxLayout">
                 <item>
                  <widget class="QLabel" name="lblInputLEDMeter">
+                  <property name="font">
+                   <font>
+                    <family>DejaVu Sans</family>
+                    <pointsize>11</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>Input</string>
                   </property>
@@ -162,6 +168,12 @@
                       <height>16777215</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <family>DejaVu Sans</family>
+                      <pointsize>11</pointsize>
+                     </font>
+                    </property>
                     <property name="text">
                      <string>L</string>
                     </property>
@@ -183,6 +195,12 @@
                       <width>19</width>
                       <height>16777215</height>
                      </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>DejaVu Sans</family>
+                      <pointsize>11</pointsize>
+                     </font>
                     </property>
                     <property name="text">
                      <string>R</string>
