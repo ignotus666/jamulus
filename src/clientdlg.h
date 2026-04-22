@@ -199,6 +199,7 @@ public slots:
     void OnReverbEarlyEnabledChanged ( bool enabled );
     void OnReverbFreezeChanged ( bool enabled );
     void OnReverbBypassChanged ( bool bypassed );
+
     void OnCompressorBypassChanged ( bool bypassed );
     void OnCompressorThresholdChanged ( int value );
     void OnCompressorRatioChanged ( int value );
@@ -206,6 +207,7 @@ public slots:
     void OnCompressorReleaseChanged ( int value );
     void OnCompressorMakeupChanged ( int value );
     void OnCompressorLimiterChanged ( bool enabled );
+    
     void OnFilterBypassChanged ( bool bypassed );
     void OnHighPassEnabledChanged ( bool enabled );
     void OnLowPassEnabledChanged ( bool enabled );

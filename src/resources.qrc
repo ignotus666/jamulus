@@ -9,10 +9,6 @@
         <file>res/IndicatorGreen.png</file>
         <file>res/IndicatorYellow.png</file>
         <file>res/IndicatorRed.png</file>
-        <file>res/HLEDGreen.png</file>
-        <file>res/HLEDBlack.png</file>
-        <file>res/HLEDRed.png</file>
-        <file>res/HLEDYellow.png</file>
         <file>res/IndicatorRedFancy.png</file>
         <file>res/IndicatorYellowFancy.png</file>
         <file>res/CLEDGreenSmall.png</file>
@@ -21,20 +17,19 @@
         <file>res/CLEDYellowSmall.png</file>
     </qresource>
     <qresource prefix="/styles">
-        <file alias="clientdlg_dark.qss">../res/styles/clientdlg_dark.qss</file>
-        <file alias="clientdlg_light.qss">../res/styles/clientdlg_light.qss</file>
-        <file alias="dialog_common_dark.qss">../res/styles/dialog_common_dark.qss</file>
-        <file alias="dialog_common_light.qss">../res/styles/dialog_common_light.qss</file>
-        <file alias="dialog_dark.qss">../res/styles/dialog_dark.qss</file>
-        <file alias="dialog_light.qss">../res/styles/dialog_light.qss</file>
-        <file alias="serverdlg_dark.qss">../res/styles/serverdlg_dark.qss</file>
-        <file alias="serverdlg_light.qss">../res/styles/serverdlg_light.qss</file>
-        <file alias="checkmark_light.svg">../res/styles/checkmark_light.svg</file>
-        <file alias="down_arrow_light.svg">../res/styles/down_arrow_light.svg</file>
-        <file alias="down_arrow_dark.svg">../res/styles/down_arrow_dark.svg</file>
+        <file alias="clientdlg_dark.qss">../src/res/styles/clientdlg_dark.qss</file>
+        <file alias="clientdlg_light.qss">../src/res/styles/clientdlg_light.qss</file>
+        <file alias="dialog_common_dark.qss">../src/res/styles/dialog_common_dark.qss</file>
+        <file alias="dialog_common_light.qss">../src/res/styles/dialog_common_light.qss</file>
+        <file alias="dialog_dark.qss">../src/res/styles/dialog_dark.qss</file>
+        <file alias="dialog_light.qss">../src/res/styles/dialog_light.qss</file>
+        <file alias="serverdlg_dark.qss">../src/res/styles/serverdlg_dark.qss</file>
+        <file alias="serverdlg_light.qss">../src/res/styles/serverdlg_light.qss</file>
+        <file alias="checkmark_light.svg">../src/res/styles/checkmark_light.svg</file>
+        <file alias="down_arrow_light.svg">../src/res/styles/down_arrow_light.svg</file>
+        <file alias="down_arrow_dark.svg">../src/res/styles/down_arrow_dark.svg</file>
     </qresource>
     <qresource prefix="/png/mixer">
-        <file>res/mixerboardbackground.png</file>
         <file>res/transparent1x1.png</file>
         <file>res/mutediconorange.png</file>
     </qresource>

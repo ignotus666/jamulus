@@ -678,12 +678,19 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( &TimerDetectFeedback, &QTimer::timeout, this, &CClientDlg::OnTimerDetectFeedback );
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbValueChanged, this, &CClientDlg::OnAudioReverbValueChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbPreDelayChanged, this, &CClientDlg::OnReverbPreDelayChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRoomSizeChanged, this, &CClientDlg::OnReverbRoomSizeChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbDampingChanged, this, &CClientDlg::OnReverbDampingChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWetMixChanged, this, &CClientDlg::OnReverbWetMixChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbEarlyLevelChanged, this, &CClientDlg::OnReverbEarlyLevelChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWidthChanged, this, &CClientDlg::OnReverbWidthChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbLeftSelected, this, [this]
     {
         pClient->SetReverbOnLeftChan ( true );
@@ -695,24 +702,42 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         UpdateRevSelection();
     } );
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbEarlyEnabledChanged, this, &CClientDlg::OnReverbEarlyEnabledChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbFreezeChanged, this, &CClientDlg::OnReverbFreezeChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbBypassChanged, this, &CClientDlg::OnReverbBypassChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorBypassChanged, this, &CClientDlg::OnCompressorBypassChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorThresholdChanged, this, &CClientDlg::OnCompressorThresholdChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorRatioChanged, this, &CClientDlg::OnCompressorRatioChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorAttackChanged, this, &CClientDlg::OnCompressorAttackChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorReleaseChanged, this, &CClientDlg::OnCompressorReleaseChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorMakeupChanged, this, &CClientDlg::OnCompressorMakeupChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorLimiterChanged, this, &CClientDlg::OnCompressorLimiterChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::FilterBypassChanged, this, &CClientDlg::OnFilterBypassChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassEnabledChanged, this, &CClientDlg::OnHighPassEnabledChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassEnabledChanged, this, &CClientDlg::OnLowPassEnabledChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassCutoffChanged, this, &CClientDlg::OnHighPassCutoffChanged );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassCutoffChanged, this, &CClientDlg::OnLowPassCutoffChanged );
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); 
+    } );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBandGainChanged, this, [this] ( int iBandIndex, int iGainDb ) {
         pClient->SetEQBandGainDb ( iBandIndex, iGainDb );
     } );
+
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQResetRequested, this, [this] { pClient->ResetEQ(); } );
 
     // other
@@ -732,6 +757,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // protocol, a modal licence dialog is opened. Since this blocks the thread, we need
     // a queued connection to make sure the core protocol mechanism is not blocked, too.
     qRegisterMetaType<ELicenceType> ( "ELicenceType" );
+
     QObject::connect ( pClient, &CClient::LicenceRequired, this, &CClientDlg::OnLicenceRequired, Qt::QueuedConnection );
 
     QObject::connect ( pClient, &CClient::PingTimeReceived, this, &CClientDlg::OnPingTimeResult );
@@ -763,6 +789,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( pClient, &CClient::SoundDeviceChanged, this, &CClientDlg::OnSoundDeviceChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::GUIDesignChanged, this, &CClientDlg::OnGUIDesignChanged );
+    
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, this, &CClientDlg::OnUIThemeChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MeterStyleChanged, this, &CClientDlg::OnMeterStyleChanged );

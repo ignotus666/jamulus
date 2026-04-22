@@ -313,12 +313,8 @@ QListView::indicator:checked,
 QTableView::indicator:checked {
     background: rgb(50, 150, 200);
     border: 1px solid rgb(46, 132, 198);
-    image: url(:/styles/checkmark_light.svg);
-}
-                                 stop:0 rgb(118, 244, 255),
-                                 stop:0.55 rgb(80, 220, 255),
-                                 stop:1 rgb(40, 160, 220));
     border-radius: 3px;
+    image: url(:/styles/checkmark_light.svg);
 }
 
 QSlider::sub-page:vertical {

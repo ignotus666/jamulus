@@ -316,10 +316,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
         pLabelInstBox->setMaximumWidth ( QWIDGETSIZE_MAX );
         pPan->setFixedSize ( 50, 50 );
-        pPanLabel->setText ( tr ( "PAN" ) );
-        pcbMute->setText ( tr ( "MUTE" ) );
-        pcbSolo->setText ( tr ( "SOLO" ) );
-        strGroupBaseText  = tr ( "GRP" );
+        pPanLabel->setText ( tr ( "Pan" ) );
+        pcbMute->setText ( tr ( "Mute" ) );
+        pcbSolo->setText ( tr ( "Solo" ) );
+        strGroupBaseText  = tr ( "Grp" );
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
         break;
 
@@ -401,7 +401,7 @@ void CChannelFader::SetDisplayPans ( const bool eNDP )
         pPanLabel->setVisible ( true );
         pPan->setVisible ( true );
         pPan->setEnabled ( true );
-        pPanLabel->setText ( ( eDesign == GD_ORIGINAL ) ? tr ( "PAN" ) : tr ( "Pan" ) );
+        pPanLabel->setText ( tr ( "Pan" ) );
     }
     else
     {

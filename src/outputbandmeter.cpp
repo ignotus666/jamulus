@@ -59,7 +59,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
     Q_UNUSED ( pEvent )
 
     QPainter painter ( this );
-    painter.setRenderHint ( QPainter::Antialiasing, false );
+    painter.setRenderHint ( QPainter::Antialiasing, true );
 
     const int iMargin = 2;
     const int iGap    = 2;
@@ -68,33 +68,82 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
     const int iWAvail = qMax ( 1, width() - 2 * iMargin - ( iCount - 1 ) * iGap );
     const int iBarW   = qMax ( 1, iWAvail / iCount );
 
-    for ( int iBand = 0; iBand < iCount; ++iBand )
-    {
+    // Segmented meter parameters
+    constexpr int iSegmentCount = 16; // Match NUM_STEPS_LED_BAR from CLevelMeter
+    const int iGapPx = ( iH > 60 ) ? 1 : 0;
+    const int iTotalGapPx = std::max ( 0, ( iSegmentCount - 1 ) * iGapPx );
+    const int iUsableH = std::max ( iSegmentCount, iH - iTotalGapPx );
+    const double dBottomWeight = 1.35;
+    const double dTopWeight = 0.65;
+
+    // Gradient stops (copied from CLevelMeter)
+    const auto ColorAt = [] ( const double dPos ) {
+        struct TStop { double dPos; QColor c; };
+        const TStop aStops[] = {
+            { 0.00, QColor ( 48, 230, 75 ) },
+            { 0.50, QColor ( 48, 230, 75 ) },
+            { 0.68, QColor ( 245, 210, 50 ) },
+            { 0.84, QColor ( 245, 155, 40 ) },
+            { 1.00, QColor ( 235, 60, 55 ) }
+        };
+        const double dClampedPos = std::max ( 0.0, std::min ( 1.0, dPos ) );
+        for ( int i = 0; i < 4; ++i ) {
+            const TStop& s0 = aStops[i];
+            const TStop& s1 = aStops[i + 1];
+            if ( dClampedPos <= s1.dPos ) {
+                const double dDenom = std::max ( 1e-9, s1.dPos - s0.dPos );
+                const double t = ( dClampedPos - s0.dPos ) / dDenom;
+                return QColor::fromRgbF (
+                    s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
+                    s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
+                    s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
+                    1.0 );
+            }
+        }
+        return aStops[4].c;
+    };
+
+    for ( int iBand = 0; iBand < iCount; ++iBand ) {
         const int iX = iMargin + iBand * ( iBarW + iGap );
         const int iY = iMargin;
+        QRect barRect ( iX, iY, iBarW, iH );
+        painter.fillRect ( barRect, QColor ( 28, 32, 36, 90 ) );
 
-        painter.fillRect ( QRect ( iX, iY, iBarW, iH ), QColor ( 28, 32, 36, 90 ) );
-
-        const int iFillH = qBound ( 0, static_cast<int> ( afLevels[iBand] * iH ), iH );
-        if ( iFillH <= 0 )
-        {
-            continue;
+        // Segmented rendering
+        double dNormValue = std::max ( 0.0, std::min ( 1.0, static_cast<double> ( afLevels[iBand] ) ) );
+        double dWeightSum = 0.0;
+        for ( int iSegment = 0; iSegment < iSegmentCount; ++iSegment ) {
+            const double dPos = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
+            const double dWeight = dBottomWeight + ( dTopWeight - dBottomWeight ) * dPos;
+            dWeightSum += dWeight;
         }
-
-        QColor cColor ( 42, 198, 74 );
-        if ( afLevels[iBand] > 0.90f )
-        {
-            cColor = QColor ( 218, 56, 56 );
+        int iYCursor = iY + iH;
+        double dCumWeight = 0.0;
+        for ( int iSegment = 0; iSegment < iSegmentCount; ++iSegment ) {
+            const double dPos = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
+            const double dWeight = dBottomWeight + ( dTopWeight - dBottomWeight ) * dPos;
+            const int iStartPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
+            dCumWeight += dWeight;
+            const int iEndPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
+            const int iSegH = std::max ( 1, iEndPx - iStartPx );
+            iYCursor -= iSegH;
+            QRect segRect ( iX, iYCursor, iBarW, iSegH );
+            if ( !segRect.isValid() ) continue;
+            const double dSegStart = static_cast<double> ( iSegment ) / iSegmentCount;
+            const bool bActive = dNormValue > dSegStart;
+            if ( bActive ) {
+                const double dSegMid = std::min ( 1.0, ( iSegment + 0.5 ) / iSegmentCount );
+                const QColor cSeg = ColorAt ( dSegMid );
+                painter.setPen ( Qt::NoPen );
+                painter.setBrush ( cSeg );
+                const qreal dRadius = std::min ( 2.2, std::min ( segRect.width(), segRect.height() ) / 2.0 );
+                painter.drawRoundedRect ( QRectF ( segRect ), dRadius, dRadius );
+            } else {
+                painter.fillRect ( segRect, QColor ( 28, 35, 45 ) );
+            }
+            if ( iSegment + 1 < iSegmentCount ) {
+                iYCursor -= iGapPx;
+            }
         }
-        else if ( afLevels[iBand] > 0.75f )
-        {
-            cColor = QColor ( 234, 136, 44 );
-        }
-        else if ( afLevels[iBand] > 0.60f )
-        {
-            cColor = QColor ( 214, 206, 72 );
-        }
-
-        painter.fillRect ( QRect ( iX, iY + iH - iFillH, iBarW, iFillH ), cColor );
     }
 }
