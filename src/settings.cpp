@@ -697,11 +697,11 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     }
 
     // MeterStyle
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "meterstyle", 0, 4 /* MT_LED_ROUND_BIG */, iValue ) )
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "meterstyle", 0, 4 /* legacy max */, iValue ) )
     {
-        const EMeterStyle eLoadedMeterStyle = static_cast<EMeterStyle> ( iValue );
-        // Preserve backward compatibility with existing config values by collapsing to bar styles.
-        const EMeterStyle eNormalizedMeterStyle = ( eLoadedMeterStyle == MT_BAR_NARROW || eLoadedMeterStyle == MT_LED_ROUND_SMALL ) ? MT_BAR_NARROW : MT_BAR_WIDE;
+        // Preserve backward compatibility with legacy config values:
+        // 0=narrow bar, 1=wide bar, 2=LED stripe (wide), 3=LED round small (narrow), 4=LED round big (wide).
+        const EMeterStyle eNormalizedMeterStyle = ( iValue == 0 || iValue == 3 ) ? MT_BAR_NARROW : MT_BAR_WIDE;
         pClient->SetMeterStyle ( eNormalizedMeterStyle );
     }
     else

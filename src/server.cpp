@@ -874,8 +874,10 @@ void CServer::DecodeReceiveData ( const int iChanCnt, const int iNumClients )
                 return;
             }
 
-            const int  iOffset     = iB * SYSTEM_FRAME_SIZE_SAMPLES * vecNumAudioChannels[iChanCnt];
-            const bool bIsRawAudio = ( iCeltNumCodedBytes == iClientFrameSizeSamples * vecNumAudioChannels[iChanCnt] * sizeof ( int16_t ) );
+            const int    iOffset        = iB * SYSTEM_FRAME_SIZE_SAMPLES * vecNumAudioChannels[iChanCnt];
+            const size_t iRawAudioBytes = static_cast<size_t> ( iClientFrameSizeSamples ) * static_cast<size_t> ( vecNumAudioChannels[iChanCnt] ) *
+                                          sizeof ( int16_t );
+            const bool   bIsRawAudio = ( iCeltNumCodedBytes >= 0 ) && ( static_cast<size_t> ( iCeltNumCodedBytes ) == iRawAudioBytes );
 
             // get pointer to coded data
             if ( eGetStat == GS_BUFFER_OK )
@@ -1173,7 +1175,9 @@ void CServer::MixEncodeTransmitData ( const int iChanCnt, const int iNumClients 
             DoubleFrameSizeConvBufOut[iCurChanID].GetAll ( vecsSendData, DOUBLE_SYSTEM_FRAME_SIZE_SAMPLES * vecNumAudioChannels[iChanCnt] );
         }
 
-        if ( iCeltNumCodedBytes != iClientFrameSizeSamples * vecNumAudioChannels[iChanCnt] * sizeof ( int16_t ) )
+        const size_t iRawAudioBytes = static_cast<size_t> ( iClientFrameSizeSamples ) * static_cast<size_t> ( vecNumAudioChannels[iChanCnt] ) *
+                          sizeof ( int16_t );
+        if ( ( iCeltNumCodedBytes < 0 ) || ( static_cast<size_t> ( iCeltNumCodedBytes ) != iRawAudioBytes ) )
         {
             // OPUS encoding
             if ( pCurOpusEncoder != nullptr )

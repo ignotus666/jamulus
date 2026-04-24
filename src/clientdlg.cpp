@@ -49,9 +49,7 @@ QString BuildClientDlgStyleSheet ( const EUITheme eTheme )
 QString BuildDialogStyleSheet ( const EUITheme eTheme )
 {
     const bool bDark = IsDarkUITheme ( eTheme );
-    QString     styleSheet = LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
-    styleSheet += LoadStyleSheetResource ( bDark ? ":/styles/dialog_dark.qss" : ":/styles/dialog_light.qss" );
-    return styleSheet;
+    return LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
 }
 
 QString BuildMainMenuStyleSheet ( const EUITheme eTheme )
@@ -382,6 +380,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // init status LEDs
     ledBuffers->Reset();
     ledDelay->Reset();
+    ledBuffers->hide();
+    ledDelay->hide();
 
     // Use adaptive widths for action buttons in the left panel.
     const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
@@ -1536,6 +1536,9 @@ void CClientDlg::Connect ( const QString& strSelectedAddress, const QString& str
         TimerPing.start ( PING_UPDATE_TIME_MS );
         TimerCheckAudioDeviceOk.start ( CHECK_AUDIO_DEV_OK_TIME_MS ); // is single shot timer
 
+        ledBuffers->show();
+        ledDelay->show();
+
         // audio feedback detection
         if ( pSettings->bEnableFeedbackDetection )
         {
@@ -1596,6 +1599,8 @@ void CClientDlg::Disconnect()
     // reset LEDs
     ledBuffers->Reset();
     ledDelay->Reset();
+    ledBuffers->hide();
+    ledDelay->hide();
 
     // clear text labels with client parameters
     lblPingVal->setText ( "---" );
@@ -1669,11 +1674,12 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     if ( QMenuBar* pMainMenu = findChild<QMenuBar*> ( "mainMenuBar" ) )
     {
         pMainMenu->setStyleSheet ( BuildMainMenuStyleSheet ( eResolvedTheme ) );
-        const QList<QMenu*> vecMenus      = pMainMenu->findChildren<QMenu*>();
-        for ( QMenu* pPopupMenu : vecMenus )
-        {
-            ApplyMainPopupMenuStyle ( pPopupMenu, eResolvedTheme );
-        }
+    }
+
+    const QList<QMenu*> vecMenus = findChildren<QMenu*>();
+    for ( QMenu* pPopupMenu : vecMenus )
+    {
+        ApplyMainPopupMenuStyle ( pPopupMenu, eResolvedTheme );
     }
 
     // apply GUI design to current window
@@ -1837,6 +1843,14 @@ void CClientDlg::OnGUIDesignChanged()
 
 void CClientDlg::OnUIThemeChanged()
 {
+
+    // Reapply Fusion style (safe to call multiple times)
+    QApplication::setStyle("Fusion");
+
+    // Reapply palette using shared function
+    EUITheme eResolvedTheme = ResolveUITheme(pSettings->eUITheme);
+    SetAppPaletteForTheme(eResolvedTheme);
+
     SetGUIDesign ( pClient->GetGUIDesign() );
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );
 }

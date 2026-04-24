@@ -70,10 +70,11 @@ QLabel#pOutputBandMeterTitle {
     font:      normal 10px;
 }
 QLabel[channelLabelStyle="slim"] {
-    color: rgb(220, 232, 242);
+    color: rgb(37, 37, 40);
+    font: 9px;
 }
 QLabel[channelLabelStyle="normal"] {
-    color: rgb(220, 232, 242); font: bold;
+    color: rgb(37, 37, 40); font: bold 9px;
 }
 QRadioButton {
     color:          rgb(220, 232, 242);
@@ -178,20 +179,19 @@ QPushButton#chbLocalMute:pressed {
 QPushButton#butConnect {
     color:             rgb(37, 37, 40);
     font:              bold;
-    border:            2px solid rgb(64, 202, 236);
+    border:            2px solid rgb(88, 88, 92);
     border-radius:     6px;
     background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgb(64, 202, 236),
-        stop:1 rgb(11, 123, 228));
+        stop:0 rgb(234, 236, 238),
+        stop:1 rgb(237, 246, 252));
     padding:           4px 7px;
     min-height:        40px;
     max-height:        40px;
 }
 QPushButton#butConnect:hover {
-    border: 2px solid rgb(89, 115, 231);
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgb(129, 193, 245),
-        stop:1 rgb(41, 154, 247));
+    color: rgb(37, 37, 40);
+    border: 2px solid rgb(75, 213, 248);
+    background: none;
 }
 QPushButton#butConnect:pressed {
     border: 2px solid rgb(92, 180, 242);
@@ -228,7 +228,7 @@ QPushButton#pcbSolo {
     color: rgb(37, 37, 40);
     font: bold;
     spacing: 0px;
-    padding: 4px 7px;
+    padding: 4px 5px;
     border: 1px solid rgb(88, 88, 92);
     border-radius: 6px;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,

@@ -76,35 +76,6 @@ void ApplyPopupMenuStyle ( QMenu* pMenu, const EUITheme eTheme )
     pMenu->setStyleSheet ( BuildPopupMenuStyleSheet ( eTheme ) );
 }
 
-void ApplyApplicationHighlightPalette ( const EUITheme eTheme )
-{
-    QPalette pal = QApplication::palette();
-
-    if ( IsDarkUITheme ( eTheme ) )
-    {
-        const QColor cHighlight ( 64, 64, 70 );
-        const QColor cText ( 220, 232, 242 );
-        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
-    }
-    else
-    {
-        const QColor cHighlight ( 46, 132, 198 );
-        const QColor cText ( 255, 255, 255 );
-        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
-    }
-
-    QApplication::setPalette ( pal );
-}
 } // namespace
 
 /* Implementation *************************************************************/
@@ -605,12 +576,12 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
 void CServerDlg::ApplyTheme()
 {
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
-    ApplyApplicationHighlightPalette ( eResolvedTheme );
+    SetAppPaletteForTheme ( eResolvedTheme );
     setStyleSheet ( BuildServerDialogStyleSheet ( eResolvedTheme ) );
 
     if ( pMenu != nullptr )
     {
-        const QList<QMenu*> vecMenus = pMenu->findChildren<QMenu*>();
+        const QList<QMenu*> vecMenus = findChildren<QMenu*>();
         for ( QMenu* pPopupMenu : vecMenus )
         {
             ApplyPopupMenuStyle ( pPopupMenu, eResolvedTheme );

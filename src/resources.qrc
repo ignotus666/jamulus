@@ -21,13 +21,13 @@
         <file alias="clientdlg_light.qss">../src/res/styles/clientdlg_light.qss</file>
         <file alias="dialog_common_dark.qss">../src/res/styles/dialog_common_dark.qss</file>
         <file alias="dialog_common_light.qss">../src/res/styles/dialog_common_light.qss</file>
-        <file alias="dialog_dark.qss">../src/res/styles/dialog_dark.qss</file>
-        <file alias="dialog_light.qss">../src/res/styles/dialog_light.qss</file>
         <file alias="serverdlg_dark.qss">../src/res/styles/serverdlg_dark.qss</file>
         <file alias="serverdlg_light.qss">../src/res/styles/serverdlg_light.qss</file>
         <file alias="checkmark_light.svg">../src/res/styles/checkmark_light.svg</file>
         <file alias="down_arrow_light.svg">../src/res/styles/down_arrow_light.svg</file>
         <file alias="down_arrow_dark.svg">../src/res/styles/down_arrow_dark.svg</file>
+        <file alias="up_arrow_light.svg">../src/res/styles/up_arrow_light.svg</file>
+        <file alias="up_arrow_dark.svg">../src/res/styles/up_arrow_dark.svg</file>
     </qresource>
     <qresource prefix="/png/mixer">
         <file>res/transparent1x1.png</file>

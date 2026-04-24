@@ -179,8 +179,9 @@ int CCustomSlider::valueFromPosition ( int pos ) const
     int trackSize = 0;
     if ( eOrientation == Qt::Vertical )
     {
-        trackSize = height() - 2 * MARGINS - HANDLE_HEIGHT;
-        pos       = height() - MARGINS - HANDLE_HEIGHT / 2 - pos; // inverted for vertical
+        // Keep vertical track insets symmetric and aligned with the meter widget.
+        trackSize = height() - 2 * MARGINS;
+        pos       = height() - MARGINS - pos; // inverted for vertical
     }
     else
     {
@@ -206,8 +207,8 @@ int CCustomSlider::positionFromValue ( int val ) const
 
     if ( eOrientation == Qt::Vertical )
     {
-        trackSize = height() - 2 * MARGINS - HANDLE_HEIGHT;
-        basePos   = MARGINS + HANDLE_HEIGHT / 2;
+        trackSize = height() - 2 * MARGINS;
+        basePos   = MARGINS;
         int pos   = basePos + ( ( iMaxValue - val ) * trackSize ) / range;
         return pos;
     }
@@ -267,9 +268,9 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
 {
     int width       = this->width();
     int height      = this->height();
-    int trackSize   = height - 2 * MARGINS - HANDLE_HEIGHT;
+    int trackSize   = height - 2 * MARGINS;
     int trackLeft   = ( width - TRACK_WIDTH ) / 2;
-    int trackTop    = MARGINS + HANDLE_HEIGHT / 2;
+    int trackTop    = MARGINS;
     int handlePos   = positionFromValue ( iCurrentValue );
     const SControlPalette palette = GetControlPalette ( bDarkTheme );
     const QColor trackBackground = palette.trackBackground;
@@ -279,7 +280,7 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     painter.fillRect ( trackLeft, trackTop, TRACK_WIDTH, trackSize, trackBackground );
 
     // Draw filled portion with a brighter cyan-to-blue gradient
-    int filledHeight = height - MARGINS - HANDLE_HEIGHT / 2 - handlePos;
+    int filledHeight = height - MARGINS - handlePos;
     if ( filledHeight > 0 )
     {
         const QRect filledRect ( trackLeft, handlePos, TRACK_WIDTH, filledHeight );

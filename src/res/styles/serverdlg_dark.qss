@@ -188,23 +188,6 @@ QCheckBox::indicator:disabled:hover {
     border: 1.5px solid rgb(54, 207, 255);
 }
 
-QGroupBox:disabled {
-    color: rgb(96, 104, 112);
-}
-QGroupBox:disabled QLabel,
-QGroupBox:disabled QCheckBox,
-QGroupBox:disabled QRadioButton,
-QGroupBox:disabled QPushButton,
-QGroupBox:disabled QToolButton,
-QGroupBox:disabled QComboBox,
-QGroupBox:disabled QLineEdit,
-QGroupBox:disabled QTextEdit,
-QGroupBox:disabled QPlainTextEdit {
-    color: rgb(96, 104, 112);
-    background: rgb(52, 52, 56);
-    border-color: rgb(96, 96, 100);
-}
-
 QPushButton:hover {
     border: 2px solid rgb(54, 207, 255);
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,

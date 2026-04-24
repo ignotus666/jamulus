@@ -825,6 +825,9 @@ int main ( int argc, char** argv )
     QApplication* pApp       = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
+    if (bUseGUI) {
+        QApplication::setStyle("Fusion");
+    }
 #    endif
 #endif
 
@@ -938,6 +941,9 @@ int main ( int argc, char** argv )
 #    ifndef HEADLESS
             if ( bUseGUI )
             {
+                // Set palette based on resolved theme
+                EUITheme eResolvedTheme = ResolveUITheme(Settings.eUITheme);
+                SetAppPaletteForTheme(eResolvedTheme);
                 // load translation
                 if ( bUseTranslation )
                 {
@@ -1008,6 +1014,9 @@ int main ( int argc, char** argv )
                 // load settings from init-file (command line options override)
                 CServerSettings Settings ( &Server, strIniFileName );
                 Settings.Load ( CommandLineOptions );
+                // Set palette based on resolved theme
+                EUITheme eResolvedTheme = ResolveUITheme(Settings.eUITheme);
+                SetAppPaletteForTheme(eResolvedTheme);
 
                 // load translation
                 if ( bUseTranslation )

@@ -107,18 +107,8 @@ QComboBox QAbstractItemView {
 }
 
 QComboBox QAbstractItemView::item:hover {
-    background-color: rgb(202, 224, 246);
+    background-color: rgb(142, 188, 233);
     color: rgb(28, 34, 42);
-}
-
-QComboBox QAbstractItemView::item:selected {
-    background-color: rgb(46, 132, 198);
-    color: rgb(255, 255, 255);
-}
-
-QComboBox QAbstractItemView::item:selected:hover {
-    background-color: rgb(38, 118, 186);
-    color: rgb(255, 255, 255);
 }
 
 QAbstractItemView {
@@ -127,26 +117,6 @@ QAbstractItemView {
     color: rgb(28, 34, 42);
     selection-background-color: rgb(46, 132, 198);
     selection-color: rgb(255, 255, 255);
-}
-
-QAbstractItemView::item:hover {
-    background-color: rgb(202, 224, 246);
-    color: rgb(28, 34, 42);
-}
-
-QComboBox QListView::item:selected:hover {
-    background-color: rgb(26, 118, 194);
-    color: rgb(255, 255, 255);
-}
-
-QAbstractItemView::item:selected {
-    background-color: rgb(46, 132, 198);
-    color: rgb(255, 255, 255);
-}
-
-QAbstractItemView::item:selected:hover {
-    background-color: rgb(38, 118, 186);
-    color: rgb(255, 255, 255);
 }
 
 QTreeWidget,
@@ -216,23 +186,6 @@ QPushButton:disabled:hover, QToolButton:disabled:hover {
 
 QCheckBox::indicator:disabled:hover {
     border: 1.5px solid rgb(46, 132, 198);
-}
-
-QGroupBox:disabled {
-    color: rgb(166, 176, 188);
-}
-QGroupBox:disabled QLabel,
-QGroupBox:disabled QCheckBox,
-QGroupBox:disabled QRadioButton,
-QGroupBox:disabled QPushButton,
-QGroupBox:disabled QToolButton,
-QGroupBox:disabled QComboBox,
-QGroupBox:disabled QLineEdit,
-QGroupBox:disabled QTextEdit,
-QGroupBox:disabled QPlainTextEdit {
-    color: rgb(166, 176, 188);
-    background: rgb(245, 247, 250);
-    border-color: rgb(205, 210, 218);
 }
 
 QPushButton:hover {

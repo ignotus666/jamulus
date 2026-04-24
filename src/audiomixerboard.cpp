@@ -169,9 +169,8 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
 #endif
 
     // setup channel level
-    // Match CCustomSlider vertical track geometry:
-    // track starts/ends with a 20px inset from top/bottom.
-    plbrChannelLevel->setContentsMargins ( 0, 20, 2, 20 );
+    // Match CCustomSlider vertical track geometry with tighter top/bottom insets.
+    plbrChannelLevel->setContentsMargins ( 0, 10, 2, 10 );
     plbrChannelLevel->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
     // setup slider
@@ -209,6 +208,9 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pLabelGrid->setContentsMargins ( 0, 0, 0, 0 );
     pLabelGrid->setSpacing ( 2 ); // only minimal space between picture and text
 
+    pLabelPictGrid->setContentsMargins ( 0, 0, 0, 0 );
+    pLabelPictGrid->setSpacing ( 0 );
+
     // add user controls to the grids
     pLabelPictGrid->addWidget ( plblCountryFlag, 0, Qt::AlignHCenter );
     pLabelPictGrid->addWidget ( plblInstrument, 0, Qt::AlignHCenter );
@@ -226,7 +228,7 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pMainGrid->addLayout ( pPanGrid );
     pMainGrid->addWidget ( pLevelsBox, 1, Qt::AlignHCenter );
     pMainGrid->addWidget ( pMuteSoloBox, 0, Qt::AlignHCenter );
-    pMainGrid->addWidget ( pLabelInstBox );
+    pMainGrid->addWidget ( pLabelInstBox, 0, Qt::AlignHCenter );
 
     // reset current fader
     strGroupBaseText  = "Grp";         // this will most probably overwritten by SetGUIDesign()
@@ -310,12 +312,14 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
     {
     case GD_STANDARD:
     case GD_ORIGINAL:
+        pFader->setTickPosition ( QSlider::TicksBothSides );
         pFader->setStyleSheet ( "" );  // Custom slider handles its own rendering
         pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
+        pLabelInstBox->setMinimumWidth ( 0 );
         pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
-        pLabelInstBox->setMaximumWidth ( QWIDGETSIZE_MAX );
-        pPan->setFixedSize ( 50, 50 );
+        pLabelInstBox->setMaximumWidth ( 86 );
+        pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "Mute" ) );
         pcbSolo->setText ( tr ( "Solo" ) );
@@ -325,17 +329,18 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
-        pLabelInstBox->setMinimumHeight ( 130 );                      // maximum height of the instrument+flag+label
-        pLabelInstBox->setMaximumWidth ( 70 );
+        pLabelInstBox->setMinimumWidth ( 54 );
+        pLabelInstBox->setMinimumHeight ( 88 );                       // keep compact mode tight around flag+instrument+label
+        pLabelInstBox->setMaximumWidth ( 54 );
         pPan->setFixedSize ( 34, 34 );
-        pFader->setTickPosition ( QSlider::NoTicks );
+        pFader->setTickPosition ( QSlider::TicksBothSides );
         pFader->setStyleSheet ( "" );
         pFader->SetCompactMode ( true );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "M" ) );
         pcbSolo->setText ( tr ( "S" ) );
         strGroupBaseText  = tr ( "G" );
-        iInstrPicMaxWidth = 18; // scale instrument picture to avoid enlarging the width by the picture
+        iInstrPicMaxWidth = 23; // scale instrument picture to avoid enlarging the width by the picture
         break;
 
     default:
@@ -344,9 +349,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pFader->setStyleSheet ( "" );
         pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
+        pLabelInstBox->setMinimumWidth ( 0 );
         pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
-        pLabelInstBox->setMaximumWidth ( QWIDGETSIZE_MAX );
-        pPan->setFixedSize ( 50, 50 );
+        pLabelInstBox->setMaximumWidth ( 86 );
+        pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "Mute" ) );
         pcbSolo->setText ( tr ( "Solo" ) );
@@ -472,10 +478,13 @@ void CChannelFader::SetupFaderTag ( const ESkillLevel eSkillLevel )
 
     // setup group box for label/instrument picture: set a thick black border
     // with nice round edges
-    QString strStile = "QGroupBox { border:        2px " + strBorderStyle + " " + strBorderColor +
+    const int iTagPadding     = ( eDesign == GD_SLIMFADER ) ? 0 : 3;
+    const int iTagBorderWidth = ( eDesign == GD_SLIMFADER ) ? 1 : 2;
+
+    QString strStile = "QGroupBox { border:        " + QString::number ( iTagBorderWidth ) + "px " + strBorderStyle + " " + strBorderColor +
                        ";"
                        "            border-radius: 4px;"
-                       "            padding:       3px;";
+                       "            padding:       " + QString::number ( iTagPadding ) + "px;";
 
     // the background color depends on the skill level
     switch ( eSkillLevel )
@@ -844,8 +853,8 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
         plblLabel->style()->unpolish ( plblLabel );
         plblLabel->style()->polish ( plblLabel );
 
-        // break at every 4th character
-        iBreakPos = 4;
+        // break at every 3rd character to fit the narrower slim strip
+        iBreakPos = 3;
     }
     else
     {
@@ -854,8 +863,8 @@ void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
         plblLabel->style()->unpolish ( plblLabel );
         plblLabel->style()->polish ( plblLabel );
 
-        // break text at predefined position
-        iBreakPos = MAX_LEN_FADER_TAG / 2;
+        // break earlier in normal mode to keep strip width compact.
+        iBreakPos = qMin ( MAX_LEN_FADER_TAG / 2, 6 );
     }
 
     int iInsPos     = iBreakPos;

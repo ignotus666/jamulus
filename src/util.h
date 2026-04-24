@@ -558,6 +558,10 @@ inline bool IsDarkUITheme ( const EUITheme eTheme )
 
 inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme ( eTheme ) ? UIT_DARK : UIT_LIGHT; }
 
+#ifndef HEADLESS
+void SetAppPaletteForTheme ( EUITheme eTheme );
+#endif
+
 // Default, fallback skin if no skin was selected
 #if defined( Q_OS_IOS ) || defined( ANDROID ) || defined( Q_OS_ANDROID )
 // on mobile, slim UI is preferred for space reasons
@@ -570,11 +574,8 @@ inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme 
 enum EMeterStyle
 {
     // used for settings -> enum values should be fixed
-    MT_BAR_NARROW      = 0,
-    MT_BAR_WIDE        = 1,
-    MT_LED_STRIPE      = 2, // legacy value, treated as bar wide
-    MT_LED_ROUND_SMALL = 3, // legacy value, treated as bar narrow
-    MT_LED_ROUND_BIG   = 4  // legacy value, treated as bar wide
+    MT_BAR_NARROW = 0,
+    MT_BAR_WIDE   = 1
 };
 
 // Server licence type enum ----------------------------------------------------
