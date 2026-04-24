@@ -430,7 +430,6 @@ QSlider::handle:horizontal {
     width: 14px;
     margin: -6px 0;
     border-radius: 7px;
-    transition: border 0.2s;
 }
 QSlider::handle:horizontal:hover {
     border: 2px solid rgb(59, 164, 245);
@@ -444,7 +443,6 @@ QSlider::handle:vertical {
     height: 14px;
     margin: 0 -6px;
     border-radius: 7px;
-    transition: border 0.2s;
 }
 QSlider::handle:vertical:hover {
     border: 2px solid rgb(59, 164, 245);

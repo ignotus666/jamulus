@@ -916,6 +916,7 @@ void CClientDlg::ShowEffectsWindow()
 void CClientDlg::changeEvent ( QEvent* Event )
 {
     if ( ( pSettings->eUITheme == UIT_SYSTEM ) &&
+                 !bApplyingThemeChange &&
          ( ( Event->type() == QEvent::ApplicationPaletteChange ) ||
            ( Event->type() == QEvent::PaletteChange ) ) )
     {
@@ -1843,6 +1844,11 @@ void CClientDlg::OnGUIDesignChanged()
 
 void CClientDlg::OnUIThemeChanged()
 {
+    if ( bApplyingThemeChange )
+    {
+        return;
+    }
+    bApplyingThemeChange = true;
 
     // Reapply Fusion style (safe to call multiple times)
     QApplication::setStyle("Fusion");
@@ -1853,6 +1859,7 @@ void CClientDlg::OnUIThemeChanged()
 
     SetGUIDesign ( pClient->GetGUIDesign() );
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );
+    bApplyingThemeChange = false;
 }
 
 void CClientDlg::OnMeterStyleChanged() { SetMeterStyle ( pClient->GetMeterStyle() ); }

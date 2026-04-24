@@ -110,6 +110,7 @@ protected:
     int            iClients;
     bool           bConnected;
     bool           bConnectDlgWasShown;
+    bool           bApplyingThemeChange = false;
     bool           bDetectFeedback;
     bool           bEnableIPv6;
     ERecorderState eLastRecorderState;
