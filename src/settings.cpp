@@ -693,7 +693,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // GUI design
     if ( GetNumericIniSet ( IniXMLDocument, "client", "guidesign", 0, 2 /* GD_SLIMFADER */, iValue ) )
     {
-        pClient->SetGUIDesign ( ( iValue == GD_SLIMFADER ) ? GD_SLIMFADER : GD_ORIGINAL );
+        pClient->SetGUIDesign ( ( iValue == GD_SLIMFADER ) ? GD_SLIMFADER : GD_STANDARD );
     }
 
     // MeterStyle

@@ -116,7 +116,7 @@ static bool midiPickupTryApply ( int midiValue, int currentValue, int tolerance,
 * CChanneFader                                                                 *
 \******************************************************************************/
 CChannelFader::CChannelFader ( QWidget* pNW ) :
-    eDesign ( GD_ORIGINAL ),
+    eDesign ( GD_STANDARD ),
     BitmapMutedIcon ( QString::fromUtf8 ( ":/png/mixer/res/mutediconorange.png" ) ),
     bMIDICtrlUsed ( false ),
     bPanIsDragging ( false )
@@ -306,12 +306,11 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
 void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
     eDesign = eNewDesign;
-    plbrChannelLevel->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
+    plbrChannelLevel->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
 
     switch ( eNewDesign )
     {
     case GD_STANDARD:
-    case GD_ORIGINAL:
         pFader->setTickPosition ( QSlider::TicksBothSides );
         pFader->setStyleSheet ( "" );  // Custom slider handles its own rendering
         pFader->SetCompactMode ( false );
@@ -703,6 +702,19 @@ void CChannelFader::UpdateGroupIDDependencies()
     else
     {
         pcbGroup->setText ( strGroupBaseText );
+    }
+
+    // Expose group color index to stylesheet so GRP button can mirror tag border color.
+    const int iGroupColorIdx   = ( iGroupID != INVALID_INDEX ) ? ( iGroupID % 4 ) : -1;
+    const int iGroupSegmented  = ( iGroupID != INVALID_INDEX ) ? ( iGroupID / 4 ) : 0;
+    const bool bNeedsRestyling = ( pcbGroup->property ( "groupColorIdx" ).toInt() != iGroupColorIdx ) ||
+                                 ( pcbGroup->property ( "groupSegmented" ).toInt() != iGroupSegmented );
+    if ( bNeedsRestyling )
+    {
+        pcbGroup->setProperty ( "groupColorIdx", iGroupColorIdx );
+        pcbGroup->setProperty ( "groupSegmented", iGroupSegmented );
+        pcbGroup->style()->unpolish ( pcbGroup );
+        pcbGroup->style()->polish ( pcbGroup );
     }
 
     // Match GRP/MUTE/SOLO controls to the info-box width.

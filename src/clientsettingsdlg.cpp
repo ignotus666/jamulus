@@ -498,7 +498,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // GUI design (mode) combo box
     cbxSkin->clear();
-    cbxSkin->addItem ( tr ( "Normal" ) );  // GD_ORIGINAL
+    cbxSkin->addItem ( tr ( "Normal" ) );  // GD_STANDARD
     cbxSkin->addItem ( tr ( "Compact" ) ); // GD_SLIMFADER
     cbxSkin->setCurrentIndex ( pClient->GetGUIDesign() == GD_SLIMFADER ? 1 : 0 );
 
@@ -1265,7 +1265,7 @@ void CClientSettingsDlg::OnAudioQualityActivated ( int iQualityIdx )
 
 void CClientSettingsDlg::OnGUIDesignActivated ( int iDesignIdx )
 {
-    pClient->SetGUIDesign ( iDesignIdx == 0 ? GD_ORIGINAL : GD_SLIMFADER );
+    pClient->SetGUIDesign ( iDesignIdx == 0 ? GD_STANDARD : GD_SLIMFADER );
     emit GUIDesignChanged();
     UpdateDisplay();
 }

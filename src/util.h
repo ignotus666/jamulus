@@ -528,8 +528,7 @@ enum EGetDataStat
 enum EGUIDesign
 {
     // used for settings -> enum values should be fixed
-    GD_STANDARD  = 0, // legacy value, treated as GD_ORIGINAL
-    GD_ORIGINAL  = 1,
+    GD_STANDARD  = 0,
     GD_SLIMFADER = 2
 };
 
@@ -567,7 +566,7 @@ void SetAppPaletteForTheme ( EUITheme eTheme );
 // on mobile, slim UI is preferred for space reasons
 #    define GD_DEFAULT GD_SLIMFADER
 #else
-#    define GD_DEFAULT GD_ORIGINAL
+#    define GD_DEFAULT GD_STANDARD
 #endif
 
 // MeterStyle enum -------------------------------------------------------------

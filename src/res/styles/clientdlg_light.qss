@@ -239,6 +239,78 @@ QPushButton#pcbSolo {
     text-align: center;
     margin: 0px;
 }
+QPushButton#pcbGroup[groupColorIdx="0"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(196, 58, 197);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(226, 169, 227),
+        stop:1 rgb(196, 58, 197));
+}
+QPushButton#pcbGroup[groupColorIdx="1"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(43, 147, 212);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(165, 214, 245),
+        stop:1 rgb(43, 147, 212));
+}
+QPushButton#pcbGroup[groupColorIdx="2"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(59, 197, 58);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(179, 237, 179),
+        stop:1 rgb(59, 197, 58));
+}
+QPushButton#pcbGroup[groupColorIdx="3"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(212, 108, 43);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(238, 192, 163),
+        stop:1 rgb(212, 108, 43));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="0"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(196, 58, 197);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(236, 198, 237), stop:0.16 rgb(236, 198, 237),
+        stop:0.17 rgb(196, 58, 197),  stop:0.33 rgb(196, 58, 197),
+        stop:0.34 rgb(236, 198, 237), stop:0.50 rgb(236, 198, 237),
+        stop:0.51 rgb(196, 58, 197),  stop:0.67 rgb(196, 58, 197),
+        stop:0.68 rgb(236, 198, 237), stop:0.84 rgb(236, 198, 237),
+        stop:0.85 rgb(196, 58, 197),  stop:1.00 rgb(196, 58, 197));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="1"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(43, 147, 212);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(193, 228, 248), stop:0.16 rgb(193, 228, 248),
+        stop:0.17 rgb(43, 147, 212),  stop:0.33 rgb(43, 147, 212),
+        stop:0.34 rgb(193, 228, 248), stop:0.50 rgb(193, 228, 248),
+        stop:0.51 rgb(43, 147, 212),  stop:0.67 rgb(43, 147, 212),
+        stop:0.68 rgb(193, 228, 248), stop:0.84 rgb(193, 228, 248),
+        stop:0.85 rgb(43, 147, 212),  stop:1.00 rgb(43, 147, 212));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="2"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(59, 197, 58);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(205, 245, 205), stop:0.16 rgb(205, 245, 205),
+        stop:0.17 rgb(59, 197, 58),   stop:0.33 rgb(59, 197, 58),
+        stop:0.34 rgb(205, 245, 205), stop:0.50 rgb(205, 245, 205),
+        stop:0.51 rgb(59, 197, 58),   stop:0.67 rgb(59, 197, 58),
+        stop:0.68 rgb(205, 245, 205), stop:0.84 rgb(205, 245, 205),
+        stop:0.85 rgb(59, 197, 58),   stop:1.00 rgb(59, 197, 58));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="3"]:checked {
+    color: rgb(31, 28, 28);
+    border: 2px solid rgb(212, 108, 43);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(245, 219, 201), stop:0.16 rgb(245, 219, 201),
+        stop:0.17 rgb(212, 108, 43),  stop:0.33 rgb(212, 108, 43),
+        stop:0.34 rgb(245, 219, 201), stop:0.50 rgb(245, 219, 201),
+        stop:0.51 rgb(212, 108, 43),  stop:0.67 rgb(212, 108, 43),
+        stop:0.68 rgb(245, 219, 201), stop:0.84 rgb(245, 219, 201),
+        stop:0.85 rgb(212, 108, 43),  stop:1.00 rgb(212, 108, 43));
+}
 QPushButton#pcbGroup:checked {
     color: rgb(31, 28, 28);
     border: 2px solid rgb(59, 164, 245);
@@ -255,6 +327,70 @@ QPushButton#pcbGroup:checked:hover {
     background:    qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(167, 219, 240),
         stop:1 rgb(125, 198, 240));
+}
+QPushButton#pcbGroup[groupColorIdx="0"]:checked:hover {
+    border: 2px solid rgb(214, 132, 214);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(237, 210, 237),
+        stop:1 rgb(214, 132, 214));
+}
+QPushButton#pcbGroup[groupColorIdx="1"]:checked:hover {
+    border: 2px solid rgb(117, 190, 236);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(202, 229, 246),
+        stop:1 rgb(117, 190, 236));
+}
+QPushButton#pcbGroup[groupColorIdx="2"]:checked:hover {
+    border: 2px solid rgb(132, 214, 132);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(218, 246, 218),
+        stop:1 rgb(132, 214, 132));
+}
+QPushButton#pcbGroup[groupColorIdx="3"]:checked:hover {
+    border: 2px solid rgb(227, 160, 118);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(247, 223, 206),
+        stop:1 rgb(227, 160, 118));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="0"]:checked:hover {
+    border: 2px solid rgb(214, 132, 214);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(246, 228, 246), stop:0.16 rgb(246, 228, 246),
+        stop:0.17 rgb(214, 132, 214), stop:0.33 rgb(214, 132, 214),
+        stop:0.34 rgb(246, 228, 246), stop:0.50 rgb(246, 228, 246),
+        stop:0.51 rgb(214, 132, 214), stop:0.67 rgb(214, 132, 214),
+        stop:0.68 rgb(246, 228, 246), stop:0.84 rgb(246, 228, 246),
+        stop:0.85 rgb(214, 132, 214), stop:1.00 rgb(214, 132, 214));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="1"]:checked:hover {
+    border: 2px solid rgb(117, 190, 236);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(223, 241, 252), stop:0.16 rgb(223, 241, 252),
+        stop:0.17 rgb(117, 190, 236), stop:0.33 rgb(117, 190, 236),
+        stop:0.34 rgb(223, 241, 252), stop:0.50 rgb(223, 241, 252),
+        stop:0.51 rgb(117, 190, 236), stop:0.67 rgb(117, 190, 236),
+        stop:0.68 rgb(223, 241, 252), stop:0.84 rgb(223, 241, 252),
+        stop:0.85 rgb(117, 190, 236), stop:1.00 rgb(117, 190, 236));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="2"]:checked:hover {
+    border: 2px solid rgb(132, 214, 132);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(228, 252, 228), stop:0.16 rgb(228, 252, 228),
+        stop:0.17 rgb(132, 214, 132), stop:0.33 rgb(132, 214, 132),
+        stop:0.34 rgb(228, 252, 228), stop:0.50 rgb(228, 252, 228),
+        stop:0.51 rgb(132, 214, 132), stop:0.67 rgb(132, 214, 132),
+        stop:0.68 rgb(228, 252, 228), stop:0.84 rgb(228, 252, 228),
+        stop:0.85 rgb(132, 214, 132), stop:1.00 rgb(132, 214, 132));
+}
+QPushButton#pcbGroup[groupSegmented="1"][groupColorIdx="3"]:checked:hover {
+    border: 2px solid rgb(227, 160, 118);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 rgb(252, 236, 225), stop:0.16 rgb(252, 236, 225),
+        stop:0.17 rgb(227, 160, 118), stop:0.33 rgb(227, 160, 118),
+        stop:0.34 rgb(252, 236, 225), stop:0.50 rgb(252, 236, 225),
+        stop:0.51 rgb(227, 160, 118), stop:0.67 rgb(227, 160, 118),
+        stop:0.68 rgb(252, 236, 225), stop:0.84 rgb(252, 236, 225),
+        stop:0.85 rgb(227, 160, 118), stop:1.00 rgb(227, 160, 118));
 }
 QPushButton#pcbMute:checked {
     color: rgb(31, 28, 28);

@@ -1660,8 +1660,8 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
     // remove any styling from the mixer board - reapply after changing skin
     MainMixerBoard->setStyleSheet ( "" );
-    lbrInputLevelL->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
-    lbrInputLevelR->SetNormalModeStyle ( eNewDesign == GD_ORIGINAL );
+    lbrInputLevelL->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
+    lbrInputLevelR->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
     ApplyApplicationHighlightPalette ( eResolvedTheme );
     lbrInputLevelL->SetDarkTheme ( eResolvedTheme == UIT_DARK );
@@ -1687,14 +1687,11 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     switch ( eNewDesign )
     {
     case GD_STANDARD:
-    case GD_ORIGINAL:
+    case GD_SLIMFADER:
+    default:
+        // Use the same LED icon set in all layouts.
         ledBuffers->SetType ( CMultiColorLED::MT_LED );
         ledDelay->SetType ( CMultiColorLED::MT_LED );
-        break;
-
-    default:
-        ledBuffers->SetType ( CMultiColorLED::MT_INDICATOR );
-        ledDelay->SetType ( CMultiColorLED::MT_INDICATOR );
         break;
     }
 
