@@ -485,7 +485,6 @@ protected:
     EMeterStyle eMeterStyle;
     bool        bEnableAudioAlerts;
     bool        bEnableOPUS64;
-    bool        bRawAudioIsSupported;
 
     bool   bJitterBufferOK;
     bool   bEnableIPv6;
@@ -495,7 +494,8 @@ protected:
     float  afOutputBandLevels[16];
 
     // server settings
-    int iServerSockBufNumFrames;
+    int  iServerSockBufNumFrames;
+    bool bRawAudioIsSupported;
 
     // for ping measurement
     QElapsedTimer PreciseTime;
