@@ -1104,6 +1104,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         iSettingsTab = iValue;
     }
 
+    // selected Effects Tab
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "effectstab", 0, 3, iValue ) )
+    {
+        iEffectsTab = iValue;
+    }
+
     // fader settings
     ReadFaderSettingsFromXML ( IniXMLDocument );
 }
@@ -1432,6 +1438,9 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
     // Settings Tab
     SetNumericIniSet ( IniXMLDocument, "client", "settingstab", iSettingsTab );
+
+    // Effects Tab
+    SetNumericIniSet ( IniXMLDocument, "client", "effectstab", iEffectsTab );
 
     // MIDI settings
     SetNumericIniSet ( IniXMLDocument, "client", "midichannel", iMidiChannel );

@@ -26,6 +26,7 @@
 
 #ifndef HEADLESS
 #    include <QApplication>
+#    include <QFile>
 
 void SetAppPaletteForTheme ( EUITheme eTheme )
 {
@@ -49,6 +50,29 @@ void SetAppPaletteForTheme ( EUITheme eTheme )
     else
     {
         QApplication::setPalette ( QApplication::style()->standardPalette() );
+    }
+}
+
+void SetAppStyleSheetFromResources ( const QStringList& resourcePaths )
+{
+    QString combinedStyleSheet;
+
+    for ( const QString& resourcePath : resourcePaths )
+    {
+        QFile styleFile ( resourcePath );
+        if ( !styleFile.open ( QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::Text ) )
+        {
+            qWarning() << "Unable to open stylesheet resource:" << resourcePath;
+            continue;
+        }
+
+        combinedStyleSheet += QString::fromUtf8 ( styleFile.readAll() );
+        combinedStyleSheet += '\n';
+    }
+
+    if ( QApplication* pApp = qobject_cast<QApplication*> ( QCoreApplication::instance() ) )
+    {
+        pApp->setStyleSheet ( combinedStyleSheet );
     }
 }
 #endif

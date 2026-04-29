@@ -383,6 +383,7 @@ FORMS_GUI = src/aboutdlgbase.ui \
 !contains(CONFIG, "serveronly") {
     FORMS_GUI += src/clientdlgbase.ui \
         src/clientsettingsdlgbase.ui \
+        src/effectsdlgbase.ui \
         src/chatdlgbase.ui \
         src/connectdlgbase.ui
 }

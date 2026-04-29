@@ -941,9 +941,13 @@ int main ( int argc, char** argv )
 #    ifndef HEADLESS
             if ( bUseGUI )
             {
-                // Set palette based on resolved theme
-                EUITheme eResolvedTheme = ResolveUITheme(Settings.eUITheme);
-                SetAppPaletteForTheme(eResolvedTheme);
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
+                                                                             : QString ( ":/styles/dialog_common_light.qss" ),
+                                                  eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" )
+                                                                             : QString ( ":/styles/clientdlg_light.qss" ) } );
                 // load translation
                 if ( bUseTranslation )
                 {
@@ -1014,9 +1018,11 @@ int main ( int argc, char** argv )
                 // load settings from init-file (command line options override)
                 CServerSettings Settings ( &Server, strIniFileName );
                 Settings.Load ( CommandLineOptions );
-                // Set palette based on resolved theme
-                EUITheme eResolvedTheme = ResolveUITheme(Settings.eUITheme);
-                SetAppPaletteForTheme(eResolvedTheme);
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
+                                                                             : QString ( ":/styles/dialog_common_light.qss" ) } );
 
                 // load translation
                 if ( bUseTranslation )

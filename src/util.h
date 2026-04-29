@@ -40,6 +40,7 @@
 #    include <sys/time.h>
 #endif
 #include <QCoreApplication>
+#include <QStringList>
 #include <QUdpSocket>
 #include <QHostAddress>
 #include <QHostInfo>
@@ -559,6 +560,7 @@ inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme 
 
 #ifndef HEADLESS
 void SetAppPaletteForTheme ( EUITheme eTheme );
+void SetAppStyleSheetFromResources ( const QStringList& resourcePaths );
 #endif
 
 // Default, fallback skin if no skin was selected

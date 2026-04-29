@@ -32,15 +32,18 @@
 #include <QRadioButton>
 #include <QSlider>
 #include <QTabWidget>
+#include <QPointer>
 #include <QShowEvent>
+#include <QResizeEvent>
 #include <QVBoxLayout>
 #include "client.h"
 #include "outputbandmeter.h"
 #include "plugins/audioequalizer.h"
 #include "settings.h"
+#include "ui_effectsdlgbase.h"
 #include "util.h"
 
-class CEffectsDlg : public CBaseDlg
+class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
 {
     Q_OBJECT
 
@@ -56,6 +59,7 @@ public:
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
+    virtual void resizeEvent ( QResizeEvent* Event ) override;
 
 signals:
     void ReverbValueChanged ( int value );
@@ -89,65 +93,10 @@ signals:
 private:
     CClient*      pClient;
     CClientSettings* pSettings;
-    QTabWidget*   pTabs;
-    QComboBox*    pCbxEffectsPresets;
-    QPushButton*  pButEffectsSavePreset;
-    QPushButton*  pButEffectsSaveAsPreset;
-    QPushButton*  pButEffectsDeletePreset;
-    QSlider*      pSldReverb;
-    QSlider*      pSldReverbPreDelay;
-    QSlider*      pSldReverbRoom;
-    QSlider*      pSldReverbDamping;
-    QSlider*      pSldReverbWet;
-    QSlider*      pSldReverbEarly;
-    QSlider*      pSldReverbWidth;
-    QRadioButton* pRbtReverbSelL;
-    QRadioButton* pRbtReverbSelR;
-    QLabel*       pLblStereoHint;
-    QLabel*       pLblReverbPreDelayValue;
-    QLabel*       pLblReverbRoomValue;
-    QLabel*       pLblReverbDampingValue;
-    QLabel*       pLblReverbWetValue;
-    QLabel*       pLblReverbEarlyValue;
-    QLabel*       pLblReverbWidthValue;
-    QCheckBox*    pChbReverbEarly;
-    QCheckBox*    pChbReverbFreeze;
-    QCheckBox*    pChbReverbBypass;
-    QPushButton*  pButReverbReset;
-
-    QCheckBox*    pChbCompressorBypass;
-    QCheckBox*    pChbCompressorLimiter;
-    QPushButton*  pButCompressorReset;
-    QSlider*      pSldCompressorThreshold;
-    QSlider*      pSldCompressorRatio;
-    QSlider*      pSldCompressorAttack;
-    QSlider*      pSldCompressorRelease;
-    QSlider*      pSldCompressorMakeup;
-    QLabel*       pLblCompressorThresholdValue;
-    QLabel*       pLblCompressorRatioValue;
-    QLabel*       pLblCompressorAttackValue;
-    QLabel*       pLblCompressorReleaseValue;
-    QLabel*       pLblCompressorMakeupValue;
-
-    QCheckBox*    pChbFilterBypass;
-    QCheckBox*    pChbHighPass;
-    QCheckBox*    pChbLowPass;
-    QPushButton*  pButFilterReset;
-    QSlider*      pSldHighPassCutoff;
-    QSlider*      pSldLowPassCutoff;
-    QLabel*       pLblHighPassValue;
-    QLabel*       pLblLowPassValue;
-
-    QCheckBox*    pChbEQBypass;
-    QComboBox*    pCbxEQPresets;
-    QPushButton*  pButEQSavePreset;
-    QPushButton*  pButEQSaveAsPreset;
-    QPushButton*  pButEQDeletePreset;
-    QPushButton*  pButEQReset;
-    QSlider*      pSldEQBands[CAudioEqualizer::NUM_BANDS];
-    QLabel*       pLblEQBandValues[CAudioEqualizer::NUM_BANDS];
-    QLabel*       pLblOutputBandTitle;
-    COutputBandMeter* pOutputBandMeter;
+    QPointer<COutputBandMeter> pOutputBandMeterSafe;
+    QPointer<QSlider> pSldEQBands[CAudioEqualizer::NUM_BANDS] = {};
+    QPointer<QLabel>  pLblEQBandValues[CAudioEqualizer::NUM_BANDS] = {};
+    bool          bEQBandWidgetsReady = false;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
@@ -157,6 +106,7 @@ private:
     void PopulateEQPresetCombo();
     void ApplyPresetFromComboIndex ( const int iPresetIndex );
     void UpdateEQPresetSelection();
+    void UpdateOutputBandAlignment();
     int  FindPresetSlotByName ( const QString& strName ) const;
     int  FindFreePresetSlot() const;
 

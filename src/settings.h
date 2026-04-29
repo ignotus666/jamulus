@@ -154,6 +154,7 @@ public:
         iNewClientFaderLevel ( 100 ),
         iInputBoost ( 1 ),
         iSettingsTab ( SETTING_TAB_AUDIONET ),
+        iEffectsTab ( 0 ),
         bConnectDlgShowAllMusicians ( true ),
         eChannelSortType ( ST_NO_SORT ),
         iNumMixerPanelRows ( 1 ),
@@ -297,6 +298,7 @@ public:
     int              iNewClientFaderLevel;
     int              iInputBoost;
     int              iSettingsTab;
+    int              iEffectsTab;
     bool             bConnectDlgShowAllMusicians;
     EChSortType      eChannelSortType;
     int              iNumMixerPanelRows;

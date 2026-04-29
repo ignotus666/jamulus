@@ -54,6 +54,12 @@ void COutputBandMeter::SetLevels ( const CVector<float>& vecLevels )
     update();
 }
 
+void COutputBandMeter::SetBandCenters ( const QVector<int>& vecBandCenters )
+{
+    vecBandCentersPx = vecBandCenters;
+    update();
+}
+
 void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
 {
     Q_UNUSED ( pEvent )
@@ -103,10 +109,41 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
         return aStops[4].c;
     };
 
+    const int minGapPx = 3; // Minimum gap in pixels between bars
     for ( int iBand = 0; iBand < iCount; ++iBand ) {
-        const int iX = iMargin + iBand * ( iBarW + iGap );
+        int barLeft, barRight;
+        if (vecBandCentersPx.size() == kBandCount && vecBandCentersPx[iBand] >= 0) {
+            int center = vecBandCentersPx[iBand];
+            // Calculate virtual centers for edges
+            int prevCenter, nextCenter;
+            if (iBand == 0) {
+                int delta = vecBandCentersPx[1] - vecBandCentersPx[0];
+                prevCenter = vecBandCentersPx[0] - delta;
+            } else {
+                prevCenter = vecBandCentersPx[iBand-1];
+            }
+            if (iBand == kBandCount-1) {
+                int delta = vecBandCentersPx[kBandCount-1] - vecBandCentersPx[kBandCount-2];
+                nextCenter = vecBandCentersPx[kBandCount-1] + delta;
+            } else {
+                nextCenter = vecBandCentersPx[iBand+1];
+            }
+            // Compute left and right edge as midpoint to neighbors, minus half the gap
+            barLeft = (center + prevCenter) / 2 + (minGapPx / 2);
+            barRight = (center + nextCenter) / 2 - (minGapPx / 2);
+            // Clamp to widget bounds
+            barLeft = std::max(iMargin, barLeft);
+            barRight = std::min(width() - iMargin, barRight);
+            if (barRight < barLeft + 2) barRight = barLeft + 2; // Minimum width
+        } else {
+            // Fallback: even spacing
+            int iX = iMargin + iBand * ( iBarW + iGap );
+            barLeft = iX;
+            barRight = iX + iBarW;
+        }
+        int barW = barRight - barLeft;
         const int iY = iMargin;
-        QRect barRect ( iX, iY, iBarW, iH );
+        QRect barRect ( barLeft, iY, barW, iH );
         painter.fillRect ( barRect, QColor ( 28, 32, 36, 90 ) );
 
         // Segmented rendering
@@ -127,7 +164,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             const int iEndPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
             const int iSegH = std::max ( 1, iEndPx - iStartPx );
             iYCursor -= iSegH;
-            QRect segRect ( iX, iYCursor, iBarW, iSegH );
+            QRect segRect ( barLeft, iYCursor, barW, iSegH );
             if ( !segRect.isValid() ) continue;
             const double dSegStart = static_cast<double> ( iSegment ) / iSegmentCount;
             const bool bActive = dNormValue > dSegStart;

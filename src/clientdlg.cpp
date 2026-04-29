@@ -27,117 +27,6 @@
 #include <QFile>
 #include "util.h"
 
-namespace
-{
-QString LoadStyleSheetResource ( const char* resourcePath )
-{
-    QFile file ( QString::fromLatin1 ( resourcePath ) );
-    if ( !file.open ( QIODevice::ReadOnly | QIODevice::Text ) )
-    {
-        return QString();
-    }
-
-    return QString::fromUtf8 ( file.readAll() );
-}
-
-QString BuildClientDlgStyleSheet ( const EUITheme eTheme )
-{
-    const char* path = IsDarkUITheme ( eTheme ) ? ":/styles/clientdlg_dark.qss" : ":/styles/clientdlg_light.qss";
-    return LoadStyleSheetResource ( path );
-}
-
-QString BuildDialogStyleSheet ( const EUITheme eTheme )
-{
-    const bool bDark = IsDarkUITheme ( eTheme );
-    return LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
-}
-
-QString BuildMainMenuStyleSheet ( const EUITheme eTheme )
-{
-    if ( IsDarkUITheme ( eTheme ) )
-    {
-        return QString::fromLatin1 (
-            "QMenuBar { background-color: rgb(28, 28, 31); color: rgb(220, 232, 242); border: 1px solid rgb(58, 58, 62); }"
-            "QMenuBar::item { background: transparent; color: rgb(220, 232, 242); padding: 3px 8px; }"
-            "QMenuBar::item:selected, QMenuBar::item:pressed { background: rgb(52, 52, 56); color: rgb(220, 232, 242); }"
-            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
-            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
-            "QMenu::item:hover { background-color: rgb(60, 60, 65); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::item:selected { background-color: rgb(60, 60, 65); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
-    }
-
-    return QString::fromLatin1 (
-        "QMenuBar { background-color: rgb(247, 248, 250); color: rgb(28, 34, 42); border: 1px solid rgb(196, 202, 210); }"
-        "QMenuBar::item { background: transparent; color: rgb(28, 34, 42); padding: 3px 8px; }"
-        "QMenuBar::item:selected, QMenuBar::item:pressed { background: rgb(232, 238, 246); color: rgb(28, 34, 42); }"
-        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
-        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
-        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
-}
-
-QString BuildMainPopupMenuStyleSheet ( const EUITheme eTheme )
-{
-    if ( IsDarkUITheme ( eTheme ) )
-    {
-        return QString::fromLatin1 (
-            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
-            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
-            "QMenu::item:hover { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::item:selected { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
-    }
-
-    return QString::fromLatin1 (
-        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
-        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
-        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
-}
-
-void ApplyMainPopupMenuStyle ( QMenu* pMenu, const EUITheme eTheme )
-{
-    if ( pMenu == nullptr )
-    {
-        return;
-    }
-
-    pMenu->setStyleSheet ( BuildMainPopupMenuStyleSheet ( eTheme ) );
-}
-
-void ApplyApplicationHighlightPalette ( const EUITheme eTheme )
-{
-    QPalette pal = QApplication::palette();
-
-    if ( IsDarkUITheme ( eTheme ) )
-    {
-        const QColor cHighlight ( 64, 64, 70 );
-        const QColor cText ( 220, 232, 242 );
-        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
-    }
-    else
-    {
-        const QColor cHighlight ( 46, 132, 198 );
-        const QColor cText ( 255, 255, 255 );
-        pal.setColor ( QPalette::Active, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Inactive, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Disabled, QPalette::Highlight, cHighlight );
-        pal.setColor ( QPalette::Active, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Inactive, QPalette::HighlightedText, cText );
-        pal.setColor ( QPalette::Disabled, QPalette::HighlightedText, cText );
-    }
-
-    QApplication::setPalette ( pal );
-}
-} // namespace
 
 /* Implementation *************************************************************/
 CClientDlg::CClientDlg ( CClient*         pNCliP,
@@ -372,6 +261,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // init connection button text
     butConnect->setText ( tr ( "C&onnect" ) );
     butConnect->setProperty ( "connectedState", false );
+    butConnect->setProperty ( "mainConnectButton", true );
 
     // init input level meter bars
     lbrInputLevelL->SetValue ( 0 );
@@ -471,7 +361,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pFileMenu->addSeparator();
 
     pFileMenu->addAction ( tr ( "E&xit" ), this, SLOT ( close() ), QKeySequence ( Qt::CTRL + Qt::Key_Q ) );
-    ApplyMainPopupMenuStyle ( pFileMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    // Menu styling is now handled by .qss files
 
     // Edit menu  --------------------------------------------------------------
     QMenu* pEditMenu = new QMenu ( tr ( "&Edit" ), this );
@@ -484,7 +374,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
                            QKeySequence ( Qt::CTRL + Qt::Key_L ) );
 
     pEditMenu->addAction ( tr ( "Auto-Adjust all &Faders" ), this, SLOT ( OnAutoAdjustAllFaderLevels() ), QKeySequence ( Qt::CTRL + Qt::Key_F ) );
-    ApplyMainPopupMenuStyle ( pEditMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    // Menu styling is now handled by .qss files
 
     // View menu  --------------------------------------------------------------
     QMenu* pViewMenu = new QMenu ( tr ( "&View" ), this );
@@ -567,7 +457,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     {
         pViewMenu->addAction ( tr ( "&Analyzer Console..." ), this, SLOT ( OnOpenAnalyzerConsole() ) );
     }
-    ApplyMainPopupMenuStyle ( pViewMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    // Menu styling is now handled by .qss files
 
     pViewMenu->addSeparator();
 
@@ -585,7 +475,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         this,
         [this] { ShowGeneralSettings ( SETTING_TAB_MIDI ); },
         QKeySequence ( Qt::CTRL + Qt::Key_M ) );
-    ApplyMainPopupMenuStyle ( pSettingsMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    // Menu styling is now handled by .qss files
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
@@ -596,11 +486,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pMenu->addMenu ( pViewMenu );
     pMenu->addMenu ( pSettingsMenu );
     CHelpMenu* pHelpMenu = new CHelpMenu ( true, this );
-    ApplyMainPopupMenuStyle ( pHelpMenu, ResolveUITheme ( pSettings->eUITheme ) );
+    // Menu styling is now handled by .qss files
     pMenu->addMenu ( pHelpMenu );
     pMenu->setObjectName ( "mainMenuBar" );
     pMenu->setAttribute ( Qt::WA_StyledBackground, true );
-    pMenu->setStyleSheet ( BuildMainMenuStyleSheet ( ResolveUITheme ( pSettings->eUITheme ) ) );
 
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
@@ -1663,25 +1552,9 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     lbrInputLevelL->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
     lbrInputLevelR->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
-    ApplyApplicationHighlightPalette ( eResolvedTheme );
     lbrInputLevelL->SetDarkTheme ( eResolvedTheme == UIT_DARK );
     lbrInputLevelR->SetDarkTheme ( eResolvedTheme == UIT_DARK );
-    backgroundFrame->setStyleSheet ( BuildClientDlgStyleSheet ( eResolvedTheme ) );
-    const QString sDialogStyle = BuildDialogStyleSheet ( eResolvedTheme );
-    ClientSettingsDlg.setStyleSheet ( sDialogStyle );
-    EffectsDlg.setStyleSheet ( sDialogStyle );
-    ConnectDlg.setStyleSheet ( sDialogStyle );
-    ChatDlg.setStyleSheet ( sDialogStyle );
-    if ( QMenuBar* pMainMenu = findChild<QMenuBar*> ( "mainMenuBar" ) )
-    {
-        pMainMenu->setStyleSheet ( BuildMainMenuStyleSheet ( eResolvedTheme ) );
-    }
-
-    const QList<QMenu*> vecMenus = findChildren<QMenu*>();
-    for ( QMenu* pPopupMenu : vecMenus )
-    {
-        ApplyMainPopupMenuStyle ( pPopupMenu, eResolvedTheme );
-    }
+    // All widget and menu styling is now handled by .qss files
 
     // apply GUI design to current window
     switch ( eNewDesign )
@@ -1847,12 +1720,13 @@ void CClientDlg::OnUIThemeChanged()
     }
     bApplyingThemeChange = true;
 
-    // Reapply Fusion style (safe to call multiple times)
-    QApplication::setStyle("Fusion");
-
-    // Reapply palette using shared function
-    EUITheme eResolvedTheme = ResolveUITheme(pSettings->eUITheme);
-    SetAppPaletteForTheme(eResolvedTheme);
+    // Reapply palette and application stylesheet using the current theme.
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    SetAppPaletteForTheme ( eResolvedTheme );
+    SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
+                                                                 : QString ( ":/styles/dialog_common_light.qss" ),
+                                      eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" )
+                                                                 : QString ( ":/styles/clientdlg_light.qss" ) } );
 
     SetGUIDesign ( pClient->GetGUIDesign() );
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );

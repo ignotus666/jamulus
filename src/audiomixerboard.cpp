@@ -147,6 +147,7 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pLabelInstBox   = new QGroupBox ( pFrame );
     plblLabel       = new QLabel ( "", pFrame );
     plblInstrument  = new QLabel ( pFrame );
+    plblInstrument->setObjectName ( "plblInstrument" );
     plblCountryFlag = new QLabel ( pFrame );
 
     QVBoxLayout* pMainGrid     = new QVBoxLayout ( pFrame );

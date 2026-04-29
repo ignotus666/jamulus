@@ -38,208 +38,148 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pClient ( pNCliP ),
     pSettings ( pNSetP )
 {
+    setupUi ( this );
+    pOutputBandMeterSafe = pOutputBandMeter;
+
+    // Save tab index on change
+    connect(pTabs, &QTabWidget::currentChanged, this, [this](int idx) {
+        pSettings->iEffectsTab = idx;
+    });
+
     setWindowTitle ( tr ( "Effects" ) );
-
-    pTabs = new QTabWidget ( this );
-
-    pCbxEffectsPresets = new QComboBox ( this );
-    pButEffectsSavePreset = new QPushButton ( tr ( "Save" ), this );
-    pButEffectsSaveAsPreset = new QPushButton ( tr ( "Save As..." ), this );
-    pButEffectsDeletePreset = new QPushButton ( tr ( "Delete" ), this );
-
-    QWidget*     pReverbTab    = new QWidget ( pTabs );
-    QVBoxLayout* pReverbLayout = new QVBoxLayout ( pReverbTab );
-
-    QLabel* pLblReverb = new QLabel ( tr ( "Reverb Level" ), pReverbTab );
-    pSldReverb         = new QSlider ( Qt::Horizontal, pReverbTab );
     pSldReverb->setRange ( 0, AUD_REVERB_MAX );
     pSldReverb->setTickInterval ( AUD_REVERB_MAX / 5 );
     pSldReverb->setTickPosition ( QSlider::TicksBothSides );
 
-    QGridLayout* pReverbGrid = new QGridLayout();
-    pReverbGrid->setColumnStretch ( 1, 1 );
-    int iReverbRow = 0;
+    pLblReverbPreDelayValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbRoomValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbDampingValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbWetValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbEarlyValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbWidthValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblReverbPreDelayValue->setMinimumWidth ( 32 );
+    pLblReverbRoomValue->setMinimumWidth ( 32 );
+    pLblReverbDampingValue->setMinimumWidth ( 32 );
+    pLblReverbWetValue->setMinimumWidth ( 32 );
+    pLblReverbEarlyValue->setMinimumWidth ( 32 );
+    pLblReverbWidthValue->setMinimumWidth ( 32 );
 
-    auto addReverbRow = [pReverbGrid, pReverbTab, &iReverbRow] ( const QString& label, int minVal, int maxVal, int tick,
-                                                                QSlider*& outSlider, QLabel*& outValue, const QString& suffix = QString() ) {
-        QLabel* pLbl = new QLabel ( label, pReverbTab );
-        outSlider    = new QSlider ( Qt::Horizontal, pReverbTab );
-        outSlider->setRange ( minVal, maxVal );
-        outSlider->setTickInterval ( tick );
-        outSlider->setTickPosition ( QSlider::TicksBothSides );
-        const QString strValue = suffix.isEmpty() ? QStringLiteral ( "0" ) : QStringLiteral ( "0" ) + suffix;
-        outValue = new QLabel ( strValue, pReverbTab );
-        outValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-        outValue->setMinimumWidth ( 32 );
+    pSldReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
+    pSldReverbPreDelay->setTickInterval ( 10 );
+    pSldReverbPreDelay->setTickPosition ( QSlider::TicksBothSides );
+    pSldReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
+    pSldReverbRoom->setTickInterval ( 10 );
+    pSldReverbRoom->setTickPosition ( QSlider::TicksBothSides );
+    pSldReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
+    pSldReverbDamping->setTickInterval ( 10 );
+    pSldReverbDamping->setTickPosition ( QSlider::TicksBothSides );
+    pSldReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
+    pSldReverbWet->setTickInterval ( 10 );
+    pSldReverbWet->setTickPosition ( QSlider::TicksBothSides );
+    pSldReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
+    pSldReverbEarly->setTickInterval ( 10 );
+    pSldReverbEarly->setTickPosition ( QSlider::TicksBothSides );
+    pSldReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
+    pSldReverbWidth->setTickInterval ( 10 );
+    pSldReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
-        pReverbGrid->addWidget ( pLbl, iReverbRow, 0 );
-        pReverbGrid->addWidget ( outSlider, iReverbRow, 1 );
-        pReverbGrid->addWidget ( outValue, iReverbRow, 2 );
-        ++iReverbRow;
-    };
+    pLblHighPassValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblLowPassValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblHighPassValue->setMinimumWidth ( 36 );
+    pLblLowPassValue->setMinimumWidth ( 36 );
+    pSldHighPassCutoff->setRange ( 20, 1000 );
+    pSldHighPassCutoff->setTickInterval ( 50 );
+    pSldHighPassCutoff->setTickPosition ( QSlider::TicksBothSides );
+    pSldLowPassCutoff->setRange ( 1000, 20000 );
+    pSldLowPassCutoff->setTickInterval ( 1000 );
+    pSldLowPassCutoff->setTickPosition ( QSlider::TicksBothSides );
 
-    addReverbRow ( tr ( "Pre-Delay" ), 0, REVERB_PRE_DELAY_MAX_MS, 10, pSldReverbPreDelay, pLblReverbPreDelayValue, tr ( " ms" ) );
-    addReverbRow ( tr ( "Room Size" ), 0, REVERB_ROOM_SIZE_MAX, 10, pSldReverbRoom, pLblReverbRoomValue, tr ( " %" ) );
-    addReverbRow ( tr ( "Damping" ), 0, REVERB_DAMPING_MAX, 10, pSldReverbDamping, pLblReverbDampingValue, tr ( " %" ) );
-    addReverbRow ( tr ( "Wet Mix" ), 0, REVERB_WET_MIX_MAX, 10, pSldReverbWet, pLblReverbWetValue, tr ( " %" ) );
-    addReverbRow ( tr ( "Early Level" ), 0, REVERB_EARLY_LEVEL_MAX, 10, pSldReverbEarly, pLblReverbEarlyValue, tr ( " %" ) );
-    addReverbRow ( tr ( "Width" ), 0, REVERB_WIDTH_MAX, 10, pSldReverbWidth, pLblReverbWidthValue, tr ( " %" ) );
+    pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorAttackValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorReleaseValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorMakeupValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorThresholdValue->setMinimumWidth ( 36 );
+    pLblCompressorRatioValue->setMinimumWidth ( 36 );
+    pLblCompressorAttackValue->setMinimumWidth ( 36 );
+    pLblCompressorReleaseValue->setMinimumWidth ( 36 );
+    pLblCompressorMakeupValue->setMinimumWidth ( 36 );
+    pSldCompressorThreshold->setRange ( -60, 0 );
+    pSldCompressorThreshold->setTickInterval ( 6 );
+    pSldCompressorThreshold->setTickPosition ( QSlider::TicksBothSides );
+    pSldCompressorRatio->setRange ( 1, 20 );
+    pSldCompressorRatio->setTickInterval ( 1 );
+    pSldCompressorRatio->setTickPosition ( QSlider::TicksBothSides );
+    pSldCompressorAttack->setRange ( 1, 50 );
+    pSldCompressorAttack->setTickInterval ( 5 );
+    pSldCompressorAttack->setTickPosition ( QSlider::TicksBothSides );
+    pSldCompressorRelease->setRange ( 10, 400 );
+    pSldCompressorRelease->setTickInterval ( 20 );
+    pSldCompressorRelease->setTickPosition ( QSlider::TicksBothSides );
+    pSldCompressorMakeup->setRange ( 0, 24 );
+    pSldCompressorMakeup->setTickInterval ( 3 );
+    pSldCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
 
-    pLblStereoHint = new QLabel ( tr ( "Stereo mode applies reverb to both channels." ), pReverbTab );
-
-    pRbtReverbSelL = new QRadioButton ( tr ( "Left" ), pReverbTab );
-    pRbtReverbSelR = new QRadioButton ( tr ( "Right" ), pReverbTab );
-    pChbReverbBypass = new QCheckBox ( tr ( "Bypass Reverb" ), pReverbTab );
-    pChbReverbEarly = new QCheckBox ( tr ( "Early Reflections" ), pReverbTab );
-    pChbReverbFreeze = new QCheckBox ( tr ( "Freeze" ), pReverbTab );
-    pButReverbReset = new QPushButton ( tr ( "Reset Reverb" ), pReverbTab );
-
-    pReverbLayout->addWidget ( pChbReverbBypass );
-    pReverbLayout->addWidget ( pLblReverb );
-    pReverbLayout->addWidget ( pSldReverb );
-    pReverbLayout->addLayout ( pReverbGrid );
-    pReverbLayout->addWidget ( pChbReverbEarly );
-    pReverbLayout->addWidget ( pChbReverbFreeze );
-    pReverbLayout->addWidget ( pLblStereoHint );
-    pReverbLayout->addWidget ( pRbtReverbSelL );
-    pReverbLayout->addWidget ( pRbtReverbSelR );
-    pReverbLayout->addWidget ( pButReverbReset, 0, Qt::AlignRight );
-    pReverbLayout->addStretch();
-
-    pTabs->addTab ( pReverbTab, tr ( "Reverb" ) );
-
-    QWidget*     pFilterTab    = new QWidget ( pTabs );
-    QVBoxLayout* pFilterLayout = new QVBoxLayout ( pFilterTab );
-
-    pChbFilterBypass = new QCheckBox ( tr ( "Bypass Filters" ), pFilterTab );
-    pChbHighPass = new QCheckBox ( tr ( "High-Pass" ), pFilterTab );
-    pChbLowPass = new QCheckBox ( tr ( "Low-Pass" ), pFilterTab );
-    pButFilterReset = new QPushButton ( tr ( "Reset Filters" ), pFilterTab );
-
-    QGridLayout* pFilterGrid = new QGridLayout();
-    pFilterGrid->setColumnStretch ( 1, 1 );
-    int iFilterRow = 0;
-
-    auto addFilterRow = [pFilterGrid, pFilterTab, &iFilterRow] ( const QString& label, int minVal, int maxVal, int tick,
-                                                                QSlider*& outSlider, QLabel*& outValue, const QString& suffix = QString() ) {
-        QLabel* pLbl = new QLabel ( label, pFilterTab );
-        outSlider    = new QSlider ( Qt::Horizontal, pFilterTab );
-        outSlider->setRange ( minVal, maxVal );
-        outSlider->setTickInterval ( tick );
-        outSlider->setTickPosition ( QSlider::TicksBothSides );
-        const QString strValue = suffix.isEmpty() ? QStringLiteral ( "0" ) : QStringLiteral ( "0" ) + suffix;
-        outValue = new QLabel ( strValue, pFilterTab );
-        outValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-        outValue->setMinimumWidth ( 36 );
-
-        pFilterGrid->addWidget ( pLbl, iFilterRow, 0 );
-        pFilterGrid->addWidget ( outSlider, iFilterRow, 1 );
-        pFilterGrid->addWidget ( outValue, iFilterRow, 2 );
-        ++iFilterRow;
-    };
-
-    addFilterRow ( tr ( "High-Pass Cutoff" ), 20, 1000, 50, pSldHighPassCutoff, pLblHighPassValue, tr ( " Hz" ) );
-    addFilterRow ( tr ( "Low-Pass Cutoff" ), 1000, 20000, 1000, pSldLowPassCutoff, pLblLowPassValue, tr ( " Hz" ) );
-
-    pFilterLayout->addWidget ( pChbFilterBypass );
-    pFilterLayout->addWidget ( pChbHighPass );
-    pFilterLayout->addWidget ( pChbLowPass );
-    pFilterLayout->addLayout ( pFilterGrid );
-    pFilterLayout->addWidget ( pButFilterReset, 0, Qt::AlignRight );
-    pFilterLayout->addStretch();
-
-    pTabs->addTab ( pFilterTab, tr ( "Filters" ) );
-
-    QWidget*     pCompressorTab    = new QWidget ( pTabs );
-    QVBoxLayout* pCompressorLayout = new QVBoxLayout ( pCompressorTab );
-
-    pChbCompressorBypass = new QCheckBox ( tr ( "Bypass Compressor" ), pCompressorTab );
-    pChbCompressorLimiter = new QCheckBox ( tr ( "Limiter" ), pCompressorTab );
-    pButCompressorReset = new QPushButton ( tr ( "Reset Compressor" ), pCompressorTab );
-
-    QGridLayout* pCompressorGrid = new QGridLayout();
-    pCompressorGrid->setColumnStretch ( 1, 1 );
-    int iCompRow = 0;
-
-    auto addCompressorRow = [pCompressorGrid, pCompressorTab, &iCompRow] ( const QString& label, int minVal, int maxVal, int tick,
-                                                                          QSlider*& outSlider, QLabel*& outValue, const QString& suffix = QString() ) {
-        QLabel* pLbl = new QLabel ( label, pCompressorTab );
-        outSlider    = new QSlider ( Qt::Horizontal, pCompressorTab );
-        outSlider->setRange ( minVal, maxVal );
-        outSlider->setTickInterval ( tick );
-        outSlider->setTickPosition ( QSlider::TicksBothSides );
-        const QString strValue = suffix.isEmpty() ? QStringLiteral ( "0" ) : QStringLiteral ( "0" ) + suffix;
-        outValue = new QLabel ( strValue, pCompressorTab );
-        outValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-        outValue->setMinimumWidth ( 36 );
-
-        pCompressorGrid->addWidget ( pLbl, iCompRow, 0 );
-        pCompressorGrid->addWidget ( outSlider, iCompRow, 1 );
-        pCompressorGrid->addWidget ( outValue, iCompRow, 2 );
-        ++iCompRow;
-    };
-
-    addCompressorRow ( tr ( "Threshold" ), -60, 0, 6, pSldCompressorThreshold, pLblCompressorThresholdValue, tr ( " dB" ) );
-    addCompressorRow ( tr ( "Ratio" ), 1, 20, 1, pSldCompressorRatio, pLblCompressorRatioValue, tr ( ":1" ) );
-    addCompressorRow ( tr ( "Attack" ), 1, 50, 5, pSldCompressorAttack, pLblCompressorAttackValue, tr ( " ms" ) );
-    addCompressorRow ( tr ( "Release" ), 10, 400, 20, pSldCompressorRelease, pLblCompressorReleaseValue, tr ( " ms" ) );
-    addCompressorRow ( tr ( "Makeup" ), 0, 24, 3, pSldCompressorMakeup, pLblCompressorMakeupValue, tr ( " dB" ) );
-
-    pCompressorLayout->addWidget ( pChbCompressorBypass );
-    pCompressorLayout->addLayout ( pCompressorGrid );
-    pCompressorLayout->addWidget ( pChbCompressorLimiter );
-    pCompressorLayout->addWidget ( pButCompressorReset, 0, Qt::AlignRight );
-    pCompressorLayout->addStretch();
-
-    pTabs->addTab ( pCompressorTab, tr ( "Compressor" ) );
-
-    QWidget*     pEQTab    = new QWidget ( pTabs );
-    QVBoxLayout* pEQLayout = new QVBoxLayout ( pEQTab );
-
-    pChbEQBypass = new QCheckBox ( tr ( "Bypass Equalizer" ), pEQTab );
-    pEQLayout->addWidget ( pChbEQBypass );
-
-    QHBoxLayout* pPresetRow = new QHBoxLayout();
-    pCbxEQPresets           = new QComboBox ( pEQTab );
-    pButEQSavePreset        = new QPushButton ( tr ( "Save" ), pEQTab );
-    pButEQSaveAsPreset      = new QPushButton ( tr ( "Save As..." ), pEQTab );
-    pButEQDeletePreset      = new QPushButton ( tr ( "Delete" ), pEQTab );
-
-    pPresetRow->addWidget ( pCbxEQPresets, 1 );
-    pPresetRow->addWidget ( pButEQSavePreset );
-    pPresetRow->addWidget ( pButEQSaveAsPreset );
-    pPresetRow->addWidget ( pButEQDeletePreset );
-    pEQLayout->addLayout ( pPresetRow );
-
-    QVBoxLayout* pOutputMeterLayout = new QVBoxLayout();
-    pOutputMeterLayout->setContentsMargins ( 0, 0, 0, 0 );
-    pOutputMeterLayout->setSpacing ( 4 );
-    pLblOutputBandTitle = new QLabel ( tr ( "Output" ), pEQTab );
-    pLblOutputBandTitle->setAlignment ( Qt::AlignHCenter );
-    pLblOutputBandTitle->setObjectName ( "pOutputBandMeterTitle" );
-    pOutputBandMeter = new COutputBandMeter ( pEQTab );
+    pOutputBandMeter->setObjectName ( "pOutputBandMeter" );
     pOutputBandMeter->setMinimumHeight ( 72 );
     pOutputBandMeter->setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
-    pOutputMeterLayout->addWidget ( pLblOutputBandTitle );
-    pOutputMeterLayout->addWidget ( pOutputBandMeter );
-    const int iOutputMeterIndex = pEQLayout->count();
-    pEQLayout->addLayout ( pOutputMeterLayout );
 
-    QHBoxLayout* pBandsLayout = new QHBoxLayout();
-    pBandsLayout->setSpacing ( 4 );
-    const char*  acBandLabels[CAudioEqualizer::NUM_BANDS] = { "63", "89", "125", "177", "250", "354", "500", "707",
-                                                             "1k", "1.4k", "2k", "2.8k", "4k", "5.6k", "8k", "11.2k" };
+    QLabel* apFreqLabels[CAudioEqualizer::NUM_BANDS] = { pLblEQBandFreq0,
+                                                         pLblEQBandFreq1,
+                                                         pLblEQBandFreq2,
+                                                         pLblEQBandFreq3,
+                                                         pLblEQBandFreq4,
+                                                         pLblEQBandFreq5,
+                                                         pLblEQBandFreq6,
+                                                         pLblEQBandFreq7,
+                                                         pLblEQBandFreq8,
+                                                         pLblEQBandFreq9,
+                                                         pLblEQBandFreq10,
+                                                         pLblEQBandFreq11,
+                                                         pLblEQBandFreq12,
+                                                         pLblEQBandFreq13,
+                                                         pLblEQBandFreq14,
+                                                         pLblEQBandFreq15 };
+
+    QSlider* apBandSliders[CAudioEqualizer::NUM_BANDS] = { pSldEQBand0,
+                                                           pSldEQBand1,
+                                                           pSldEQBand2,
+                                                           pSldEQBand3,
+                                                           pSldEQBand4,
+                                                           pSldEQBand5,
+                                                           pSldEQBand6,
+                                                           pSldEQBand7,
+                                                           pSldEQBand8,
+                                                           pSldEQBand9,
+                                                           pSldEQBand10,
+                                                           pSldEQBand11,
+                                                           pSldEQBand12,
+                                                           pSldEQBand13,
+                                                           pSldEQBand14,
+                                                           pSldEQBand15 };
+
+    QLabel* apBandValues[CAudioEqualizer::NUM_BANDS] = { pLblEQBandValue0,
+                                                         pLblEQBandValue1,
+                                                         pLblEQBandValue2,
+                                                         pLblEQBandValue3,
+                                                         pLblEQBandValue4,
+                                                         pLblEQBandValue5,
+                                                         pLblEQBandValue6,
+                                                         pLblEQBandValue7,
+                                                         pLblEQBandValue8,
+                                                         pLblEQBandValue9,
+                                                         pLblEQBandValue10,
+                                                         pLblEQBandValue11,
+                                                         pLblEQBandValue12,
+                                                         pLblEQBandValue13,
+                                                         pLblEQBandValue14,
+                                                         pLblEQBandValue15 };
 
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        QVBoxLayout* pBandLayout = new QVBoxLayout();
-        pBandLayout->setContentsMargins ( 0, 0, 0, 0 );
-        pBandLayout->setSpacing ( 2 );
+        pSldEQBands[iBand] = apBandSliders[iBand];
+        pLblEQBandValues[iBand] = apBandValues[iBand];
 
-        QLabel* pLblFreq = new QLabel ( QString::fromUtf8 ( acBandLabels[iBand] ), pEQTab );
-        pLblFreq->setAlignment ( Qt::AlignHCenter );
-
-        pSldEQBands[iBand] = new QSlider ( Qt::Vertical, pEQTab );
         pSldEQBands[iBand]->setRange ( -12, 12 );
         pSldEQBands[iBand]->setValue ( 0 );
         pSldEQBands[iBand]->setTickInterval ( 3 );
@@ -249,13 +189,15 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         pSldEQBands[iBand]->setMaximumWidth ( 24 );
         pSldEQBands[iBand]->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
-        pLblEQBandValues[iBand] = new QLabel ( QStringLiteral ( "0" ), pEQTab );
-        pLblEQBandValues[iBand]->setAlignment ( Qt::AlignHCenter );
+        apFreqLabels[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
+        QFont freqFont = apFreqLabels[iBand]->font();
+        freqFont.setPointSizeF ( freqFont.pointSizeF() * 0.8f ); // Reduce font size by 20%
+        apFreqLabels[iBand]->setFont ( freqFont );
+        apFreqLabels[iBand]->setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Preferred );
 
-        pBandLayout->addWidget ( pLblFreq );
-        pBandLayout->addWidget ( pSldEQBands[iBand], 1 );
-        pBandLayout->addWidget ( pLblEQBandValues[iBand] );
-        pBandsLayout->addLayout ( pBandLayout );
+        pLblEQBandValues[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
+        pLblEQBandValues[iBand]->setMinimumWidth ( pSldEQBands[iBand]->minimumWidth() );
+        pLblEQBandValues[iBand]->setMaximumWidth ( pSldEQBands[iBand]->maximumWidth() );
 
         QObject::connect ( pSldEQBands[iBand], &QSlider::valueChanged, this, [this, iBand] ( int value )
         {
@@ -264,30 +206,9 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         } );
     }
 
-    const int iBandsIndex = pEQLayout->count();
-    pEQLayout->addLayout ( pBandsLayout );
-    pEQLayout->setStretch ( iOutputMeterIndex, 1 );
-    pEQLayout->setStretch ( iBandsIndex, 3 );
-
-    pButEQReset = new QPushButton ( tr ( "Reset EQ" ), pEQTab );
-    pEQLayout->addWidget ( pButEQReset, 0, Qt::AlignRight );
-    pEQLayout->addStretch();
-
-    pTabs->addTab ( pEQTab, tr ( "Equalizer" ) );
+    bEQBandWidgetsReady = true;
 
     setMinimumHeight ( 380 );
-
-    QHBoxLayout* pEffectsPresetRow = new QHBoxLayout();
-    QLabel* pLblEffectsPreset = new QLabel ( tr ( "Effects Preset:" ), this );
-    pEffectsPresetRow->addWidget ( pLblEffectsPreset );
-    pEffectsPresetRow->addWidget ( pCbxEffectsPresets, 1 );
-    pEffectsPresetRow->addWidget ( pButEffectsSavePreset );
-    pEffectsPresetRow->addWidget ( pButEffectsSaveAsPreset );
-    pEffectsPresetRow->addWidget ( pButEffectsDeletePreset );
-
-    QVBoxLayout* pMainLayout = new QVBoxLayout ( this );
-    pMainLayout->addLayout ( pEffectsPresetRow );
-    pMainLayout->addWidget ( pTabs );
 
     QObject::connect ( pSldReverb, &QSlider::valueChanged, this, &CEffectsDlg::ReverbValueChanged );
     QObject::connect ( pChbReverbBypass, &QCheckBox::toggled, this, &CEffectsDlg::ReverbBypassChanged );
@@ -395,14 +316,18 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
 void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 {
-    if ( pOutputBandMeter != nullptr )
+    if ( pOutputBandMeterSafe )
     {
-        pOutputBandMeter->SetLevels ( vecOutLevels );
+        pOutputBandMeterSafe->SetLevels ( vecOutLevels );
     }
 }
 
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
+    // Restore last used tab if valid (do this first)
+    if (pSettings->iEffectsTab >= 0 && pSettings->iEffectsTab < pTabs->count()) {
+        pTabs->setCurrentIndex(pSettings->iEffectsTab);
+    }
     PopulateEffectsPresetCombo();
     UpdateReverbControls();
     UpdateFilterControls();
@@ -410,6 +335,33 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     UpdateEQControls();
     UpdateEQPresetSelection();
     CBaseDlg::showEvent ( Event );
+}
+
+void CEffectsDlg::resizeEvent ( QResizeEvent* Event )
+{
+    CBaseDlg::resizeEvent ( Event );
+    UpdateOutputBandAlignment();
+}
+
+void CEffectsDlg::UpdateOutputBandAlignment()
+{
+    // Direct mapping: each meter bar is centered under its slider
+    if (bEQBandWidgetsReady && pOutputBandMeterSafe) {
+        QVector<int> bandCenters;
+        bandCenters.reserve(CAudioEqualizer::NUM_BANDS);
+        for (int i = 0; i < CAudioEqualizer::NUM_BANDS; ++i) {
+            QSlider* pSlider = pSldEQBands[i];
+            if (!pSlider || !pSlider->isVisible()) {
+                bandCenters.append(-1);
+                continue;
+            }
+            QPoint sliderCenter = pSlider->rect().center();
+            QPoint globalCenter = pSlider->mapToGlobal(sliderCenter);
+            QPoint meterLocal = pOutputBandMeterSafe->mapFromGlobal(globalCenter);
+            bandCenters.append(meterLocal.x());
+        }
+        pOutputBandMeterSafe->SetBandCenters(bandCenters);
+    }
 }
 
 void CEffectsDlg::UpdateFilterControls()

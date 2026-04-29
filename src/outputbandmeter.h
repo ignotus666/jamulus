@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <QVector>
 #include <QWidget>
 #include "util.h"
 
@@ -37,10 +38,12 @@ public:
     COutputBandMeter ( QWidget* parent = nullptr );
 
     void SetLevels ( const CVector<float>& vecLevels );
+    void SetBandCenters ( const QVector<int>& vecBandCentersPx );
 
 protected:
     virtual void paintEvent ( QPaintEvent* pEvent ) override;
 
 private:
     float afLevels[kBandCount];
+    QVector<int> vecBandCentersPx;
 };

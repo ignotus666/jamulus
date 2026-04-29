@@ -209,6 +209,7 @@ CConnectDlg::CConnectDlg ( CClientSettings* pNSetP, const bool bNewShowCompleteR
     butCancel->setAutoDefault ( false );
     butConnect->setDefault ( false );
     butCancel->setDefault ( false );
+    butConnect->setFixedHeight ( butCancel->sizeHint().height() );
 
     // add invisible columns which are used for sorting the list and storing
     // the current/maximum number of clients

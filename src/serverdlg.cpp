@@ -23,60 +23,6 @@
 \******************************************************************************/
 
 #include "serverdlg.h"
-#include <QFile>
-
-namespace
-{
-QString LoadStyleSheetResource ( const char* resourcePath )
-{
-    QFile file ( QString::fromLatin1 ( resourcePath ) );
-    if ( !file.open ( QIODevice::ReadOnly | QIODevice::Text ) )
-    {
-        return QString();
-    }
-
-    return QString::fromUtf8 ( file.readAll() );
-}
-
-QString BuildServerDialogStyleSheet ( const EUITheme eTheme )
-{
-    const bool bDark = IsDarkUITheme ( eTheme );
-    QString     styleSheet = LoadStyleSheetResource ( bDark ? ":/styles/dialog_common_dark.qss" : ":/styles/dialog_common_light.qss" );
-    styleSheet += LoadStyleSheetResource ( bDark ? ":/styles/serverdlg_dark.qss" : ":/styles/serverdlg_light.qss" );
-    return styleSheet;
-}
-
-QString BuildPopupMenuStyleSheet ( const EUITheme eTheme )
-{
-    if ( IsDarkUITheme ( eTheme ) )
-    {
-        return QString::fromLatin1 (
-            "QMenu { background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); border: 1px solid rgb(88, 88, 92); margin: 2px; }"
-            "QMenu::item { padding: 4px 16px; margin: 0px; background-color: rgb(37, 37, 40); color: rgb(220, 232, 242); }"
-            "QMenu::item:hover { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::item:selected { background-color: rgb(64, 64, 70); color: rgb(220, 232, 242); margin: 0px; border-radius: 2px; }"
-            "QMenu::separator { height: 1px; background: rgb(58, 58, 62); margin: 4px 8px; }" );
-    }
-
-    return QString::fromLatin1 (
-        "QMenu { background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); border: 1px solid rgb(180, 188, 198); margin: 2px; }"
-        "QMenu::item { padding: 4px 16px; margin: 0px; border: 1px solid transparent; background-color: rgb(255, 255, 255); color: rgb(28, 34, 42); }"
-        "QMenu::item:hover { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::item:selected { background-color: rgb(198, 220, 245); color: rgb(28, 34, 42); margin: 0px; border: 1px solid rgb(158, 190, 224); border-radius: 2px; font-weight: 700; }"
-        "QMenu::separator { height: 1px; background: rgb(196, 202, 210); margin: 4px 8px; }" );
-}
-
-void ApplyPopupMenuStyle ( QMenu* pMenu, const EUITheme eTheme )
-{
-    if ( pMenu == nullptr )
-    {
-        return;
-    }
-
-    pMenu->setStyleSheet ( BuildPopupMenuStyleSheet ( eTheme ) );
-}
-
-} // namespace
 
 /* Implementation *************************************************************/
 CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool bStartMinimized, QWidget* parent ) :
@@ -469,10 +415,6 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     CHelpMenu* pHelpMenu = new CHelpMenu ( false, this );
     pMenu->addMenu ( pHelpMenu );
 
-    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
-    ApplyPopupMenuStyle ( pViewMenu, eResolvedTheme );
-    ApplyPopupMenuStyle ( pHelpMenu, eResolvedTheme );
-
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
 
@@ -577,16 +519,8 @@ void CServerDlg::ApplyTheme()
 {
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
     SetAppPaletteForTheme ( eResolvedTheme );
-    setStyleSheet ( BuildServerDialogStyleSheet ( eResolvedTheme ) );
-
-    if ( pMenu != nullptr )
-    {
-        const QList<QMenu*> vecMenus = findChildren<QMenu*>();
-        for ( QMenu* pPopupMenu : vecMenus )
-        {
-            ApplyPopupMenuStyle ( pPopupMenu, eResolvedTheme );
-        }
-    }
+    SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
+                                                                 : QString ( ":/styles/dialog_common_light.qss" ) } );
 }
 
 void CServerDlg::OnUIThemeActivated ( int iThemeIdx )
