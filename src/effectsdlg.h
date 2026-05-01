@@ -30,7 +30,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QRadioButton>
-#include <QSlider>
+#include "customslider.h"
 #include <QTabWidget>
 #include <QPointer>
 #include <QShowEvent>
@@ -56,6 +56,7 @@ public:
     void UpdateEQControls();
     void UpdateEQReadouts();
     void UpdateOutputBandLevels ( const CVector<float>& vecOutLevels );
+    void OnUIThemeChanged();
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
@@ -94,7 +95,7 @@ private:
     CClient*      pClient;
     CClientSettings* pSettings;
     QPointer<COutputBandMeter> pOutputBandMeterSafe;
-    QPointer<QSlider> pSldEQBands[CAudioEqualizer::NUM_BANDS] = {};
+    QPointer<CCustomSlider> pSldEQBands[CAudioEqualizer::NUM_BANDS] = {};
     QPointer<QLabel>  pLblEQBandValues[CAudioEqualizer::NUM_BANDS] = {};
     bool          bEQBandWidgetsReady = false;
 
@@ -106,6 +107,7 @@ private:
     void PopulateEQPresetCombo();
     void ApplyPresetFromComboIndex ( const int iPresetIndex );
     void UpdateEQPresetSelection();
+    void ApplyThemeToCustomWidgets();
     void UpdateOutputBandAlignment();
     int  FindPresetSlotByName ( const QString& strName ) const;
     int  FindFreePresetSlot() const;

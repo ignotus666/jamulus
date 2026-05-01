@@ -23,10 +23,12 @@
 \******************************************************************************/
 
 #include "outputbandmeter.h"
+#include "uicolors.h"
 #include <QPainter>
 
 COutputBandMeter::COutputBandMeter ( QWidget* parent ) :
     QWidget ( parent )
+    , bDarkTheme ( true )
 {
     for ( float& fLevel : afLevels )
     {
@@ -35,6 +37,15 @@ COutputBandMeter::COutputBandMeter ( QWidget* parent ) :
 
     setMinimumSize ( 180, 72 );
     setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
+}
+
+void COutputBandMeter::SetDarkTheme ( const bool bEnable )
+{
+    if ( bDarkTheme != bEnable )
+    {
+        bDarkTheme = bEnable;
+        update();
+    }
 }
 
 void COutputBandMeter::SetLevels ( const CVector<float>& vecLevels )
@@ -66,6 +77,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
 
     QPainter painter ( this );
     painter.setRenderHint ( QPainter::Antialiasing, true );
+    const SControlPalette palette = GetControlPalette ( bDarkTheme );
 
     const int iMargin = 2;
     const int iGap    = 2;
@@ -144,7 +156,8 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
         int barW = barRight - barLeft;
         const int iY = iMargin;
         QRect barRect ( barLeft, iY, barW, iH );
-        painter.fillRect ( barRect, QColor ( 28, 32, 36, 90 ) );
+        const QColor backgroundFill = bDarkTheme ? QColor ( 28, 32, 36, 90 ) : QColor ( 245, 246, 248, 220 );
+        painter.fillRect ( barRect, backgroundFill );
 
         // Segmented rendering
         double dNormValue = std::max ( 0.0, std::min ( 1.0, static_cast<double> ( afLevels[iBand] ) ) );
@@ -176,7 +189,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
                 const qreal dRadius = std::min ( 2.2, std::min ( segRect.width(), segRect.height() ) / 2.0 );
                 painter.drawRoundedRect ( QRectF ( segRect ), dRadius, dRadius );
             } else {
-                painter.fillRect ( segRect, QColor ( 28, 35, 45 ) );
+                painter.fillRect ( segRect, bDarkTheme ? QColor ( 28, 35, 45 ) : palette.trackBackground );
             }
             if ( iSegment + 1 < iSegmentCount ) {
                 iYCursor -= iGapPx;

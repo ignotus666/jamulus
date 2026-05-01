@@ -29,10 +29,6 @@
 #include <QLineEdit>
 #include <QMessageBox>
 
-namespace
-{
-} // namespace
-
 CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
     CBaseDlg ( parent, Qt::Window ),
     pClient ( pNCliP ),
@@ -65,22 +61,22 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblReverbWidthValue->setMinimumWidth ( 32 );
 
     pSldReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
-    pSldReverbPreDelay->setTickInterval ( 10 );
+    pSldReverbPreDelay->setTickInterval ( std::max ( 1, REVERB_PRE_DELAY_MAX_MS / 5 ) );
     pSldReverbPreDelay->setTickPosition ( QSlider::TicksBothSides );
     pSldReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
-    pSldReverbRoom->setTickInterval ( 10 );
+    pSldReverbRoom->setTickInterval ( std::max ( 1, REVERB_ROOM_SIZE_MAX / 5 ) );
     pSldReverbRoom->setTickPosition ( QSlider::TicksBothSides );
     pSldReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
-    pSldReverbDamping->setTickInterval ( 10 );
+    pSldReverbDamping->setTickInterval ( std::max ( 1, REVERB_DAMPING_MAX / 5 ) );
     pSldReverbDamping->setTickPosition ( QSlider::TicksBothSides );
     pSldReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
-    pSldReverbWet->setTickInterval ( 10 );
+    pSldReverbWet->setTickInterval ( std::max ( 1, REVERB_WET_MIX_MAX / 5 ) );
     pSldReverbWet->setTickPosition ( QSlider::TicksBothSides );
     pSldReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
-    pSldReverbEarly->setTickInterval ( 10 );
+    pSldReverbEarly->setTickInterval ( std::max ( 1, REVERB_EARLY_LEVEL_MAX / 5 ) );
     pSldReverbEarly->setTickPosition ( QSlider::TicksBothSides );
     pSldReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
-    pSldReverbWidth->setTickInterval ( 10 );
+    pSldReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
     pSldReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
     pLblHighPassValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -88,10 +84,10 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblHighPassValue->setMinimumWidth ( 36 );
     pLblLowPassValue->setMinimumWidth ( 36 );
     pSldHighPassCutoff->setRange ( 20, 1000 );
-    pSldHighPassCutoff->setTickInterval ( 50 );
+    pSldHighPassCutoff->setTickInterval ( std::max ( 1, ( 1000 - 20 ) / 5 ) );
     pSldHighPassCutoff->setTickPosition ( QSlider::TicksBothSides );
     pSldLowPassCutoff->setRange ( 1000, 20000 );
-    pSldLowPassCutoff->setTickInterval ( 1000 );
+    pSldLowPassCutoff->setTickInterval ( std::max ( 1, ( 20000 - 1000 ) / 5 ) );
     pSldLowPassCutoff->setTickPosition ( QSlider::TicksBothSides );
 
     pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -105,19 +101,19 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblCompressorReleaseValue->setMinimumWidth ( 36 );
     pLblCompressorMakeupValue->setMinimumWidth ( 36 );
     pSldCompressorThreshold->setRange ( -60, 0 );
-    pSldCompressorThreshold->setTickInterval ( 6 );
+    pSldCompressorThreshold->setTickInterval ( std::max ( 1, 60 / 5 ) );
     pSldCompressorThreshold->setTickPosition ( QSlider::TicksBothSides );
     pSldCompressorRatio->setRange ( 1, 20 );
-    pSldCompressorRatio->setTickInterval ( 1 );
+    pSldCompressorRatio->setTickInterval ( std::max ( 1, ( 20 - 1 ) / 5 ) );
     pSldCompressorRatio->setTickPosition ( QSlider::TicksBothSides );
     pSldCompressorAttack->setRange ( 1, 50 );
-    pSldCompressorAttack->setTickInterval ( 5 );
+    pSldCompressorAttack->setTickInterval ( std::max ( 1, ( 50 - 1 ) / 5 ) );
     pSldCompressorAttack->setTickPosition ( QSlider::TicksBothSides );
     pSldCompressorRelease->setRange ( 10, 400 );
-    pSldCompressorRelease->setTickInterval ( 20 );
+    pSldCompressorRelease->setTickInterval ( std::max ( 1, ( 400 - 10 ) / 5 ) );
     pSldCompressorRelease->setTickPosition ( QSlider::TicksBothSides );
     pSldCompressorMakeup->setRange ( 0, 24 );
-    pSldCompressorMakeup->setTickInterval ( 3 );
+    pSldCompressorMakeup->setTickInterval ( std::max ( 1, 24 / 5 ) );
     pSldCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
 
     pOutputBandMeter->setObjectName ( "pOutputBandMeter" );
@@ -141,22 +137,22 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
                                                          pLblEQBandFreq14,
                                                          pLblEQBandFreq15 };
 
-    QSlider* apBandSliders[CAudioEqualizer::NUM_BANDS] = { pSldEQBand0,
-                                                           pSldEQBand1,
-                                                           pSldEQBand2,
-                                                           pSldEQBand3,
-                                                           pSldEQBand4,
-                                                           pSldEQBand5,
-                                                           pSldEQBand6,
-                                                           pSldEQBand7,
-                                                           pSldEQBand8,
-                                                           pSldEQBand9,
-                                                           pSldEQBand10,
-                                                           pSldEQBand11,
-                                                           pSldEQBand12,
-                                                           pSldEQBand13,
-                                                           pSldEQBand14,
-                                                           pSldEQBand15 };
+    CCustomSlider* apBandSliders[CAudioEqualizer::NUM_BANDS] = { pSldEQBand0,
+                                                                 pSldEQBand1,
+                                                                 pSldEQBand2,
+                                                                 pSldEQBand3,
+                                                                 pSldEQBand4,
+                                                                 pSldEQBand5,
+                                                                 pSldEQBand6,
+                                                                 pSldEQBand7,
+                                                                 pSldEQBand8,
+                                                                 pSldEQBand9,
+                                                                 pSldEQBand10,
+                                                                 pSldEQBand11,
+                                                                 pSldEQBand12,
+                                                                 pSldEQBand13,
+                                                                 pSldEQBand14,
+                                                                 pSldEQBand15 };
 
     QLabel* apBandValues[CAudioEqualizer::NUM_BANDS] = { pLblEQBandValue0,
                                                          pLblEQBandValue1,
@@ -182,24 +178,23 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
         pSldEQBands[iBand]->setRange ( -12, 12 );
         pSldEQBands[iBand]->setValue ( 0 );
-        pSldEQBands[iBand]->setTickInterval ( 3 );
+        pSldEQBands[iBand]->setTickInterval ( std::max ( 1, 24 / 5 ) );
         pSldEQBands[iBand]->setTickPosition ( QSlider::TicksBothSides );
-        pSldEQBands[iBand]->setMinimumHeight ( 120 );
-        pSldEQBands[iBand]->setMinimumWidth ( 18 );
+        pSldEQBands[iBand]->setMinimumHeight ( 100 );
+        pSldEQBands[iBand]->setMinimumWidth ( 20 );
         pSldEQBands[iBand]->setMaximumWidth ( 24 );
         pSldEQBands[iBand]->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
         apFreqLabels[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-        QFont freqFont = apFreqLabels[iBand]->font();
-        freqFont.setPointSizeF ( freqFont.pointSizeF() * 0.8f ); // Reduce font size by 20%
-        apFreqLabels[iBand]->setFont ( freqFont );
+        apFreqLabels[iBand]->setObjectName ( QString ( "eqBandFreq%1" ).arg ( iBand ) );
+        pLblEQBandValues[iBand]->setObjectName ( QString ( "eqBandValue%1" ).arg ( iBand ) );
         apFreqLabels[iBand]->setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Preferred );
 
         pLblEQBandValues[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
         pLblEQBandValues[iBand]->setMinimumWidth ( pSldEQBands[iBand]->minimumWidth() );
         pLblEQBandValues[iBand]->setMaximumWidth ( pSldEQBands[iBand]->maximumWidth() );
 
-        QObject::connect ( pSldEQBands[iBand], &QSlider::valueChanged, this, [this, iBand] ( int value )
+        QObject::connect ( pSldEQBands[iBand], &CCustomSlider::valueChanged, this, [this, iBand] ( int value )
         {
             pLblEQBandValues[iBand]->setText ( QString::number ( value ) );
             emit EQBandGainChanged ( iBand, value );
@@ -208,31 +203,31 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     bEQBandWidgetsReady = true;
 
-    setMinimumHeight ( 380 );
+    setMinimumHeight ( 420 );
 
-    QObject::connect ( pSldReverb, &QSlider::valueChanged, this, &CEffectsDlg::ReverbValueChanged );
+    QObject::connect ( pSldReverb, &CCustomSlider::valueChanged, this, &CEffectsDlg::ReverbValueChanged );
     QObject::connect ( pChbReverbBypass, &QCheckBox::toggled, this, &CEffectsDlg::ReverbBypassChanged );
-    QObject::connect ( pSldReverbPreDelay, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbPreDelay, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbPreDelayValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit ReverbPreDelayChanged ( value );
     } );
-    QObject::connect ( pSldReverbRoom, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbRoom, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbRoomValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbRoomSizeChanged ( value );
     } );
-    QObject::connect ( pSldReverbDamping, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbDamping, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbDampingValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbDampingChanged ( value );
     } );
-    QObject::connect ( pSldReverbWet, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbWet, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbWetValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbWetMixChanged ( value );
     } );
-    QObject::connect ( pSldReverbEarly, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbEarly, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbEarlyValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbEarlyLevelChanged ( value );
     } );
-    QObject::connect ( pSldReverbWidth, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldReverbWidth, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblReverbWidthValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbWidthChanged ( value );
     } );
@@ -256,34 +251,34 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         pSldLowPassCutoff->setEnabled ( enabled );
         emit LowPassEnabledChanged ( enabled );
     } );
-    QObject::connect ( pSldHighPassCutoff, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldHighPassCutoff, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblHighPassValue->setText ( QString::number ( value ) + tr ( " Hz" ) );
         emit HighPassCutoffChanged ( value );
     } );
-    QObject::connect ( pSldLowPassCutoff, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldLowPassCutoff, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblLowPassValue->setText ( QString::number ( value ) + tr ( " Hz" ) );
         emit LowPassCutoffChanged ( value );
     } );
     QObject::connect ( pButFilterReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetFilterClicked );
     QObject::connect ( pChbCompressorBypass, &QCheckBox::toggled, this, &CEffectsDlg::CompressorBypassChanged );
     QObject::connect ( pChbCompressorLimiter, &QCheckBox::toggled, this, &CEffectsDlg::CompressorLimiterChanged );
-    QObject::connect ( pSldCompressorThreshold, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldCompressorThreshold, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblCompressorThresholdValue->setText ( QString::number ( value ) + tr ( " dB" ) );
         emit CompressorThresholdChanged ( value );
     } );
-    QObject::connect ( pSldCompressorRatio, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldCompressorRatio, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblCompressorRatioValue->setText ( QString::number ( value ) + tr ( ":1" ) );
         emit CompressorRatioChanged ( value );
     } );
-    QObject::connect ( pSldCompressorAttack, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldCompressorAttack, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblCompressorAttackValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit CompressorAttackChanged ( value );
     } );
-    QObject::connect ( pSldCompressorRelease, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldCompressorRelease, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblCompressorReleaseValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit CompressorReleaseChanged ( value );
     } );
-    QObject::connect ( pSldCompressorMakeup, &QSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pSldCompressorMakeup, &CCustomSlider::valueChanged, this, [this] ( int value ) {
         pLblCompressorMakeupValue->setText ( QString::number ( value ) + tr ( " dB" ) );
         emit CompressorMakeupChanged ( value );
     } );
@@ -324,6 +319,8 @@ void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
+    ApplyThemeToCustomWidgets();
+
     // Restore last used tab if valid (do this first)
     if (pSettings->iEffectsTab >= 0 && pSettings->iEffectsTab < pTabs->count()) {
         pTabs->setCurrentIndex(pSettings->iEffectsTab);
@@ -335,6 +332,54 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     UpdateEQControls();
     UpdateEQPresetSelection();
     CBaseDlg::showEvent ( Event );
+}
+
+void CEffectsDlg::OnUIThemeChanged()
+{
+    ApplyThemeToCustomWidgets();
+}
+
+void CEffectsDlg::ApplyThemeToCustomWidgets()
+{
+    const bool bDarkTheme = ( ResolveUITheme ( pSettings->eUITheme ) == UIT_DARK );
+
+    CCustomSlider* apThemeSliders[] = {
+        pSldReverb,
+        pSldReverbPreDelay,
+        pSldReverbRoom,
+        pSldReverbDamping,
+        pSldReverbWet,
+        pSldReverbEarly,
+        pSldReverbWidth,
+        pSldHighPassCutoff,
+        pSldLowPassCutoff,
+        pSldCompressorThreshold,
+        pSldCompressorRatio,
+        pSldCompressorAttack,
+        pSldCompressorRelease,
+        pSldCompressorMakeup,
+    };
+
+    for ( CCustomSlider* pSlider : apThemeSliders )
+    {
+        if ( pSlider )
+        {
+            pSlider->SetDarkTheme ( bDarkTheme );
+        }
+    }
+
+    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    {
+        if ( pSldEQBands[iBand] )
+        {
+            pSldEQBands[iBand]->SetDarkTheme ( bDarkTheme );
+        }
+    }
+
+    if ( pOutputBandMeterSafe )
+    {
+        pOutputBandMeterSafe->SetDarkTheme ( bDarkTheme );
+    }
 }
 
 void CEffectsDlg::resizeEvent ( QResizeEvent* Event )
@@ -350,7 +395,7 @@ void CEffectsDlg::UpdateOutputBandAlignment()
         QVector<int> bandCenters;
         bandCenters.reserve(CAudioEqualizer::NUM_BANDS);
         for (int i = 0; i < CAudioEqualizer::NUM_BANDS; ++i) {
-            QSlider* pSlider = pSldEQBands[i];
+            CCustomSlider* pSlider = pSldEQBands[i];
             if (!pSlider || !pSlider->isVisible()) {
                 bandCenters.append(-1);
                 continue;

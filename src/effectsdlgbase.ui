@@ -87,7 +87,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="pSldReverb">
+        <widget class="CCustomSlider" name="pSldReverb">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -103,7 +103,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSlider" name="pSldReverbPreDelay">
+          <widget class="CCustomSlider" name="pSldReverbPreDelay">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -124,7 +124,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSlider" name="pSldReverbRoom">
+          <widget class="CCustomSlider" name="pSldReverbRoom">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -145,7 +145,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QSlider" name="pSldReverbDamping">
+          <widget class="CCustomSlider" name="pSldReverbDamping">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -166,7 +166,7 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSlider" name="pSldReverbWet">
+          <widget class="CCustomSlider" name="pSldReverbWet">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -187,7 +187,7 @@
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QSlider" name="pSldReverbEarly">
+          <widget class="CCustomSlider" name="pSldReverbEarly">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -208,7 +208,7 @@
           </widget>
          </item>
          <item row="5" column="1">
-          <widget class="QSlider" name="pSldReverbWidth">
+          <widget class="CCustomSlider" name="pSldReverbWidth">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -372,14 +372,14 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSlider" name="pSldHighPassCutoff">
+          <widget class="CCustomSlider" name="pSldHighPassCutoff">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSlider" name="pSldLowPassCutoff">
+          <widget class="CCustomSlider" name="pSldLowPassCutoff">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -482,7 +482,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSlider" name="pSldCompressorThreshold">
+          <widget class="CCustomSlider" name="pSldCompressorThreshold">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -503,7 +503,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSlider" name="pSldCompressorRatio">
+          <widget class="CCustomSlider" name="pSldCompressorRatio">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -524,7 +524,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QSlider" name="pSldCompressorAttack">
+          <widget class="CCustomSlider" name="pSldCompressorAttack">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -545,7 +545,7 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSlider" name="pSldCompressorRelease">
+          <widget class="CCustomSlider" name="pSldCompressorRelease">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -566,7 +566,7 @@
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QSlider" name="pSldCompressorMakeup">
+          <widget class="CCustomSlider" name="pSldCompressorMakeup">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -773,7 +773,7 @@
           </widget>
          </item>
          <item row="1" column="10">
-          <widget class="QSlider" name="pSldEQBand10">
+          <widget class="CCustomSlider" name="pSldEQBand10">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -820,7 +820,7 @@
           </widget>
          </item>
          <item row="1" column="13">
-          <widget class="QSlider" name="pSldEQBand13">
+          <widget class="CCustomSlider" name="pSldEQBand13">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -847,7 +847,7 @@
           </widget>
          </item>
          <item row="1" column="14">
-          <widget class="QSlider" name="pSldEQBand14">
+          <widget class="CCustomSlider" name="pSldEQBand14">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -864,7 +864,7 @@
           </widget>
          </item>
          <item row="1" column="15">
-          <widget class="QSlider" name="pSldEQBand15">
+          <widget class="CCustomSlider" name="pSldEQBand15">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -891,7 +891,7 @@
           </widget>
          </item>
          <item row="1" column="12">
-          <widget class="QSlider" name="pSldEQBand12">
+          <widget class="CCustomSlider" name="pSldEQBand12">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -918,14 +918,14 @@
           </widget>
          </item>
          <item row="1" column="9">
-          <widget class="QSlider" name="pSldEQBand9">
+          <widget class="CCustomSlider" name="pSldEQBand9">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSlider" name="pSldEQBand1">
+          <widget class="CCustomSlider" name="pSldEQBand1">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -942,7 +942,7 @@
           </widget>
          </item>
          <item row="1" column="8">
-          <widget class="QSlider" name="pSldEQBand8">
+          <widget class="CCustomSlider" name="pSldEQBand8">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -969,7 +969,7 @@
           </widget>
          </item>
          <item row="1" column="5">
-          <widget class="QSlider" name="pSldEQBand5">
+          <widget class="CCustomSlider" name="pSldEQBand5">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -1066,28 +1066,28 @@
           </widget>
          </item>
          <item row="1" column="4">
-          <widget class="QSlider" name="pSldEQBand4">
+          <widget class="CCustomSlider" name="pSldEQBand4">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
           </widget>
          </item>
          <item row="1" column="7">
-          <widget class="QSlider" name="pSldEQBand7">
+          <widget class="CCustomSlider" name="pSldEQBand7">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
           </widget>
          </item>
          <item row="1" column="11">
-          <widget class="QSlider" name="pSldEQBand11">
+          <widget class="CCustomSlider" name="pSldEQBand11">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QSlider" name="pSldEQBand0">
+          <widget class="CCustomSlider" name="pSldEQBand0">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -1124,7 +1124,7 @@
           </widget>
          </item>
          <item row="1" column="6">
-          <widget class="QSlider" name="pSldEQBand6">
+          <widget class="CCustomSlider" name="pSldEQBand6">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -1151,7 +1151,7 @@
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QSlider" name="pSldEQBand3">
+          <widget class="CCustomSlider" name="pSldEQBand3">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -1168,7 +1168,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSlider" name="pSldEQBand2">
+          <widget class="CCustomSlider" name="pSldEQBand2">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -1225,6 +1225,11 @@
    <extends>QWidget</extends>
    <header>outputbandmeter.h</header>
   </customwidget>
+    <customwidget>
+     <class>CCustomSlider</class>
+     <extends>QSlider</extends>
+     <header>customslider.h</header>
+    </customwidget>
  </customwidgets>
  <resources/>
  <connections/>

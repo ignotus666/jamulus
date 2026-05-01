@@ -39,7 +39,8 @@ class CCustomSlider : public QWidget
     Q_OBJECT
 
 public:
-    explicit CCustomSlider ( Qt::Orientation orientation = Qt::Vertical, QWidget* parent = nullptr );
+    explicit CCustomSlider ( QWidget* parent = nullptr );
+    explicit CCustomSlider ( Qt::Orientation orientation, QWidget* parent = nullptr );
     virtual ~CCustomSlider();
 
     // Value management (QSlider compatible)
@@ -53,7 +54,20 @@ public:
     void setPageStep ( int step ) { iPageStep = step; }
     void setTickInterval ( int interval ) { iTickInterval = interval; }
     void setTickPosition ( QSlider::TickPosition position ) { eTickPosition = position; }
-    void setOrientation ( Qt::Orientation orientation ) { eOrientation = orientation; }
+    void setOrientation ( Qt::Orientation orientation )
+    {
+        eOrientation = orientation;
+        if ( eOrientation == Qt::Vertical )
+        {
+            setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Expanding );
+        }
+        else
+        {
+            setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Preferred );
+        }
+        updateGeometry();
+        update();
+    }
     void SetDarkTheme ( bool bEnable );
     void SetCompactMode ( bool bEnable );
 

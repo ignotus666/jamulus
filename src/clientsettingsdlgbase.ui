@@ -843,7 +843,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QSlider" name="sldNetBuf">
+                 <widget class="CCustomSlider" name="sldNetBuf">
                   <property name="minimum">
                    <number>1</number>
                   </property>
@@ -878,7 +878,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QSlider" name="sldNetBufServer">
+                 <widget class="CCustomSlider" name="sldNetBufServer">
                   <property name="minimum">
                    <number>1</number>
                   </property>
@@ -1245,7 +1245,7 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QSlider" name="sldAudioPan">
+                    <widget class="CCustomSlider" name="sldAudioPan">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2480,6 +2480,11 @@
    <class>CLanguageComboBox</class>
    <extends>QComboBox</extends>
    <header>util.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CCustomSlider</class>
+   <extends>QSlider</extends>
+   <header>customslider.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -32,6 +32,8 @@
 
 namespace
 {
+constexpr int TICK_SPACING_PX = 20;
+
 void FillAccentGradient ( QPainter& painter, const QRect& rect, const bool bVertical, const SControlPalette& palette )
 {
     if ( rect.width() <= 0 || rect.height() <= 0 )
@@ -83,7 +85,103 @@ void DrawHandle ( QPainter& painter,
     painter.setBrush ( Qt::NoBrush );
     painter.drawPath ( handlePath );
 }
+
+void DrawTickMarks ( QPainter& painter,
+                     const int startPos,
+                     const int endPos,
+                     const bool bVertical,
+                     const int trackLeft,
+                     const int trackTop,
+                     const int trackWidth,
+                     const int trackHeight,
+                     const QSlider::TickPosition eTickPosition,
+                     const QColor& tickColor,
+                     const bool bValueBased,
+                     const int minValue,
+                     const int maxValue )
+{
+    painter.setPen ( QPen ( tickColor, 1 ) );
+
+    if ( bValueBased )
+    {
+        const int valueRange = std::max ( 1, maxValue - minValue );
+
+        for ( int val = minValue; val <= maxValue; ++val )
+        {
+            const qreal fraction = static_cast<qreal> ( val - minValue ) / valueRange;
+            const int pos = qRound ( startPos + ( endPos - startPos ) * fraction );
+
+            if ( bVertical )
+            {
+                const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
+                                      ( eTickPosition == QSlider::TicksLeft ) ||
+                                      ( eTickPosition == QSlider::TicksAbove );
+                const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
+                                       ( eTickPosition == QSlider::TicksRight ) ||
+                                       ( eTickPosition == QSlider::TicksBelow );
+
+                if ( drawLeft )
+                {
+                    painter.drawLine ( trackLeft - 7, pos, trackLeft - 2, pos );
+                }
+                if ( drawRight )
+                {
+                    painter.drawLine ( trackLeft + trackWidth + 2, pos, trackLeft + trackWidth + 7, pos );
+                }
+            }
+            else
+            {
+                painter.drawLine ( pos, trackTop - 7, pos, trackTop - 2 );
+                painter.drawLine ( pos, trackTop + trackHeight + 2, pos, trackTop + trackHeight + 7 );
+            }
+        }
+        return;
+    }
+
+    const int trackLength = std::abs ( endPos - startPos );
+    if ( trackLength <= 0 )
+    {
+        return;
+    }
+
+    const int intervalCount = std::max ( 1, trackLength / TICK_SPACING_PX );
+
+    for ( int i = 0; i <= intervalCount; ++i )
+    {
+        const qreal fraction = static_cast<qreal> ( i ) / intervalCount;
+        const int pos = qRound ( startPos + ( endPos - startPos ) * fraction );
+
+        if ( bVertical )
+        {
+            const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
+                                  ( eTickPosition == QSlider::TicksLeft ) ||
+                                  ( eTickPosition == QSlider::TicksAbove );
+            const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
+                                   ( eTickPosition == QSlider::TicksRight ) ||
+                                   ( eTickPosition == QSlider::TicksBelow );
+
+            if ( drawLeft )
+            {
+                painter.drawLine ( trackLeft - 7, pos, trackLeft - 2, pos );
+            }
+            if ( drawRight )
+            {
+                painter.drawLine ( trackLeft + trackWidth + 2, pos, trackLeft + trackWidth + 7, pos );
+            }
+        }
+        else
+        {
+            painter.drawLine ( pos, trackTop - 7, pos, trackTop - 2 );
+            painter.drawLine ( pos, trackTop + trackHeight + 2, pos, trackTop + trackHeight + 7 );
+        }
+    }
+}
 } // namespace
+
+CCustomSlider::CCustomSlider ( QWidget* parent ) :
+    CCustomSlider ( Qt::Vertical, parent )
+{
+}
 
 CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     QWidget ( parent ),
@@ -99,9 +197,28 @@ CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     eOrientation ( orientation ),
     eTickPosition ( QSlider::TicksAbove )
 {
+    if ( eOrientation == Qt::Vertical )
+    {
+        setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Expanding );
+    }
+    else
+    {
+        setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Preferred );
+    }
+
     setFocusPolicy ( Qt::StrongFocus );
     setAttribute ( Qt::WA_OpaquePaintEvent );
     setMouseTracking ( true );
+    if ( eOrientation == Qt::Vertical )
+    {
+        setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Expanding );
+    }
+    else
+    {
+        setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Preferred );
+    }
+    updateGeometry();
+    update();
 }
 
 CCustomSlider::~CCustomSlider() {}
@@ -111,7 +228,7 @@ void CCustomSlider::SetDarkTheme ( bool bEnable )
     if ( bDarkTheme != bEnable )
     {
         bDarkTheme = bEnable;
-        update();
+        repaint();
     }
 }
 
@@ -297,47 +414,22 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     painter.setPen ( QPen ( trackBorder, 1 ) );
     painter.drawRect ( trackLeft, trackTop, TRACK_WIDTH, trackSize );
 
-    // Draw tick marks with stronger contrast for dark and light themes.
-    if ( ( iTickInterval > 0 ) && ( eTickPosition != QSlider::NoTicks ) )
+    // Draw tick marks with a consistent pixel spacing across all sliders.
+    if ( iTickInterval > 0 && eTickPosition != QSlider::NoTicks )
     {
-        painter.setPen ( QPen ( palette.tick, 1 ) );
-        const int iStep  = std::max ( 1, iTickInterval );
-
-        for ( int val = iMinValue; val <= iMaxValue; val += iStep )
-        {
-            const int y = positionFromValue ( val );
-
-            const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                  ( eTickPosition == QSlider::TicksLeft ) ||
-                                  ( eTickPosition == QSlider::TicksAbove );
-            const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                   ( eTickPosition == QSlider::TicksRight ) ||
-                                   ( eTickPosition == QSlider::TicksBelow );
-
-            if ( drawLeft )
-            {
-                painter.drawLine ( trackLeft - 7, y, trackLeft - 2, y );
-            }
-            if ( drawRight )
-            {
-                painter.drawLine ( trackLeft + TRACK_WIDTH + 2, y, trackLeft + TRACK_WIDTH + 7, y );
-            }
-        }
-
-        if ( ( ( iMaxValue - iMinValue ) % iStep ) != 0 )
-        {
-            const int y = positionFromValue ( iMaxValue );
-            const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                  ( eTickPosition == QSlider::TicksLeft ) ||
-                                  ( eTickPosition == QSlider::TicksAbove );
-            const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                   ( eTickPosition == QSlider::TicksRight ) ||
-                                   ( eTickPosition == QSlider::TicksBelow );
-            if ( drawLeft )
-                painter.drawLine ( trackLeft - 7, y, trackLeft - 2, y );
-            if ( drawRight )
-                painter.drawLine ( trackLeft + TRACK_WIDTH + 2, y, trackLeft + TRACK_WIDTH + 7, y );
-        }
+        DrawTickMarks ( painter,
+                        positionFromValue ( iMinValue ),
+                        positionFromValue ( iMaxValue ),
+                        true,
+                        trackLeft,
+                        trackTop,
+                        TRACK_WIDTH,
+                        trackSize,
+                        eTickPosition,
+                        palette.tick,
+                        ( iTickInterval == 1 ),
+                        iMinValue,
+                        iMaxValue );
     }
 
     DrawHandle ( painter, currentHandleRect(), true, ( bHandleHovered || bMousePressed ), palette );
@@ -376,46 +468,22 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
     painter.setPen ( QPen ( trackBorder, 1 ) );
     painter.drawRect ( MARGINS + HANDLE_WIDTH / 2, trackTop, trackSize, TRACK_WIDTH );
 
-    // Draw tick marks with stronger contrast for dark and light themes.
-    if ( ( iTickInterval > 0 ) && ( eTickPosition != QSlider::NoTicks ) )
+    // Draw tick marks with a consistent pixel spacing across all sliders.
+    if ( iTickInterval > 0 && eTickPosition != QSlider::NoTicks )
     {
-        painter.setPen ( QPen ( palette.tick, 1 ) );
-        const int iStep = std::max ( 1, iTickInterval );
-
-        for ( int val = iMinValue; val <= iMaxValue; val += iStep )
-        {
-            const int x = positionFromValue ( val );
-            const bool drawTop = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                 ( eTickPosition == QSlider::TicksAbove ) ||
-                                 ( eTickPosition == QSlider::TicksLeft );
-            const bool drawBottom = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                    ( eTickPosition == QSlider::TicksBelow ) ||
-                                    ( eTickPosition == QSlider::TicksRight );
-
-            if ( drawTop )
-            {
-                painter.drawLine ( x, trackTop - 7, x, trackTop - 2 );
-            }
-            if ( drawBottom )
-            {
-                painter.drawLine ( x, trackTop + TRACK_WIDTH + 2, x, trackTop + TRACK_WIDTH + 7 );
-            }
-        }
-
-        if ( ( ( iMaxValue - iMinValue ) % iStep ) != 0 )
-        {
-            const int x = positionFromValue ( iMaxValue );
-            const bool drawTop = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                 ( eTickPosition == QSlider::TicksAbove ) ||
-                                 ( eTickPosition == QSlider::TicksLeft );
-            const bool drawBottom = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                    ( eTickPosition == QSlider::TicksBelow ) ||
-                                    ( eTickPosition == QSlider::TicksRight );
-            if ( drawTop )
-                painter.drawLine ( x, trackTop - 7, x, trackTop - 2 );
-            if ( drawBottom )
-                painter.drawLine ( x, trackTop + TRACK_WIDTH + 2, x, trackTop + TRACK_WIDTH + 7 );
-        }
+        DrawTickMarks ( painter,
+                        positionFromValue ( iMinValue ),
+                        positionFromValue ( iMaxValue ),
+                        false,
+                        MARGINS + HANDLE_WIDTH / 2,
+                        trackTop,
+                        TRACK_WIDTH,
+                        TRACK_WIDTH,
+                        eTickPosition,
+                        palette.tick,
+                        ( iTickInterval == 1 ),
+                        iMinValue,
+                        iMaxValue );
     }
 
     DrawHandle ( painter, currentHandleRect(), false, ( bHandleHovered || bMousePressed ), palette );

@@ -39,6 +39,7 @@ public:
 
     void SetLevels ( const CVector<float>& vecLevels );
     void SetBandCenters ( const QVector<int>& vecBandCentersPx );
+    void SetDarkTheme ( bool bEnable );
 
 protected:
     virtual void paintEvent ( QPaintEvent* pEvent ) override;
@@ -46,4 +47,5 @@ protected:
 private:
     float afLevels[kBandCount];
     QVector<int> vecBandCentersPx;
+    bool bDarkTheme;
 };

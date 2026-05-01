@@ -1,6 +1,6 @@
 QLabel {
     color:          rgb(220, 232, 242);
-    font:           bold;
+    font-weight:    normal;
 }
 QLabel#lblInputLEDMeter,
 QLabel#lblPing,

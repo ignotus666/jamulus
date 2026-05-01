@@ -474,7 +474,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // init slider controls ---
     // network buffer sliders
     sldNetBuf->setRange ( MIN_NET_BUF_SIZE_NUM_BL, MAX_NET_BUF_SIZE_NUM_BL );
+    sldNetBuf->setTickInterval ( 1 );
+    sldNetBuf->setTickPosition ( QSlider::TicksBothSides );
     sldNetBufServer->setRange ( MIN_NET_BUF_SIZE_NUM_BL, MAX_NET_BUF_SIZE_NUM_BL );
+    sldNetBufServer->setTickInterval ( 1 );
+    sldNetBufServer->setTickPosition ( QSlider::TicksBothSides );
     UpdateJitterBufferFrame();
 
     // init sound card channel selection frame
@@ -693,9 +697,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     QObject::connect ( &TimerStatus, &QTimer::timeout, this, &CClientSettingsDlg::OnTimerStatus );
 
     // slider controls
-    QObject::connect ( sldNetBuf, &QSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufValueChanged );
+    QObject::connect ( sldNetBuf, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufValueChanged );
 
-    QObject::connect ( sldNetBufServer, &QSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufServerValueChanged );
+    QObject::connect ( sldNetBufServer, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufServerValueChanged );
 
     // check boxes
     QObject::connect ( chbAutoJitBuf, &QCheckBox::stateChanged, this, &CClientSettingsDlg::OnAutoJitBufStateChanged );
@@ -782,7 +786,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // misc
     // sliders
-    QObject::connect ( sldAudioPan, &QSlider::valueChanged, this, &CClientSettingsDlg::OnAudioPanValueChanged );
+    QObject::connect ( sldAudioPan, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnAudioPanValueChanged );
 
     QObject::connect ( &SndCrdBufferDelayButtonGroup,
                        static_cast<void ( QButtonGroup::* ) ( QAbstractButton* )> ( &QButtonGroup::buttonClicked ),
@@ -962,6 +966,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
 void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
+    ApplyThemeToCustomWidgets();
+
     UpdateAudioPanVisibility();
     UpdateDisplay();
     UpdateDirectoryComboBox();
@@ -1273,8 +1279,23 @@ void CClientSettingsDlg::OnGUIDesignActivated ( int iDesignIdx )
 void CClientSettingsDlg::OnUIThemeActivated ( int iThemeIdx )
 {
     pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    ApplyThemeToCustomWidgets();
     emit UIThemeChanged();
     UpdateDisplay();
+}
+
+void CClientSettingsDlg::ApplyThemeToCustomWidgets()
+{
+    const bool bDarkTheme = ( ResolveUITheme ( pSettings->eUITheme ) == UIT_DARK );
+
+    CCustomSlider* apThemeSliders[] = { sldNetBuf, sldNetBufServer, sldAudioPan };
+    for ( CCustomSlider* pSlider : apThemeSliders )
+    {
+        if ( pSlider )
+        {
+            pSlider->SetDarkTheme ( bDarkTheme );
+        }
+    }
 }
 
 void CClientSettingsDlg::OnMeterStyleActivated ( int iMeterStyleIdx )

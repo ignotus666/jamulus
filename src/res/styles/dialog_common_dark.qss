@@ -58,28 +58,41 @@ QTabWidget::pane {
 }
 
 QTabBar::tab {
-    background: rgb(38, 38, 42);
+    background: rgb(38, 38, 38);
     color: rgb(220, 232, 242);
-    border: 1px solid rgb(58, 58, 62);
+    border: 1px solid rgb(38, 38, 38);
     padding: 4px 10px;
+}
+QTabBar::tab:hover {
+    border: 1px solid rgb(80, 80, 80);
+    color: rgb(220, 232, 242);
 }
 
 QTabBar::tab:selected {
-    background: rgb(48, 48, 52);
-    border: 1px solid rgb(88, 88, 92);
-}
-QTabBar::tab:hover {
-    background: rgb(78, 78, 80);
+    background: rgb(60, 60, 60);
+    border-top: 1px solid rgb(75, 213, 248);
+    border-left: 1px solid rgb(60, 60, 60);
+    border-right: 1px solid rgb(60, 60, 60);
+    border-bottom: 1px solid rgb(60, 60, 60);
     color: rgb(220, 232, 242);
 }
+
+QTabBar::tab:selected:hover {
+    background: rgb(60, 60, 60);
+    border-top: 1px solid rgb(75, 213, 248);
+    border-left: 1px solid rgb(60, 60, 60);
+    border-right: 1px solid rgb(60, 60, 60);
+    border-bottom: 1px solid rgb(60, 60, 60);
+    color: rgb(220, 232, 242);
+}
+
 QMenu::item:selected:hover {
-    background: rgb(60, 60, 65);
+    background: rgb(60, 60, 60);
     color: rgb(220, 232, 242);
 }
 
 QPushButton {
     color: rgb(220, 232, 242);
-    font: bold;
     border: 2px solid rgb(88, 88, 92);
     border-radius: 5px;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -132,7 +145,6 @@ QPushButton[learnActive="true"]:disabled {
 
 QPushButton[learnActive="false"] {
     color: rgb(220, 232, 242);
-    font: bold;
     spacing: 0px;
     padding: 4px 7px;
     border: 1px solid rgb(88, 88, 92);
@@ -299,7 +311,7 @@ QComboBox:disabled {
 
 QSpinBox::up-button:hover,
 QSpinBox::down-button:hover {
-    background: rgb(58, 62, 70);
+    background: rgb(71, 71, 73);
 }
 
 QSpinBox::up-button:disabled,
@@ -324,21 +336,24 @@ QComboBox::drop-down {
     subcontrol-position: top right;
     width: 18px;
     margin: 1px 1px 1px 0;
-    border-left: 1px solid rgb(88, 88, 92);
     background-color: rgb(37, 37, 40);
+    border-left: 1px solid rgb(88, 88, 92);
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
 }
 
-QComboBox QAbstractItemView {
-    background-color: rgb(37, 37, 40);
-    color: rgb(220, 232, 242);
-    selection-background-color: rgb(54, 207, 255);
-    selection-color: rgb(8, 12, 18);
+QComboBox::drop-down:hover {
+    background-color: rgb(71, 71, 73);
+    margin: 1px 1px 1px 0;
 }
 
-QComboBox QAbstractItemView::item:hover {
-    background-color: rgb(52, 52, 56);
+QComboBox::item {
+    background-color: rgb(37, 37, 40);
+    color: rgb(220, 232, 242);
+}
+
+QComboBox::item:selected {
+    background-color: rgb(86, 86, 88);
     color: rgb(220, 232, 242);
 }
 
@@ -492,7 +507,6 @@ QSlider::handle:vertical:hover {
 
 QToolButton {
     color: rgb(220, 232, 242);
-    font: bold;
     border: 1px solid rgb(88, 88, 92);
     border-radius: 6px;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -565,4 +579,10 @@ QScrollBar::sub-line:horizontal {
     border: none;
     background: none;
     width: 0px;
+}
+
+QLabel[objectName^="eqBandFreq"],
+QLabel[objectName^="eqBandValue"] {
+    font-size: 9pt;
+    font-weight: normal;
 }

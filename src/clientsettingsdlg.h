@@ -31,7 +31,7 @@
 #include <QProgressBar>
 #include <QWhatsThis>
 #include <QTimer>
-#include <QSlider>
+#include "customslider.h"
 #include <QRadioButton>
 #include <QMenuBar>
 #include <QLayout>
@@ -128,6 +128,8 @@ signals:
     void MIDIControllerUsageChanged ( bool bEnabled );
 
 private:
+    void ApplyThemeToCustomWidgets();
+
     enum MidiLearnTarget
     {
         None,

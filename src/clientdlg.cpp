@@ -680,6 +680,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::GUIDesignChanged, this, &CClientDlg::OnGUIDesignChanged );
     
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, this, &CClientDlg::OnUIThemeChanged );
+    
+    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, &EffectsDlg, &CEffectsDlg::OnUIThemeChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MeterStyleChanged, this, &CClientDlg::OnMeterStyleChanged );
 
