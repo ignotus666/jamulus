@@ -62,11 +62,7 @@ void FillAccentStripe ( QPainter& painter, const QRect& rect, const bool bVertic
     painter.fillRect ( rect, gradient );
 }
 
-void DrawHandle ( QPainter& painter,
-                  const QRect& rect,
-                  const bool bVertical,
-                  const bool bHighlighted,
-                  const SControlPalette& palette )
+void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, const bool bHighlighted, const SControlPalette& palette )
 {
     QLinearGradient gradient ( rect.topLeft(), bVertical ? rect.bottomLeft() : rect.topRight() );
     gradient.setColorAt ( 0, palette.handleTop );
@@ -87,18 +83,18 @@ void DrawHandle ( QPainter& painter,
 }
 
 void DrawTickMarks ( QPainter& painter,
-                     const int startPos,
-                     const int endPos,
-                     const bool bVertical,
-                     const int trackLeft,
-                     const int trackTop,
-                     const int trackWidth,
-                     const int trackHeight,
+                     const int                   startPos,
+                     const int                   endPos,
+                     const bool                  bVertical,
+                     const int                   trackLeft,
+                     const int                   trackTop,
+                     const int                   trackWidth,
+                     const int                   trackHeight,
                      const QSlider::TickPosition eTickPosition,
-                     const QColor& tickColor,
-                     const bool bValueBased,
-                     const int minValue,
-                     const int maxValue )
+                     const QColor&               tickColor,
+                     const bool                  bValueBased,
+                     const int                   minValue,
+                     const int                   maxValue )
 {
     painter.setPen ( QPen ( tickColor, 1 ) );
 
@@ -109,15 +105,13 @@ void DrawTickMarks ( QPainter& painter,
         for ( int val = minValue; val <= maxValue; ++val )
         {
             const qreal fraction = static_cast<qreal> ( val - minValue ) / valueRange;
-            const int pos = qRound ( startPos + ( endPos - startPos ) * fraction );
+            const int pos        = qRound ( startPos + ( endPos - startPos ) * fraction );
 
             if ( bVertical )
             {
-                const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                      ( eTickPosition == QSlider::TicksLeft ) ||
+                const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) ||
                                       ( eTickPosition == QSlider::TicksAbove );
-                const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                       ( eTickPosition == QSlider::TicksRight ) ||
+                const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksRight ) ||
                                        ( eTickPosition == QSlider::TicksBelow );
 
                 if ( drawLeft )
@@ -149,16 +143,14 @@ void DrawTickMarks ( QPainter& painter,
     for ( int i = 0; i <= intervalCount; ++i )
     {
         const qreal fraction = static_cast<qreal> ( i ) / intervalCount;
-        const int pos = qRound ( startPos + ( endPos - startPos ) * fraction );
+        const int pos        = qRound ( startPos + ( endPos - startPos ) * fraction );
 
         if ( bVertical )
         {
-            const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                  ( eTickPosition == QSlider::TicksLeft ) ||
-                                  ( eTickPosition == QSlider::TicksAbove );
-            const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) ||
-                                   ( eTickPosition == QSlider::TicksRight ) ||
-                                   ( eTickPosition == QSlider::TicksBelow );
+            const bool drawLeft =
+                ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) || ( eTickPosition == QSlider::TicksAbove );
+            const bool drawRight =
+                ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksRight ) || ( eTickPosition == QSlider::TicksBelow );
 
             if ( drawLeft )
             {
@@ -178,10 +170,7 @@ void DrawTickMarks ( QPainter& painter,
 }
 } // namespace
 
-CCustomSlider::CCustomSlider ( QWidget* parent ) :
-    CCustomSlider ( Qt::Vertical, parent )
-{
-}
+CCustomSlider::CCustomSlider ( QWidget* parent ) : CCustomSlider ( Qt::Vertical, parent ) {}
 
 CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     QWidget ( parent ),
@@ -255,21 +244,15 @@ void CCustomSlider::setValue ( int val )
 
 void CCustomSlider::setRange ( int minVal, int maxVal )
 {
-    iMinValue    = minVal;
-    iMaxValue    = maxVal;
+    iMinValue     = minVal;
+    iMaxValue     = maxVal;
     iCurrentValue = std::max ( iMinValue, std::min ( iMaxValue, iCurrentValue ) );
     update();
 }
 
-void CCustomSlider::setMinimum ( int min )
-{
-    setRange ( min, iMaxValue );
-}
+void CCustomSlider::setMinimum ( int min ) { setRange ( min, iMaxValue ); }
 
-void CCustomSlider::setMaximum ( int max )
-{
-    setRange ( iMinValue, max );
-}
+void CCustomSlider::setMaximum ( int max ) { setRange ( iMinValue, max ); }
 
 QSize CCustomSlider::sizeHint() const
 {
@@ -370,8 +353,8 @@ void CCustomSlider::paintEvent ( QPaintEvent* event )
     QPainter painter ( this );
     painter.setRenderHint ( QPainter::Antialiasing );
 
-    const SControlPalette palette = GetControlPalette ( bDarkTheme );
-    const QColor backgroundColor = palette.background;
+    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const QColor          backgroundColor = palette.background;
 
     painter.fillRect ( rect(), backgroundColor );
 
@@ -383,15 +366,15 @@ void CCustomSlider::paintEvent ( QPaintEvent* event )
 
 void CCustomSlider::drawVerticalSlider ( QPainter& painter )
 {
-    int width       = this->width();
-    int height      = this->height();
-    int trackSize   = height - 2 * MARGINS;
-    int trackLeft   = ( width - TRACK_WIDTH ) / 2;
-    int trackTop    = MARGINS;
-    int handlePos   = positionFromValue ( iCurrentValue );
-    const SControlPalette palette = GetControlPalette ( bDarkTheme );
-    const QColor trackBackground = palette.trackBackground;
-    const QColor trackBorder     = palette.trackBorder;
+    int                   width           = this->width();
+    int                   height          = this->height();
+    int                   trackSize       = height - 2 * MARGINS;
+    int                   trackLeft       = ( width - TRACK_WIDTH ) / 2;
+    int                   trackTop        = MARGINS;
+    int                   handlePos       = positionFromValue ( iCurrentValue );
+    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const QColor          trackBackground = palette.trackBackground;
+    const QColor          trackBorder     = palette.trackBorder;
 
     // Draw track background
     painter.fillRect ( trackLeft, trackTop, TRACK_WIDTH, trackSize, trackBackground );
@@ -404,8 +387,8 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
         FillAccentGradient ( painter, filledRect, true, palette );
 
         // Thin bright center accent to mirror the reverb slider's lighter active stripe
-        const int accentWidth = 2;
-        const int accentLeft  = trackLeft + ( TRACK_WIDTH - accentWidth ) / 2;
+        const int   accentWidth = 2;
+        const int   accentLeft  = trackLeft + ( TRACK_WIDTH - accentWidth ) / 2;
         const QRect accentRect ( accentLeft, handlePos, accentWidth, filledHeight );
         FillAccentStripe ( painter, accentRect, true, palette );
     }
@@ -438,14 +421,14 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
 
 void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
 {
-    int width       = this->width();
-    int height      = this->height();
-    int trackSize   = width - 2 * MARGINS - HANDLE_WIDTH;
-    int trackTop    = ( height - TRACK_WIDTH ) / 2;
-    int handlePos   = positionFromValue ( iCurrentValue );
-    const SControlPalette palette = GetControlPalette ( bDarkTheme );
-    const QColor trackBackground = palette.trackBackground;
-    const QColor trackBorder     = palette.trackBorder;
+    int                   width           = this->width();
+    int                   height          = this->height();
+    int                   trackSize       = width - 2 * MARGINS - HANDLE_WIDTH;
+    int                   trackTop        = ( height - TRACK_WIDTH ) / 2;
+    int                   handlePos       = positionFromValue ( iCurrentValue );
+    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const QColor          trackBackground = palette.trackBackground;
+    const QColor          trackBorder     = palette.trackBorder;
 
     // Draw track background
     painter.fillRect ( MARGINS + HANDLE_WIDTH / 2, trackTop, trackSize, TRACK_WIDTH, trackBackground );
@@ -458,8 +441,8 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
         FillAccentGradient ( painter, filledRect, false, palette );
 
         // Thin bright center accent to mirror the reverb slider's lighter active stripe
-        const int accentHeight = 2;
-        const int accentTop    = trackTop + ( TRACK_WIDTH - accentHeight ) / 2;
+        const int   accentHeight = 2;
+        const int   accentTop    = trackTop + ( TRACK_WIDTH - accentHeight ) / 2;
         const QRect accentRect ( MARGINS + HANDLE_WIDTH / 2, accentTop, filledWidth, accentHeight );
         FillAccentStripe ( painter, accentRect, false, palette );
     }
@@ -504,7 +487,7 @@ void CCustomSlider::mousePressEvent ( QMouseEvent* event )
 void CCustomSlider::mouseMoveEvent ( QMouseEvent* event )
 {
     const bool bWasHandleHovered = bHandleHovered;
-    bHandleHovered = currentHandleRect().contains ( event->pos() );
+    bHandleHovered               = currentHandleRect().contains ( event->pos() );
 
     if ( bMousePressed )
     {
@@ -520,7 +503,7 @@ void CCustomSlider::mouseReleaseEvent ( QMouseEvent* event )
 {
     if ( event->button() == Qt::LeftButton )
     {
-        bMousePressed = false;
+        bMousePressed  = false;
         bHandleHovered = currentHandleRect().contains ( event->pos() );
         update();
     }

@@ -910,7 +910,7 @@ void CServer::DecodeReceiveData ( const int iChanCnt, const int iNumClients )
                 pCurCodedData = nullptr;
             }
 
-            if ( !bIsRawAudio  && CurOpusDecoder != nullptr )
+            if ( !bIsRawAudio && CurOpusDecoder != nullptr )
             {
                 iUnused = opus_custom_decode ( CurOpusDecoder,
                                                pCurCodedData,
@@ -1198,7 +1198,7 @@ void CServer::MixEncodeTransmitData ( const int iChanCnt, const int iNumClients 
                                                    &vecvecbyCodedData[iChanCnt][0],
                                                    iCeltNumCodedBytes );
 
-                                                   // send separate mix to current clients
+                    // send separate mix to current clients
                     vecChannels[iCurChanID].PrepAndSendPacket ( &Socket, vecvecbyCodedData[iChanCnt], iCeltNumCodedBytes );
                 }
             }

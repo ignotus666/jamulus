@@ -88,24 +88,24 @@ protected:
 
 private:
     QRect currentHandleRect() const;
-    int  valueFromPosition ( int pos ) const;
-    int  positionFromValue ( int val ) const;
-    void updateValue ( int pos );
-    void drawVerticalSlider ( QPainter& painter );
-    void drawHorizontalSlider ( QPainter& painter );
+    int   valueFromPosition ( int pos ) const;
+    int   positionFromValue ( int val ) const;
+    void  updateValue ( int pos );
+    void  drawVerticalSlider ( QPainter& painter );
+    void  drawHorizontalSlider ( QPainter& painter );
 
     // State
-    int                        iMinValue;
-    int                        iMaxValue;
-    int                        iCurrentValue;
-    int                        iPageStep;
-    int                        iTickInterval;
-    bool                       bMousePressed;
-    bool                       bHandleHovered;
-    bool                       bDarkTheme;
-    bool                       bCompact;
-    Qt::Orientation            eOrientation;
-    QSlider::TickPosition      eTickPosition;
+    int                   iMinValue;
+    int                   iMaxValue;
+    int                   iCurrentValue;
+    int                   iPageStep;
+    int                   iTickInterval;
+    bool                  bMousePressed;
+    bool                  bHandleHovered;
+    bool                  bDarkTheme;
+    bool                  bCompact;
+    Qt::Orientation       eOrientation;
+    QSlider::TickPosition eTickPosition;
 
     // Constants
     static const int HANDLE_WIDTH  = 16;

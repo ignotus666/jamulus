@@ -144,9 +144,9 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pcbSolo->setObjectName ( "pcbSolo" );
     pcbGroup->setObjectName ( "pcbGroup" );
 
-    pLabelInstBox   = new QGroupBox ( pFrame );
-    plblLabel       = new QLabel ( "", pFrame );
-    plblInstrument  = new QLabel ( pFrame );
+    pLabelInstBox  = new QGroupBox ( pFrame );
+    plblLabel      = new QLabel ( "", pFrame );
+    plblInstrument = new QLabel ( pFrame );
     plblInstrument->setObjectName ( "plblInstrument" );
     plblCountryFlag = new QLabel ( pFrame );
     plblCountryFlag->setObjectName ( "plblCountryFlag" );
@@ -314,11 +314,11 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
     {
     case GD_STANDARD:
         pFader->setTickPosition ( QSlider::TicksBothSides );
-        pFader->setStyleSheet ( "" );  // Custom slider handles its own rendering
+        pFader->setStyleSheet ( "" ); // Custom slider handles its own rendering
         pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
         pLabelInstBox->setMinimumWidth ( 0 );
-        pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
+        pLabelInstBox->setMinimumHeight ( 52 ); // maximum height of the instrument+flag pictures
         pLabelInstBox->setMaximumWidth ( 86 );
         pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
@@ -331,7 +331,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
         pLabelInstBox->setMinimumWidth ( 54 );
-        pLabelInstBox->setMinimumHeight ( 88 );                       // keep compact mode tight around flag+instrument+label
+        pLabelInstBox->setMinimumHeight ( 88 ); // keep compact mode tight around flag+instrument+label
         pLabelInstBox->setMaximumWidth ( 54 );
         pPan->setFixedSize ( 34, 34 );
         pFader->setTickPosition ( QSlider::TicksBothSides );
@@ -351,7 +351,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
         pLabelInstBox->setMinimumWidth ( 0 );
-        pLabelInstBox->setMinimumHeight ( 52 );                   // maximum height of the instrument+flag pictures
+        pLabelInstBox->setMinimumHeight ( 52 ); // maximum height of the instrument+flag pictures
         pLabelInstBox->setMaximumWidth ( 86 );
         pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
@@ -485,7 +485,8 @@ void CChannelFader::SetupFaderTag ( const ESkillLevel eSkillLevel )
     QString strStile = "QGroupBox { border:        " + QString::number ( iTagBorderWidth ) + "px " + strBorderStyle + " " + strBorderColor +
                        ";"
                        "            border-radius: 4px;"
-                       "            padding:       " + QString::number ( iTagPadding ) + "px;";
+                       "            padding:       " +
+                       QString::number ( iTagPadding ) + "px;";
 
     // the background color depends on the skill level
     switch ( eSkillLevel )
@@ -707,8 +708,8 @@ void CChannelFader::UpdateGroupIDDependencies()
     }
 
     // Expose group color index to stylesheet so GRP button can mirror tag border color.
-    const int iGroupColorIdx   = ( iGroupID != INVALID_INDEX ) ? ( iGroupID % 4 ) : -1;
-    const int iGroupSegmented  = ( iGroupID != INVALID_INDEX ) ? ( iGroupID / 4 ) : 0;
+    const int  iGroupColorIdx  = ( iGroupID != INVALID_INDEX ) ? ( iGroupID % 4 ) : -1;
+    const int  iGroupSegmented = ( iGroupID != INVALID_INDEX ) ? ( iGroupID / 4 ) : 0;
     const bool bNeedsRestyling = ( pcbGroup->property ( "groupColorIdx" ).toInt() != iGroupColorIdx ) ||
                                  ( pcbGroup->property ( "groupSegmented" ).toInt() != iGroupSegmented );
     if ( bNeedsRestyling )

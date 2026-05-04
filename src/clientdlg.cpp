@@ -143,16 +143,16 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // connect/disconnect button
 
-        butConnect->setWhatsThis ( "<b>" + tr ( "Connect/Disconnect Button" ) + ":</b> " +
-                             tr ( "Opens a dialog where you can select a server to connect to. "
-                                 "If you are connected, pressing this button will end the session." ) );
+    butConnect->setWhatsThis ( "<b>" + tr ( "Connect/Disconnect Button" ) + ":</b> " +
+                               tr ( "Opens a dialog where you can select a server to connect to. "
+                                    "If you are connected, pressing this button will end the session." ) );
 
-        butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
-        // (Reverted: object names are set in the UI file, no need to set or polish in code)
+    butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
+    // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
-        butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
-                             tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
-        butEffects->setAccessibleName ( tr ( "Open effects window" ) );
+    butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
+                               tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
+    butEffects->setAccessibleName ( tr ( "Open effects window" ) );
 
     // delay LED
     QString strLEDDelay = "<b>" + tr ( "Delay Status LED" ) + ":</b> " + tr ( "Shows the current audio delay status:" ) +
@@ -275,8 +275,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Use adaptive widths for action buttons in the left panel.
     const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
-                                     qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ),
-                                            butConnect->sizeHint().width() ) );
+                                     qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ), butConnect->sizeHint().width() ) );
 
     butConnect->setFixedHeight ( 40 );
     butConnect->setMinimumWidth ( iMainPillWidth );
@@ -297,8 +296,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // Qt sometimes finalizes font and style metrics only after the first event loop
     // turn. Re-run the design pass once after construction so startup matches the
     // state reached after the first UI settings change.
-    QTimer::singleShot ( 0, this, [this]
-    {
+    QTimer::singleShot ( 0, this, [this] {
         SetGUIDesign ( pClient->GetGUIDesign() );
         SetMeterStyle ( pClient->GetMeterStyle() );
 
@@ -580,13 +578,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWidthChanged, this, &CClientDlg::OnReverbWidthChanged );
 
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbLeftSelected, this, [this]
-    {
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbLeftSelected, this, [this] {
         pClient->SetReverbOnLeftChan ( true );
         UpdateRevSelection();
     } );
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRightSelected, this, [this]
-    {
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRightSelected, this, [this] {
         pClient->SetReverbOnLeftChan ( false );
         UpdateRevSelection();
     } );
@@ -620,8 +616,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassCutoffChanged, this, &CClientDlg::OnLowPassCutoffChanged );
 
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); 
-    } );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBandGainChanged, this, [this] ( int iBandIndex, int iGainDb ) {
         pClient->SetEQBandGainDb ( iBandIndex, iGainDb );
@@ -806,10 +801,8 @@ void CClientDlg::ShowEffectsWindow()
 
 void CClientDlg::changeEvent ( QEvent* Event )
 {
-    if ( ( pSettings->eUITheme == UIT_SYSTEM ) &&
-                 !bApplyingThemeChange &&
-         ( ( Event->type() == QEvent::ApplicationPaletteChange ) ||
-           ( Event->type() == QEvent::PaletteChange ) ) )
+    if ( ( pSettings->eUITheme == UIT_SYSTEM ) && !bApplyingThemeChange &&
+         ( ( Event->type() == QEvent::ApplicationPaletteChange ) || ( Event->type() == QEvent::PaletteChange ) ) )
     {
         OnUIThemeChanged();
     }
@@ -1580,45 +1573,21 @@ void CClientDlg::OnAudioReverbValueChanged ( int value )
     EffectsDlg.UpdateReverbControls();
 }
 
-void CClientDlg::OnReverbPreDelayChanged ( int value )
-{
-    pClient->SetReverbPreDelayMs ( value );
-}
+void CClientDlg::OnReverbPreDelayChanged ( int value ) { pClient->SetReverbPreDelayMs ( value ); }
 
-void CClientDlg::OnReverbRoomSizeChanged ( int value )
-{
-    pClient->SetReverbRoomSize ( value );
-}
+void CClientDlg::OnReverbRoomSizeChanged ( int value ) { pClient->SetReverbRoomSize ( value ); }
 
-void CClientDlg::OnReverbDampingChanged ( int value )
-{
-    pClient->SetReverbDamping ( value );
-}
+void CClientDlg::OnReverbDampingChanged ( int value ) { pClient->SetReverbDamping ( value ); }
 
-void CClientDlg::OnReverbWetMixChanged ( int value )
-{
-    pClient->SetReverbWetMix ( value );
-}
+void CClientDlg::OnReverbWetMixChanged ( int value ) { pClient->SetReverbWetMix ( value ); }
 
-void CClientDlg::OnReverbEarlyLevelChanged ( int value )
-{
-    pClient->SetReverbEarlyLevel ( value );
-}
+void CClientDlg::OnReverbEarlyLevelChanged ( int value ) { pClient->SetReverbEarlyLevel ( value ); }
 
-void CClientDlg::OnReverbWidthChanged ( int value )
-{
-    pClient->SetReverbWidth ( value );
-}
+void CClientDlg::OnReverbWidthChanged ( int value ) { pClient->SetReverbWidth ( value ); }
 
-void CClientDlg::OnReverbEarlyEnabledChanged ( bool enabled )
-{
-    pClient->SetReverbEarlyEnabled ( enabled );
-}
+void CClientDlg::OnReverbEarlyEnabledChanged ( bool enabled ) { pClient->SetReverbEarlyEnabled ( enabled ); }
 
-void CClientDlg::OnReverbFreezeChanged ( bool enabled )
-{
-    pClient->SetReverbFreeze ( enabled );
-}
+void CClientDlg::OnReverbFreezeChanged ( bool enabled ) { pClient->SetReverbFreeze ( enabled ); }
 
 void CClientDlg::OnReverbBypassChanged ( bool bypassed )
 {
@@ -1632,35 +1601,17 @@ void CClientDlg::OnCompressorBypassChanged ( bool bypassed )
     EffectsDlg.UpdateCompressorControls();
 }
 
-void CClientDlg::OnCompressorThresholdChanged ( int value )
-{
-    pClient->SetCompressorThresholdDb ( static_cast<float> ( value ) );
-}
+void CClientDlg::OnCompressorThresholdChanged ( int value ) { pClient->SetCompressorThresholdDb ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorRatioChanged ( int value )
-{
-    pClient->SetCompressorRatio ( static_cast<float> ( value ) );
-}
+void CClientDlg::OnCompressorRatioChanged ( int value ) { pClient->SetCompressorRatio ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorAttackChanged ( int value )
-{
-    pClient->SetCompressorAttackMs ( static_cast<float> ( value ) );
-}
+void CClientDlg::OnCompressorAttackChanged ( int value ) { pClient->SetCompressorAttackMs ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorReleaseChanged ( int value )
-{
-    pClient->SetCompressorReleaseMs ( static_cast<float> ( value ) );
-}
+void CClientDlg::OnCompressorReleaseChanged ( int value ) { pClient->SetCompressorReleaseMs ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorMakeupChanged ( int value )
-{
-    pClient->SetCompressorMakeupDb ( static_cast<float> ( value ) );
-}
+void CClientDlg::OnCompressorMakeupChanged ( int value ) { pClient->SetCompressorMakeupDb ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorLimiterChanged ( bool enabled )
-{
-    pClient->SetCompressorLimiterEnabled ( enabled );
-}
+void CClientDlg::OnCompressorLimiterChanged ( bool enabled ) { pClient->SetCompressorLimiterEnabled ( enabled ); }
 
 void CClientDlg::OnFilterBypassChanged ( bool bypassed )
 {
@@ -1680,15 +1631,9 @@ void CClientDlg::OnLowPassEnabledChanged ( bool enabled )
     EffectsDlg.UpdateFilterControls();
 }
 
-void CClientDlg::OnHighPassCutoffChanged ( int value )
-{
-    pClient->SetHighPassCutoffHz ( value );
-}
+void CClientDlg::OnHighPassCutoffChanged ( int value ) { pClient->SetHighPassCutoffHz ( value ); }
 
-void CClientDlg::OnLowPassCutoffChanged ( int value )
-{
-    pClient->SetLowPassCutoffHz ( value );
-}
+void CClientDlg::OnLowPassCutoffChanged ( int value ) { pClient->SetLowPassCutoffHz ( value ); }
 
 void CClientDlg::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {
@@ -1725,10 +1670,9 @@ void CClientDlg::OnUIThemeChanged()
     // Reapply palette and application stylesheet using the current theme.
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
     SetAppPaletteForTheme ( eResolvedTheme );
-    SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
-                                                                 : QString ( ":/styles/dialog_common_light.qss" ),
-                                      eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" )
-                                                                 : QString ( ":/styles/clientdlg_light.qss" ) } );
+    SetAppStyleSheetFromResources (
+        { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ),
+          eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" ) : QString ( ":/styles/clientdlg_light.qss" ) } );
 
     SetGUIDesign ( pClient->GetGUIDesign() );
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );

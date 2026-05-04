@@ -112,15 +112,15 @@ protected:
     CLevelMeter*    plbrChannelLevel;
     CCustomSlider*  pFader;
     CCustomKnob*    pPan;
-    QLabel*      pPanLabel;
-    QLabel*      pInfoLabel;
-    QHBoxLayout* pLabelGrid;
-    QVBoxLayout* pLabelPictGrid;
+    QLabel*         pPanLabel;
+    QLabel*         pInfoLabel;
+    QHBoxLayout*    pLabelGrid;
+    QVBoxLayout*    pLabelPictGrid;
 
     QPushButton* pcbMute;
     QPushButton* pcbSolo;
     QPushButton* pcbGroup;
-    QMenu*     pGroupPopupMenu;
+    QMenu*       pGroupPopupMenu;
 
     QGroupBox* pLabelInstBox;
     QLabel*    plblLabel;
