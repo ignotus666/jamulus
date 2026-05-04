@@ -72,65 +72,65 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
     if ( bDarkTheme )
     {
         return {
-            QColor ( 28, 28, 31 ),   // background
-            QColor ( 34, 34, 38 ),   // dial
-            QColor ( 62, 62, 66 ),   // dial outline
-            QColor ( 82, 82, 88 ),   // ring
-            QColor ( 54, 207, 255 ), // accent
+            QColor ( 28, 28, 31 ),        // background
+            QColor ( 34, 34, 38 ),        // dial
+            QColor ( 62, 62, 66 ),        // dial outline
+            QColor ( 82, 82, 88 ),        // ring
+            QColor ( 54, 207, 255 ),      // accent
             QColor ( 54, 207, 255, 120 ), // accent glow
-            QColor ( 118, 244, 255 ), // accent bright
-            QColor ( 80, 220, 255 ),  // accent mid
-            QColor ( 40, 160, 220 ),  // accent deep
-            QColor ( 70, 82, 98 ),    // knob normal top
-            QColor ( 44, 54, 66 ),    // knob normal mid
-            QColor ( 30, 38, 48 ),    // knob normal bottom
-            QColor ( 96, 114, 132 ),  // knob hover top
-            QColor ( 58, 74, 90 ),    // knob hover mid
-            QColor ( 34, 48, 62 ),    // knob hover bottom
-            QColor ( 92, 106, 122 ),  // knob outline
-            QColor ( 168, 216, 244 ), // marker normal
-            QColor ( 118, 238, 255 ), // marker hover
-            QColor ( 160, 200, 230 ), // marker dot
-            QColor ( 176, 228, 255 ), // marker dot hover
-            QColor ( 84, 96, 112 ),   // inner bevel
-            QColor ( 44, 44, 48 ),   // track background
-            QColor ( 72, 82, 94 ), // track border
-            QColor ( 82, 96, 112 ),  // handle top
-            QColor ( 44, 54, 66 ),   // handle mid
-            QColor ( 28, 36, 46 ),   // handle bottom
-            QColor ( 92, 108, 124 ), // handle border
+            QColor ( 118, 244, 255 ),     // accent bright
+            QColor ( 80, 220, 255 ),      // accent mid
+            QColor ( 40, 160, 220 ),      // accent deep
+            QColor ( 70, 82, 98 ),        // knob normal top
+            QColor ( 44, 54, 66 ),        // knob normal mid
+            QColor ( 30, 38, 48 ),        // knob normal bottom
+            QColor ( 96, 114, 132 ),      // knob hover top
+            QColor ( 58, 74, 90 ),        // knob hover mid
+            QColor ( 34, 48, 62 ),        // knob hover bottom
+            QColor ( 92, 106, 122 ),      // knob outline
+            QColor ( 168, 216, 244 ),     // marker normal
+            QColor ( 118, 238, 255 ),     // marker hover
+            QColor ( 160, 200, 230 ),     // marker dot
+            QColor ( 176, 228, 255 ),     // marker dot hover
+            QColor ( 84, 96, 112 ),       // inner bevel
+            QColor ( 44, 44, 48 ),        // track background
+            QColor ( 72, 82, 94 ),        // track border
+            QColor ( 82, 96, 112 ),       // handle top
+            QColor ( 44, 54, 66 ),        // handle mid
+            QColor ( 28, 36, 46 ),        // handle bottom
+            QColor ( 92, 108, 124 ),      // handle border
             QColor ( 216, 224, 232, 230 ) // tick
         };
     }
 
     return {
-        QColor ( 247, 248, 250 ), // background
-        QColor ( 230, 232, 236 ), // dial
-        QColor ( 180, 190, 200 ), // dial outline
-        QColor ( 200, 210, 220 ), // ring
-        QColor ( 50, 150, 200 ),  // accent
+        QColor ( 247, 248, 250 ),     // background
+        QColor ( 230, 232, 236 ),     // dial
+        QColor ( 180, 190, 200 ),     // dial outline
+        QColor ( 200, 210, 220 ),     // ring
+        QColor ( 50, 150, 200 ),      // accent
         QColor ( 50, 150, 200, 120 ), // accent glow
-        QColor ( 118, 244, 255 ),  // accent bright
-        QColor ( 80, 220, 255 ),   // accent mid
-        QColor ( 40, 160, 220 ),   // accent deep
-        QColor ( 200, 210, 220 ),  // knob normal top
-        QColor ( 180, 190, 200 ),  // knob normal mid
-        QColor ( 160, 170, 180 ),  // knob normal bottom
-        QColor ( 190, 200, 210 ),  // knob hover top
-        QColor ( 170, 180, 190 ),  // knob hover mid
-        QColor ( 150, 160, 170 ),  // knob hover bottom
-        QColor ( 150, 160, 170 ),  // knob outline
-        QColor ( 80, 100, 150 ),   // marker normal
-        QColor ( 50, 140, 200 ),   // marker hover
-        QColor ( 80, 140, 200 ),   // marker dot
-        QColor ( 100, 160, 220 ),  // marker dot hover
-        QColor ( 180, 190, 200 ),  // inner bevel
-        QColor ( 225, 228, 234 ), // track background
-        QColor ( 165, 175, 185 ), // track border
-        QColor ( 255, 255, 255 ), // handle top
-        QColor ( 232, 237, 242 ), // handle mid
-        QColor ( 214, 221, 228 ), // handle bottom
-        QColor ( 145, 155, 165 ), // handle border
+        QColor ( 118, 244, 255 ),     // accent bright
+        QColor ( 80, 220, 255 ),      // accent mid
+        QColor ( 40, 160, 220 ),      // accent deep
+        QColor ( 200, 210, 220 ),     // knob normal top
+        QColor ( 180, 190, 200 ),     // knob normal mid
+        QColor ( 160, 170, 180 ),     // knob normal bottom
+        QColor ( 190, 200, 210 ),     // knob hover top
+        QColor ( 170, 180, 190 ),     // knob hover mid
+        QColor ( 150, 160, 170 ),     // knob hover bottom
+        QColor ( 150, 160, 170 ),     // knob outline
+        QColor ( 80, 100, 150 ),      // marker normal
+        QColor ( 50, 140, 200 ),      // marker hover
+        QColor ( 80, 140, 200 ),      // marker dot
+        QColor ( 100, 160, 220 ),     // marker dot hover
+        QColor ( 180, 190, 200 ),     // inner bevel
+        QColor ( 225, 228, 234 ),     // track background
+        QColor ( 165, 175, 185 ),     // track border
+        QColor ( 255, 255, 255 ),     // handle top
+        QColor ( 232, 237, 242 ),     // handle mid
+        QColor ( 214, 221, 228 ),     // handle bottom
+        QColor ( 145, 155, 165 ),     // handle border
         QColor ( 120, 130, 142, 220 ) // tick
     };
 }

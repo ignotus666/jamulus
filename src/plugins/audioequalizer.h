@@ -19,8 +19,8 @@ public:
         bBypass       = bNBypass;
         fWetMixTarget = bNBypass ? 0.0f : 1.0f;
     }
-    bool GetBypass() const { return bBypass; }
-    void SetBandGainDb ( const int iBandIndex, const float fGainDb );
+    bool  GetBypass() const { return bBypass; }
+    void  SetBandGainDb ( const int iBandIndex, const float fGainDb );
     float GetBandGainDb ( const int iBandIndex ) const
     {
         if ( ( iBandIndex < 0 ) || ( iBandIndex >= NUM_BANDS ) )

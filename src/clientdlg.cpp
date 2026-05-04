@@ -27,7 +27,6 @@
 #include <QFile>
 #include "util.h"
 
-
 /* Implementation *************************************************************/
 CClientDlg::CClientDlg ( CClient*         pNCliP,
                          CClientSettings* pNSetP,
@@ -275,7 +274,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Use adaptive widths for action buttons in the left panel.
     const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
-                                     qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ), butConnect->sizeHint().width() ) );
+                                      qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ), butConnect->sizeHint().width() ) );
 
     butConnect->setFixedHeight ( 40 );
     butConnect->setMinimumWidth ( iMainPillWidth );
@@ -673,9 +672,9 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( pClient, &CClient::SoundDeviceChanged, this, &CClientDlg::OnSoundDeviceChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::GUIDesignChanged, this, &CClientDlg::OnGUIDesignChanged );
-    
+
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, this, &CClientDlg::OnUIThemeChanged );
-    
+
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, &EffectsDlg, &CEffectsDlg::OnUIThemeChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MeterStyleChanged, this, &CClientDlg::OnMeterStyleChanged );

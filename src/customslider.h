@@ -28,11 +28,8 @@
 #include <QSlider>
 
 /**
- * @brief Modern custom vertical slider with a clean, professional appearance.
- * 
- * This widget provides a drop-in replacement for QSlider with custom painting
- * for a modern audio interface look. It emits the core change notifications
- * and supports mouse interactions.
+ * Custom slider. Provides a drop-in replacement for QSlider with custom painting.
+ * Emits the core change notifications and supports mouse interactions.
  */
 class CCustomSlider : public QWidget
 {

@@ -92,12 +92,12 @@ signals:
     void EQResetRequested();
 
 private:
-    CClient*      pClient;
-    CClientSettings* pSettings;
+    CClient*                   pClient;
+    CClientSettings*           pSettings;
     QPointer<COutputBandMeter> pOutputBandMeterSafe;
-    QPointer<CCustomSlider> pSldEQBands[CAudioEqualizer::NUM_BANDS] = {};
-    QPointer<QLabel>  pLblEQBandValues[CAudioEqualizer::NUM_BANDS] = {};
-    bool          bEQBandWidgetsReady = false;
+    QPointer<CCustomSlider>    pSldEQBands[CAudioEqualizer::NUM_BANDS]      = {};
+    QPointer<QLabel>           pLblEQBandValues[CAudioEqualizer::NUM_BANDS] = {};
+    bool                       bEQBandWidgetsReady                          = false;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );

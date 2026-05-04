@@ -31,7 +31,7 @@
 #include "global.h"
 
 /* Definitions ****************************************************************/
-#define CLIP_IND_TIME_OUT_MS   20000
+#define CLIP_IND_TIME_OUT_MS 20000
 
 /* Classes ********************************************************************/
 class CLevelMeter : public QWidget

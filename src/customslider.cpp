@@ -82,7 +82,7 @@ void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, co
     painter.drawPath ( handlePath );
 }
 
-void DrawTickMarks ( QPainter& painter,
+void DrawTickMarks ( QPainter&                   painter,
                      const int                   startPos,
                      const int                   endPos,
                      const bool                  bVertical,
@@ -105,7 +105,7 @@ void DrawTickMarks ( QPainter& painter,
         for ( int val = minValue; val <= maxValue; ++val )
         {
             const qreal fraction = static_cast<qreal> ( val - minValue ) / valueRange;
-            const int pos        = qRound ( startPos + ( endPos - startPos ) * fraction );
+            const int   pos      = qRound ( startPos + ( endPos - startPos ) * fraction );
 
             if ( bVertical )
             {
@@ -143,7 +143,7 @@ void DrawTickMarks ( QPainter& painter,
     for ( int i = 0; i <= intervalCount; ++i )
     {
         const qreal fraction = static_cast<qreal> ( i ) / intervalCount;
-        const int pos        = qRound ( startPos + ( endPos - startPos ) * fraction );
+        const int   pos      = qRound ( startPos + ( endPos - startPos ) * fraction );
 
         if ( bVertical )
         {
@@ -477,7 +477,7 @@ void CCustomSlider::mousePressEvent ( QMouseEvent* event )
 {
     if ( event->button() == Qt::LeftButton )
     {
-        bMousePressed = true;
+        bMousePressed  = true;
         bHandleHovered = currentHandleRect().contains ( event->pos() );
         updateValue ( eOrientation == Qt::Vertical ? event->y() : event->x() );
         update();

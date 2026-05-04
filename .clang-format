@@ -53,3 +53,4 @@ SpacesInParentheses: true
 ObjCBlockIndentWidth: 4
 ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
+CommentPragmas: '^ TODO:|^### TODO:|^### TEST'

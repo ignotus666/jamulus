@@ -75,7 +75,7 @@
 #define AUD_FADER_IN_MIDDLE ( AUD_FADER_IN_MAX / 2 )
 
 // audio reverberation range
-#define AUD_REVERB_MAX 100
+#define AUD_REVERB_MAX          100
 #define REVERB_PRE_DELAY_MAX_MS 120
 #define REVERB_ROOM_SIZE_MAX    100
 #define REVERB_DAMPING_MAX      100
@@ -220,20 +220,20 @@ public:
     bool GetEQBypass() const { return AudioEqualizer.GetBypass(); }
     int  GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
 
-    void SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
-    bool GetCompressorBypass() const { return AudioCompressor.GetBypass(); }
-    void SetCompressorThresholdDb ( const float fDb ) { AudioCompressor.SetThresholdDb ( fDb ); }
+    void  SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
+    bool  GetCompressorBypass() const { return AudioCompressor.GetBypass(); }
+    void  SetCompressorThresholdDb ( const float fDb ) { AudioCompressor.SetThresholdDb ( fDb ); }
     float GetCompressorThresholdDb() const { return AudioCompressor.GetThresholdDb(); }
-    void SetCompressorRatio ( const float fValue ) { AudioCompressor.SetRatio ( fValue ); }
+    void  SetCompressorRatio ( const float fValue ) { AudioCompressor.SetRatio ( fValue ); }
     float GetCompressorRatio() const { return AudioCompressor.GetRatio(); }
-    void SetCompressorAttackMs ( const float fMs ) { AudioCompressor.SetAttackMs ( fMs ); }
+    void  SetCompressorAttackMs ( const float fMs ) { AudioCompressor.SetAttackMs ( fMs ); }
     float GetCompressorAttackMs() const { return AudioCompressor.GetAttackMs(); }
-    void SetCompressorReleaseMs ( const float fMs ) { AudioCompressor.SetReleaseMs ( fMs ); }
+    void  SetCompressorReleaseMs ( const float fMs ) { AudioCompressor.SetReleaseMs ( fMs ); }
     float GetCompressorReleaseMs() const { return AudioCompressor.GetReleaseMs(); }
-    void SetCompressorMakeupDb ( const float fDb ) { AudioCompressor.SetMakeupDb ( fDb ); }
+    void  SetCompressorMakeupDb ( const float fDb ) { AudioCompressor.SetMakeupDb ( fDb ); }
     float GetCompressorMakeupDb() const { return AudioCompressor.GetMakeupDb(); }
-    void SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
-    bool GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
+    void  SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
+    bool  GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
 
     void SetFilterBypass ( const bool bNBypass ) { AudioFilter.SetBypass ( bNBypass ); }
     bool GetFilterBypass() const { return AudioFilter.GetBypass(); }
@@ -445,23 +445,23 @@ protected:
 
     CVector<uint8_t> vecbyNetwData;
 
-    int          iAudioInFader;
-    bool         bReverbOnLeftChan;
-    int          iReverbLevel;
-    int          iReverbPreDelayMs;
-    int          iReverbRoomSize;
-    int          iReverbDamping;
-    int          iReverbWetMix;
-    int          iReverbEarlyLevel;
-    int          iReverbWidth;
-    bool         bReverbEarlyEnabled;
-    bool         bReverbFreeze;
-    bool         bReverbBypass;
-    CAudioReverb AudioReverb;
-    CAudioEqualizer AudioEqualizer;
+    int              iAudioInFader;
+    bool             bReverbOnLeftChan;
+    int              iReverbLevel;
+    int              iReverbPreDelayMs;
+    int              iReverbRoomSize;
+    int              iReverbDamping;
+    int              iReverbWetMix;
+    int              iReverbEarlyLevel;
+    int              iReverbWidth;
+    bool             bReverbEarlyEnabled;
+    bool             bReverbFreeze;
+    bool             bReverbBypass;
+    CAudioReverb     AudioReverb;
+    CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
-    CAudioFilter AudioFilter;
-    int          iInputBoost;
+    CAudioFilter     AudioFilter;
+    int              iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;
     int iSndCrdFrameSizeFactor;

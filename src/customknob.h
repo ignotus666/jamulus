@@ -28,7 +28,7 @@
 
 /**
  * @brief Modern custom pan knob with circular dial design.
- * 
+ *
  * This widget provides a professional circular dial control for pan (left-right)
  * or other continuous parameters. It features a dark background with bright cyan
  * accents matching the custom slider aesthetic.
@@ -76,18 +76,18 @@ protected:
     void wheelEvent ( QWheelEvent* event ) override;
 
 private:
-    int  valueFromAngle ( double angle ) const;
+    int    valueFromAngle ( double angle ) const;
     double angleFromValue ( int val ) const;
-    void updateValue ( QMouseEvent* event );
+    void   updateValue ( QMouseEvent* event );
 
     // State
-    int    iMinValue;
-    int    iMaxValue;
-    int    iCurrentValue;
-    int    iPageStep;
-    int    iDragStartValue;
-    int    iDragStartY;
-    bool   bMousePressed;
-    bool   bKnobHovered;
-    bool   bDarkTheme;
+    int  iMinValue;
+    int  iMaxValue;
+    int  iCurrentValue;
+    int  iPageStep;
+    int  iDragStartValue;
+    int  iDragStartY;
+    bool bMousePressed;
+    bool bKnobHovered;
+    bool bDarkTheme;
 };

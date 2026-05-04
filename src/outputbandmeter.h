@@ -45,7 +45,7 @@ protected:
     virtual void paintEvent ( QPaintEvent* pEvent ) override;
 
 private:
-    float afLevels[kBandCount];
+    float        afLevels[kBandCount];
     QVector<int> vecBandCentersPx;
-    bool bDarkTheme;
+    bool         bDarkTheme;
 };

@@ -86,20 +86,24 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
 
     // Segmented meter parameters
     constexpr int iSegmentCount = 16; // Match NUM_STEPS_LED_BAR from CLevelMeter
-    const int     iGapPx = ( iH > 60 ) ? 1 : 0;
-    const int     iTotalGapPx = std::max ( 0, ( iSegmentCount - 1 ) * iGapPx );
-    const int     iUsableH = std::max ( iSegmentCount, iH - iTotalGapPx );
+    const int     iGapPx        = ( iH > 60 ) ? 1 : 0;
+    const int     iTotalGapPx   = std::max ( 0, ( iSegmentCount - 1 ) * iGapPx );
+    const int     iUsableH      = std::max ( iSegmentCount, iH - iTotalGapPx );
     const double  dBottomWeight = 1.35;
-    const double  dTopWeight = 0.65;
+    const double  dTopWeight    = 0.65;
 
     // Gradient stops (copied from CLevelMeter)
     const auto ColorAt = [] ( const double dPos ) {
-        struct TStop { double dPos; QColor c; };
-        const TStop aStops[] = { { 0.00, QColor ( 48, 230, 75 ) },
-                                 { 0.50, QColor ( 48, 230, 75 ) },
-                                 { 0.68, QColor ( 245, 210, 50 ) },
-                                 { 0.84, QColor ( 245, 155, 40 ) },
-                                 { 1.00, QColor ( 235, 60, 55 ) } };
+        struct TStop
+        {
+            double dPos;
+            QColor c;
+        };
+        const TStop aStops[]     = { { 0.00, QColor ( 48, 230, 75 ) },
+                                     { 0.50, QColor ( 48, 230, 75 ) },
+                                     { 0.68, QColor ( 245, 210, 50 ) },
+                                     { 0.84, QColor ( 245, 155, 40 ) },
+                                     { 1.00, QColor ( 235, 60, 55 ) } };
         const double dClampedPos = std::max ( 0.0, std::min ( 1.0, dPos ) );
         for ( int i = 0; i < 4; ++i )
         {
@@ -110,9 +114,9 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
                 const double dDenom = std::max ( 1e-9, s1.dPos - s0.dPos );
                 const double t      = ( dClampedPos - s0.dPos ) / dDenom;
 +               return QColor::fromRgbF ( s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
-+                                          s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
-+                                          s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
-+                                          1.0 );
++                                         s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
++                                         s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
++                                         1.0 );
             }
         }
         return aStops[4].c;
@@ -122,36 +126,36 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
     for ( int iBand = 0; iBand < iCount; ++iBand )
     {
         int barLeft, barRight;
-        if (vecBandCentersPx.size() == kBandCount && vecBandCentersPx[iBand] >= 0)
+        if ( vecBandCentersPx.size() == kBandCount && vecBandCentersPx[iBand] >= 0 )
         {
             int center = vecBandCentersPx[iBand];
             // Calculate virtual centers for edges
             int prevCenter, nextCenter;
-            if (iBand == 0)
+            if ( iBand == 0 )
             {
                 int delta  = vecBandCentersPx[1] - vecBandCentersPx[0];
                 prevCenter = vecBandCentersPx[0] - delta;
             }
             else
             {
-                prevCenter = vecBandCentersPx[iBand-1];
+                prevCenter = vecBandCentersPx[iBand - 1];
             }
-            if (iBand == kBandCount-1)
+            if ( iBand == kBandCount-1 )
             {
-                int delta  = vecBandCentersPx[kBandCount-1] - vecBandCentersPx[kBandCount-2];
-                nextCenter = vecBandCentersPx[kBandCount-1] + delta;
+                int delta  = vecBandCentersPx[kBandCount - 1] - vecBandCentersPx[kBandCount - 2];
+                nextCenter = vecBandCentersPx[kBandCount - 1] + delta;
             }
             else
             {
-                nextCenter = vecBandCentersPx[iBand+1];
+                nextCenter = vecBandCentersPx[iBand + 1];
             }
             // Compute left and right edge as midpoint to neighbors, minus half the gap
-            barLeft  = (center + prevCenter) / 2 + (minGapPx / 2);
-            barRight = (center + nextCenter) / 2 - (minGapPx / 2);
+            barLeft  = ( center + prevCenter ) / 2 + ( minGapPx / 2 );
+            barRight = ( center + nextCenter ) / 2 - ( minGapPx / 2 );
             // Clamp to widget bounds
-            barLeft  = std::max(iMargin, barLeft);
-            barRight = std::min(width() - iMargin, barRight);
-            if (barRight < barLeft + 2) barRight = barLeft + 2; // Minimum width
+            barLeft  = std::max ( iMargin, barLeft );
+            barRight = std::min ( width() - iMargin, barRight );
+            if ( barRight < barLeft + 2 ) barRight = barLeft + 2; // Minimum width
         }
         else
         {
@@ -160,9 +164,9 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             barLeft  = iX;
             barRight = iX + iBarW;
         }
-        int       barW = barRight - barLeft;
-        const int iY   = iMargin;
-        QRect     barRect ( barLeft, iY, barW, iH );
+        int          barW = barRight - barLeft;
+        const int    iY   = iMargin;
+        QRect        barRect ( barLeft, iY, barW, iH );
         const QColor backgroundFill = bDarkTheme ? QColor ( 28, 32, 36, 90 ) : QColor ( 245, 246, 248, 220 );
         painter.fillRect ( barRect, backgroundFill );
 
@@ -171,26 +175,26 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
         double dWeightSum = 0.0;
         for ( int iSegment = 0; iSegment < iSegmentCount; ++iSegment )
         {
-            const double dPos = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
+            const double dPos    = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
             const double dWeight = dBottomWeight + ( dTopWeight - dBottomWeight ) * dPos;
             dWeightSum += dWeight;
         }
-        int    iYCursor = iY + iH;
+        int    iYCursor   = iY + iH;
         double dCumWeight = 0.0;
         for ( int iSegment = 0; iSegment < iSegmentCount; ++iSegment )
         {
-            const double dPos = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
-            const double dWeight = dBottomWeight + ( dTopWeight - dBottomWeight ) * dPos;
+            const double dPos     = static_cast<double> ( iSegment ) / std::max ( 1, iSegmentCount - 1 );
+            const double dWeight  = dBottomWeight + ( dTopWeight - dBottomWeight ) * dPos;
             const int    iStartPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
             dCumWeight += dWeight;
-            const int    iEndPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
-            const int    iSegH = std::max ( 1, iEndPx - iStartPx );
+            const int iEndPx = static_cast<int> ( ( dCumWeight * iUsableH ) / std::max ( 1e-9, dWeightSum ) + 0.5 );
+            const int iSegH  = std::max ( 1, iEndPx - iStartPx );
             iYCursor -= iSegH;
             QRect segRect ( barLeft, iYCursor, barW, iSegH );
             if ( !segRect.isValid() )
                 continue;
             const double dSegStart = static_cast<double> ( iSegment ) / iSegmentCount;
-            const bool bActive     = dNormValue > dSegStart;
+            const bool   bActive   = dNormValue > dSegStart;
             if ( bActive )
             {
                 const double dSegMid = std::min ( 1.0, ( iSegment + 0.5 ) / iSegmentCount );

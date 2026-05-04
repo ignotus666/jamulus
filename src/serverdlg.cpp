@@ -452,10 +452,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
                        &CServerDlg::OnLocationCountryCurrentIndexChanged );
 
     QObject::connect ( cbxLanguage, &CLanguageComboBox::LanguageChanged, this, &CServerDlg::OnLanguageChanged );
-    QObject::connect ( cbxTheme,
-                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
-                       this,
-                       &CServerDlg::OnUIThemeActivated );
+    QObject::connect ( cbxTheme, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ), this, &CServerDlg::OnUIThemeActivated );
 
     // push buttons
     QObject::connect ( pbtNewRecording, &QPushButton::released, this, &CServerDlg::OnNewRecordingClicked );
@@ -519,8 +516,8 @@ void CServerDlg::ApplyTheme()
 {
     const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
     SetAppPaletteForTheme ( eResolvedTheme );
-    SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
-                                                                 : QString ( ":/styles/dialog_common_light.qss" ) } );
+    SetAppStyleSheetFromResources (
+        { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ) } );
 }
 
 void CServerDlg::OnUIThemeActivated ( int iThemeIdx )

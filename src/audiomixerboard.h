@@ -69,7 +69,7 @@ public:
     bool    GetDisplayChannelLevel();
     void    SetDisplayPans ( const bool eNDP );
     QFrame* GetMainWidget() { return pFrame; }
-    void SetDarkTheme ( const bool bEnable )
+    void    SetDarkTheme ( const bool bEnable )
     {
         pFader->SetDarkTheme ( bEnable );
         pPan->SetDarkTheme ( bEnable );
@@ -107,15 +107,15 @@ protected:
 
     QFrame* pFrame;
 
-    QWidget*        pLevelsBox;
-    QWidget*        pMuteSoloBox;
-    CLevelMeter*    plbrChannelLevel;
-    CCustomSlider*  pFader;
-    CCustomKnob*    pPan;
-    QLabel*         pPanLabel;
-    QLabel*         pInfoLabel;
-    QHBoxLayout*    pLabelGrid;
-    QVBoxLayout*    pLabelPictGrid;
+    QWidget*       pLevelsBox;
+    QWidget*       pMuteSoloBox;
+    CLevelMeter*   plbrChannelLevel;
+    CCustomSlider* pFader;
+    CCustomKnob*   pPan;
+    QLabel*        pPanLabel;
+    QLabel*        pInfoLabel;
+    QHBoxLayout*   pLabelGrid;
+    QVBoxLayout*   pLabelPictGrid;
 
     QPushButton* pcbMute;
     QPushButton* pcbSolo;

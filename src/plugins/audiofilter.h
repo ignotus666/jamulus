@@ -49,13 +49,13 @@ private:
     void UpdateLowPassCoeff();
     void ClearState ( SState& state );
 
-    bool  bBypass;
-    bool  bHighPassEnabled;
-    bool  bLowPassEnabled;
-    int   iSampleRateHz;
-    int   iHighPassCutoffHz;
-    int   iLowPassCutoffHz;
-    float fQ;
+    bool   bBypass;
+    bool   bHighPassEnabled;
+    bool   bLowPassEnabled;
+    int    iSampleRateHz;
+    int    iHighPassCutoffHz;
+    int    iLowPassCutoffHz;
+    float  fQ;
     SCoeff sHighPassCoeff;
     SCoeff sLowPassCoeff;
     SState sHighPassState;

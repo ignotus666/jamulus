@@ -271,8 +271,8 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // MeterStyle
     lblMeterStyle->setWhatsThis ( "<b>" + tr ( "Meter Style" ) + ":</b> " +
-                                tr ( "Select the meter style to be used for the level meters. "
-                                    "Only bar styles are available: narrow or wide." ) );
+                                  tr ( "Select the meter style to be used for the level meters. "
+                                       "Only bar styles are available: narrow or wide." ) );
 
     cbxMeterStyle->setAccessibleName ( tr ( "Meter Style combo box" ) );
 
@@ -1728,10 +1728,7 @@ void CClientSettingsDlg::ResetMidiActivityLog()
     lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
 }
 
-void CClientSettingsDlg::OnClearMidiActivityLogClicked()
-{
-    ResetMidiActivityLog();
-}
+void CClientSettingsDlg::OnClearMidiActivityLogClicked() { ResetMidiActivityLog(); }
 
 void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber, int midiValue )
 {
@@ -1748,10 +1745,7 @@ void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber, int midiV
     const QString vStyle  = "<span style=\"color:#14E81D;\">%1</span>";
 
     const QString activityText =
-        tr ( "Ch %1, CC %2, V %3" )
-            .arg ( chStyle.arg ( channel + 1 ) )
-            .arg ( ccStyle.arg ( ccNumber ) )
-            .arg ( vStyle.arg ( midiValue ) );
+        tr ( "Ch %1, CC %2, V %3" ).arg ( chStyle.arg ( channel + 1 ) ).arg ( ccStyle.arg ( ccNumber ) ).arg ( vStyle.arg ( midiValue ) );
 
     midiActivityLog.append ( activityText );
     while ( midiActivityLog.size() > 15 )

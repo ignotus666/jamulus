@@ -663,14 +663,12 @@ int main ( int argc, char** argv )
 
             if ( !strServerListFileName.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list persistence file will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list persistence file will only take effect when running as a directory.";
             }
 
             if ( !strServerListFilter.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list filter will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list filter will only take effect when running as a directory.";
             }
         }
         else
@@ -822,11 +820,12 @@ int main ( int argc, char** argv )
     bIsClient = true; // Client only - TODO: maybe a switch in interface to change to server?
 
     // bUseMultithreading = true;
-    QApplication* pApp       = new QApplication ( argc, argv );
+    QApplication* pApp = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
-    if (bUseGUI) {
-        QApplication::setStyle("Fusion");
+    if ( bUseGUI )
+    {
+        QApplication::setStyle ( "Fusion" );
     }
 #    endif
 #endif
@@ -881,7 +880,7 @@ int main ( int argc, char** argv )
         qWarning() << "No JSON-RPC support in this build.";
     }
 #else
-    CRpcServer*   pRpcServer = nullptr;
+    CRpcServer* pRpcServer = nullptr;
 
     if ( iJsonRpcPortNumber != INVALID_PORT )
     {
@@ -944,10 +943,9 @@ int main ( int argc, char** argv )
                 // Apply palette and application stylesheet before creating dialogs.
                 const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
                 SetAppPaletteForTheme ( eResolvedTheme );
-                SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
-                                                                             : QString ( ":/styles/dialog_common_light.qss" ),
-                                                  eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" )
-                                                                             : QString ( ":/styles/clientdlg_light.qss" ) } );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ),
+                      eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" ) : QString ( ":/styles/clientdlg_light.qss" ) } );
                 // load translation
                 if ( bUseTranslation )
                 {
@@ -1021,8 +1019,8 @@ int main ( int argc, char** argv )
                 // Apply palette and application stylesheet before creating dialogs.
                 const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
                 SetAppPaletteForTheme ( eResolvedTheme );
-                SetAppStyleSheetFromResources ( { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" )
-                                                                             : QString ( ":/styles/dialog_common_light.qss" ) } );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ) } );
 
                 // load translation
                 if ( bUseTranslation )

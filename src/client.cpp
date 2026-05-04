@@ -1450,8 +1450,8 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         sParams.bEarlyEnabled = bReverbEarlyEnabled;
         sParams.bFreeze       = bReverbFreeze;
 
-        const float fRoomSize = static_cast<float> ( iReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
-        sParams.fT60 = 0.3f + 4.2f * fRoomSize;
+        const float fRoomSize   = static_cast<float> ( iReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
+        sParams.fT60            = 0.3f + 4.2f * fRoomSize;
         const float fLevelScale = static_cast<float> ( iReverbLevel ) / AUD_REVERB_MAX;
         sParams.fWet *= fLevelScale;
         sParams.fDry = 1.0f - sParams.fWet;
@@ -1642,10 +1642,9 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 
 void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
 {
-    constexpr float fPi = 3.14159265358979323846f;
-    constexpr int kOutputBands = 16;
-    const float afFreqs[kOutputBands] = { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f,
-                                          1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
+    constexpr float fPi          = 3.14159265358979323846f;
+    constexpr int   kOutputBands = 16;
+    const float     afFreqs[kOutputBands] = { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f, 1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
 
     if ( iMonoBlockSizeSam <= 0 )
     {
@@ -1671,8 +1670,8 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
             q1            = q0;
         }
 
-        const float power = q1 * q1 + q2 * q2 - coeff * q1 * q2;
-        const float mag   = std::sqrt ( qMax ( power, 0.0f ) ) / iMonoBlockSizeSam;
+        const float power  = q1 * q1 + q2 * q2 - coeff * q1 * q2;
+        const float mag    = std::sqrt ( qMax ( power, 0.0f ) ) / iMonoBlockSizeSam;
         afNewLevels[iBand] = qBound ( 0.0f, mag * 16.0f, 1.0f );
     }
 
@@ -1777,7 +1776,7 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
-void CClient::OnMidiCCReceived ( int channel, int ccNumber, int midiValue ) { emit MidiCCReceived ( channel, ccNumber, midiValue); }
+void CClient::OnMidiCCReceived ( int channel, int ccNumber, int midiValue ) { emit MidiCCReceived ( channel, ccNumber, midiValue ); }
 
 // find, and optionally create, a client channel for the supplied server channel ID
 // returns a client channel ID or INVALID_INDEX

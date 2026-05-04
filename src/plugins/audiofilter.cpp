@@ -57,10 +57,10 @@ void CAudioFilter::SetLowPassCutoffHz ( const int iHz )
 void CAudioFilter::UpdateHighPassCoeff()
 {
     const float fCutoff = static_cast<float> ( std::max ( 20, iHighPassCutoffHz ) );
-    const float fW0 = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
-    const float fCosW0 = std::cos ( fW0 );
-    const float fSinW0 = std::sin ( fW0 );
-    const float fAlpha = fSinW0 / ( 2.0f * fQ );
+    const float fW0     = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
+    const float fCosW0  = std::cos ( fW0 );
+    const float fSinW0  = std::sin ( fW0 );
+    const float fAlpha  = fSinW0 / ( 2.0f * fQ );
 
     const float b0 = ( 1.0f + fCosW0 ) * 0.5f;
     const float b1 = -( 1.0f + fCosW0 );
@@ -79,10 +79,10 @@ void CAudioFilter::UpdateHighPassCoeff()
 void CAudioFilter::UpdateLowPassCoeff()
 {
     const float fCutoff = static_cast<float> ( std::max ( 20, iLowPassCutoffHz ) );
-    const float fW0 = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
-    const float fCosW0 = std::cos ( fW0 );
-    const float fSinW0 = std::sin ( fW0 );
-    const float fAlpha = fSinW0 / ( 2.0f * fQ );
+    const float fW0     = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
+    const float fCosW0  = std::cos ( fW0 );
+    const float fSinW0  = std::sin ( fW0 );
+    const float fAlpha  = fSinW0 / ( 2.0f * fQ );
 
     const float b0 = ( 1.0f - fCosW0 ) * 0.5f;
     const float b1 = 1.0f - fCosW0;
@@ -124,9 +124,9 @@ void CAudioFilter::Process ( CVector<int16_t>& vecsStereoInOut, const int iStere
 
             if ( bHighPassEnabled )
             {
-                const SCoeff& c = sHighPassCoeff;
-                SState& s = sHighPassState;
-                const float fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
+                const SCoeff& c    = sHighPassCoeff;
+                SState&       s    = sHighPassState;
+                const float   fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
 
                 s.x2[iChannel] = s.x1[iChannel];
                 s.x1[iChannel] = fSample;
@@ -138,9 +138,9 @@ void CAudioFilter::Process ( CVector<int16_t>& vecsStereoInOut, const int iStere
 
             if ( bLowPassEnabled )
             {
-                const SCoeff& c = sLowPassCoeff;
-                SState& s = sLowPassState;
-                const float fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
+                const SCoeff& c    = sLowPassCoeff;
+                SState&       s    = sLowPassState;
+                const float   fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
 
                 s.x2[iChannel] = s.x1[iChannel];
                 s.x1[iChannel] = fSample;

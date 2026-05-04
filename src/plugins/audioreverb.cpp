@@ -296,8 +296,8 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         if ( vecPreDelayBuffer.Size() > 0 )
         {
             vecPreDelayBuffer[iPreDelayWriteIndex] = fMixedInput;
-            const int iReadIndex = WrapIndex ( iPreDelayWriteIndex - iPreDelaySamples, vecPreDelayBuffer.Size() );
-            fPreDelayed          = vecPreDelayBuffer[iReadIndex];
+            const int iReadIndex                   = WrapIndex ( iPreDelayWriteIndex - iPreDelaySamples, vecPreDelayBuffer.Size() );
+            fPreDelayed                            = vecPreDelayBuffer[iReadIndex];
 
             if ( bEarlyEnabled && ( fEarlyLevel > 0.0f ) )
             {
@@ -344,8 +344,8 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         outLeftDelay.Add ( filtout );
         outRightDelay.Add ( filtout );
 
-        float fWetL = outLeftDelay.Get();
-        float fWetR = outRightDelay.Get();
+        float       fWetL    = outLeftDelay.Get();
+        float       fWetR    = outRightDelay.Get();
         const float fWetMono = 0.5f * ( fWetL + fWetR );
         fWetL                = fWetMono + ( fWetL - fWetMono ) * fWidth;
         fWetR                = fWetMono + ( fWetR - fWetMono ) * fWidth;
@@ -354,13 +354,13 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         // reverberation effect on both channels)
         if ( ( eAudioChannelConf == CC_STEREO ) || bReverbOnLeftChan )
         {
-            const float fOutL = fDry * fInL + fWet * 0.5f * fWetL + fEarlyLevel * fEarly;
+            const float fOutL  = fDry * fInL + fWet * 0.5f * fWetL + fEarlyLevel * fEarly;
             vecsStereoInOut[i] = Float2Short ( fOutL );
         }
 
         if ( ( eAudioChannelConf == CC_STEREO ) || !bReverbOnLeftChan )
         {
-            const float fOutR = fDry * fInR + fWet * 0.5f * fWetR + fEarlyLevel * fEarly;
+            const float fOutR      = fDry * fInR + fWet * 0.5f * fWetR + fEarlyLevel * fEarly;
             vecsStereoInOut[i + 1] = Float2Short ( fOutR );
         }
     }

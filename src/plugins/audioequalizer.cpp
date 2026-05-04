@@ -5,20 +5,16 @@
 #include "audioequalizer.h"
 #include <cmath>
 
-const float CAudioEqualizer::afBandFrequencies[NUM_BANDS] = { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f,
-                                                             1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
+const float CAudioEqualizer::afBandFrequencies[NUM_BANDS] =
+    { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f, 1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
 
-CAudioEqualizer::CAudioEqualizer() :
-    bBypass ( true ),
-    fWetMixCurrent ( 0.0f ),
-    fWetMixTarget ( 0.0f ),
-    iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ )
+CAudioEqualizer::CAudioEqualizer() : bBypass ( true ), fWetMixCurrent ( 0.0f ), fWetMixTarget ( 0.0f ), iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ )
 {
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         afBandTargetGainDb[iBand]  = 0.0f;
         afBandCurrentGainDb[iBand] = 0.0f;
-        aBandCoeff[iBand]   = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+        aBandCoeff[iBand]          = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     }
 
     ClearFilterState();
@@ -26,7 +22,7 @@ CAudioEqualizer::CAudioEqualizer() :
 
 void CAudioEqualizer::Init ( const int iNsampleRateHz )
 {
-    iSampleRateHz = iNsampleRateHz;
+    iSampleRateHz  = iNsampleRateHz;
     fWetMixCurrent = bBypass ? 0.0f : 1.0f;
     fWetMixTarget  = fWetMixCurrent;
 
@@ -80,14 +76,14 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
         }
     }
 
-    const int iFrameCount = iStereoBlockSizeSam / 2;
-    const float fWetStep  = ( iFrameCount > 0 ) ? ( fWetMixTarget - fWetMixCurrent ) / iFrameCount : 0.0f;
+    const int   iFrameCount = iStereoBlockSizeSam / 2;
+    const float fWetStep    = ( iFrameCount > 0 ) ? ( fWetMixTarget - fWetMixCurrent ) / iFrameCount : 0.0f;
 
     for ( int iSample = 0; iSample < iStereoBlockSizeSam; iSample += 2 )
     {
         for ( int iChannel = 0; iChannel < 2; ++iChannel )
         {
-            const float fDry = vecsStereoInOut[iSample + iChannel];
+            const float fDry    = vecsStereoInOut[iSample + iChannel];
             float       fSample = fDry;
 
             for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
@@ -105,7 +101,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
                 fSample = fOut;
             }
 
-            const float fMixed = fDry + ( fSample - fDry ) * fWetMixCurrent;
+            const float fMixed                  = fDry + ( fSample - fDry ) * fWetMixCurrent;
             vecsStereoInOut[iSample + iChannel] = Float2Short ( fMixed );
         }
 
@@ -122,7 +118,7 @@ void CAudioEqualizer::UpdateBandCoeff ( const int iBandIndex, const float fGainD
 {
     // RBJ peaking EQ biquad.
     constexpr float fPi = 3.14159265358979323846f;
-    constexpr float fQ = 1.0f;
+    constexpr float fQ  = 1.0f;
 
     const float fA     = std::pow ( 10.0f, fGainDb / 40.0f );
     const float fW0    = 2.0f * fPi * afBandFrequencies[iBandIndex] / iSampleRateHz;

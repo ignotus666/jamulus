@@ -88,21 +88,21 @@ public:
                  QWidget*         parent = nullptr );
 
 protected:
-    void SetGUIDesign ( const EGUIDesign eNewDesign );
-    void SetMeterStyle ( const EMeterStyle eNewMeterStyle );
-    void SetMyWindowTitle ( const int iNumClients );
-    void ShowConnectionSetupDialog();
-    void ShowGeneralSettings ( int iTab );
-    void ShowChatWindow ( const bool bForceRaise = true );
-    void ShowAnalyzerConsole();
-    void ShowEffectsWindow();
-    void UpdateAudioFaderSlider();
-    void UpdateRevSelection();
-    void Connect ( const QString& strSelectedAddress, const QString& strMixerBoardLabel );
-    void Disconnect();
+    void         SetGUIDesign ( const EGUIDesign eNewDesign );
+    void         SetMeterStyle ( const EMeterStyle eNewMeterStyle );
+    void         SetMyWindowTitle ( const int iNumClients );
+    void         ShowConnectionSetupDialog();
+    void         ShowGeneralSettings ( int iTab );
+    void         ShowChatWindow ( const bool bForceRaise = true );
+    void         ShowAnalyzerConsole();
+    void         ShowEffectsWindow();
+    void         UpdateAudioFaderSlider();
+    void         UpdateRevSelection();
+    void         Connect ( const QString& strSelectedAddress, const QString& strMixerBoardLabel );
+    void         Disconnect();
     virtual void changeEvent ( QEvent* Event ) override;
-    void ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept );
-    void SetPingTime ( const int iPingTime, const int iOverallDelayMs, const CMultiColorLED::ELightColor eOverallDelayLEDColor );
+    void         ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept );
+    void         SetPingTime ( const int iPingTime, const int iOverallDelayMs, const CMultiColorLED::ELightColor eOverallDelayLEDColor );
 
     CClient*         pClient;
     CClientSettings* pSettings;
@@ -208,7 +208,7 @@ public slots:
     void OnCompressorReleaseChanged ( int value );
     void OnCompressorMakeupChanged ( int value );
     void OnCompressorLimiterChanged ( bool enabled );
-    
+
     void OnFilterBypassChanged ( bool bypassed );
     void OnHighPassEnabledChanged ( bool enabled );
     void OnLowPassEnabledChanged ( bool enabled );

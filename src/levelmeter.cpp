@@ -97,21 +97,18 @@ protected:
         fullGradient.setColorAt ( 0.84, QColor ( 245, 155, 40 ) );
         fullGradient.setColorAt ( 1.00, QColor ( 235, 60, 55 ) );
 
-        const auto ColorAt = [] ( const double dPos )
-        {
+        const auto ColorAt = [] ( const double dPos ) {
             struct TStop
             {
                 double dPos;
                 QColor c;
             };
 
-            const TStop aStops[] = {
-                { 0.00, QColor ( 48, 230, 75 ) },
-                { 0.50, QColor ( 48, 230, 75 ) },
-                { 0.68, QColor ( 245, 210, 50 ) },
-                { 0.84, QColor ( 245, 155, 40 ) },
-                { 1.00, QColor ( 235, 60, 55 ) }
-            };
+            const TStop aStops[] = { { 0.00, QColor ( 48, 230, 75 ) },
+                                     { 0.50, QColor ( 48, 230, 75 ) },
+                                     { 0.68, QColor ( 245, 210, 50 ) },
+                                     { 0.84, QColor ( 245, 155, 40 ) },
+                                     { 1.00, QColor ( 235, 60, 55 ) } };
 
             const double dClampedPos = std::max ( 0.0, std::min ( 1.0, dPos ) );
             for ( int i = 0; i < 4; ++i )
@@ -135,7 +132,7 @@ protected:
         // Enhanced mode uses discrete meter blocks to emulate hardware segmented meters.
         const int    iSegmentCount = std::max ( 1, NUM_STEPS_LED_BAR );
         const double dNormValue    = std::max ( 0.0, std::min ( 1.0, static_cast<double> ( iValue ) / std::max ( 1, iMaxValue ) ) );
-        const int    iGapPx = ( r.height() > 60 ) ? 1 : 0;
+        const int    iGapPx        = ( r.height() > 60 ) ? 1 : 0;
 
         const int iTotalGapPx = std::max ( 0, ( iSegmentCount - 1 ) * iGapPx );
         const int iUsableH    = std::max ( iSegmentCount, r.height() - iTotalGapPx );
@@ -259,9 +256,7 @@ void CLevelMeter::SetDarkTheme ( const bool bEnable )
     }
 }
 
-CLevelMeter::~CLevelMeter()
-{
-}
+CLevelMeter::~CLevelMeter() {}
 
 void CLevelMeter::SetLevelMeterType ( const ELevelMeterType eNType )
 {

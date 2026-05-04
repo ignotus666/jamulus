@@ -61,16 +61,16 @@ protected:
         float fLastSample;
     };
 
-    EAudChanConf eAudioChannelConf;
-    int          iStereoBlockSizeSam;
-    int          iSampleRate;
-    CFIFO<float> allpassDelays[3];
-    CFIFO<float> combDelays[4];
-    COnePole     combFilters[4];
-    CFIFO<float> outLeftDelay;
-    CFIFO<float> outRightDelay;
-    float        allpassCoefficient;
-    float        combCoefficient[4];
+    EAudChanConf   eAudioChannelConf;
+    int            iStereoBlockSizeSam;
+    int            iSampleRate;
+    CFIFO<float>   allpassDelays[3];
+    CFIFO<float>   combDelays[4];
+    COnePole       combFilters[4];
+    CFIFO<float>   outLeftDelay;
+    CFIFO<float>   outRightDelay;
+    float          allpassCoefficient;
+    float          combCoefficient[4];
     CVector<float> vecPreDelayBuffer;
     int            iPreDelaySamples;
     int            iPreDelayWriteIndex;

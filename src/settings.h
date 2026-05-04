@@ -41,7 +41,7 @@
 #include "util.h"
 
 #define MAX_NUM_EQ_USER_PRESETS 12
-#define MAX_NUM_EFFECT_PRESETS 12
+#define MAX_NUM_EFFECT_PRESETS  12
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
@@ -64,12 +64,7 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect (
-                pGApp,
-                &QGuiApplication::saveStateRequest,
-                this,
-                [=] ( QSessionManager& ) { Save ( false ); },
-                Qt::DirectConnection );
+            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
@@ -165,7 +160,7 @@ public:
         bEnableFeedbackDetection ( true ),
         bEnableAudioAlerts ( false ),
         bEQBypass ( true ),
-        aiEQBandGainDb { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        aiEQBandGainDb{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         iReverbPreDelayMs ( 0 ),
         iReverbRoomSize ( 60 ),
         iReverbDamping ( 30 ),
@@ -233,31 +228,31 @@ public:
                 aiEffectsPresetEQBandGainDb[iPreset][iBand] = 0;
             }
 
-            iEffectsPresetReverbLevel[iPreset] = 0;
-            iEffectsPresetReverbPreDelayMs[iPreset] = 0;
-            iEffectsPresetReverbRoomSize[iPreset] = 60;
-            iEffectsPresetReverbDamping[iPreset] = 30;
-            iEffectsPresetReverbWetMix[iPreset] = 25;
-            iEffectsPresetReverbEarlyLevel[iPreset] = 30;
-            iEffectsPresetReverbWidth[iPreset] = 100;
+            iEffectsPresetReverbLevel[iPreset]        = 0;
+            iEffectsPresetReverbPreDelayMs[iPreset]   = 0;
+            iEffectsPresetReverbRoomSize[iPreset]     = 60;
+            iEffectsPresetReverbDamping[iPreset]      = 30;
+            iEffectsPresetReverbWetMix[iPreset]       = 25;
+            iEffectsPresetReverbEarlyLevel[iPreset]   = 30;
+            iEffectsPresetReverbWidth[iPreset]        = 100;
             bEffectsPresetReverbEarlyEnabled[iPreset] = true;
-            bEffectsPresetReverbFreeze[iPreset] = false;
-            bEffectsPresetReverbBypass[iPreset] = true;
-            bEffectsPresetReverbOnLeftChan[iPreset] = false;
+            bEffectsPresetReverbFreeze[iPreset]       = false;
+            bEffectsPresetReverbBypass[iPreset]       = true;
+            bEffectsPresetReverbOnLeftChan[iPreset]   = false;
 
-            bEffectsPresetCompressorBypass[iPreset] = true;
-            iEffectsPresetCompressorThresholdDb[iPreset] = -12;
-            iEffectsPresetCompressorRatio[iPreset] = 3;
-            iEffectsPresetCompressorAttackMs[iPreset] = 5;
-            iEffectsPresetCompressorReleaseMs[iPreset] = 120;
-            iEffectsPresetCompressorMakeupDb[iPreset] = 3;
+            bEffectsPresetCompressorBypass[iPreset]         = true;
+            iEffectsPresetCompressorThresholdDb[iPreset]    = -12;
+            iEffectsPresetCompressorRatio[iPreset]          = 3;
+            iEffectsPresetCompressorAttackMs[iPreset]       = 5;
+            iEffectsPresetCompressorReleaseMs[iPreset]      = 120;
+            iEffectsPresetCompressorMakeupDb[iPreset]       = 3;
             bEffectsPresetCompressorLimiterEnabled[iPreset] = true;
 
-            bEffectsPresetFilterBypass[iPreset] = true;
-            bEffectsPresetHighPassEnabled[iPreset] = false;
-            bEffectsPresetLowPassEnabled[iPreset] = false;
+            bEffectsPresetFilterBypass[iPreset]     = true;
+            bEffectsPresetHighPassEnabled[iPreset]  = false;
+            bEffectsPresetLowPassEnabled[iPreset]   = false;
             iEffectsPresetHighPassCutoffHz[iPreset] = 80;
-            iEffectsPresetLowPassCutoffHz[iPreset] = 12000;
+            iEffectsPresetLowPassCutoffHz[iPreset]  = 12000;
         }
 
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
