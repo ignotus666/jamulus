@@ -416,7 +416,6 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     }
 
     DrawHandle ( painter, currentHandleRect(), true, ( bHandleHovered || bMousePressed ), palette );
-
 }
 
 void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
@@ -470,7 +469,6 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
     }
 
     DrawHandle ( painter, currentHandleRect(), false, ( bHandleHovered || bMousePressed ), palette );
-
 }
 
 void CCustomSlider::mousePressEvent ( QMouseEvent* event )

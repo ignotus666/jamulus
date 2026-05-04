@@ -161,10 +161,10 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     QPainter painter ( this );
     painter.setRenderHint ( QPainter::Antialiasing );
 
-    int w       = width();
-    int h       = height();
-    int centerX = w / 2;
-    int centerY = h / 2;
+    int       w          = width();
+    int       h          = height();
+    int       centerX    = w / 2;
+    int       centerY    = h / 2;
     const int dialRadius = std::max ( 8, ( std::min ( w, h ) / 2 ) - 2 );
     const int knobRadius = std::max ( 5, dialRadius - 6 );
 

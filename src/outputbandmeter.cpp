@@ -99,7 +99,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             double dPos;
             QColor c;
         };
-        const TStop aStops[]     = { { 0.00, QColor ( 48, 230, 75 ) },
+        const TStop  aStops[]    = { { 0.00, QColor ( 48, 230, 75 ) },
                                      { 0.50, QColor ( 48, 230, 75 ) },
                                      { 0.68, QColor ( 245, 210, 50 ) },
                                      { 0.84, QColor ( 245, 155, 40 ) },
@@ -113,10 +113,10 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             {
                 const double dDenom = std::max ( 1e-9, s1.dPos - s0.dPos );
                 const double t      = ( dClampedPos - s0.dPos ) / dDenom;
-+               return QColor::fromRgbF ( s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
-+                                         s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
-+                                         s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
-+                                         1.0 );
+                +return QColor::fromRgbF ( s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
+                                           +s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
+                                           +s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
+                                           +1.0 );
             }
         }
         return aStops[4].c;
@@ -140,7 +140,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             {
                 prevCenter = vecBandCentersPx[iBand - 1];
             }
-            if ( iBand == kBandCount-1 )
+            if ( iBand == kBandCount - 1 )
             {
                 int delta  = vecBandCentersPx[kBandCount - 1] - vecBandCentersPx[kBandCount - 2];
                 nextCenter = vecBandCentersPx[kBandCount - 1] + delta;
@@ -155,7 +155,8 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             // Clamp to widget bounds
             barLeft  = std::max ( iMargin, barLeft );
             barRight = std::min ( width() - iMargin, barRight );
-            if ( barRight < barLeft + 2 ) barRight = barLeft + 2; // Minimum width
+            if ( barRight < barLeft + 2 )
+                barRight = barLeft + 2; // Minimum width
         }
         else
         {
