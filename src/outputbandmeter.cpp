@@ -113,10 +113,10 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             {
                 const double dDenom = std::max ( 1e-9, s1.dPos - s0.dPos );
                 const double t      = ( dClampedPos - s0.dPos ) / dDenom;
-                +return QColor::fromRgbF ( s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
-                                           +s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
-                                           +s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
-                                           +1.0 );
+                return QColor::fromRgbF ( s0.c.redF() + ( s1.c.redF() - s0.c.redF() ) * t,
+                                          s0.c.greenF() + ( s1.c.greenF() - s0.c.greenF() ) * t,
+                                          s0.c.blueF() + ( s1.c.blueF() - s0.c.blueF() ) * t,
+                                          1.0 );
             }
         }
         return aStops[4].c;
