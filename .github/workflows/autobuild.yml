@@ -15,6 +15,12 @@ jobs:
     runs-on: ubuntu-22.04
     container: ubuntu:20.04
     steps:
+      - name: Install git
+        run: |
+          set -eu
+          apt-get -qq update
+          apt-get -qq -y install git
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -31,12 +37,11 @@ jobs:
           set -eu
           apt-get -qq update
           apt-get install -y software-properties-common sudo curl
-          add-apt-repository ppa:git-core/ppa
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get -qq update
-          apt-get -qq -y install git-core gh
+          apt-get -qq -y install gh
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Set up build dependencies
