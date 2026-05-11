@@ -42,11 +42,11 @@ exists($$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp) {
     message("VST3 SDK found at $$VST3_SDK_PATH -- enabling HAVE_VST3")
     DEFINES += HAVE_VST3
     INCLUDEPATH += $$VST3_SDK_PATH
-    # Link pre-compiled VST3 SDK object files
-    LIBS += $$PWD/vst3_obj/funknown.o \
-            $$PWD/vst3_obj/processdata.o \
-            $$PWD/vst3_obj/eventlist.o \
-            $$PWD/vst3_obj/vstinitiids.o
+    # Build the minimal VST3 SDK sources needed by the host
+    SOURCES += $$VST3_SDK_PATH/pluginterfaces/base/funknown.cpp \
+               $$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp \
+               $$VST3_SDK_PATH/public.sdk/source/vst/hosting/eventlist.cpp \
+               $$VST3_SDK_PATH/public.sdk/source/vst/vstinitiids.cpp
 }
 
 contains(CONFIG, "nosound") {
