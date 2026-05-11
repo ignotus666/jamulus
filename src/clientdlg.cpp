@@ -26,6 +26,7 @@
 #include <QBoxLayout>
 #include <QFile>
 #include "util.h"
+#include "plugins/pluginloaderdlg.h"
 
 /* Implementation *************************************************************/
 CClientDlg::CClientDlg ( CClient*         pNCliP,
@@ -150,7 +151,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
     butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
-                               tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
+                               tr ( "Opens the effects window where you can configure reverb, equalizer, compressor, and filters." ) );
     butEffects->setAccessibleName ( tr ( "Open effects window" ) );
 
     // delay LED
@@ -274,7 +275,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Use adaptive widths for action buttons in the left panel.
     const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
-                                      qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ), butConnect->sizeHint().width() ) );
+                                      qMax ( qMax ( chbChat->sizeHint().width(), butConnect->sizeHint().width() ),
+                                             butPlugins->sizeHint().width() ) );
 
     butConnect->setFixedHeight ( 40 );
     butConnect->setMinimumWidth ( iMainPillWidth );
@@ -282,10 +284,12 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     chbSettings->setFixedHeight ( 20 );
     chbChat->setFixedHeight ( 20 );
     butEffects->setFixedHeight ( 20 );
+    butPlugins->setFixedHeight ( 20 );
     chbLocalMute->setMinimumWidth ( iMainPillWidth );
     chbSettings->setMinimumWidth ( iMainPillWidth );
     chbChat->setMinimumWidth ( iMainPillWidth );
     butEffects->setMinimumWidth ( iMainPillWidth );
+    butPlugins->setMinimumWidth ( iMainPillWidth );
     butEffects->setCheckable ( true );
 
     const int iMeterLabelWidth = qMax ( lbrInputLevelL->minimumWidth(), lbrInputLevelL->sizeHint().width() );
@@ -311,8 +315,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // init input boost
     pClient->SetInputBoost ( pSettings->iInputBoost );
 
-    // init reverb channel
-    UpdateRevSelection();
+    // Plugins button opens the plugin loader dialog.
+    connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenPluginLoader );
+
+    // initialize pan control visibility (pan is not supported for mono)
+    MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
 
     // init connect dialog
     ConnectDlg.SetShowAllMusicians ( pSettings->bConnectDlgShowAllMusicians );
@@ -772,6 +779,8 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     EffectsDlg.close();
     ConnectDlg.close();
     AnalyzerConsole.close();
+    if ( pPluginLoaderDlg )
+        pPluginLoaderDlg->close();
 
     // if connected, terminate connection
     if ( pClient->IsRunning() )
@@ -1330,13 +1339,8 @@ void CClientDlg::OnTimerCheckAudioDeviceOk()
     // timeout to check if a valid device is selected and if we do not have
     // fundamental settings errors (in which case the GUI would only show that
     // it is trying to connect the server which does not help to solve the problem (#129))
-    if ( !pClient->IsCallbackEntered() )
-    {
-        QMessageBox::warning ( this,
-                               APP_NAME,
-                               tr ( "Your sound card is not working correctly. "
-                                    "Please open the settings dialog and check the device selection and the driver settings." ) );
-    }
+
+    // Removed IsCallbackEntered check (function no longer exists)
 }
 
 void CClientDlg::OnTimerDetectFeedback() { bDetectFeedback = false; }
@@ -1746,4 +1750,38 @@ void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 
     // Enable/disable runtime MIDI via the sound interface through the public CClient interface
     pClient->EnableMIDI ( bEnabled );
+}
+
+void CClientDlg::OnOpenPluginLoader()
+{
+    // If already visible, a second press closes it (toggle behavior).
+    if ( pPluginLoaderDlg && pPluginLoaderDlg->isVisible() )
+    {
+        pPluginLoaderDlg->close();
+        return;
+    }
+
+    if ( !pPluginLoaderDlg )
+    {
+        pPluginLoaderDlg = new CPluginLoaderDlg ( pClient, nullptr );
+
+        // Keep button state in sync when user closes the dialog directly.
+        connect ( pPluginLoaderDlg, &QDialog::finished, this, [this] {
+            if ( butPlugins->isChecked() )
+                butPlugins->setChecked ( false );
+        } );
+
+        connect ( pPluginLoaderDlg, &QObject::destroyed, this, [this] {
+            pPluginLoaderDlg = nullptr;
+            if ( butPlugins->isChecked() )
+                butPlugins->setChecked ( false );
+        } );
+    }
+
+    pPluginLoaderDlg->show();
+    pPluginLoaderDlg->raise();
+    pPluginLoaderDlg->activateWindow();
+
+    if ( !butPlugins->isChecked() )
+        butPlugins->setChecked ( true );
 }

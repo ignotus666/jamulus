@@ -27,6 +27,7 @@
 #include <QThread>
 #include <QString>
 #include <QMutex>
+#include <functional>
 #ifndef HEADLESS
 #    include <QMessageBox>
 #endif
@@ -78,6 +79,9 @@ public:
     }
     virtual void Stop();
 
+    bool GetCallbackEntered() const { return bCallbackEntered; }
+    bool isRunning() const { return bRun; }
+
     // device selection
     QStringList GetDevNames();
     QString     SetDev ( const QString strDevName );
@@ -109,8 +113,9 @@ public:
     virtual void           SetMIDIDevice ( const QString& strDevice ) { strMIDIDevice = strDevice; }
     virtual QStringList    GetMIDIDevNames() { return QStringList(); } // Base class default (overridden by platform implementations)
 
-    bool IsRunning() const { return bRun; }
-    bool IsCallbackEntered() const { return bCallbackEntered; }
+    // Set a callback for MIDI events (typically to forward to plugin host)
+    using MidiEventCallback = std::function<void(const uint8_t*, int, uint32_t)>;
+    void SetMidiEventCallback ( const MidiEventCallback& callback ) { midiEventCallback = callback; }
 
     // TODO this should be protected but since it is used
     // in a callback function it has to be public -> better solution
@@ -179,6 +184,7 @@ protected:
     QString                strSystemDriverTechniqueName;
     int                    iCtrlMIDIChannel;
     QVector<CMidiCtlEntry> aMidiCtls;
+    MidiEventCallback      midiEventCallback;
 
     long    lNumDevs;
     QString strCurDevName;

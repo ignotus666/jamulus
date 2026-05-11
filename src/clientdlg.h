@@ -133,6 +133,7 @@ protected:
     CConnectDlg        ConnectDlg;
     CAnalyzerConsole   AnalyzerConsole;
     CEffectsDlg        EffectsDlg;
+    class CPluginLoaderDlg* pPluginLoaderDlg { nullptr };
 
 public slots:
     void OnConnectDisconBut();
@@ -167,6 +168,7 @@ public slots:
     void OnOpenUserProfileSettings();
     void OnOpenAudioNetSettings();
     void OnOpenAdvancedSettings();
+    void OnOpenPluginLoader();
     void OnOpenChatDialog() { ShowChatWindow(); }
     void OnOpenAnalyzerConsole() { ShowAnalyzerConsole(); }
     void OnOwnFaderFirst()
@@ -271,7 +273,7 @@ public slots:
     void OnMeterStyleChanged();
     void OnRecorderStateReceived ( ERecorderState eRecorderState );
     void SetMixerBoardDeco ( const ERecorderState newRecorderState, const EGUIDesign eNewDesign );
-    void OnAudioChannelsChanged() { UpdateRevSelection(); }
+    void OnAudioChannelsChanged() { MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO ); }
     void OnNumClientsChanged ( int iNewNumClients );
 
     void accept() { close(); } // introduced by pljones

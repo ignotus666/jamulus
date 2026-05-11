@@ -40,6 +40,7 @@
 #include "server.h"
 #include "util.h"
 
+#define NUM_EQ_BANDS 16
 #define MAX_NUM_EQ_USER_PRESETS 12
 #define MAX_NUM_EFFECT_PRESETS  12
 
@@ -219,7 +220,7 @@ public:
     {
         for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
         {
-            for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+            for ( int iBand = 0; iBand < NUM_EQ_BANDS; ++iBand )
             {
                 aiEQPresetBandGainDb[iPreset][iBand] = 0;
             }
@@ -228,7 +229,7 @@ public:
         for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
         {
             bEffectsPresetEQBypass[iPreset] = true;
-            for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+            for ( int iBand = 0; iBand < NUM_EQ_BANDS; ++iBand )
             {
                 aiEffectsPresetEQBandGainDb[iPreset][iBand] = 0;
             }
@@ -304,10 +305,10 @@ public:
     int              iNumMixerPanelRows;
     CVector<QString> vstrDirectoryAddress;
     CVector<QString> vstrEQPresetNames;
-    int              aiEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][NUM_EQ_BANDS];
     CVector<QString> vstrEffectsPresetNames;
     bool             bEffectsPresetEQBypass[MAX_NUM_EFFECT_PRESETS];
-    int              aiEffectsPresetEQBandGainDb[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiEffectsPresetEQBandGainDb[MAX_NUM_EFFECT_PRESETS][NUM_EQ_BANDS];
     int              iEffectsPresetReverbLevel[MAX_NUM_EFFECT_PRESETS];
     int              iEffectsPresetReverbPreDelayMs[MAX_NUM_EFFECT_PRESETS];
     int              iEffectsPresetReverbRoomSize[MAX_NUM_EFFECT_PRESETS];
@@ -336,7 +337,7 @@ public:
     bool             bEnableFeedbackDetection;
     bool             bEnableAudioAlerts;
     bool             bEQBypass;
-    int              aiEQBandGainDb[CAudioEqualizer::NUM_BANDS];
+    int              aiEQBandGainDb[NUM_EQ_BANDS];
     int              iReverbPreDelayMs;
     int              iReverbRoomSize;
     int              iReverbDamping;

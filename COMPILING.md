@@ -19,6 +19,20 @@ First of all, you need to get the Jamulus source code. You can either download i
 - If you use `git`, [set it up](https://docs.github.com/en/get-started/quickstart/set-up-git) – preferably with SSH if you want to contribute.
 Then run `git clone git@github.com:jamulussoftware/jamulus` in Terminal to get the bleeding edge version directly from GitHub.
 
+### VST3 SDK submodule (optional)
+
+If you are building with VST3 host support, initialize the Steinberg VST3 SDK submodule after cloning:
+
+```shell
+git submodule update --init --recursive
+```
+
+To update the SDK to the latest commit tracked by this repo:
+
+```shell
+git submodule update --recursive
+```
+
 ## Linux
 
 ### Install dependencies

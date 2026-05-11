@@ -40,7 +40,8 @@ QGroupBox {
 QPushButton#chbLocalMute,
 QPushButton#chbSettings,
 QPushButton#chbChat,
-QPushButton#butEffects {
+QPushButton#butEffects,
+QPushButton#butPlugins {
     color: rgb(37, 37, 40);
     font: bold;
     spacing: 0px;
@@ -58,7 +59,8 @@ QPushButton#butEffects {
 
 QPushButton#chbSettings:checked,
 QPushButton#chbChat:checked,
-QPushButton#butEffects:checked {
+QPushButton#butEffects:checked,
+QPushButton#butPlugins:checked {
     color: rgb(31, 28, 28);
     border: 2px solid rgb(173, 245, 173);
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -68,7 +70,8 @@ QPushButton#butEffects:checked {
 
 QPushButton#chbSettings:hover,
 QPushButton#chbChat:hover,
-QPushButton#butEffects:hover {
+QPushButton#butEffects:hover,
+QPushButton#butPlugins:hover {
     color: rgb(37, 37, 40);
     border: 2px solid rgb(82, 180, 110);
     background: none;
@@ -76,7 +79,8 @@ QPushButton#butEffects:hover {
 
 QPushButton#chbSettings:checked:hover,
 QPushButton#chbChat:checked:hover,
-QPushButton#butEffects:checked:hover {
+QPushButton#butEffects:checked:hover,
+QPushButton#butPlugins:checked:hover {
     color: rgb(49, 39, 39);
     border: 2px solid rgb(82, 180, 110);
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,

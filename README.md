@@ -31,6 +31,8 @@ Bugs and feature requests can be [reported here](https://github.com/jamulussoftw
 
 [Please see these instructions](COMPILING.md)
 
+If you are building from git with VST3 host support enabled, make sure to initialize submodules (see [COMPILING.md](COMPILING.md)).
+
 ## Contributing
 
 See the [contributing instructions](CONTRIBUTING.md)

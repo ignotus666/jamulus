@@ -343,7 +343,7 @@ int CSound::process ( jack_nframes_t nframes, void* arg )
     // make sure we are locked during execution
     QMutexLocker locker ( &pSound->MutexAudioProcessCallback );
 
-    if ( pSound->IsRunning() && ( nframes == static_cast<jack_nframes_t> ( pSound->iJACKBufferSizeMono ) ) )
+    if ( pSound->isRunning() && ( nframes == static_cast<jack_nframes_t> ( pSound->iJACKBufferSizeMono ) ) )
     {
         // get input data pointer
         jack_default_audio_sample_t* in_left = (jack_default_audio_sample_t*) jack_port_get_buffer ( pSound->input_port_left, nframes );
@@ -421,6 +421,13 @@ int CSound::process ( jack_nframes_t nframes, void* arg )
                 {
                     vMIDIPaketBytes[i] = static_cast<uint8_t> ( in_event.buffer[i] );
                 }
+
+                // Send to plugin host for MIDI event processing
+                if ( pSound->midiEventCallback )
+                {
+                    pSound->midiEventCallback ( in_event.buffer, in_event.size, in_event.time );
+                }
+
                 pSound->ParseMIDIMessage ( vMIDIPaketBytes );
             }
         }

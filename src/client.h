@@ -37,6 +37,7 @@
 #include "global.h"
 #include "socket.h"
 #include "channel.h"
+#include "plugins/pluginhost.h"
 #include "util.h"
 #include "plugins/audioreverb.h"
 #include "plugins/audioequalizer.h"
@@ -147,8 +148,8 @@ public:
 
     void Start();
     void Stop();
-    bool IsRunning() { return Sound.IsRunning(); }
-    bool IsCallbackEntered() const { return Sound.IsCallbackEntered(); }
+    bool IsRunning() { return Sound.isRunning(); }
+    bool IsCallbackEntered() const { return Sound.GetCallbackEntered(); }
     bool SetServerAddr ( QString strNAddr );
 
     double GetLevelForMeterdBLeft() { return SignalLevelMeter.GetLevelForMeterdBLeftOrMono(); }
@@ -374,6 +375,14 @@ public:
     CChannelCoreInfo ChannelInfo;
     QString          strClientName;
 
+    // Plugin host control wrappers (UI can call these)
+    // Returns plugin id (>0) on success or -1 on failure
+    int LoadPlugin ( const std::string & sPath ) { return PluginHost.LoadPlugin ( sPath ); }
+    bool UnloadPlugin ( int iPluginId ) { return PluginHost.UnloadPlugin ( iPluginId ); }
+    bool ShowPluginEditor ( int iPluginId, void* parentWindow ) { return PluginHost.ShowPluginEditor ( iPluginId, parentWindow ); }
+    bool ClosePluginEditor ( int iPluginId ) { return PluginHost.ClosePluginEditor ( iPluginId ); }
+    std::vector<CPluginHost::LoadedPluginInfo> GetLoadedPluginsSnapshot() { return PluginHost.GetLoadedPluginsSnapshot(); }
+
 public:
     void SetSettings ( CClientSettings* settings );
 
@@ -445,7 +454,7 @@ protected:
 
     CVector<uint8_t> vecbyNetwData;
 
-    int              iAudioInFader;
+    int iAudioInFader;
     bool             bReverbOnLeftChan;
     int              iReverbLevel;
     int              iReverbPreDelayMs;
@@ -461,7 +470,8 @@ protected:
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
     CAudioFilter     AudioFilter;
-    int              iInputBoost;
+    int iInputBoost;
+    CPluginHost PluginHost;
 
     int iSndCrdPrefFrameSizeFactor;
     int iSndCrdFrameSizeFactor;

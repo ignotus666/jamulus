@@ -250,7 +250,7 @@ void CClient::SetSettings ( CClientSettings* settings )
 CClient::~CClient()
 {
     // if we were running, stop sound device
-    if ( Sound.IsRunning() )
+    if ( Sound.isRunning() )
     {
         Sound.Stop();
     }
@@ -426,7 +426,7 @@ void CClient::OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo )
 void CClient::OnVersionAndOSReceived ( COSUtil::EOpSystemType eOSType, QString strVersion )
 {
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -693,7 +693,7 @@ void CClient::SetSndCrdPrefFrameSizeFactor ( const int iNewFactor )
     {
         // init with new parameter, if client was running then first
         // stop it and restart again after new initialization
-        const bool bWasRunning = Sound.IsRunning();
+        const bool bWasRunning = Sound.isRunning();
         if ( bWasRunning )
         {
             Sound.Stop();
@@ -717,7 +717,7 @@ void CClient::SetEnableOPUS64 ( const bool eNEnableOPUS64 )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -737,7 +737,7 @@ void CClient::SetAudioQuality ( const EAudioQuality eNAudioQuality )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -757,7 +757,7 @@ void CClient::SetAudioChannels ( const EAudChanConf eNAudChanConf )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -777,7 +777,7 @@ QString CClient::SetSndCrdDev ( const QString strNewDev )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -808,7 +808,7 @@ void CClient::SetSndCrdLeftInputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -828,7 +828,7 @@ void CClient::SetSndCrdRightInputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -848,7 +848,7 @@ void CClient::SetSndCrdLeftOutputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -868,7 +868,7 @@ void CClient::SetSndCrdRightOutputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.IsRunning();
+    const bool bWasRunning = Sound.isRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -898,7 +898,7 @@ void CClient::OnSndCrdReinitRequest ( int iSndCrdResetType )
 
         // if client was running then first
         // stop it and restart again after new initialization
-        const bool bWasRunning = Sound.IsRunning();
+        const bool bWasRunning = Sound.isRunning();
         if ( bWasRunning )
         {
             Sound.Stop();
@@ -1339,11 +1339,13 @@ void CClient::Init()
     // set the channel network properties
     Channel.SetAudioStreamProperties ( eAudioCompressionType, iCeltNumCodedBytes, iSndCrdFrameSizeFactor, iNumAudioChannels );
 
-    // init reverberation
-    AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
-    AudioFilter.Init ( SYSTEM_SAMPLE_RATE_HZ );
-    AudioEqualizer.Init ( SYSTEM_SAMPLE_RATE_HZ );
-    AudioCompressor.Init ( SYSTEM_SAMPLE_RATE_HZ );
+    // initialize local plugin host processing stage
+    PluginHost.Init ( SYSTEM_SAMPLE_RATE_HZ, iStereoBlockSizeSam );
+    Sound.SetMidiEventCallback ( [this] ( const uint8_t* pData, int iLength, uint32_t iSampleOffset ) {
+        if ( pData && iLength > 0 )
+            qDebug() << "CClient: MIDI callback received status=" << pData[0] << "length=" << iLength << "offset=" << iSampleOffset;
+        PluginHost.QueueMIDIEvent ( pData, iLength, iSampleOffset );
+    } );
 
     // init the sound card conversion buffers
     if ( bSndCrdConversionBufferRequired )
@@ -1464,6 +1466,9 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     AudioFilter.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
     AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
     AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+
+    // process local output plugin chain (currently no-op scaffold)
+    PluginHost.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
 
     // apply pan (audio fader) and mix mono signals
     if ( !( ( iAudioInFader == AUD_FADER_IN_MIDDLE ) && ( eAudioChannelConf == CC_STEREO ) ) )

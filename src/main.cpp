@@ -31,6 +31,8 @@
 #    include <QMessageBox>
 #    include "serverdlg.h"
 #    ifndef SERVER_ONLY
+
+// (moved) File-scope crash backtrace helper will be defined after includes
 #        include "clientdlg.h"
 #    endif
 #endif
@@ -47,6 +49,9 @@
 extern void qt_set_sequence_auto_mnemonic ( bool bEnable );
 #endif
 #include <memory>
+#include <signal.h>
+#include <execinfo.h>
+#include <unistd.h>
 #ifndef NO_JSON_RPC
 #    include "rpcserver.h"
 #    include "serverrpc.h"
@@ -55,10 +60,33 @@ extern void qt_set_sequence_auto_mnemonic ( bool bEnable );
 #    endif
 #endif
 
+// File-scope crash backtrace helper
+static void jamulus_print_backtrace(int signum)
+{
+    const int max_frames = 64;
+    void* frames[max_frames];
+    int frame_count = backtrace(frames, max_frames);
+    fprintf(stderr, "\n*** Crash signal %d received - backtrace (%d frames):\n", signum, frame_count);
+    backtrace_symbols_fd(frames, frame_count, STDERR_FILENO);
+    // Restore default handler and re-raise to terminate normally
+    signal(signum, SIG_DFL);
+    raise(signum);
+}
+
 // Implementation **************************************************************
 
 int main ( int argc, char** argv )
 {
+
+    // Install simple crash handler to print a backtrace on abort/segfault.
+    extern void jamulus_print_backtrace(int);
+    struct sigaction sa;
+    sa.sa_handler = jamulus_print_backtrace;
+    sigemptyset ( &sa.sa_mask );
+    sa.sa_flags = SA_RESTART;
+    sigaction ( SIGSEGV, &sa, nullptr );
+    sigaction ( SIGABRT, &sa, nullptr );
+
 
 #if defined( Q_OS_MACOS )
     // Mnemonic keys are default disabled in Qt for MacOS. The following function enables them.

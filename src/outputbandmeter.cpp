@@ -149,7 +149,7 @@ void COutputBandMeter::paintEvent ( QPaintEvent* pEvent )
             {
                 nextCenter = vecBandCentersPx[iBand + 1];
             }
-            // Compute left and right edge as midpoint to neighbors, minus half the gap
+            // Compute left and right edge as midpoint to neighbours, minus half the gap
             barLeft  = ( center + prevCenter ) / 2 + ( minGapPx / 2 );
             barRight = ( center + nextCenter ) / 2 - ( minGapPx / 2 );
             // Clamp to widget bounds

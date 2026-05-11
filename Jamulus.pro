@@ -36,6 +36,19 @@ QT += network \
     xml \
     concurrent
 
+# VST3 SDK support (submodule at thirdparty/vst3sdk)
+VST3_SDK_PATH = $$PWD/thirdparty/vst3sdk
+exists($$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp) {
+    message("VST3 SDK found at $$VST3_SDK_PATH -- enabling HAVE_VST3")
+    DEFINES += HAVE_VST3
+    INCLUDEPATH += $$VST3_SDK_PATH
+    # Link pre-compiled VST3 SDK object files
+    LIBS += $$PWD/vst3_obj/funknown.o \
+            $$PWD/vst3_obj/processdata.o \
+            $$PWD/vst3_obj/eventlist.o \
+            $$PWD/vst3_obj/vstinitiids.o
+}
+
 contains(CONFIG, "nosound") {
     CONFIG -= "nosound"
     CONFIG += "serveronly"
@@ -388,13 +401,11 @@ FORMS_GUI = src/aboutdlgbase.ui \
         src/connectdlgbase.ui
 }
 
-HEADERS += src/plugins/audioreverb.h \
-    src/plugins/audioequalizer.h \
-    src/plugins/audiocompressor.h \
-    src/plugins/audiofilter.h \
-    src/buffer.h \
+HEADERS += src/buffer.h \
     src/channel.h \
     src/global.h \
+    src/plugins/pluginhost.h \
+    src/plugins/pluginloaderdlg.h \
     src/protocol.h \
     src/recorder/jamcontroller.h \
     src/threadpool.h \
@@ -503,13 +514,17 @@ HEADERS_OPUS_X86 = libs/opus/celt/x86/celt_lpc_sse.h \
     libs/opus/celt/x86/x86cpu.h \
     $$files(libs/opus/silk/x86/*.h)
 
-SOURCES += src/plugins/audioreverb.cpp \
+SOURCES += src/buffer.cpp \
+    src/channel.cpp \
+    src/main.cpp \
+    src/plugins/pluginhost.cpp \
+    src/plugins/vst3_adapter.cpp \
+    src/plugins/vst3_iids.cpp \
+    src/plugins/pluginloaderdlg.cpp \
+    src/plugins/audioreverb.cpp \
     src/plugins/audioequalizer.cpp \
     src/plugins/audiocompressor.cpp \
     src/plugins/audiofilter.cpp \
-    src/buffer.cpp \
-    src/channel.cpp \
-    src/main.cpp \
     src/protocol.cpp \
     src/recorder/jamcontroller.cpp \
     src/server.cpp \
