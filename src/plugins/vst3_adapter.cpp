@@ -382,7 +382,9 @@ public:
                     continue;
                     
                 const uint8_t status = me.second[0];
-                   qDebug() << "vst3_adapter::process: MIDI status 0x" << Qt::hex << status << Qt::dec << "length" << me.second.size();
+                   qDebug() << "vst3_adapter::process: MIDI status 0x"
+                            << QString::number ( status, 16 )
+                            << "length" << me.second.size();
                 
                    // Set common fields
                 e.sampleOffset = static_cast<int32_t>(me.first);
