@@ -94,6 +94,10 @@ INCLUDEPATH_OPUS = libs/opus/include \
 HEADERS_JACK = src/sound/jack/sound.h
 SOURCES_JACK = src/sound/jack/sound.cpp
 
+unix:!macx {
+    LIBS += -ldl
+}
+
 DEFINES += APP_VERSION=\\\"$$VERSION\\\" \
     CUSTOM_MODES \
     _REENTRANT
