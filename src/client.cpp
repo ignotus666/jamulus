@@ -81,7 +81,8 @@ CClient::CClient ( const quint16  iPortNumber,
     bEnableIPv6 ( bNEnableIPv6 ),
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
-    bRawAudioIsSupported ( false )
+    bRawAudioIsSupported ( false ),
+    bUseRawAudio ( false )
 {
     int iOpusError;
 
@@ -1073,6 +1074,7 @@ void CClient::Stop()
 
     // Fall back to opus in case raw was used
     bRawAudioIsSupported = false;
+    bUseRawAudio         = false;
     Init();
 
     // wait for approx. 100 ms to make sure no audio packet is still in the
@@ -1217,7 +1219,7 @@ void CClient::Init()
             case AQ_RAW:
                 if ( bRawAudioIsSupported && Channel.IsEnabled() )
                 {
-                    iCeltNumCodedBytes = iNumAudioChannels * iOPUSFrameSizeSamples * sizeof ( int16_t );
+                    iCeltNumCodedBytes = sizeof ( int16_t ) * iNumAudioChannels * iOPUSFrameSizeSamples;
                 }
                 else
                 {
@@ -1246,7 +1248,7 @@ void CClient::Init()
             case AQ_RAW:
                 if ( bRawAudioIsSupported && Channel.IsEnabled() )
                 {
-                    iCeltNumCodedBytes = iNumAudioChannels * iOPUSFrameSizeSamples * sizeof ( int16_t );
+                    iCeltNumCodedBytes = sizeof ( int16_t ) * iNumAudioChannels * iOPUSFrameSizeSamples;
                 }
                 else
                 {
@@ -1280,7 +1282,7 @@ void CClient::Init()
             case AQ_RAW:
                 if ( bRawAudioIsSupported && Channel.IsEnabled() )
                 {
-                    iCeltNumCodedBytes = iNumAudioChannels * iOPUSFrameSizeSamples * sizeof ( int16_t );
+                    iCeltNumCodedBytes = sizeof ( int16_t ) * iNumAudioChannels * iOPUSFrameSizeSamples;
                 }
                 else
                 {
@@ -1309,7 +1311,7 @@ void CClient::Init()
             case AQ_RAW:
                 if ( bRawAudioIsSupported && Channel.IsEnabled() )
                 {
-                    iCeltNumCodedBytes = iNumAudioChannels * iOPUSFrameSizeSamples * sizeof ( int16_t );
+                    iCeltNumCodedBytes = sizeof ( int16_t ) * iNumAudioChannels * iOPUSFrameSizeSamples;
                 }
                 else
                 {
@@ -1320,6 +1322,9 @@ void CClient::Init()
         }
     }
 
+    // determine whether to use raw audio
+    bUseRawAudio = bRawAudioIsSupported && eAudioQuality == AQ_RAW;
+
     // calculate stereo (two channels) buffer size
     iStereoBlockSizeSam = 2 * iMonoBlockSizeSam;
 
@@ -1327,7 +1332,8 @@ void CClient::Init()
     vecZeros.Init ( iStereoBlockSizeSam, 0 );
     vecsStereoSndCrdMuteStream.Init ( iStereoBlockSizeSam );
 
-    if ( !bRawAudioIsSupported )
+    // In case we are connected to a non raw audio server or we don't use raw audio we need to initialze the codec
+    if ( !bUseRawAudio )
     {
         opus_custom_encoder_ctl ( CurOpusEncoder,
                                   OPUS_SET_BITRATE ( CalcBitRateBitsPerSecFromCodedBytes ( iCeltNumCodedBytes, iOPUSFrameSizeSamples ) ) );
@@ -1522,7 +1528,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 
     for ( i = 0, j = 0; i < iSndCrdFrameSizeFactor; i++, j += iNumAudioChannels * iOPUSFrameSizeSamples )
     {
-        if ( eAudioQuality != AQ_RAW || !bRawAudioIsSupported )
+        if ( !bUseRawAudio )
         {
             // OPUS encoding
             if ( CurOpusEncoder != nullptr )
@@ -1536,27 +1542,19 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
                     iUnused = opus_custom_encode ( CurOpusEncoder, &vecsStereoSndCrd[j], iOPUSFrameSizeSamples, &vecCeltData[0], iCeltNumCodedBytes );
                 }
             }
-            else
-            {
-                if ( bMuteOutStream )
-                {
-                    memset ( &vecCeltData[0], 0, iCeltNumCodedBytes );
-                }
-            }
         }
         else
         {
-            // Send raw samples instead of OPUS
             if ( bMuteOutStream )
             {
                 memset ( &vecCeltData[0], 0, iCeltNumCodedBytes );
             }
             else
             {
+                // Send raw samples instead of OPUS
                 memcpy ( &vecCeltData[0], &vecsStereoSndCrd[j], iCeltNumCodedBytes );
             }
         }
-
         // send coded audio through the network
         Channel.PrepAndSendPacket ( &Socket, vecCeltData, iCeltNumCodedBytes );
     }
@@ -1585,6 +1583,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             {
                 pCurCodedData = &vecbyNetwData[0];
             }
+
             // on any valid received packet, we clear the initialization phase flag
             bIsInitializationPhase = false;
         }
@@ -1594,13 +1593,15 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             {
                 memset ( &vecsStereoSndCrd[j], 0, iCeltNumCodedBytes );
             }
+
             // for lost packets use null pointer as coded input data
             pCurCodedData = nullptr;
+
             // invalidate the buffer OK status flag
             bJitterBufferOK = false;
         }
 
-        if ( ( eAudioQuality != AQ_RAW || !bRawAudioIsSupported ) && CurOpusDecoder != nullptr )
+        if ( !bUseRawAudio && CurOpusDecoder != nullptr )
         {
             // OPUS decoding
             iUnused = opus_custom_decode ( CurOpusDecoder, pCurCodedData, iCeltNumCodedBytes, &vecsStereoSndCrd[j], iOPUSFrameSizeSamples );
@@ -1697,7 +1698,7 @@ int CClient::EstimatedOverallDelay ( const int iPingTimeMs )
     // length. Since that is usually not the case but the buffers are usually
     // a bit larger than necessary, we introduce some factor for compensation.
     // Consider the jitter buffer on the client and on the server side, too.
-    const float fTotalJitterBufferDelayMs = fSystemBlockDurationMs * ( GetSockBufNumFrames() + GetServerSockBufNumFrames() ) * 0.7f;
+    const float fTotalJitterBufferDelayMs = fSystemBlockDurationMs * ( GetSockBufNumFrames() + GetServerSockBufNumFrames() ) * JITTBUF_COMP_FACTOR;
 
     // consider delay introduced by the sound card conversion buffer by using
     // "GetSndCrdConvBufAdditionalDelayMonoBlSize()"

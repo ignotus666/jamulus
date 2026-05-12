@@ -1222,6 +1222,35 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // audio fader
     SetNumericIniSet ( IniXMLDocument, "client", "audfad", pClient->GetAudioInFader() );
 
+    // effects: reverb
+    SetNumericIniSet ( IniXMLDocument, "client", "revlev", pClient->GetReverbLevel() );
+    SetFlagIniSet ( IniXMLDocument, "client", "reverblchan", pClient->IsReverbOnLeftChan() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revpredelay", pClient->GetReverbPreDelayMs() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revroom", pClient->GetReverbRoomSize() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revdamping", pClient->GetReverbDamping() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revwet", pClient->GetReverbWetMix() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revearlylevel", pClient->GetReverbEarlyLevel() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revearlyenable", pClient->GetReverbEarlyEnabled() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revwidth", pClient->GetReverbWidth() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revfreeze", pClient->GetReverbFreeze() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revbypass", pClient->GetReverbBypass() );
+
+    // effects: compressor
+    SetFlagIniSet ( IniXMLDocument, "client", "compbypass", pClient->GetCompressorBypass() );
+    SetNumericIniSet ( IniXMLDocument, "client", "compthreshold", static_cast<int> ( pClient->GetCompressorThresholdDb() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compratio", static_cast<int> ( pClient->GetCompressorRatio() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compattack", static_cast<int> ( pClient->GetCompressorAttackMs() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "comprelease", static_cast<int> ( pClient->GetCompressorReleaseMs() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compmakeup", static_cast<int> ( pClient->GetCompressorMakeupDb() ) );
+    SetFlagIniSet ( IniXMLDocument, "client", "complimiter", pClient->GetCompressorLimiterEnabled() );
+
+    // effects: filters
+    SetFlagIniSet ( IniXMLDocument, "client", "filterbypass", pClient->GetFilterBypass() );
+    SetFlagIniSet ( IniXMLDocument, "client", "highpassenabled", pClient->GetHighPassEnabled() );
+    SetFlagIniSet ( IniXMLDocument, "client", "lowpassenabled", pClient->GetLowPassEnabled() );
+    SetNumericIniSet ( IniXMLDocument, "client", "highpasscutoff", pClient->GetHighPassCutoffHz() );
+    SetNumericIniSet ( IniXMLDocument, "client", "lowpasscutoff", pClient->GetLowPassCutoffHz() );
+
     // sound card selection
     PutIniSetting ( IniXMLDocument, "client", "auddev_base64", ToBase64 ( pClient->GetSndCrdDev() ) );
 
@@ -1252,11 +1281,13 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // enable OPUS64 setting
     SetFlagIniSet ( IniXMLDocument, "client", "enableopussmall", pClient->GetEnableOPUS64() );
 
-    // Preserve legacy EQ settings values in config for compatibility.
+    // Preserve EQ settings values in config for compatibility.
+    bEQBypass = pClient->GetEQBypass();
     SetFlagIniSet ( IniXMLDocument, "client", "eqbypass", bEQBypass );
 
     for ( iIdx = 0; iIdx < NUM_EQ_BANDS; ++iIdx )
     {
+        aiEQBandGainDb[iIdx] = pClient->GetEQBandGainDb ( iIdx );
         SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), aiEQBandGainDb[iIdx] );
     }
 
