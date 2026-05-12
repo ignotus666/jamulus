@@ -36,8 +36,8 @@ QT += network \
     xml \
     concurrent
 
-# VST3 SDK support (submodule at thirdparty/vst3sdk)
-VST3_SDK_PATH = $$PWD/thirdparty/vst3sdk
+# VST3 SDK support
+VST3_SDK_PATH = $$PWD/libs/vst3sdk
 exists($$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp) {
     message("VST3 SDK found at $$VST3_SDK_PATH -- enabling HAVE_VST3")
     DEFINES += HAVE_VST3
