@@ -29,6 +29,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QProgressBar>
+#include <QDialog>
+#include <QCheckBox>
 #include <QWhatsThis>
 #include <QTimer>
 #include <QRadioButton>
@@ -55,7 +57,8 @@
 #include "chatdlg.h"
 #include "connectdlg.h"
 #include "analyzerconsole.h"
-#include "effectsdlg.h"
+#include "plugins/effectsdlg.h"
+#include "customslider.h"
 #include "ui_clientdlgbase.h"
 #if defined( Q_OS_MACOS )
 #    include "mac/badgelabel.h"
@@ -216,8 +219,33 @@ public slots:
     void OnLowPassEnabledChanged ( bool enabled );
     void OnHighPassCutoffChanged ( int value );
     void OnLowPassCutoffChanged ( int value );
+    void OnAudioChannelsChanged();
+    void OnInputGainSliderContextMenu ( const QPoint& pos );
+    void OnInputGainSliderValueChanged ( int value );
+    void OnInputGainMidiCCReceived ( int channel, int ccNumber, int midiValue );
 
     void OnReverbSelLClicked() { pClient->SetReverbOnLeftChan ( true ); }
+
+private:
+    enum InputGainMidiLearnTarget
+    {
+        InputGainLearnNone,
+        InputGainLearnLeft,
+        InputGainLearnRight
+    };
+
+    InputGainMidiLearnTarget m_inputGainLearnTarget { InputGainLearnNone };
+    QDialog*                  m_pInputGainLearnDialog { nullptr };
+    CCustomSlider*            m_pInputGainSliderL { nullptr };
+    CCustomSlider*            m_pInputGainSliderR { nullptr };
+    QCheckBox*                m_pInputGainLinkCheck { nullptr };
+    bool                      m_bInputGainSliderUpdateLock { false };
+
+    void UpdateInputGainControls();
+    void UpdateInputGainToolTips();
+    void StartInputGainMidiLearn ( InputGainMidiLearnTarget target );
+    void ResetInputGainMidiLearn();
+    void ApplyInputGainValue ( InputGainMidiLearnTarget target, int value, bool bFromMidi = false );
 
     void OnReverbSelRClicked() { pClient->SetReverbOnLeftChan ( false ); }
 
@@ -273,7 +301,6 @@ public slots:
     void OnMeterStyleChanged();
     void OnRecorderStateReceived ( ERecorderState eRecorderState );
     void SetMixerBoardDeco ( const ERecorderState newRecorderState, const EGUIDesign eNewDesign );
-    void OnAudioChannelsChanged() { MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO ); }
     void OnNumClientsChanged ( int iNewNumClients );
 
     void accept() { close(); } // introduced by pljones

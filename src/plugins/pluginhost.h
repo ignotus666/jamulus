@@ -55,6 +55,8 @@ public:
 
     void Clear();
 
+    bool HasLoadedPlugins();
+
     // Queue raw MIDI bytes for the next audio block. Called from audio/MIDI callback.
     // Safe for concurrent calls from MIDI thread. vst3_adapter will forward these into
     // the VST3 processor's inputEvents buffer during the Process call.

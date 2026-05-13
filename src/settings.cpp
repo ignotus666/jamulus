@@ -399,6 +399,32 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         iInputBoost = iValue;
     }
 
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "inputgainl", 0, 200, iValue ) )
+    {
+        iInputGainL = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "inputgainr", 0, 200, iValue ) )
+    {
+        iInputGainR = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "inputgainlmidi", -1, 127, iValue ) )
+    {
+        iInputGainLMidiCC = iValue;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "inputgainrmidi", -1, 127, iValue ) )
+    {
+        iInputGainRMidiCC = iValue;
+    }
+
+    // input gain link (persisted)
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "inputgainlink", bValue ) )
+    {
+        bInputGainLink = bValue;
+    }
+
     if ( GetFlagIniSet ( IniXMLDocument, "client", "enablefeedbackdetection", bValue ) )
     {
         bEnableFeedbackDetection = bValue;
@@ -1182,6 +1208,12 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
     // input boost
     SetNumericIniSet ( IniXMLDocument, "client", "inputboost", iInputBoost );
+
+    SetNumericIniSet ( IniXMLDocument, "client", "inputgainl", iInputGainL );
+    SetNumericIniSet ( IniXMLDocument, "client", "inputgainr", iInputGainR );
+    SetNumericIniSet ( IniXMLDocument, "client", "inputgainlmidi", iInputGainLMidiCC );
+    SetNumericIniSet ( IniXMLDocument, "client", "inputgainrmidi", iInputGainRMidiCC );
+    SetFlagIniSet    ( IniXMLDocument, "client", "inputgainlink", bInputGainLink );
 
     // feedback detection
     SetFlagIniSet ( IniXMLDocument, "client", "enablefeedbackdetection", bEnableFeedbackDetection );

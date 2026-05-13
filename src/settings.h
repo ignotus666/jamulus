@@ -154,6 +154,11 @@ public:
         vstrIPAddress ( MAX_NUM_SERVER_ADDR_ITEMS, "" ),
         iNewClientFaderLevel ( 100 ),
         iInputBoost ( 1 ),
+        iInputGainL ( 100 ),
+        iInputGainR ( 100 ),
+        iInputGainLMidiCC ( -1 ),
+        iInputGainRMidiCC ( -1 ),
+        bInputGainLink ( false ),
         iSettingsTab ( SETTING_TAB_AUDIONET ),
         iEffectsTab ( 0 ),
         bConnectDlgShowAllMusicians ( true ),
@@ -298,6 +303,11 @@ public:
     CVector<QString> vstrIPAddress;
     int              iNewClientFaderLevel;
     int              iInputBoost;
+    int              iInputGainL;
+    int              iInputGainR;
+    int              iInputGainLMidiCC;
+    int              iInputGainRMidiCC;
+    bool             bInputGainLink;
     int              iSettingsTab;
     int              iEffectsTab;
     bool             bConnectDlgShowAllMusicians;

@@ -400,16 +400,16 @@ FORMS_GUI = src/aboutdlgbase.ui \
 !contains(CONFIG, "serveronly") {
     FORMS_GUI += src/clientdlgbase.ui \
         src/clientsettingsdlgbase.ui \
-        src/effectsdlgbase.ui \
+        src/plugins/effectsdlgbase.ui \
         src/chatdlgbase.ui \
-        src/connectdlgbase.ui
+        src/connectdlgbase.ui \
+        src/plugins/pluginloaderdlgbase.ui
 }
 
 HEADERS += src/buffer.h \
     src/channel.h \
     src/global.h \
     src/plugins/pluginhost.h \
-    src/plugins/pluginloaderdlg.h \
     src/protocol.h \
     src/recorder/jamcontroller.h \
     src/threadpool.h \
@@ -437,7 +437,8 @@ HEADERS_GUI = src/serverdlg.h
         src/customknob.h \
         src/audiomixerboard.h \
         src/chatdlg.h \
-        src/effectsdlg.h \
+        src/plugins/pluginloaderdlg.h \
+        src/plugins/effectsdlg.h \
         src/clientsettingsdlg.h \
         src/connectdlg.h \
         src/clientdlg.h \
@@ -524,7 +525,6 @@ SOURCES += src/buffer.cpp \
     src/plugins/pluginhost.cpp \
     src/plugins/vst3_adapter.cpp \
     src/plugins/vst3_iids.cpp \
-    src/plugins/pluginloaderdlg.cpp \
     src/plugins/audioreverb.cpp \
     src/plugins/audioequalizer.cpp \
     src/plugins/audiocompressor.cpp \
@@ -552,7 +552,8 @@ SOURCES_GUI = src/serverdlg.cpp
 !contains(CONFIG, "serveronly") {
     SOURCES_GUI += src/audiomixerboard.cpp \
         src/chatdlg.cpp \
-        src/effectsdlg.cpp \
+        src/plugins/effectsdlg.cpp \
+        src/plugins/pluginloaderdlg.cpp \
         src/clientsettingsdlg.cpp \
         src/connectdlg.cpp \
         src/clientdlg.cpp \

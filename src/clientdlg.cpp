@@ -25,6 +25,7 @@
 #include "clientdlg.h"
 #include <QBoxLayout>
 #include <QFile>
+#include "customslider.h"
 #include "util.h"
 #include "plugins/pluginloaderdlg.h"
 
@@ -72,22 +73,80 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pMetersContainer->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
     QVBoxLayout* pInputColumn = new QVBoxLayout();
-    QHBoxLayout* pInputBars   = new QHBoxLayout();
-    QHBoxLayout* pInputLabels = new QHBoxLayout();
+    QHBoxLayout* pInputChannels = new QHBoxLayout();
+    QVBoxLayout* pInputLeftColumn = new QVBoxLayout();
+    QVBoxLayout* pInputRightColumn = new QVBoxLayout();
+    QHBoxLayout* pInputLeftMeterRow = new QHBoxLayout();
+    QHBoxLayout* pInputRightMeterRow = new QHBoxLayout();
     pInputColumn->setContentsMargins ( 0, 0, 0, 0 );
     pInputColumn->setSpacing ( 2 );
-    pInputBars->setContentsMargins ( 0, 0, 0, 0 );
-    pInputBars->setSpacing ( 2 );
-    pInputLabels->setContentsMargins ( 0, 0, 0, 0 );
-    pInputLabels->setSpacing ( 2 );
+    pInputChannels->setContentsMargins ( 0, 0, 0, 0 );
+    pInputChannels->setSpacing ( 6 );
+    pInputLeftColumn->setContentsMargins ( 0, 0, 0, 0 );
+    pInputLeftColumn->setSpacing ( 2 );
+    pInputRightColumn->setContentsMargins ( 0, 0, 0, 0 );
+    pInputRightColumn->setSpacing ( 2 );
+    pInputLeftMeterRow->setContentsMargins ( 0, 0, 0, 0 );
+    pInputLeftMeterRow->setSpacing ( 2 );
+    pInputRightMeterRow->setContentsMargins ( 0, 0, 0, 0 );
+    pInputRightMeterRow->setSpacing ( 2 );
+
+    CCustomSlider* pInputGainSliderL = new CCustomSlider ( Qt::Vertical, backgroundFrame );
+    CCustomSlider* pInputGainSliderR = new CCustomSlider ( Qt::Vertical, backgroundFrame );
+    m_pInputGainSliderL = pInputGainSliderL;
+    m_pInputGainSliderR = pInputGainSliderR;
+    for ( CCustomSlider* pSlider : { pInputGainSliderL, pInputGainSliderR } )
+    {
+        pSlider->setRange ( 0, 200 );
+        pSlider->setPageStep ( 10 );
+        pSlider->setTickPosition ( QSlider::NoTicks );
+        pSlider->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
+        pSlider->setMinimumSize ( 22, 120 );
+        pSlider->setMaximumWidth ( 22 );
+        pSlider->SetCompactMode ( true );
+        pSlider->SetDarkTheme ( pSettings->eUITheme != UIT_LIGHT );
+        pSlider->setContextMenuPolicy ( Qt::CustomContextMenu );
+    }
+    pInputGainSliderL->setValue ( pSettings->iInputGainL );
+    pInputGainSliderR->setValue ( pSettings->iInputGainR );
+
+    m_pInputGainLinkCheck = new QCheckBox ( tr ( "Link" ), backgroundFrame );
+    m_pInputGainLinkCheck->setChecked ( pSettings->bInputGainLink );
+    m_pInputGainLinkCheck->setVisible ( pClient->GetAudioChannels() == CC_STEREO );
+    m_pInputGainLinkCheck->setToolTip ( tr ( "Keep both input gain sliders in sync while in stereo mode." ) );
+    m_pInputGainLinkCheck->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Fixed );
+    m_pInputGainLinkCheck->setCursor ( Qt::PointingHandCursor );
+
+    connect ( pInputGainSliderL, &CCustomSlider::valueChanged, this, &CClientDlg::OnInputGainSliderValueChanged );
+    connect ( pInputGainSliderR, &CCustomSlider::valueChanged, this, &CClientDlg::OnInputGainSliderValueChanged );
+    connect ( pInputGainSliderL, &QWidget::customContextMenuRequested, this, &CClientDlg::OnInputGainSliderContextMenu );
+    connect ( pInputGainSliderR, &QWidget::customContextMenuRequested, this, &CClientDlg::OnInputGainSliderContextMenu );
+    connect ( m_pInputGainLinkCheck, &QCheckBox::toggled, this, [this] ( bool checked ) {
+        pSettings->bInputGainLink = checked;
+        if ( checked && pClient->GetAudioChannels() == CC_STEREO && m_pInputGainSliderL && m_pInputGainSliderR )
+        {
+            m_bInputGainSliderUpdateLock = true;
+            const int value = m_pInputGainSliderL->value();
+            m_pInputGainSliderR->setValue ( value );
+            pSettings->iInputGainR = value;
+            pClient->SetInputGainR ( static_cast<float> ( value ) / 100.0f );
+            m_bInputGainSliderUpdateLock = false;
+        }
+    } );
 
     pInputColumn->addWidget ( lblInputLEDMeter, 0, Qt::AlignHCenter );
-    pInputBars->addWidget ( lbrInputLevelL );
-    pInputBars->addWidget ( lbrInputLevelR );
-    pInputColumn->addLayout ( pInputBars, 1 );
-    pInputLabels->addWidget ( lblLevelMeterLeft );
-    pInputLabels->addWidget ( lblLevelMeterRight );
-    pInputColumn->addLayout ( pInputLabels );
+    pInputLeftMeterRow->addWidget ( lbrInputLevelL );
+    pInputLeftMeterRow->addWidget ( pInputGainSliderL );
+    pInputRightMeterRow->addWidget ( lbrInputLevelR );
+    pInputRightMeterRow->addWidget ( pInputGainSliderR );
+    pInputLeftColumn->addLayout ( pInputLeftMeterRow, 1 );
+    pInputLeftColumn->addWidget ( lblLevelMeterLeft, 0, Qt::AlignHCenter );
+    pInputRightColumn->addLayout ( pInputRightMeterRow, 1 );
+    pInputRightColumn->addWidget ( lblLevelMeterRight, 0, Qt::AlignHCenter );
+    pInputChannels->addLayout ( pInputLeftColumn );
+    pInputChannels->addLayout ( pInputRightColumn );
+    pInputColumn->addLayout ( pInputChannels );
+    pInputColumn->addWidget ( m_pInputGainLinkCheck, 0, Qt::AlignHCenter );
 
     pMetersRow->addStretch();
     pMetersRow->addLayout ( pInputColumn );
@@ -314,6 +373,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // init input boost
     pClient->SetInputBoost ( pSettings->iInputBoost );
+    pClient->SetInputGainL ( static_cast<float> ( pSettings->iInputGainL ) / 100.0f );
+    pClient->SetInputGainR ( static_cast<float> ( pSettings->iInputGainR ) / 100.0f );
+    UpdateInputGainToolTips();
+    UpdateInputGainControls();
 
     // Plugins button opens the plugin loader dialog.
     connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenPluginLoader );
@@ -677,6 +740,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( pClient, &CClient::CLVersionAndOSReceived, this, &CClientDlg::OnCLVersionAndOSReceived );
 
     QObject::connect ( pClient, &CClient::SoundDeviceChanged, this, &CClientDlg::OnSoundDeviceChanged );
+
+    QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientDlg::OnInputGainMidiCCReceived );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::GUIDesignChanged, this, &CClientDlg::OnGUIDesignChanged );
 
@@ -1679,10 +1744,17 @@ void CClientDlg::OnUIThemeChanged()
 
     SetGUIDesign ( pClient->GetGUIDesign() );
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );
+    UpdateInputGainControls();
     bApplyingThemeChange = false;
 }
 
 void CClientDlg::OnMeterStyleChanged() { SetMeterStyle ( pClient->GetMeterStyle() ); }
+
+void CClientDlg::OnAudioChannelsChanged()
+{
+    MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
+    UpdateInputGainControls();
+}
 
 void CClientDlg::SetMixerBoardDeco ( const ERecorderState newRecorderState, const EGUIDesign eNewDesign )
 {
@@ -1750,6 +1822,206 @@ void CClientDlg::OnMIDIControllerUsageChanged ( bool bEnabled )
 
     // Enable/disable runtime MIDI via the sound interface through the public CClient interface
     pClient->EnableMIDI ( bEnabled );
+}
+
+void CClientDlg::UpdateInputGainToolTips()
+{
+    if ( !m_pInputGainSliderL || !m_pInputGainSliderR )
+    {
+        return;
+    }
+
+    const auto makeTip = [this] ( const QString& side, int midiCC ) {
+        QString tip = tr ( "Controls the direct input level for the %1 channel." ).arg ( side );
+        tip += "\n" + tr ( "Right-click for MIDI learn." );
+        if ( midiCC >= 0 )
+            tip += "\n" + tr ( "MIDI CC: %1" ).arg ( midiCC );
+        else
+            tip += "\n" + tr ( "MIDI CC: none" );
+        return tip;
+    };
+
+    m_pInputGainSliderL->setToolTip ( makeTip ( tr ( "left" ), pSettings->iInputGainLMidiCC ) );
+    m_pInputGainSliderR->setToolTip ( makeTip ( tr ( "right" ), pSettings->iInputGainRMidiCC ) );
+}
+
+void CClientDlg::UpdateInputGainControls()
+{
+    const bool bStereo = ( pClient->GetAudioChannels() == CC_STEREO );
+
+    if ( m_pInputGainLinkCheck != nullptr )
+    {
+        m_pInputGainLinkCheck->setVisible ( bStereo );
+        if ( !bStereo )
+            m_pInputGainLinkCheck->setChecked ( false );
+        else
+            m_pInputGainLinkCheck->setChecked ( pSettings->bInputGainLink );
+    }
+
+    if ( m_pInputGainSliderL != nullptr )
+        m_pInputGainSliderL->SetDarkTheme ( ResolveUITheme ( pSettings->eUITheme ) != UIT_LIGHT );
+    if ( m_pInputGainSliderR != nullptr )
+        m_pInputGainSliderR->SetDarkTheme ( ResolveUITheme ( pSettings->eUITheme ) != UIT_LIGHT );
+
+    UpdateInputGainToolTips();
+}
+
+void CClientDlg::ApplyInputGainValue ( InputGainMidiLearnTarget target, int value, bool bFromMidi )
+{
+    if ( !m_pInputGainSliderL || !m_pInputGainSliderR )
+    {
+        return;
+    }
+
+    const int iClampedValue = qMax ( 0, qMin ( 200, value ) );
+    const float fGain       = static_cast<float> ( iClampedValue ) / 100.0f;
+    const bool  bLinked     = ( m_pInputGainLinkCheck != nullptr ) && m_pInputGainLinkCheck->isChecked() && pClient->GetAudioChannels() == CC_STEREO;
+
+    m_bInputGainSliderUpdateLock = true;
+
+    if ( target == InputGainLearnLeft )
+    {
+        pSettings->iInputGainL = iClampedValue;
+        pClient->SetInputGainL ( fGain );
+        m_pInputGainSliderL->setValue ( iClampedValue );
+        if ( bLinked )
+        {
+            pSettings->iInputGainR = iClampedValue;
+            pClient->SetInputGainR ( fGain );
+            m_pInputGainSliderR->setValue ( iClampedValue );
+        }
+    }
+    else if ( target == InputGainLearnRight )
+    {
+        pSettings->iInputGainR = iClampedValue;
+        pClient->SetInputGainR ( fGain );
+        m_pInputGainSliderR->setValue ( iClampedValue );
+        if ( bLinked )
+        {
+            pSettings->iInputGainL = iClampedValue;
+            pClient->SetInputGainL ( fGain );
+            m_pInputGainSliderL->setValue ( iClampedValue );
+        }
+    }
+
+    m_bInputGainSliderUpdateLock = false;
+}
+
+void CClientDlg::OnInputGainSliderValueChanged ( int value )
+{
+    if ( m_bInputGainSliderUpdateLock )
+    {
+        return;
+    }
+
+    CCustomSlider* pSenderSlider = qobject_cast<CCustomSlider*> ( sender() );
+    if ( pSenderSlider == m_pInputGainSliderL )
+    {
+        ApplyInputGainValue ( InputGainLearnLeft, value );
+    }
+    else if ( pSenderSlider == m_pInputGainSliderR )
+    {
+        ApplyInputGainValue ( InputGainLearnRight, value );
+    }
+}
+
+void CClientDlg::StartInputGainMidiLearn ( InputGainMidiLearnTarget target )
+{
+    m_inputGainLearnTarget = target;
+
+    if ( !m_pInputGainLearnDialog )
+    {
+        m_pInputGainLearnDialog = new QDialog ( this, Qt::Dialog );
+        m_pInputGainLearnDialog->setWindowTitle ( tr ( "MIDI Learn" ) );
+        m_pInputGainLearnDialog->setWindowModality ( Qt::NonModal );
+        m_pInputGainLearnDialog->setAttribute ( Qt::WA_DeleteOnClose, false );
+
+        auto* pLayout = new QVBoxLayout ( m_pInputGainLearnDialog );
+        auto* pLabel  = new QLabel ( tr ( "Waiting for MIDI CC" ), m_pInputGainLearnDialog );
+        pLabel->setAlignment ( Qt::AlignCenter );
+        pLayout->addWidget ( pLabel );
+    }
+
+    if ( m_pInputGainLearnDialog )
+    {
+        m_pInputGainLearnDialog->show();
+        m_pInputGainLearnDialog->raise();
+        m_pInputGainLearnDialog->activateWindow();
+    }
+}
+
+void CClientDlg::ResetInputGainMidiLearn()
+{
+    m_inputGainLearnTarget = InputGainLearnNone;
+    if ( m_pInputGainLearnDialog )
+    {
+        m_pInputGainLearnDialog->close();
+        m_pInputGainLearnDialog->hide();
+    }
+}
+
+void CClientDlg::OnInputGainSliderContextMenu ( const QPoint& pos )
+{
+    auto* pSlider = qobject_cast<CCustomSlider*> ( sender() );
+    if ( !pSlider )
+    {
+        return;
+    }
+
+    const bool bLeft = ( pSlider == m_pInputGainSliderL );
+    QMenu      menu ( this );
+    QAction*   pLearnAction = menu.addAction ( tr ( "MIDI learn" ) );
+    QAction*   pClearAction = menu.addAction ( tr ( "Clear MIDI CC" ) );
+
+    QAction* pSelected = menu.exec ( pSlider->mapToGlobal ( pos ) );
+    if ( pSelected == pLearnAction )
+    {
+        StartInputGainMidiLearn ( bLeft ? InputGainLearnLeft : InputGainLearnRight );
+    }
+    else if ( pSelected == pClearAction )
+    {
+        if ( bLeft )
+            pSettings->iInputGainLMidiCC = -1;
+        else
+            pSettings->iInputGainRMidiCC = -1;
+        UpdateInputGainToolTips();
+        ResetInputGainMidiLearn();
+    }
+}
+
+void CClientDlg::OnInputGainMidiCCReceived ( int channel, int ccNumber, int midiValue )
+{
+    Q_UNUSED ( channel )
+
+    if ( ccNumber < 0 || ccNumber > 127 )
+    {
+        return;
+    }
+
+    const int iSliderValue = qRound ( ( static_cast<double> ( midiValue ) * 200.0 ) / 127.0 );
+
+    if ( m_inputGainLearnTarget != InputGainLearnNone )
+    {
+        if ( m_inputGainLearnTarget == InputGainLearnLeft )
+            pSettings->iInputGainLMidiCC = ccNumber;
+        else if ( m_inputGainLearnTarget == InputGainLearnRight )
+            pSettings->iInputGainRMidiCC = ccNumber;
+
+        UpdateInputGainToolTips();
+        ApplyInputGainValue ( m_inputGainLearnTarget, iSliderValue, true );
+        ResetInputGainMidiLearn();
+        return;
+    }
+
+    if ( ccNumber == pSettings->iInputGainLMidiCC )
+    {
+        ApplyInputGainValue ( InputGainLearnLeft, iSliderValue, true );
+    }
+
+    if ( ccNumber == pSettings->iInputGainRMidiCC )
+    {
+        ApplyInputGainValue ( InputGainLearnRight, iSliderValue, true );
+    }
 }
 
 void CClientDlg::OnOpenPluginLoader()

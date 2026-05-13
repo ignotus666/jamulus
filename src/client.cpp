@@ -66,6 +66,8 @@ CClient::CClient ( const quint16  iPortNumber,
     bReverbFreeze ( false ),
     bReverbBypass ( true ),
     iInputBoost ( 1 ),
+    fInputGainL ( 1.0f ),
+    fInputGainR ( 1.0f ),
     iSndCrdPrefFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
     iSndCrdFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
     bSndCrdConversionBufferRequired ( false ),
@@ -229,6 +231,12 @@ void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
 void CClient::SetSettings ( CClientSettings* settings )
 {
     pSettings = settings;
+
+    if ( pSettings != nullptr )
+    {
+        SetInputGainL ( static_cast<float> ( pSettings->iInputGainL ) / 100.0f );
+        SetInputGainR ( static_cast<float> ( pSettings->iInputGainR ) / 100.0f );
+    }
 
     // Apply MIDI settings
     Sound.SetCtrlMIDIChannel ( pSettings->iMidiChannel );
@@ -1440,44 +1448,82 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         }
     }
 
-    // update stereo signal level meter (not needed in headless mode)
-#ifndef HEADLESS
-    SignalLevelMeter.Update ( vecsStereoSndCrd, iMonoBlockSizeSam, true );
-#endif
-
-    // add reverberation effect if activated
-    if ( !bReverbBypass && iReverbLevel != 0 )
+    for ( i = 0, j = 0; i < iMonoBlockSizeSam; i++, j += 2 )
     {
-        SReverbParams sParams;
-        sParams.fWet          = static_cast<float> ( iReverbWetMix ) / REVERB_WET_MIX_MAX;
-        sParams.fDry          = 1.0f - sParams.fWet;
-        sParams.fEarlyLevel   = static_cast<float> ( iReverbEarlyLevel ) / REVERB_EARLY_LEVEL_MAX;
-        sParams.fWidth        = static_cast<float> ( iReverbWidth ) / REVERB_WIDTH_MAX;
-        sParams.fDamping      = static_cast<float> ( iReverbDamping ) / REVERB_DAMPING_MAX;
-        sParams.iPreDelayMs   = iReverbPreDelayMs;
-        sParams.bEarlyEnabled = bReverbEarlyEnabled;
-        sParams.bFreeze       = bReverbFreeze;
-
-        const float fRoomSize   = static_cast<float> ( iReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
-        sParams.fT60            = 0.3f + 4.2f * fRoomSize;
-        const float fLevelScale = static_cast<float> ( iReverbLevel ) / AUD_REVERB_MAX;
-        sParams.fWet *= fLevelScale;
-        sParams.fDry = 1.0f - sParams.fWet;
-        sParams.fEarlyLevel *= fLevelScale;
-
-        AudioReverb.Process ( vecsStereoSndCrd, bReverbOnLeftChan, sParams );
+        vecsStereoSndCrd[j]     = static_cast<int16_t> ( static_cast<float> ( vecsStereoSndCrd[j] ) * fInputGainL );
+        vecsStereoSndCrd[j + 1] = static_cast<int16_t> ( static_cast<float> ( vecsStereoSndCrd[j + 1] ) * fInputGainR );
     }
 
-    // apply filters and equalizer before dynamics
-    AudioFilter.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
-    AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
-    AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    const bool bHasPlugins = PluginHost.HasLoadedPlugins();
 
-    // process local output plugin chain (currently no-op scaffold)
-    PluginHost.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    if ( bHasPlugins )
+    {
+        // Keep a dry copy for routing and a wet copy for plugin output.
+        CVector<int16_t> vecsDryInput ( vecsStereoSndCrd );
+        CVector<int16_t> vecsWetInput ( vecsStereoSndCrd );
+
+        // process local input plugin chain before transmission
+        PluginHost.Process ( vecsWetInput, iStereoBlockSizeSam );
+
+        if ( eAudioChannelConf == CC_MONO_IN_STEREO_OUT )
+        {
+            for ( i = 0, j = 0; i < iMonoBlockSizeSam; ++i, j += 2 )
+            {
+                const float fDryMono = 0.5f * ( static_cast<float> ( vecsDryInput[j] ) + static_cast<float> ( vecsDryInput[j + 1] ) );
+                float       fMixL    = ( fDryMono + static_cast<float> ( vecsWetInput[j] ) ) * 0.5f;
+                float       fMixR    = ( fDryMono + static_cast<float> ( vecsWetInput[j + 1] ) ) * 0.5f;
+
+                if ( fMixL > 32767.0f ) fMixL = 32767.0f;
+                if ( fMixL < -32768.0f ) fMixL = -32768.0f;
+                if ( fMixR > 32767.0f ) fMixR = 32767.0f;
+                if ( fMixR < -32768.0f ) fMixR = -32768.0f;
+
+                vecsStereoSndCrd[j]     = static_cast<int16_t> ( fMixL );
+                vecsStereoSndCrd[j + 1] = static_cast<int16_t> ( fMixR );
+            }
+        }
+        else
+        {
+            for ( i = 0, j = 0; i < iMonoBlockSizeSam; ++i, j += 2 )
+            {
+                float fMixL = ( static_cast<float> ( vecsDryInput[j] ) + static_cast<float> ( vecsWetInput[j] ) ) * 0.5f;
+                float fMixR = ( static_cast<float> ( vecsDryInput[j + 1] ) + static_cast<float> ( vecsWetInput[j + 1] ) ) * 0.5f;
+
+                if ( fMixL > 32767.0f ) fMixL = 32767.0f;
+                if ( fMixL < -32768.0f ) fMixL = -32768.0f;
+                if ( fMixR > 32767.0f ) fMixR = 32767.0f;
+                if ( fMixR < -32768.0f ) fMixR = -32768.0f;
+
+                vecsStereoSndCrd[j]     = static_cast<int16_t> ( fMixL );
+                vecsStereoSndCrd[j + 1] = static_cast<int16_t> ( fMixR );
+            }
+        }
+
+        // Update meter after plugins so it reflects processed input.
+#ifndef HEADLESS
+        SignalLevelMeter.Update ( vecsStereoSndCrd, iMonoBlockSizeSam, true );
+#endif
+    }
+    else
+    {
+        // Update meter on the direct input when no plugin is loaded.
+#ifndef HEADLESS
+        SignalLevelMeter.Update ( vecsStereoSndCrd, iMonoBlockSizeSam, true );
+#endif
+
+        if ( eAudioChannelConf == CC_MONO_IN_STEREO_OUT )
+        {
+            for ( i = iMonoBlockSizeSam - 1, j = iStereoBlockSizeSam - 2; i >= 0; --i, j -= 2 )
+            {
+                const float fDryMono = 0.5f * ( static_cast<float> ( vecsStereoSndCrd[i * 2] ) + static_cast<float> ( vecsStereoSndCrd[i * 2 + 1] ) );
+                const int16_t iMono  = Float2Short ( fDryMono );
+                vecsStereoSndCrd[j] = vecsStereoSndCrd[j + 1] = iMono;
+            }
+        }
+    }
 
     // apply pan (audio fader) and mix mono signals
-    if ( !( ( iAudioInFader == AUD_FADER_IN_MIDDLE ) && ( eAudioChannelConf == CC_STEREO ) ) )
+    if ( !bHasPlugins && ( eAudioChannelConf != CC_MONO_IN_STEREO_OUT ) && !( ( iAudioInFader == AUD_FADER_IN_MIDDLE ) && ( eAudioChannelConf == CC_STEREO ) ) )
     {
         // calculate pan gain in the range 0 to 1, where 0.5 is the middle position
         const float fPan = static_cast<float> ( iAudioInFader ) / AUD_FADER_IN_MAX;
@@ -1498,31 +1544,29 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         }
         else
         {
-            // for mono implement a cross-fade between channels and mix them, for
-            // mono-in/stereo-out use no attenuation in pan center
-            const float fGainL = MathUtils::GetLeftPan ( fPan, eAudioChannelConf != CC_MONO_IN_STEREO_OUT );
-            const float fGainR = MathUtils::GetRightPan ( fPan, eAudioChannelConf != CC_MONO_IN_STEREO_OUT );
+            // For mono keep the classic pan crossfade.
+            const float fGainL = MathUtils::GetLeftPan ( fPan, true );
+            const float fGainR = MathUtils::GetRightPan ( fPan, true );
 
             for ( i = 0, j = 0; i < iMonoBlockSizeSam; i++, j += 2 )
             {
-                // note that we need the Float2Short for stereo pan mode
                 vecsStereoSndCrd[i] = Float2Short ( fGainL * vecsStereoSndCrd[j] + fGainR * vecsStereoSndCrd[j + 1] );
             }
         }
-    }
 
-    // Support for mono-in/stereo-out mode: Per definition this mode works in
-    // full stereo mode at the transmission level. The only thing which is done
-    // is to mix both sound card inputs together and then put this signal on
-    // both stereo channels to be transmitted to the server.
-    if ( eAudioChannelConf == CC_MONO_IN_STEREO_OUT )
-    {
-        // copy mono data in stereo sound card buffer (note that since the input
-        // and output is the same buffer, we have to start from the end not to
-        // overwrite input values)
-        for ( i = iMonoBlockSizeSam - 1, j = iStereoBlockSizeSam - 2; i >= 0; i--, j -= 2 )
+        // Support for mono-in/stereo-out mode: Per definition this mode works in
+        // full stereo mode at the transmission level. The only thing which is done
+        // is to mix both sound card inputs together and then put this signal on
+        // both stereo channels to be transmitted to the server.
+        if ( eAudioChannelConf == CC_MONO_IN_STEREO_OUT )
         {
-            vecsStereoSndCrd[j] = vecsStereoSndCrd[j + 1] = vecsStereoSndCrd[i];
+            // copy mono data in stereo sound card buffer (note that since the input
+            // and output is the same buffer, we have to start from the end not to
+            // overwrite input values)
+            for ( i = iMonoBlockSizeSam - 1, j = iStereoBlockSizeSam - 2; i >= 0; i--, j -= 2 )
+            {
+                vecsStereoSndCrd[j] = vecsStereoSndCrd[j + 1] = vecsStereoSndCrd[i];
+            }
         }
     }
 
@@ -1616,6 +1660,33 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             vecsStereoSndCrd[i] = Float2Short ( vecsStereoSndCrd[i] + vecsStereoSndCrdMuteStream[i] * fMuteOutStreamGain );
         }
     }
+
+    // apply built-in effects to the received (mixed) signal
+    if ( !bReverbBypass && iReverbLevel != 0 )
+    {
+        SReverbParams sParams;
+        sParams.fWet          = static_cast<float> ( iReverbWetMix ) / REVERB_WET_MIX_MAX;
+        sParams.fDry          = 1.0f - sParams.fWet;
+        sParams.fEarlyLevel   = static_cast<float> ( iReverbEarlyLevel ) / REVERB_EARLY_LEVEL_MAX;
+        sParams.fWidth        = static_cast<float> ( iReverbWidth ) / REVERB_WIDTH_MAX;
+        sParams.fDamping      = static_cast<float> ( iReverbDamping ) / REVERB_DAMPING_MAX;
+        sParams.iPreDelayMs   = iReverbPreDelayMs;
+        sParams.bEarlyEnabled = bReverbEarlyEnabled;
+        sParams.bFreeze       = bReverbFreeze;
+
+        const float fRoomSize   = static_cast<float> ( iReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
+        sParams.fT60            = 0.3f + 4.2f * fRoomSize;
+        const float fLevelScale = static_cast<float> ( iReverbLevel ) / AUD_REVERB_MAX;
+        sParams.fWet *= fLevelScale;
+        sParams.fDry = 1.0f - sParams.fWet;
+        sParams.fEarlyLevel *= fLevelScale;
+
+        AudioReverb.Process ( vecsStereoSndCrd, bReverbOnLeftChan, sParams );
+    }
+
+    AudioFilter.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
 
     // check if channel is connected and if we do not have the initialization phase
     if ( Channel.IsConnected() && ( !bIsInitializationPhase ) )

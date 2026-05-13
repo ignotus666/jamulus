@@ -6,16 +6,12 @@
 #include <QVector>
 #include <QStringList>
 
-class CClient;
+#include "ui_pluginloaderdlgbase.h"
 
-class QListWidget;
-class QComboBox;
-class QPushButton;
-class QLabel;
-class QDialog;
+class CClient;
 class QPoint;
 
-class CPluginLoaderDlg : public QDialog
+class CPluginLoaderDlg : public QDialog, private Ui_CPluginLoaderDlgBase
 {
     Q_OBJECT
 
@@ -48,22 +44,6 @@ private:
     void SaveFavorites();
 
     CClient* pClient;
-
-    QListWidget* lstPaths;
-    QPushButton* butAddPath;
-    QPushButton* butRemovePath;
-    QPushButton* butScan;
-
-    QLabel* lblFavorites;
-    QComboBox* cmbFavorites;
-
-    QListWidget* lstPlugins;
-    QPushButton* butLoad;
-    QPushButton* butUnload;
-    QPushButton* butShowUI;
-    QPushButton* butClose;
-
-    QLabel* lblStatus;
 
     QMap<QString,int> m_loadedPlugins; // path -> plugin id
     QVector<QDialog*> m_editorWindows;

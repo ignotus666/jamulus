@@ -135,6 +135,12 @@ void CPluginHost::Clear()
 	vecPlugins.clear();
 }
 
+bool CPluginHost::HasLoadedPlugins()
+{
+	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	return !vecPlugins.empty();
+}
+
 int CPluginHost::LoadPlugin ( const std::string & sPath )
 {
 	StartLoaderThread();

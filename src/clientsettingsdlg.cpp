@@ -308,10 +308,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                                     "will increase your stream's data rate. Make sure your upload rate does not "
                                     "exceed the available upload speed of your internet connection." ) +
                                "</li>"
-                               "</ul>" +
-                               tr ( "In stereo streaming mode, no audio channel selection "
-                                    "for the reverb effect will be available on the main window "
-                                    "since the effect is applied to both channels in this case." );
+                             "</ul>";
 
     lblAudioChannels->setWhatsThis ( strAudioChannels );
     cbxAudioChannels->setWhatsThis ( strAudioChannels );

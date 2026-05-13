@@ -1,6 +1,4 @@
 #include "pluginloaderdlg.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QComboBox>
 #include <QListWidget>
 #include <QPushButton>
@@ -136,40 +134,23 @@ static void SavePluginPaths ( QListWidget* pList )
 
 CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDialog ( parent ), pClient ( pClientP )
 {
+    setupUi ( this );
+
     Qt::WindowFlags flags = windowFlags();
     flags &= ~Qt::WindowStaysOnTopHint;
     flags &= ~Qt::Tool;
     flags &= ~Qt::Dialog;
     flags |= Qt::Window;
+    flags |= Qt::WindowMinimizeButtonHint;
     setWindowFlags ( flags );
 
     setWindowTitle ( tr ( "Plugins" ) );
     setMinimumSize ( 600, 400 );
     setWindowModality ( Qt::NonModal );
 
-    QVBoxLayout* pMain = new QVBoxLayout ( this );
-
-    lblFavorites = new QLabel ( tr ( "Favorites" ) );
-    cmbFavorites = new QComboBox();
     cmbFavorites->setSizeAdjustPolicy ( QComboBox::AdjustToContentsOnFirstShow );
     cmbFavorites->setMinimumWidth ( 320 );
     cmbFavorites->setContextMenuPolicy ( Qt::CustomContextMenu );
-    cmbFavorites->setStyleSheet ( QStringLiteral(
-        "QComboBox QAbstractItemView {"
-        " background-color: %1;"
-        " color: %2;"
-        " selection-background-color: %3;"
-        " selection-color: %4;"
-        " }" )
-                                          .arg ( palette().color ( QPalette::Base ).name(),
-                                                 palette().color ( QPalette::Text ).name(),
-                                                 palette().color ( QPalette::Highlight ).name(),
-                                                 palette().color ( QPalette::HighlightedText ).name() ) );
-
-    QVBoxLayout* pFavoritesCol = new QVBoxLayout();
-    pFavoritesCol->addWidget ( lblFavorites );
-    pFavoritesCol->addWidget ( cmbFavorites );
-    pMain->addLayout ( pFavoritesCol );
 
     connect ( cmbFavorites, &QComboBox::customContextMenuRequested,
               this, &CPluginLoaderDlg::OnFavoritesContextMenu );
@@ -180,50 +161,16 @@ CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDia
               this, &CPluginLoaderDlg::OnFavoriteActivated );
 
     // Path controls
-    QHBoxLayout* pPathRow = new QHBoxLayout();
-    lstPaths = new QListWidget();
     lstPaths->setSelectionMode ( QListWidget::SingleSelection );
-    butAddPath = new QPushButton ( tr ( "Add Path..." ) );
-    butRemovePath = new QPushButton ( tr ( "Remove Path" ) );
-    butScan = new QPushButton ( tr ( "Scan" ) );
-
-    pPathRow->addWidget ( lstPaths );
-
-    QVBoxLayout* pPathButtons = new QVBoxLayout();
-    pPathButtons->addWidget ( butAddPath );
-    pPathButtons->addWidget ( butRemovePath );
-    pPathButtons->addWidget ( butScan );
-    pPathButtons->addStretch();
-
-    pPathRow->addLayout ( pPathButtons );
-    pMain->addLayout ( pPathRow );
 
     // Plugins list
-    lstPlugins = new QListWidget();
     lstPlugins->setSelectionMode ( QListWidget::SingleSelection );
     lstPlugins->setContextMenuPolicy ( Qt::CustomContextMenu );
-    pMain->addWidget ( lstPlugins );
 
     connect ( lstPlugins, &QListWidget::customContextMenuRequested,
               this, &CPluginLoaderDlg::OnPluginListContextMenu );
 
     // Load/Close buttons
-    QHBoxLayout* pBottom = new QHBoxLayout();
-    butLoad = new QPushButton ( tr ( "Load" ) );
-    butUnload = new QPushButton ( tr ( "Unload" ) );
-    butShowUI = new QPushButton ( tr ( "Show UI" ) );
-    butClose = new QPushButton ( tr ( "Close" ) );
-    lblStatus = new QLabel ( "" );
-
-    pBottom->addWidget ( lblStatus );
-    pBottom->addStretch();
-    pBottom->addWidget ( butShowUI );
-    pBottom->addWidget ( butUnload );
-    pBottom->addWidget ( butLoad );
-    pBottom->addWidget ( butClose );
-
-    pMain->addLayout ( pBottom );
-
     connect ( butAddPath, &QPushButton::clicked, this, &CPluginLoaderDlg::OnAddPath );
     connect ( butRemovePath, &QPushButton::clicked, this, &CPluginLoaderDlg::OnRemovePath );
     connect ( butScan, &QPushButton::clicked, this, &CPluginLoaderDlg::OnScanPaths );
@@ -667,20 +614,13 @@ void CPluginLoaderDlg::OnShowSelectedPluginUI()
 
 void CPluginLoaderDlg::UpdateLoadedPluginsDisplay()
 {
-    const QPalette listPalette = lstPlugins->palette();
-    const QColor baseBg = listPalette.color ( QPalette::Base );
-    const QColor textFg = listPalette.color ( QPalette::Text );
-    QColor loadedBg = listPalette.color ( QPalette::AlternateBase );
-    if ( loadedBg == baseBg )
-        loadedBg = listPalette.color ( QPalette::Highlight ).lighter ( 170 );
-
     // Add visual indicator for loaded plugins
     for ( int i = 0; i < lstPlugins->count(); ++i )
     {
         QListWidgetItem* item = lstPlugins->item ( i );
         QString path = item->data ( Qt::UserRole ).toString();
         const bool bIsFavorite = m_favoritePlugins.contains ( path );
-        
+
         if ( m_loadedPlugins.contains ( path ) )
         {
             int iId = m_loadedPlugins.value ( path );
@@ -692,8 +632,6 @@ void CPluginLoaderDlg::UpdateLoadedPluginsDisplay()
                 loadedName.append ( " [FAV]" );
             loadedName.append ( " [LOADED #" + QString::number ( iId ) + "]" );
             item->setText ( loadedName );
-            item->setBackground ( loadedBg );
-            item->setForeground ( textFg );
         }
         else
         {
@@ -704,8 +642,6 @@ void CPluginLoaderDlg::UpdateLoadedPluginsDisplay()
             if ( bIsFavorite )
                 normalName.append ( " [FAV]" );
             item->setText ( normalName );
-            item->setBackground ( baseBg );
-            item->setForeground ( textFg );
         }
     }
 }

@@ -335,6 +335,11 @@ public:
 
     void SetInputBoost ( const int iNewBoost ) { iInputBoost = iNewBoost; }
 
+    void SetInputGainL ( const float fNewGain ) { fInputGainL = std::max ( 0.0f, std::min ( 2.0f, fNewGain ) ); }
+    void SetInputGainR ( const float fNewGain ) { fInputGainR = std::max ( 0.0f, std::min ( 2.0f, fNewGain ) ); }
+    float GetInputGainL() const { return fInputGainL; }
+    float GetInputGainR() const { return fInputGainR; }
+
     void SetRemoteInfo() { Channel.SetRemoteInfo ( ChannelInfo ); }
 
     void CreateChatTextMes ( const QString& strChatText ) { Channel.CreateChatTextMes ( strChatText ); }
@@ -471,7 +476,9 @@ protected:
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
     CAudioFilter     AudioFilter;
-    int iInputBoost;
+    int              iInputBoost;
+    float            fInputGainL;
+    float            fInputGainR;
     CPluginHost PluginHost;
 
     int iSndCrdPrefFrameSizeFactor;
