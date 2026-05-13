@@ -80,7 +80,7 @@ public:
     virtual void Stop();
 
     bool GetCallbackEntered() const { return bCallbackEntered; }
-    bool IsRunning() const { return bRun; }
+    bool isRunning() const { return bRun; }
 
     // device selection
     QStringList GetDevNames();
