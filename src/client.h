@@ -148,7 +148,7 @@ public:
 
     void Start();
     void Stop();
-    bool IsRunning() { return Sound.isRunning(); }
+    bool IsRunning() { return Sound.IsRunning(); }
     bool IsCallbackEntered() const { return Sound.GetCallbackEntered(); }
     bool SetServerAddr ( QString strNAddr );
 

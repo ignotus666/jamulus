@@ -877,43 +877,15 @@ void CServer::DecodeReceiveData ( const int iChanCnt, const int iNumClients )
                 return;
             }
 
-            const int iOffset = iB * SYSTEM_FRAME_SIZE_SAMPLES * vecNumAudioChannels[iChanCnt];
-            // Recognise a raw audio packet by its size:
-            // The client doesn't pass a value for the selected audio quality implicitly.
-            // Rather the server is passed the length of the data sent by the client in iClientFrameSizeSamples.
-            // We know the exact size to expect from a client sending raw audio packets.
-            // The length is calculated in the client by: iNumAudioChannels * iOPUSFrameSizeSamples * sizeof ( int16_t )
-            // iOPUSFrameSizeSamples can be either 64 or 128 (small network buffers enabled|disabled)
-            // iNumAudioChannels is either 1 for mono or 2 for stereo and mono-in/stereo-out
-            // sizeof ( int16_t ) is the size in bytes for the raw pcm audio data = 2
-            // Sizes other than that are considered OPUS coded because those depend on hardcoded sizes in client.h
-            const bool bIsRawAudio =
-                ( iCeltNumCodedBytes == static_cast<int> ( sizeof ( int16_t ) * iClientFrameSizeSamples * vecNumAudioChannels[iChanCnt] ) );
-
             // get pointer to coded data
             if ( eGetStat == GS_BUFFER_OK )
             {
-                if ( bIsRawAudio )
-                {
-                    memcpy ( &vecvecsData[iChanCnt][iOffset], &vecvecbyCodedData[iChanCnt][0], iCeltNumCodedBytes );
-                    pCurCodedData = nullptr;
-                }
-                else
-                {
-                    pCurCodedData = &vecvecbyCodedData[iChanCnt][0];
-                }
+                pCurCodedData = &vecvecbyCodedData[iChanCnt][0];
             }
             else
             {
-                if ( bIsRawAudio )
-                {
-                    memset ( &vecvecsData[iChanCnt][iOffset], 0, iCeltNumCodedBytes );
-                }
-                else
-                {
-                    // for lost packets use null pointer as coded input data
-                    pCurCodedData = nullptr;
-                }
+                // for lost packets use null pointer as coded input data
+                pCurCodedData = nullptr;
             }
 
             // Recognise a raw audio packet by its size:

@@ -260,7 +260,7 @@ void CClient::SetSettings ( CClientSettings* settings )
 CClient::~CClient()
 {
     // if we were running, stop sound device
-    if ( Sound.isRunning() )
+    if ( Sound.IsRunning() )
     {
         Sound.Stop();
     }
@@ -436,7 +436,7 @@ void CClient::OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo )
 void CClient::OnVersionAndOSReceived ( COSUtil::EOpSystemType eOSType, QString strVersion )
 {
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -703,7 +703,7 @@ void CClient::SetSndCrdPrefFrameSizeFactor ( const int iNewFactor )
     {
         // init with new parameter, if client was running then first
         // stop it and restart again after new initialization
-        const bool bWasRunning = Sound.isRunning();
+        const bool bWasRunning = Sound.IsRunning();
         if ( bWasRunning )
         {
             Sound.Stop();
@@ -727,7 +727,7 @@ void CClient::SetEnableOPUS64 ( const bool eNEnableOPUS64 )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -747,7 +747,7 @@ void CClient::SetAudioQuality ( const EAudioQuality eNAudioQuality )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -767,7 +767,7 @@ void CClient::SetAudioChannels ( const EAudChanConf eNAudChanConf )
 {
     // init with new parameter, if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -787,7 +787,7 @@ QString CClient::SetSndCrdDev ( const QString strNewDev )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -818,7 +818,7 @@ void CClient::SetSndCrdLeftInputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -838,7 +838,7 @@ void CClient::SetSndCrdRightInputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -858,7 +858,7 @@ void CClient::SetSndCrdLeftOutputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -878,7 +878,7 @@ void CClient::SetSndCrdRightOutputChannel ( const int iNewChan )
 {
     // if client was running then first
     // stop it and restart again after new initialization
-    const bool bWasRunning = Sound.isRunning();
+    const bool bWasRunning = Sound.IsRunning();
     if ( bWasRunning )
     {
         Sound.Stop();
@@ -908,7 +908,7 @@ void CClient::OnSndCrdReinitRequest ( int iSndCrdResetType )
 
         // if client was running then first
         // stop it and restart again after new initialization
-        const bool bWasRunning = Sound.isRunning();
+        const bool bWasRunning = Sound.IsRunning();
         if ( bWasRunning )
         {
             Sound.Stop();
