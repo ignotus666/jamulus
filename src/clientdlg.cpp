@@ -23,11 +23,84 @@
 \******************************************************************************/
 
 #include "clientdlg.h"
+#include <array>
+#include <chrono>
+#include <deque>
 #include <QBoxLayout>
 #include <QFile>
 #include "customslider.h"
 #include "util.h"
 #include "plugins/pluginloaderdlg.h"
+
+namespace
+{
+struct InputGainPickupState
+{
+    std::deque<int>                       recentMidiValues;
+    std::chrono::steady_clock::time_point lastMidiTime;
+};
+
+std::array<InputGainPickupState, 2> g_inputGainPickupStates;
+std::array<bool, 2>                 g_inputGainPickupInitialized { false, false };
+std::array<bool, 2>                 g_inputGainPickupWaitingForPickup { false, false };
+
+static void inputGainPickupInactivityCheck ( int                                    iTargetIdx,
+                                             std::chrono::steady_clock::time_point& lastMidiTime,
+                                             std::deque<int>&                       pickupBuffer,
+                                             std::array<bool, 2>&                   waitingFlags )
+{
+    auto now = std::chrono::steady_clock::now();
+    if ( lastMidiTime.time_since_epoch().count() > 0 )
+    {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds> ( now - lastMidiTime ).count();
+        if ( elapsed > MIDI_PICKUP_INACTIVITY_TIMEOUT_MS )
+        {
+            waitingFlags[static_cast<size_t> ( iTargetIdx )] = true;
+            pickupBuffer.clear();
+        }
+    }
+    lastMidiTime = now;
+}
+
+template<typename T>
+static bool inputGainPickupShouldApply ( int midiValue, int currentValue, int tolerance, const std::deque<T>& recentMidiValues )
+{
+    if ( std::abs ( midiValue - currentValue ) <= tolerance )
+        return true;
+
+    if ( recentMidiValues.size() >= 2 )
+    {
+        int prevMidi = recentMidiValues.back();
+        if ( ( prevMidi <= currentValue && midiValue >= currentValue ) || ( prevMidi >= currentValue && midiValue <= currentValue ) )
+            return true;
+    }
+
+    return false;
+}
+
+template<typename T>
+static bool inputGainPickupTryApply ( int midiValue, int currentValue, int tolerance, std::deque<T>& pickupBuffer, bool waitingForPickup )
+{
+    if ( waitingForPickup )
+    {
+        std::deque<int> tempPickup = pickupBuffer;
+        if ( tempPickup.size() >= MIDI_PICKUP_HISTORY )
+            tempPickup.pop_front();
+        tempPickup.push_back ( midiValue );
+
+        if ( !inputGainPickupShouldApply ( midiValue, currentValue, tolerance, tempPickup ) )
+            return true;
+
+        waitingForPickup = false;
+    }
+
+    if ( pickupBuffer.size() >= MIDI_PICKUP_HISTORY )
+        pickupBuffer.pop_front();
+    pickupBuffer.push_back ( midiValue );
+
+    return waitingForPickup;
+}
+} // namespace
 
 /* Implementation *************************************************************/
 CClientDlg::CClientDlg ( CClient*         pNCliP,
@@ -110,10 +183,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pInputGainSliderL->setValue ( pSettings->iInputGainL );
     pInputGainSliderR->setValue ( pSettings->iInputGainR );
 
-    m_pInputGainLinkCheck = new QCheckBox ( tr ( "Link" ), backgroundFrame );
-    m_pInputGainLinkCheck->setChecked ( pSettings->bInputGainLink );
+    m_pInputGainLinkCheck = new QCheckBox ( tr ( "Unlink" ), backgroundFrame );
+    m_pInputGainLinkCheck->setChecked ( !pSettings->bInputGainLink );
     m_pInputGainLinkCheck->setVisible ( pClient->GetAudioChannels() == CC_STEREO );
-    m_pInputGainLinkCheck->setToolTip ( tr ( "Keep both input gain sliders in sync while in stereo mode." ) );
+    m_pInputGainLinkCheck->setToolTip ( tr ( "When enabled, the left and right input gain sliders move independently in stereo mode." ) );
     m_pInputGainLinkCheck->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Fixed );
     m_pInputGainLinkCheck->setCursor ( Qt::PointingHandCursor );
 
@@ -122,8 +195,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     connect ( pInputGainSliderL, &QWidget::customContextMenuRequested, this, &CClientDlg::OnInputGainSliderContextMenu );
     connect ( pInputGainSliderR, &QWidget::customContextMenuRequested, this, &CClientDlg::OnInputGainSliderContextMenu );
     connect ( m_pInputGainLinkCheck, &QCheckBox::toggled, this, [this] ( bool checked ) {
-        pSettings->bInputGainLink = checked;
-        if ( checked && pClient->GetAudioChannels() == CC_STEREO && m_pInputGainSliderL && m_pInputGainSliderR )
+        pSettings->bInputGainLink = !checked;
+        if ( !checked && pClient->GetAudioChannels() == CC_STEREO && m_pInputGainSliderL && m_pInputGainSliderR )
         {
             m_bInputGainSliderUpdateLock = true;
             const int value = m_pInputGainSliderL->value();
@@ -1307,9 +1380,23 @@ void CClientDlg::OnTimerSigMet()
 
     if ( EffectsDlg.isVisible() )
     {
-        CVector<float> vecOutLevels;
-        pClient->GetOutputBandLevels ( vecOutLevels );
-        EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
+        if ( pClient->GetEQBypass() )
+        {
+            pClient->SetEQBandMeterActive ( false );
+            EffectsDlg.UpdateOutputBandLevels ( CVector<float> ( 16, 0.0f ) );
+        }
+        else
+        {
+            pClient->SetEQBandMeterActive ( true );
+
+            CVector<float> vecOutLevels;
+            pClient->GetOutputBandLevels ( vecOutLevels );
+            EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
+        }
+    }
+    else
+    {
+        pClient->SetEQBandMeterActive ( false );
     }
 
     if ( bDetectFeedback &&
@@ -1852,10 +1939,8 @@ void CClientDlg::UpdateInputGainControls()
     if ( m_pInputGainLinkCheck != nullptr )
     {
         m_pInputGainLinkCheck->setVisible ( bStereo );
-        if ( !bStereo )
-            m_pInputGainLinkCheck->setChecked ( false );
-        else
-            m_pInputGainLinkCheck->setChecked ( pSettings->bInputGainLink );
+        if ( bStereo )
+            m_pInputGainLinkCheck->setChecked ( !pSettings->bInputGainLink );
     }
 
     if ( m_pInputGainSliderL != nullptr )
@@ -1875,7 +1960,34 @@ void CClientDlg::ApplyInputGainValue ( InputGainMidiLearnTarget target, int valu
 
     const int iClampedValue = qMax ( 0, qMin ( 200, value ) );
     const float fGain       = static_cast<float> ( iClampedValue ) / 100.0f;
-    const bool  bLinked     = ( m_pInputGainLinkCheck != nullptr ) && m_pInputGainLinkCheck->isChecked() && pClient->GetAudioChannels() == CC_STEREO;
+    const bool  bLinked     = ( m_pInputGainLinkCheck != nullptr ) && !m_pInputGainLinkCheck->isChecked() && pClient->GetAudioChannels() == CC_STEREO;
+    const int   iTargetIdx  = ( target == InputGainLearnLeft ) ? 0 : 1;
+
+    if ( bFromMidi && pSettings && pSettings->bMIDIPickupMode )
+    {
+        auto& pickupState = g_inputGainPickupStates[static_cast<size_t> ( iTargetIdx )];
+
+        if ( !g_inputGainPickupInitialized[static_cast<size_t> ( iTargetIdx )] )
+        {
+            g_inputGainPickupInitialized[static_cast<size_t> ( iTargetIdx )]      = true;
+            g_inputGainPickupWaitingForPickup[static_cast<size_t> ( iTargetIdx )] = true;
+            pickupState.recentMidiValues.clear();
+        }
+        else
+        {
+            inputGainPickupInactivityCheck ( iTargetIdx, pickupState.lastMidiTime, pickupState.recentMidiValues, g_inputGainPickupWaitingForPickup );
+        }
+
+        int current = ( target == InputGainLearnLeft ) ? m_pInputGainSliderL->value() : m_pInputGainSliderR->value();
+        bool waiting = g_inputGainPickupWaitingForPickup[static_cast<size_t> ( iTargetIdx )];
+        waiting = inputGainPickupTryApply ( iClampedValue, current, MIDI_PICKUP_TOLERANCE, pickupState.recentMidiValues, waiting );
+        g_inputGainPickupWaitingForPickup[static_cast<size_t> ( iTargetIdx )] = waiting;
+
+        if ( waiting )
+        {
+            return;
+        }
+    }
 
     m_bInputGainSliderUpdateLock = true;
 

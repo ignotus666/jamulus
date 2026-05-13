@@ -158,7 +158,7 @@ public:
         iInputGainR ( 100 ),
         iInputGainLMidiCC ( -1 ),
         iInputGainRMidiCC ( -1 ),
-        bInputGainLink ( false ),
+        bInputGainLink ( true ),
         iSettingsTab ( SETTING_TAB_AUDIONET ),
         iEffectsTab ( 0 ),
         bConnectDlgShowAllMusicians ( true ),
@@ -239,7 +239,7 @@ public:
                 aiEffectsPresetEQBandGainDb[iPreset][iBand] = 0;
             }
 
-            iEffectsPresetReverbLevel[iPreset]        = 0;
+            iEffectsPresetReverbLevel[iPreset]        = AUD_REVERB_DEFAULT;
             iEffectsPresetReverbPreDelayMs[iPreset]   = 0;
             iEffectsPresetReverbRoomSize[iPreset]     = 60;
             iEffectsPresetReverbDamping[iPreset]      = 30;

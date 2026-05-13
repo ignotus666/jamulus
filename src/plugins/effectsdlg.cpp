@@ -329,6 +329,21 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     CBaseDlg::showEvent ( Event );
 }
 
+void CEffectsDlg::hideEvent ( QHideEvent* Event )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandMeterActive ( false );
+    }
+
+    if ( pOutputBandMeterSafe )
+    {
+        pOutputBandMeterSafe->SetLevels ( CVector<float> ( 16, 0.0f ) );
+    }
+
+    CBaseDlg::hideEvent ( Event );
+}
+
 void CEffectsDlg::OnUIThemeChanged() { ApplyThemeToCustomWidgets(); }
 
 void CEffectsDlg::ApplyThemeToCustomWidgets()
@@ -752,7 +767,7 @@ void CEffectsDlg::OnSaveEffectsPresetClicked()
 
 void CEffectsDlg::OnResetReverbClicked()
 {
-    pClient->SetReverbLevel ( 0 );
+    pClient->SetReverbLevel ( AUD_REVERB_DEFAULT );
     pClient->SetReverbOnLeftChan ( false );
     pClient->SetReverbPreDelayMs ( 0 );
     pClient->SetReverbRoomSize ( 60 );
@@ -875,7 +890,7 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
         pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = 0;
     }
 
-    pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = 0;
+    pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = AUD_REVERB_DEFAULT;
     pSettings->iEffectsPresetReverbPreDelayMs[iPresetSlot]   = 0;
     pSettings->iEffectsPresetReverbRoomSize[iPresetSlot]     = 60;
     pSettings->iEffectsPresetReverbDamping[iPresetSlot]      = 30;

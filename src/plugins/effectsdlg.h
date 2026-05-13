@@ -30,6 +30,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QRadioButton>
+#include <QHideEvent>
 #include "customslider.h"
 #include <QTabWidget>
 #include <QPointer>
@@ -60,6 +61,7 @@ public:
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
+    virtual void hideEvent ( QHideEvent* Event ) override;
     virtual void resizeEvent ( QResizeEvent* Event ) override;
 
 signals:

@@ -149,6 +149,7 @@ public:
         }
     }
     void CreateClientIDMes ( const int iChanID ) { Protocol.CreateClientIDMes ( iChanID ); }
+    void CreateRawAudioSupportedMes() { Protocol.CreateRawAudioSupportedMes(); }
     void CreateReqNetwTranspPropsMes() { Protocol.CreateReqNetwTranspPropsMes(); }
     void CreateReqSplitMessSupportMes() { Protocol.CreateReqSplitMessSupportMes(); }
     void CreateReqJitBufMes() { Protocol.CreateReqJitBufMes(); }
@@ -270,6 +271,7 @@ signals:
     void ServerAutoSockBufSizeChange ( int iNNumFra );
     void ReqConnClientsList();
     void ConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo );
+    void RawAudioSupported();
     void ChanInfoHasChanged();
     void ClientIDReceived ( int iChanID );
     void MuteStateHasChanged ( int iChanID, bool bIsMuted );

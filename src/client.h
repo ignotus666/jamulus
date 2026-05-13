@@ -77,6 +77,7 @@
 
 // audio reverberation range
 #define AUD_REVERB_MAX          100
+#define AUD_REVERB_DEFAULT      25
 #define REVERB_PRE_DELAY_MAX_MS 120
 #define REVERB_ROOM_SIZE_MAX    100
 #define REVERB_DAMPING_MAX      100
@@ -219,6 +220,7 @@ public:
     void SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
     void ResetEQ() { AudioEqualizer.Reset(); }
     bool GetEQBypass() const { return AudioEqualizer.GetBypass(); }
+    void SetEQBandMeterActive ( const bool bActive ) { bEQBandMeterActive = bActive; }
     int  GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
 
     void  SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
@@ -472,6 +474,7 @@ protected:
     bool             bReverbEarlyEnabled;
     bool             bReverbFreeze;
     bool             bReverbBypass;
+    bool             bEQBandMeterActive;
     CAudioReverb     AudioReverb;
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
@@ -556,10 +559,10 @@ protected slots:
     void OnControllerInFaderIsMute ( int iChannelIdx, bool bIsMute );
     void OnControllerInMuteMyself ( bool bMute );
     void OnClientIDReceived ( int iServerChanID );
+    void OnRawAudioSupported();
     void OnMuteStateHasChangedReceived ( int iServerChanID, bool bIsMuted );
     void OnCLChannelLevelListReceived ( CHostAddress InetAddr, CVector<uint16_t> vecLevelList );
     void OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo );
-    void OnVersionAndOSReceived ( COSUtil::EOpSystemType eOSType, QString strVersion );
 
 signals:
     void ConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo );
