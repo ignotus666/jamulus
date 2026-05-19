@@ -115,6 +115,7 @@ int main ( int argc, char** argv )
     bool         bDisconnectAllClientsOnQuit = false;
     bool         bUseDoubleSystemFrameSize   = true; // default is 128 samples frame size
     bool         bUseMultithreading          = false;
+    bool         bDisableRaw                 = false;
     bool         bShowAnalyzerConsole        = false;
     bool         bMuteStream                 = false;
     bool         bMuteMeInPersonalMix        = false;
@@ -503,6 +504,19 @@ int main ( int argc, char** argv )
             qInfo() << "- start minimized enabled";
             CommandLineOptions << "--startminimized";
             ServerOnlyOptions << "--startminimized";
+            continue;
+        }
+
+        // Disable raw audio feature -------------------------------------------
+        if ( GetFlagArgument ( argv,
+                               i,
+                               "--noraw", // no short form
+                               "--noraw" ) )
+        {
+            bDisableRaw = true;
+            qInfo() << "- raw audio is disabled";
+            CommandLineOptions << "--noraw";
+            ServerOnlyOptions << "--noraw";
             continue;
         }
 
@@ -1027,6 +1041,7 @@ int main ( int argc, char** argv )
                              strRecordingDirName,
                              bDisconnectAllClientsOnQuit,
                              bUseDoubleSystemFrameSize,
+                             bDisableRaw,
                              bUseMultithreading,
                              bDisableRecording,
                              bDelayPan,
@@ -1166,6 +1181,7 @@ QString UsageArguments ( char** argv )
            "  -w, --welcomemessage    welcome message to display on connect\n"
            "                          (string or filename, HTML supported)\n"
            "  -z, --startminimized    start minimizied\n"
+           "      --noraw             disable raw audio\n"
            "\n"
            "Client only:\n"
            "  -c, --connect           connect to given Server address on startup\n"

@@ -40,6 +40,7 @@ CServer::CServer ( const int          iNewMaxNumChan,
                    const QString&     strRecordingDirName,
                    const bool         bNDisconnectAllClientsOnQuit,
                    const bool         bNUseDoubleSystemFrameSize,
+                   const bool         bNDisableRaw,
                    const bool         bNUseMultithreading,
                    const bool         bDisableRecording,
                    const bool         bNDelayPan,
@@ -49,6 +50,7 @@ CServer::CServer ( const int          iNewMaxNumChan,
     bUseMultithreading ( bNUseMultithreading ),
     iMaxNumChannels ( iNewMaxNumChan ),
     iCurNumChannels ( 0 ),
+    bDisableRaw ( bNDisableRaw ),
     Socket ( this, iPortNumber, iQosNumber, strServerBindIP, bNEnableIPv6 ),
     Logging(),
     iFrameCount ( 0 ),
@@ -382,6 +384,12 @@ void CServer::OnNewConnection ( int iChID, int iTotChans, CHostAddress RecHostAd
     // inform the client about its own ID at the server (note that this
     // must be the first message to be sent for a new connection)
     vecChannels[iChID].CreateClientIDMes ( iChID );
+
+    // if not disabled, inform the client that the server supports raw (uncompressed) audio
+    if ( !bDisableRaw )
+    {
+        vecChannels[iChID].CreateRawAudioSupportedMes();
+    }
 
     // inform the client that the server supports raw (uncompressed) audio
     vecChannels[iChID].CreateRawAudioSupportedMes();
@@ -757,7 +765,7 @@ void CServer::DecodeReceiveData ( const int iChanCnt, const int iNumClients )
     int                iUnused;
     int                iClientFrameSizeSamples = 0; // initialize to avoid a compiler warning
     OpusCustomDecoder* CurOpusDecoder;
-    unsigned char*     pCurCodedData = nullptr; // Only used with opus coding, nullptr in case of raw or packet loss
+    unsigned char*     pCurCodedData;
 
     // get actual ID of current channel
     const int iCurChanID = vecChanIDsCurConChan[iChanCnt];
