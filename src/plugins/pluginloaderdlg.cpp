@@ -17,6 +17,10 @@
 #include <QAction>
 #include <QDir>
 #include <QSet>
+#include <QVBoxLayout>
+#include <QResizeEvent>
+#include <QPointer>
+#include <QMetaObject>
 #include <functional>
 
 #include "client.h"
@@ -28,27 +32,36 @@ class PluginEditorWindow final : public QDialog
 public:
     explicit PluginEditorWindow ( QWidget* parent = nullptr ) : QDialog ( parent, Qt::Window ) {}
 
+    void SetPluginContext ( CClient* client, int pluginId )
+    {
+        m_client = client;
+        m_pluginId = pluginId;
+    }
+
+    void ResizeFromPlugin ( int width, int height )
+    {
+        m_resizeFromPlugin = true;
+        resize ( width, height );
+        if ( m_client && m_pluginId >= 0 )
+            m_client->ResizePluginEditorFromPlugin ( m_pluginId, width, height );
+        m_resizeFromPlugin = false;
+    }
+
     void SetCloseCallback ( std::function<void()> callback ) { m_closeCallback = std::move ( callback ); }
 
 protected:
     void closeEvent ( QCloseEvent* event ) override
     {
-        qDebug() << "PluginEditorWindow: closeEvent triggered";
-        qDebug() << "PluginEditorWindow: m_closeCallback is" << ( m_closeCallback ? "set" : "null" );
-
         if ( m_closeCallback )
         {
             // Schedule the close callback to run after the close event completes and
             // the event loop resumes. This avoids running plugin teardown while the
             // window is still being destroyed.
             std::function<void()> callback = m_closeCallback;
-            qDebug() << "PluginEditorWindow: scheduling closeCallback via singleShot";
             QTimer::singleShot ( 0, this, [callback] () {
                 try
                 {
-                    qDebug() << "PluginEditorWindow: executing scheduled closeCallback";
                     callback();
-                    qDebug() << "PluginEditorWindow: scheduled closeCallback completed";
                 }
                 catch ( const std::exception& e )
                 {
@@ -60,18 +73,30 @@ protected:
                 }
             } );
         }
-
-        qDebug() << "PluginEditorWindow: calling QDialog::closeEvent";
         QDialog::closeEvent ( event );
-        qDebug() << "PluginEditorWindow: closeEvent completed";
+    }
+
+    void resizeEvent ( QResizeEvent* event ) override
+    {
+        QDialog::resizeEvent ( event );
+
+        if ( m_resizeFromPlugin )
+            return;
+
+        if ( m_client && m_pluginId >= 0 )
+            m_client->ResizePluginEditor ( m_pluginId, event->size().width(), event->size().height() );
     }
 
 private:
     std::function<void()> m_closeCallback;
+    CClient* m_client { nullptr };
+    int m_pluginId { -1 };
+    bool m_resizeFromPlugin { false };
 };
 
 static const char* kPluginLoaderPathsKey = "PluginLoader/Paths";
 static const char* kFavoritesKey = "PluginLoader/Favorites";
+static const char* kScannedPluginsKey = "PluginLoader/ScannedPlugins";
 static constexpr int kPluginPathRole = Qt::UserRole;
 static constexpr int kPluginBaseLabelRole = Qt::UserRole + 1;
 static constexpr int kMaxFavorites = 15;
@@ -148,6 +173,15 @@ CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDia
     setMinimumSize ( 600, 400 );
     setWindowModality ( Qt::NonModal );
 
+    m_loadingBanner = new QLabel ( this );
+    m_loadingBanner->setVisible ( false );
+    m_loadingBanner->setAlignment ( Qt::AlignCenter );
+    m_loadingBanner->setWordWrap ( true );
+    m_loadingBanner->setStyleSheet ( "QLabel { color: rgb(75, 213, 248); background: #353535; "
+                                     "border: 1px solid rgb(75, 213, 248); padding: 6px 10px; border-radius: 4px; }" );
+    if ( verticalLayoutMain )
+        verticalLayoutMain->insertWidget ( 0, m_loadingBanner );
+
     cmbFavorites->setSizeAdjustPolicy ( QComboBox::AdjustToContentsOnFirstShow );
     cmbFavorites->setMinimumWidth ( 320 );
     cmbFavorites->setContextMenuPolicy ( Qt::CustomContextMenu );
@@ -201,6 +235,8 @@ CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDia
     
     // Load and display favorites
     LoadFavorites();
+    // Restore last scanned plugins list
+    LoadScannedPlugins();
     RefreshLoadedPluginsFromHost();
 }
 
@@ -245,6 +281,7 @@ void CPluginLoaderDlg::OnScanPaths()
 
     lblStatus->setText ( tr ( "Scan complete" ) );
     UpdateLoadedPluginsDisplay();
+    SaveScannedPlugins();
 }
 
 void CPluginLoaderDlg::OnPluginListContextMenu ( const QPoint& pos )
@@ -497,10 +534,18 @@ void CPluginLoaderDlg::OnLoadSelectedPlugin()
         return;
     }
 
+    if ( m_loadingBanner )
+    {
+        m_loadingBanner->setText ( tr ( "Loading %1..." ).arg ( PluginDisplayNameFromPath ( path ) ) );
+        m_loadingBanner->setVisible ( true );
+    }
+    QApplication::processEvents();
+
     int iId = pClient->LoadPlugin ( path.toStdString() );
+    if ( m_loadingBanner )
+        m_loadingBanner->setVisible ( false );
     if ( iId >= 0 )
     {
-        QMessageBox::information ( this, tr ( "Load Plugin" ), tr ( "Plugin loaded (id: %1)." ).arg ( iId ) );
         lblStatus->setText ( tr ( "Loaded: %1" ).arg ( PluginDisplayNameFromPath ( path ) ) );
         m_loadedPlugins.insert ( path, iId );
         
@@ -542,7 +587,6 @@ void CPluginLoaderDlg::OnUnloadSelectedPlugin()
     bool bOk = pClient->UnloadPlugin ( iId );
     if ( bOk )
     {
-        QMessageBox::information ( this, tr ( "Unload Plugin" ), tr ( "Plugin unloaded (id: %1)." ).arg ( iId ) );
         lblStatus->setText ( tr ( "Unloaded: %1" ).arg ( PluginDisplayNameFromPath ( path ) ) );
         m_loadedPlugins.remove ( path );
         UpdateLoadedPluginsDisplay();
@@ -583,6 +627,18 @@ void CPluginLoaderDlg::OnShowSelectedPluginUI()
     pEditorWindow->setWindowTitle ( tr ( "Plugin UI - %1" ).arg ( PluginDisplayNameFromPath ( path ) ) );
     pEditorWindow->setWindowModality ( Qt::NonModal );  // Non-modal so main window stays accessible
     pEditorWindow->resize ( 900, 650 );
+
+    QPointer<PluginEditorWindow> editorWindowPtr ( pEditorWindow );
+    pClient->SetPluginEditorHostResizeCallback ( iId, [editorWindowPtr] ( int width, int height ) {
+        if ( !editorWindowPtr )
+            return;
+
+        QMetaObject::invokeMethod ( editorWindowPtr, [editorWindowPtr, width, height] {
+            if ( editorWindowPtr )
+                editorWindowPtr->ResizeFromPlugin ( width, height );
+        }, Qt::QueuedConnection );
+    } );
+
     pEditorWindow->show();
 
     // Ensure a native window exists before passing handle to VST3 view.
@@ -597,6 +653,15 @@ void CPluginLoaderDlg::OnShowSelectedPluginUI()
         lblStatus->setText ( tr ( "Show UI failed" ) );
         return;
     }
+
+    int editorWidth = 0;
+    int editorHeight = 0;
+    if ( pClient->GetPluginEditorSize ( iId, editorWidth, editorHeight ) && editorWidth > 0 && editorHeight > 0 )
+    {
+        pEditorWindow->resize ( editorWidth, editorHeight );
+    }
+
+    pEditorWindow->SetPluginContext ( pClient, iId );
 
     pEditorWindow->SetCloseCallback ( [this, iId] {
         pClient->ClosePluginEditor ( iId );
@@ -688,6 +753,51 @@ void CPluginLoaderDlg::SaveFavorites()
 {
     QSettings settings;
     settings.setValue ( kFavoritesKey, m_favoritePlugins );
+}
+
+void CPluginLoaderDlg::LoadScannedPlugins()
+{
+    QSettings settings;
+    const QStringList savedPaths = settings.value ( kScannedPluginsKey ).toStringList();
+    QSet<QString> seen;
+
+    for ( const QString& path : savedPaths )
+    {
+        if ( path.isEmpty() )
+            continue;
+
+        QFileInfo info ( path );
+        if ( !info.exists() )
+            continue;
+
+        const QString normalized = info.absoluteFilePath();
+        if ( seen.contains ( normalized ) )
+            continue;
+
+        QListWidgetItem* item = new QListWidgetItem ( PluginDisplayNameFromPath ( normalized ) );
+        SetPluginItemData ( item, normalized );
+        lstPlugins->addItem ( item );
+        seen.insert ( normalized );
+    }
+
+    if ( lstPlugins->count() > 0 )
+        lblStatus->setText ( tr ( "Loaded %1 saved plugins" ).arg ( lstPlugins->count() ) );
+}
+
+void CPluginLoaderDlg::SaveScannedPlugins()
+{
+    QStringList paths;
+    for ( int i = 0; i < lstPlugins->count(); ++i )
+    {
+        QListWidgetItem* item = lstPlugins->item ( i );
+        const QString path = item ? item->data ( kPluginPathRole ).toString() : QString();
+        if ( !path.isEmpty() )
+            paths.append ( path );
+    }
+
+    paths.removeDuplicates();
+    QSettings settings;
+    settings.setValue ( kScannedPluginsKey, paths );
 }
 
 void CPluginLoaderDlg::OnDialogClosed()

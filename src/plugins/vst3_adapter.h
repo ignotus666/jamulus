@@ -31,6 +31,19 @@ bool vst3_show_editor_handle ( plugin_handle_t h, void* parentWindow );
 // Detach the plugin editor from its native parent window, if attached.
 bool vst3_close_editor_handle ( plugin_handle_t h );
 
+// Get the current editor size in pixels.
+bool vst3_get_editor_size_handle ( plugin_handle_t h, int* width, int* height );
+
+// Request the editor to resize to the given size in pixels.
+bool vst3_resize_editor_handle ( plugin_handle_t h, int width, int height );
+
+// Resize in response to a plugin-initiated resizeView call.
+bool vst3_resize_editor_from_plugin_handle ( plugin_handle_t h, int width, int height );
+
+// Set a host resize callback so the plugin can request the native window size.
+typedef void (*vst3_host_resize_callback_t) ( void* context, int width, int height );
+bool vst3_set_host_resize_callback_handle ( plugin_handle_t h, void* context, vst3_host_resize_callback_t callback );
+
 // Set MIDI events for the current audio frame processing (internal use by plugin host)
 void vst3_set_midi_events ( const std::vector<std::pair<uint8_t, std::vector<uint8_t>>>& midiEvents );
 

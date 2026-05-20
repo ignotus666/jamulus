@@ -42,6 +42,8 @@ private:
     void CloseEditorWindowsForPlugin ( int iPluginId );
     void LoadFavorites();
     void SaveFavorites();
+    void LoadScannedPlugins();
+    void SaveScannedPlugins();
 
     CClient* pClient;
 
@@ -49,4 +51,5 @@ private:
     QVector<QDialog*> m_editorWindows;
     QMap<QDialog*, int> m_editorWindowPluginIds;
     QStringList m_favoritePlugins; // ordered list of favorite plugin paths (up to 15)
+    QLabel* m_loadingBanner { nullptr };
 };

@@ -202,7 +202,6 @@ bool CPluginHost::ClosePluginEditor ( int iPluginId )
 		plugin_handle_t inst = it->instance;
 		loaderCommands.push ( [inst, this] {
 			try {
-				qDebug() << "pluginhost (loader): executing deferred closeEditor";
 				// find matching plugin entry by instance and call its closeEditor callback
 				std::lock_guard<std::mutex> lg2 ( mtxPlugins );
 				auto jt = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
@@ -210,7 +209,6 @@ bool CPluginHost::ClosePluginEditor ( int iPluginId )
 				if ( jt != vecPlugins.end() && jt->closeEditor )
 				{
 					jt->closeEditor ( jt->instance );
-					qDebug() << "pluginhost (loader): closeEditor completed for instance" << jt->instance;
 				}
 			}
 			catch ( const std::exception& ex ) {
@@ -221,10 +219,70 @@ bool CPluginHost::ClosePluginEditor ( int iPluginId )
 			}
 		} );
 		cvLoader.notify_one();
-		qDebug() << "pluginhost: ClosePluginEditor deferred to loader thread for id" << iPluginId;
 	}
 
 	return true;
+}
+
+bool CPluginHost::GetPluginEditorSize ( int iPluginId, int& width, int& height )
+{
+	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->getEditorSize || !it->instance )
+		return false;
+
+	return it->getEditorSize ( it->instance, width, height );
+}
+
+bool CPluginHost::ResizePluginEditor ( int iPluginId, int width, int height )
+{
+	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->resizeEditor || !it->instance )
+		return false;
+
+	return it->resizeEditor ( it->instance, width, height );
+}
+
+bool CPluginHost::ResizePluginEditorFromPlugin ( int iPluginId, int width, int height )
+{
+	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->resizeEditorFromPlugin || !it->instance )
+		return false;
+
+	return it->resizeEditorFromPlugin ( it->instance, width, height );
+}
+
+void CPluginHost::HostResizeTrampoline ( void* context, int width, int height )
+{
+	if ( !context )
+		return;
+
+	auto* ctx = static_cast<HostResizeContext*> ( context );
+	if ( ctx->callback )
+		ctx->callback ( width, height );
+}
+
+bool CPluginHost::SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback )
+{
+	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->instance )
+		return false;
+
+	auto ctx = std::make_shared<HostResizeContext>();
+	ctx->callback = std::move ( callback );
+	it->hostResizeContext = ctx;
+
+	if ( it->handle == nullptr )
+		return vst3_set_host_resize_callback_handle ( it->instance, ctx.get(), &CPluginHost::HostResizeTrampoline );
+
+	return false;
 }
 
 std::vector<CPluginHost::LoadedPluginInfo> CPluginHost::GetLoadedPluginsSnapshot()
@@ -251,14 +309,12 @@ void CPluginHost::QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t i
 		return;
 	}
 
-	qDebug() << "CPluginHost::QueueMIDIEvent: status=" << pData[0] << "length=" << iLength << "offset=" << iSampleOffset;
 	std::lock_guard<std::mutex> lock ( mtxMIDI );
 	MidiEventData evt;
 	evt.length = iLength;
 	evt.offset = iSampleOffset;
 	std::memcpy ( evt.data, pData, iLength );
 	vecMIDIEvents.push_back ( evt );
-	qDebug() << "CPluginHost::QueueMIDIEvent: now have" << vecMIDIEvents.size() << "events in queue";
 }
 
 std::vector<CPluginHost::MidiEventData> CPluginHost::GetAndClearMIDIEvents()
@@ -336,6 +392,15 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 		e.closeEditor = []( plugin_handle_t x ) { vst3_close_editor_handle ( x ); };
 		e.showEditor = []( plugin_handle_t x, void* parentWindow ) {
 			return vst3_show_editor_handle ( x, parentWindow );
+		};
+		e.getEditorSize = []( plugin_handle_t x, int& w, int& h ) {
+			return vst3_get_editor_size_handle ( x, &w, &h );
+		};
+		e.resizeEditor = []( plugin_handle_t x, int w, int h ) {
+			return vst3_resize_editor_handle ( x, w, h );
+		};
+		e.resizeEditorFromPlugin = []( plugin_handle_t x, int w, int h ) {
+			return vst3_resize_editor_from_plugin_handle ( x, w, h );
 		};
 		e.path = sPath;
 		vecPlugins.push_back ( e );

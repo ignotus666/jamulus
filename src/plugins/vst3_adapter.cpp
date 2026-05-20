@@ -37,6 +37,8 @@
 #include "public.sdk/source/vst/hosting/processdata.h"
 #include "public.sdk/source/vst/hosting/eventlist.h"
 
+DEF_CLASS_IID ( Steinberg::IPlugFrame )
+
 // forward declaration of the thread-local MIDI events vector (defined later)
 extern thread_local std::vector<std::pair<uint8_t, std::vector<uint8_t>>> g_midiEventsForFrame;
 
@@ -195,7 +197,6 @@ public:
     {
         if ( plugView )
         {
-            qDebug() << "vst3_adapter: shutdown - removing view";
             plugView->removed();
             plugView = nullptr;
             bEditorAttached = false;
@@ -280,6 +281,16 @@ public:
             return false;
         }
 
+        if ( !plugFrame )
+        {
+            plugFrame.reset ( new HostPlugFrame ( [this] ( int w, int h ) {
+                if ( hostResizeCallback )
+                    hostResizeCallback ( hostResizeContext, w, h );
+            } ) );
+        }
+        plugView->setFrame ( plugFrame.get() );
+
+
 #if defined( Q_OS_LINUX )
         const char* platformType = Steinberg::kPlatformTypeX11EmbedWindowID;
 #elif defined( Q_OS_MACOS )
@@ -306,22 +317,16 @@ public:
         }
 
         bEditorAttached = true;
-        qDebug() << "vst3_adapter: editor attached";
         return true;
     }
 
     bool closeEditor ()
     {
-        qDebug() << "vst3_adapter: closeEditor called, plugView=" << plugView.get() << "bEditorAttached=" << bEditorAttached;
-        
         if ( plugView && bEditorAttached )
         {
-            qDebug() << "vst3_adapter: closeEditor - calling removed()";
             try
             {
-                   qDebug() << "vst3_adapter: closeEditor - about to call plugView->removed()";
                 plugView->removed();
-                   qDebug() << "vst3_adapter: closeEditor - removed() succeeded, nullifying plugView";
             }
             catch ( const std::exception& e )
             {
@@ -334,13 +339,56 @@ public:
             
             plugView = nullptr;
             bEditorAttached = false;
-               qDebug() << "vst3_adapter: closeEditor completed successfully";
             return true;
         }
-
-           qDebug() << "vst3_adapter: closeEditor - no active editor to close";
         return true;
     }
+
+    bool getEditorSize ( int& width, int& height )
+    {
+        if ( !plugView )
+            return false;
+
+        Steinberg::ViewRect rect;
+        if ( plugView->getSize ( &rect ) != Steinberg::kResultTrue )
+            return false;
+
+        width = rect.getWidth();
+        height = rect.getHeight();
+        return ( width > 0 && height > 0 );
+    }
+
+    bool resizeEditor ( int width, int height )
+    {
+        if ( !plugView || !bEditorAttached )
+            return false;
+
+        Steinberg::ViewRect rect ( 0, 0, width, height );
+        if ( plugView->canResize() == Steinberg::kResultTrue )
+        {
+            plugView->checkSizeConstraint ( &rect );
+            return ( plugView->onSize ( &rect ) == Steinberg::kResultTrue );
+        }
+
+        return false;
+    }
+
+    bool resizeEditorFromPlugin ( int width, int height )
+    {
+        if ( !plugView || !bEditorAttached )
+            return false;
+
+        Steinberg::ViewRect rect ( 0, 0, width, height );
+        plugView->checkSizeConstraint ( &rect );
+        return ( plugView->onSize ( &rect ) == Steinberg::kResultTrue );
+    }
+
+    void setHostResizeCallback ( void* context, vst3_host_resize_callback_t callback )
+    {
+        hostResizeContext = context;
+        hostResizeCallback = callback;
+    }
+
 
     void process ( float* interleaved, int numFrames, int numChannels )
     {
@@ -371,7 +419,6 @@ public:
         // Insert MIDI events collected for this frame into the processData.inputEvents
         if ( !g_midiEventsForFrame.empty() )
         {
-            qDebug() << "vst3_adapter::process: converting" << g_midiEventsForFrame.size() << "MIDI events";
             // create an EventList big enough to hold the events
             Steinberg::Vst::EventList* pList = new Steinberg::Vst::EventList ( static_cast<int32_t> ( g_midiEventsForFrame.size() ) );
             Steinberg::Vst::Event e;
@@ -381,10 +428,7 @@ public:
                 if ( me.second.empty() )
                     continue;
                     
-                const uint8_t status = me.second[0];
-                   qDebug() << "vst3_adapter::process: MIDI status 0x"
-                            << QString::number ( status, 16 )
-                            << "length" << me.second.size();
+                     const uint8_t status = me.second[0];
                 
                    // Set common fields
                 e.sampleOffset = static_cast<int32_t>(me.first);
@@ -409,7 +453,6 @@ public:
                                e.noteOn.tuning = 0.0f;
                                e.noteOn.length = 0;
                                e.noteOn.noteId = -1;
-                               qDebug() << "vst3_adapter::process: NoteOn ch" << channel << "pitch" << data1 << "vel" << data2;
                            }
                            else if ( messageType == 0x80 )  // Note Off
                            {
@@ -419,7 +462,6 @@ public:
                                e.noteOff.velocity = static_cast<float>(data2) / 127.0f;
                                e.noteOff.noteId = -1;
                                e.noteOff.tuning = 0.0f;
-                               qDebug() << "vst3_adapter::process: NoteOff ch" << channel << "pitch" << data1 << "vel" << data2;
                            }
                            else if ( messageType == 0xA0 )  // Polyphonic aftertouch
                            {
@@ -428,7 +470,6 @@ public:
                                e.polyPressure.pitch = static_cast<Steinberg::int16> ( data1 );
                                e.polyPressure.pressure = static_cast<float> ( data2 ) / 127.0f;
                                e.polyPressure.noteId = -1;
-                               qDebug() << "vst3_adapter::process: PolyPressure ch" << channel << "pitch" << data1 << "pressure" << data2;
                            }
                            else if ( messageType == 0xB0 )  // Control Change
                            {
@@ -439,7 +480,6 @@ public:
                                e.midiCCOut.channel = static_cast<Steinberg::int8> ( channel );
                                e.midiCCOut.value = static_cast<Steinberg::int8> ( data2 );
                                e.midiCCOut.value2 = 0;
-                               qDebug() << "vst3_adapter::process: LegacyMIDICC ch" << channel << "cc" << data1 << "value" << data2;
                            }
                            else
                            {
@@ -448,10 +488,6 @@ public:
                                e.data.type = Steinberg::Vst::DataEvent::kMidiSysEx;
                                e.data.size = static_cast<Steinberg::uint32> ( me.second.size() );
                                e.data.bytes = me.second.data();
-                               if ( messageType == 0xD0 )
-                                   qDebug() << "vst3_adapter::process: ChannelPressure value" << data1;
-                               else
-                                   qDebug() << "vst3_adapter::process: DataEvent (other MIDI type)";
                            }
                    }
                    else
@@ -461,11 +497,9 @@ public:
                        e.data.type = Steinberg::Vst::DataEvent::kMidiSysEx;
                        e.data.size = static_cast<Steinberg::uint32> ( me.second.size() );
                        e.data.bytes = me.second.data();
-                           qDebug() << "vst3_adapter::process: DataEvent (short MIDI/message length" << me.second.size() << ")";
                    }
 
                 pList->addEvent ( e );
-                   qDebug() << "vst3_adapter::process: added event at offset" << e.sampleOffset;
             }
 
             processData.inputEvents = pList;
@@ -770,6 +804,40 @@ private:
     Steinberg::FUnknownPtr<Steinberg::Vst::IConnectionPoint> connectionPointComponent;
     Steinberg::FUnknownPtr<Steinberg::Vst::IConnectionPoint> connectionPointController;
     Steinberg::OPtr<Steinberg::IPlugView> plugView;
+    struct HostPlugFrame final : public Steinberg::IPlugFrame
+    {
+        explicit HostPlugFrame ( std::function<void ( int, int )> resizeCb ) : resizeCallback ( std::move ( resizeCb ) ) {}
+
+        Steinberg::tresult PLUGIN_API resizeView ( Steinberg::IPlugView* view, Steinberg::ViewRect* newSize ) override
+        {
+            Q_UNUSED ( view );
+            if ( !newSize )
+                return Steinberg::kInvalidArgument;
+
+            if ( resizeCallback )
+                resizeCallback ( newSize->getWidth(), newSize->getHeight() );
+            return Steinberg::kResultTrue;
+        }
+
+        Steinberg::tresult PLUGIN_API queryInterface ( const Steinberg::TUID _iid, void** obj ) override
+        {
+            if ( !obj )
+                return Steinberg::kInvalidArgument;
+            *obj = nullptr;
+            if ( Steinberg::FUnknownPrivate::iidEqual ( _iid, Steinberg::IPlugFrame::iid ) )
+            {
+                *obj = static_cast<Steinberg::IPlugFrame*> ( this );
+                return Steinberg::kResultOk;
+            }
+            return Steinberg::kNoInterface;
+        }
+
+        Steinberg::uint32 PLUGIN_API addRef() override { return 1; }
+        Steinberg::uint32 PLUGIN_API release() override { return 1; }
+
+        std::function<void ( int, int )> resizeCallback;
+    };
+    std::unique_ptr<HostPlugFrame> plugFrame;
     Steinberg::FUnknownPtr<Steinberg::Vst::IAudioProcessor> processor;
     Steinberg::Vst::HostProcessData processData;
 
@@ -785,6 +853,8 @@ private:
     int32_t outputBusCount {0};
     Steinberg::Vst::SymbolicSampleSizes symbolicSampleSize {Steinberg::Vst::kSample32};
     bool bEditorAttached {false};
+    void* hostResizeContext { nullptr };
+    vst3_host_resize_callback_t hostResizeCallback { nullptr };
     HostApplication hostApplication;
 };
 } // namespace
@@ -794,13 +864,6 @@ thread_local std::vector<std::pair<uint8_t, std::vector<uint8_t>>> g_midiEventsF
 
 void vst3_set_midi_events ( const std::vector<std::pair<uint8_t, std::vector<uint8_t>>>& midiEvents )
 {
-    qDebug() << "vst3_set_midi_events: received" << midiEvents.size() << "events";
-    for ( size_t i = 0; i < midiEvents.size(); ++i )
-    {
-        const auto& evt = midiEvents[i];
-        if ( !evt.second.empty() )
-            qDebug() << "  event[" << i << "]: offset=" << evt.first << "status=" << evt.second[0] << "length=" << evt.second.size();
-    }
     g_midiEventsForFrame = midiEvents;
 }
 
@@ -852,6 +915,45 @@ bool vst3_close_editor_handle ( plugin_handle_t h )
     return false;
 }
 
+bool vst3_get_editor_size_handle ( plugin_handle_t h, int* width, int* height )
+{
+    if ( !width || !height )
+        return false;
+
+    if ( auto* runtime = static_cast<Vst3Runtime*> ( h ) )
+        return runtime->getEditorSize ( *width, *height );
+
+    return false;
+}
+
+bool vst3_resize_editor_handle ( plugin_handle_t h, int width, int height )
+{
+    if ( auto* runtime = static_cast<Vst3Runtime*> ( h ) )
+        return runtime->resizeEditor ( width, height );
+
+    return false;
+}
+
+bool vst3_resize_editor_from_plugin_handle ( plugin_handle_t h, int width, int height )
+{
+    if ( auto* runtime = static_cast<Vst3Runtime*> ( h ) )
+        return runtime->resizeEditorFromPlugin ( width, height );
+
+    return false;
+}
+
+bool vst3_set_host_resize_callback_handle ( plugin_handle_t h, void* context, vst3_host_resize_callback_t callback )
+{
+    if ( auto* runtime = static_cast<Vst3Runtime*> ( h ) )
+    {
+        runtime->setHostResizeCallback ( context, callback );
+        return true;
+    }
+
+    return false;
+}
+
+
 #else
 
 plugin_handle_t vst3_create_from_path ( const char* sPath, int sampleRate, int blockSize,
@@ -891,5 +993,38 @@ bool vst3_close_editor_handle ( plugin_handle_t h )
     Q_UNUSED ( h );
     return true;
 }
+
+bool vst3_get_editor_size_handle ( plugin_handle_t h, int* width, int* height )
+{
+    Q_UNUSED ( h );
+    Q_UNUSED ( width );
+    Q_UNUSED ( height );
+    return false;
+}
+
+bool vst3_resize_editor_handle ( plugin_handle_t h, int width, int height )
+{
+    Q_UNUSED ( h );
+    Q_UNUSED ( width );
+    Q_UNUSED ( height );
+    return false;
+}
+
+bool vst3_resize_editor_from_plugin_handle ( plugin_handle_t h, int width, int height )
+{
+    Q_UNUSED ( h );
+    Q_UNUSED ( width );
+    Q_UNUSED ( height );
+    return false;
+}
+
+bool vst3_set_host_resize_callback_handle ( plugin_handle_t h, void* context, vst3_host_resize_callback_t callback )
+{
+    Q_UNUSED ( h );
+    Q_UNUSED ( context );
+    Q_UNUSED ( callback );
+    return false;
+}
+
 
 #endif

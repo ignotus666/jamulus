@@ -388,6 +388,16 @@ public:
     bool UnloadPlugin ( int iPluginId ) { return PluginHost.UnloadPlugin ( iPluginId ); }
     bool ShowPluginEditor ( int iPluginId, void* parentWindow ) { return PluginHost.ShowPluginEditor ( iPluginId, parentWindow ); }
     bool ClosePluginEditor ( int iPluginId ) { return PluginHost.ClosePluginEditor ( iPluginId ); }
+    bool GetPluginEditorSize ( int iPluginId, int& width, int& height ) { return PluginHost.GetPluginEditorSize ( iPluginId, width, height ); }
+    bool ResizePluginEditor ( int iPluginId, int width, int height ) { return PluginHost.ResizePluginEditor ( iPluginId, width, height ); }
+    bool ResizePluginEditorFromPlugin ( int iPluginId, int width, int height )
+    {
+        return PluginHost.ResizePluginEditorFromPlugin ( iPluginId, width, height );
+    }
+    bool SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback )
+    {
+        return PluginHost.SetPluginEditorHostResizeCallback ( iPluginId, std::move ( callback ) );
+    }
     std::vector<CPluginHost::LoadedPluginInfo> GetLoadedPluginsSnapshot() { return PluginHost.GetLoadedPluginsSnapshot(); }
 
 public:

@@ -31,6 +31,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <memory>
 #include <stdint.h>
 #include "util.h"
 #include "plugin_api.h"
@@ -77,11 +78,22 @@ public:
     bool UnloadPlugin ( int iPluginId );
     bool ShowPluginEditor ( int iPluginId, void* parentWindow );
     bool ClosePluginEditor ( int iPluginId );
+    bool GetPluginEditorSize ( int iPluginId, int& width, int& height );
+    bool ResizePluginEditor ( int iPluginId, int width, int height );
+    bool ResizePluginEditorFromPlugin ( int iPluginId, int width, int height );
+    bool SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback );
     std::vector<LoadedPluginInfo> GetLoadedPluginsSnapshot();
     // Retrieve and consume MIDI events queued for the audio block (called by vst3_adapter)
     struct MidiEventData { uint8_t data[4]; int length; uint32_t offset; };
     std::vector<MidiEventData> GetAndClearMIDIEvents();
 private:
+    struct HostResizeContext
+    {
+        std::function<void ( int, int )> callback;
+    };
+
+    static void HostResizeTrampoline ( void* context, int width, int height );
+
     struct PluginEntry
     {
         int id{ -1 };
@@ -92,6 +104,10 @@ private:
         plugin_process_t process{ nullptr };
         std::function<void ( plugin_handle_t )> closeEditor;
         std::function<bool ( plugin_handle_t, void* )> showEditor;
+        std::function<bool ( plugin_handle_t, int&, int& )> getEditorSize;
+        std::function<bool ( plugin_handle_t, int, int )> resizeEditor;
+        std::function<bool ( plugin_handle_t, int, int )> resizeEditorFromPlugin;
+        std::shared_ptr<HostResizeContext> hostResizeContext;
         std::string path;
     };
 
