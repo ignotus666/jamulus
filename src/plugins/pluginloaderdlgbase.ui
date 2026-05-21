@@ -14,7 +14,7 @@
    <string>Plugins</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset>
     <normaloff>:/png/main/res/fronticon.png</normaloff>:/png/main/res/fronticon.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayoutMain">
@@ -89,7 +89,7 @@
    <item>
     <widget class="QLabel" name="lblFavorites">
      <property name="text">
-      <string>Favorites</string>
+      <string>Favourites</string>
      </property>
     </widget>
    </item>

@@ -203,6 +203,9 @@ CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDia
 
     connect ( lstPlugins, &QListWidget::customContextMenuRequested,
               this, &CPluginLoaderDlg::OnPluginListContextMenu );
+    connect ( lstPlugins, &QListWidget::currentItemChanged, this, [this] {
+        UpdateActionButtons();
+    } );
 
     // Load/Close buttons
     connect ( butAddPath, &QPushButton::clicked, this, &CPluginLoaderDlg::OnAddPath );
@@ -238,6 +241,7 @@ CPluginLoaderDlg::CPluginLoaderDlg ( CClient* pClientP, QWidget* parent ) : QDia
     // Restore last scanned plugins list
     LoadScannedPlugins();
     RefreshLoadedPluginsFromHost();
+    UpdateActionButtons();
 }
 
 void CPluginLoaderDlg::OnAddPath()
@@ -270,6 +274,7 @@ void CPluginLoaderDlg::OnRemovePath()
 void CPluginLoaderDlg::OnScanPaths()
 {
     lstPlugins->clear();
+    UpdateActionButtons();
     lblStatus->setText ( tr ( "Scanning..." ) );
     QApplication::processEvents();
 
@@ -282,6 +287,7 @@ void CPluginLoaderDlg::OnScanPaths()
     lblStatus->setText ( tr ( "Scan complete" ) );
     UpdateLoadedPluginsDisplay();
     SaveScannedPlugins();
+    UpdateActionButtons();
 }
 
 void CPluginLoaderDlg::OnPluginListContextMenu ( const QPoint& pos )
@@ -356,6 +362,7 @@ void CPluginLoaderDlg::OnFavoriteActivated ( int index )
     }
 
     lblStatus->setText ( tr ( "Selected favorite plugin: %1" ).arg ( path ) );
+    UpdateActionButtons();
 }
 
 void CPluginLoaderDlg::ScanPath ( const QString& strPath )
@@ -551,6 +558,7 @@ void CPluginLoaderDlg::OnLoadSelectedPlugin()
         
         // Update UI to show loaded plugins
         UpdateLoadedPluginsDisplay();
+        UpdateActionButtons();
     }
     else
     {
@@ -590,6 +598,7 @@ void CPluginLoaderDlg::OnUnloadSelectedPlugin()
         lblStatus->setText ( tr ( "Unloaded: %1" ).arg ( PluginDisplayNameFromPath ( path ) ) );
         m_loadedPlugins.remove ( path );
         UpdateLoadedPluginsDisplay();
+        UpdateActionButtons();
     }
     else
     {
@@ -709,6 +718,8 @@ void CPluginLoaderDlg::UpdateLoadedPluginsDisplay()
             item->setText ( normalName );
         }
     }
+
+    UpdateActionButtons();
 }
 
 void CPluginLoaderDlg::LoadFavorites()
@@ -782,6 +793,8 @@ void CPluginLoaderDlg::LoadScannedPlugins()
 
     if ( lstPlugins->count() > 0 )
         lblStatus->setText ( tr ( "Loaded %1 saved plugins" ).arg ( lstPlugins->count() ) );
+
+    UpdateActionButtons();
 }
 
 void CPluginLoaderDlg::SaveScannedPlugins()
@@ -803,4 +816,23 @@ void CPluginLoaderDlg::SaveScannedPlugins()
 void CPluginLoaderDlg::OnDialogClosed()
 {
     SaveFavorites();
+}
+
+void CPluginLoaderDlg::UpdateActionButtons()
+{
+    QListWidgetItem* item = lstPlugins->currentItem();
+    if ( !item )
+    {
+        butLoad->setEnabled ( false );
+        butUnload->setEnabled ( false );
+        butShowUI->setEnabled ( false );
+        return;
+    }
+
+    const QString path = item->data ( kPluginPathRole ).toString();
+    const bool bIsLoaded = !path.isEmpty() && m_loadedPlugins.contains ( path );
+
+    butLoad->setEnabled ( !path.isEmpty() && !bIsLoaded );
+    butUnload->setEnabled ( !path.isEmpty() && bIsLoaded );
+    butShowUI->setEnabled ( !path.isEmpty() && bIsLoaded );
 }

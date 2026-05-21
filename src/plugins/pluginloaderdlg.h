@@ -35,6 +35,7 @@ private:
     void EnsurePluginItemVisible ( const QString& path );
     void RefreshLoadedPluginsFromHost();
     void UpdateLoadedPluginsDisplay();
+    void UpdateActionButtons();
     void EnsureFavoriteVisible ( const QString& path );
     void RefreshFavoritesDisplay();
     void AddFavoritePath ( const QString& path );
