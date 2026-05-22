@@ -21,7 +21,18 @@ typedef void* plugin_handle_t;
 
 typedef plugin_handle_t (*plugin_create_t)(int sampleRate, int blockSize, int numChannels);
 typedef void (*plugin_destroy_t)(plugin_handle_t);
-typedef void (*plugin_process_t)(plugin_handle_t, float* interleaved, int numFrames, int numChannels);
+typedef void (*plugin_process_t)(plugin_handle_t, float* interleaved, int numFrames, int numChannels, const void* midi_events, int num_midi_events);
+typedef bool (*plugin_is_editor_visible_t)(plugin_handle_t);
+typedef bool (*plugin_load_preset_t)(plugin_handle_t, const char* presetPath);
+typedef char* (*plugin_save_state_t)(plugin_handle_t, int* out_size);
+typedef bool (*plugin_restore_state_t)(plugin_handle_t, const char* data, int size);
+
+#ifdef HAVE_LV2
+bool lv2_is_editor_visible_handle(plugin_handle_t inst);
+bool lv2_load_preset_handle(plugin_handle_t inst, const char* presetPath);
+char* lv2_save_state_handle(plugin_handle_t inst, int* out_size);
+bool lv2_restore_state_handle(plugin_handle_t inst, const char* data, int size);
+#endif
 
 #ifdef __cplusplus
 }

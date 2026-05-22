@@ -101,6 +101,11 @@ protected:
     void         ShowEffectsWindow();
     void         UpdateAudioFaderSlider();
     void         UpdateRevSelection();
+    void CreateConnectDlg ( const QString& strConnOnStartupAddress, bool bShowComplRegConnList, bool bEnableIPv6 );
+    void ParsePingTimeInfoStr ( const QString& strPingTimeInfo );
+    int LoadCarlaPlugin();
+
+    void ParseCLChannelLevelListMes ( const QByteArray& baMessageData );
     void         Connect ( const QString& strSelectedAddress, const QString& strMixerBoardLabel );
     void         Disconnect();
     virtual void changeEvent ( QEvent* Event ) override;
@@ -120,6 +125,7 @@ protected:
     EGUIDesign     eLastDesign;
     EUITheme       eLastUITheme;
     QTimer         TimerSigMet;
+    QTimer         TimerPluginIdle;
     QTimer         TimerBuffersLED;
     QTimer         TimerStatus;
     QTimer         TimerPing;
@@ -136,7 +142,6 @@ protected:
     CConnectDlg        ConnectDlg;
     CAnalyzerConsole   AnalyzerConsole;
     CEffectsDlg        EffectsDlg;
-    class CPluginLoaderDlg* pPluginLoaderDlg { nullptr };
 
 public slots:
     void OnConnectDisconBut();
@@ -171,7 +176,7 @@ public slots:
     void OnOpenUserProfileSettings();
     void OnOpenAudioNetSettings();
     void OnOpenAdvancedSettings();
-    void OnOpenPluginLoader();
+    void OnOpenCarla();
     void OnOpenChatDialog() { ShowChatWindow(); }
     void OnOpenAnalyzerConsole() { ShowAnalyzerConsole(); }
     void OnOwnFaderFirst()
@@ -223,6 +228,8 @@ public slots:
     void OnInputGainSliderContextMenu ( const QPoint& pos );
     void OnInputGainSliderValueChanged ( int value );
     void OnInputGainMidiCCReceived ( int channel, int ccNumber, int midiValue );
+
+    void OnCarlaContextMenu ( const QPoint& pos );
 
     void OnReverbSelLClicked() { pClient->SetReverbOnLeftChan ( true ); }
 

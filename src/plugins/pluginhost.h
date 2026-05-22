@@ -33,6 +33,9 @@
 #include <thread>
 #include <memory>
 #include <stdint.h>
+#include <QReadWriteLock>
+#include <QReadLocker>
+#include <QWriteLocker>
 #include "util.h"
 #include "plugin_api.h"
 
@@ -43,15 +46,16 @@ public:
     {
         int id { -1 };
         std::string path;
+        bool bEditorVisible { false };
     };
 
     CPluginHost();
     ~CPluginHost();
 
-    void Init ( const int iNSampleRateHz, const int iNStereoBlockSizeSam )
+    void Init ( const int iNSampleRateHz, const int iNBlockSizeFrames )
     {
         iSampleRateHz.store ( iNSampleRateHz );
-        iStereoBlockSizeSam.store ( iNStereoBlockSizeSam );
+        iBlockSizeFrames.store ( iNBlockSizeFrames );
     }
 
     void Clear();
@@ -59,8 +63,8 @@ public:
     bool HasLoadedPlugins();
 
     // Queue raw MIDI bytes for the next audio block. Called from audio/MIDI callback.
-    // Safe for concurrent calls from MIDI thread. vst3_adapter will forward these into
-    // the VST3 processor's inputEvents buffer during the Process call.
+    // Safe for concurrent calls from MIDI thread. lv2_adapter will forward these into
+    // the LV2 processor's inputEvents buffer during the Process call.
     void QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t iSampleOffset = 0 );
 
     // Process in-place interleaved stereo (int16_t) buffer. Non-blocking: will try to lock the
@@ -69,8 +73,8 @@ public:
     void Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockSizeSam );
 
     int  GetSampleRateHz() const { return iSampleRateHz.load(); }
-    int  GetStereoBlockSizeSam() const { return iStereoBlockSizeSam.load(); }
-    bool IsInitialized() const { return ( iSampleRateHz.load() > 0 ) && ( iStereoBlockSizeSam.load() > 0 ); }
+    int  GetBlockSizeFrames() const { return iBlockSizeFrames.load(); }
+    bool IsInitialized() const { return ( iSampleRateHz.load() > 0 ) && ( iBlockSizeFrames.load() > 0 ); }
 
     // Plugin management (non-RT functions)
     // Returns an integer id for the loaded plugin, or -1 on error.
@@ -82,8 +86,12 @@ public:
     bool ResizePluginEditor ( int iPluginId, int width, int height );
     bool ResizePluginEditorFromPlugin ( int iPluginId, int width, int height );
     bool SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback );
+    void IdlePluginEditors();
     std::vector<LoadedPluginInfo> GetLoadedPluginsSnapshot();
-    // Retrieve and consume MIDI events queued for the audio block (called by vst3_adapter)
+    bool LoadPluginPreset ( int iPluginId, const std::string& presetPath );
+    QByteArray SavePluginState( int iPluginId );
+    bool RestorePluginState( int iPluginId, const QByteArray& stateData );
+    // Retrieve and consume MIDI events queued for the audio block (called by lv2_adapter)
     struct MidiEventData { uint8_t data[4]; int length; uint32_t offset; };
     std::vector<MidiEventData> GetAndClearMIDIEvents();
 private:
@@ -100,10 +108,18 @@ private:
         void* handle{ nullptr };
         plugin_handle_t instance{ nullptr };
         plugin_create_t create{ nullptr };
-        plugin_destroy_t destroy{ nullptr };
-        plugin_process_t process{ nullptr };
+        plugin_destroy_t destroy { nullptr };
+        plugin_process_t process { nullptr };
+
+
+        // For host-provided editor features
         std::function<void ( plugin_handle_t )> closeEditor;
         std::function<bool ( plugin_handle_t, void* )> showEditor;
+        std::function<bool ( plugin_handle_t )> idleEditor;
+        std::function<bool ( plugin_handle_t )> isEditorVisible;
+        std::function<bool ( plugin_handle_t, const char* )> loadPreset;
+        std::function<char* ( plugin_handle_t, int* )> saveState;
+        std::function<bool ( plugin_handle_t, const char*, int )> restoreState;
         std::function<bool ( plugin_handle_t, int&, int& )> getEditorSize;
         std::function<bool ( plugin_handle_t, int, int )> resizeEditor;
         std::function<bool ( plugin_handle_t, int, int )> resizeEditorFromPlugin;
@@ -112,9 +128,9 @@ private:
     };
 
     std::atomic<int> iSampleRateHz{ 0 };
-    std::atomic<int> iStereoBlockSizeSam{ 0 };
+    std::atomic<int> iBlockSizeFrames{ 0 };
 
-    std::mutex mtxPlugins;
+    QReadWriteLock rwLockPlugins;
     std::vector<PluginEntry> vecPlugins;
     int iNextPluginId{ 1 };
 

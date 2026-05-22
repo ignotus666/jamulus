@@ -593,6 +593,19 @@ int main ( int argc, char** argv )
             continue;
         }
 
+        // Carla Preset
+        if ( GetStringArgument ( argc,
+                                 argv,
+                                 i,
+                                 "--carlapreset", // no short form
+                                 "--carlapreset",
+                                 strArgument ) )
+        {
+            CommandLineOptions << QString ( "--carlapreset=%1" ).arg ( strArgument );
+            ClientOnlyOptions << "--carlapreset";
+            continue;
+        }
+
         // Undocumented:
 
         // Show all registered servers in the server list ----------------------
@@ -1190,6 +1203,7 @@ QString UsageArguments ( char** argv )
            "      --mutemyown         prevent me from hearing what I play in the server mix (headless only)\n"
            "      --clientname        client name (window title and JACK client name)\n"
            "      --ctrlmidich        configure MIDI controller\n"
+           "      --carlapreset       automatically load a Carla preset (.carxp) on startup\n"
            "\n"
            "Example: %1 -s --inifile myinifile.ini\n"
            "\n"

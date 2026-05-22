@@ -229,7 +229,7 @@
             <item>
              <widget class="QPushButton" name="butPlugins">
               <property name="text">
-               <string>&amp;Plugins</string>
+               <string>&amp;Carla</string>
               </property>
               <property name="checkable">
                <bool>true</bool>

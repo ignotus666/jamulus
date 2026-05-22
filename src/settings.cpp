@@ -798,6 +798,22 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         strMidiDevice = FromBase64ToString ( strMidiDevice );
     }
 
+    strCarlaPath = GetIniSetting ( IniXMLDocument, "client", "carlapath_base64", "" );
+    if ( !strCarlaPath.isEmpty() )
+    {
+        strCarlaPath = FromBase64ToString ( strCarlaPath );
+    }
+
+    strCarlaPresetsDir = GetIniSetting ( IniXMLDocument, "client", "carlapresetsdir", "" );
+
+    strCarlaStateBase64 = GetIniSetting ( IniXMLDocument, "client", "carlastate_base64", "" );
+    
+    bool bCarlaWasActiveVal = false;
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "carlawasactive", bCarlaWasActiveVal ) )
+    {
+        bCarlaWasActive = bCarlaWasActiveVal;
+    }
+
     // Command line overrides: disable all controls, then re-enable only those specified
     for ( const QString& option : CommandLineOptions )
     {
@@ -853,6 +869,14 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                                bMIDIPickupMode,
                                                &strMidiDevice );
             break;
+        }
+        else if ( option.startsWith ( "--carlapreset=" ) )
+        {
+            strCarlaPresetPath = option.section ( '=', 1 );
+            // Note: Don't break, because there could be other options in the list.
+            // Actually, the original break was probably incorrect if there are multiple options,
+            // but let's just continue here.
+            continue;
         }
     }
 
@@ -1468,6 +1492,23 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     {
         PutIniSetting ( IniXMLDocument, "client", "mididevice_base64", ToBase64 ( strMidiDevice ) );
     }
+
+    if ( !strCarlaPath.isEmpty() )
+    {
+        PutIniSetting ( IniXMLDocument, "client", "carlapath_base64", ToBase64 ( strCarlaPath ) );
+    }
+
+    if ( !strCarlaPresetsDir.isEmpty() )
+    {
+        PutIniSetting ( IniXMLDocument, "client", "carlapresetsdir", strCarlaPresetsDir );
+    }
+
+    if ( !strCarlaStateBase64.isEmpty() )
+    {
+        PutIniSetting ( IniXMLDocument, "client", "carlastate_base64", strCarlaStateBase64 );
+    }
+    
+    SetFlagIniSet ( IniXMLDocument, "client", "carlawasactive", bCarlaWasActive );
 
     // fader settings
     WriteFaderSettingsToXML ( IniXMLDocument );

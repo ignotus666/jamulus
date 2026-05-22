@@ -401,6 +401,11 @@ public:
     bool    bUseMIDIController;
     bool    bMIDIPickupMode;
     QString strMidiDevice;
+    QString strCarlaPath;
+    QString strCarlaPresetPath;
+    QString strCarlaStateBase64;
+    QString strCarlaPresetsDir;
+    bool    bCarlaWasActive{ false };
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool isAboutToQuit ) override;

@@ -23,14 +23,16 @@
 \******************************************************************************/
 
 #include "clientdlg.h"
+#include <stdlib.h>
 #include <array>
 #include <chrono>
 #include <deque>
 #include <QBoxLayout>
 #include <QFile>
+#include <QProgressDialog>
+#include <QApplication>
 #include "customslider.h"
 #include "util.h"
-#include "plugins/pluginloaderdlg.h"
 
 namespace
 {
@@ -452,7 +454,9 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     UpdateInputGainControls();
 
     // Plugins button opens the plugin loader dialog.
-    connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenPluginLoader );
+    connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenCarla );
+    butPlugins->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect( butPlugins, &QPushButton::customContextMenuRequested, this, &CClientDlg::OnCarlaContextMenu );
 
     // initialize pan control visibility (pan is not supported for mono)
     MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
@@ -695,6 +699,23 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // timers
     QObject::connect ( &TimerSigMet, &QTimer::timeout, this, &CClientDlg::OnTimerSigMet );
+    QObject::connect ( &TimerPluginIdle, &QTimer::timeout, this, [this] {
+        if ( pClient )
+        {
+            pClient->IdlePluginEditors();
+            auto plugins = pClient->GetLoadedPluginsSnapshot();
+            if ( !plugins.empty() )
+            {
+                bool visible = plugins[0].bEditorVisible;
+                butPlugins->setChecked ( visible );
+            }
+            else
+            {
+                butPlugins->setChecked ( false );
+            }
+        }
+    } );
+    TimerPluginIdle.start( 20 ); // 50 Hz
 
     QObject::connect ( &TimerBuffersLED, &QTimer::timeout, this, &CClientDlg::OnTimerBuffersLED );
 
@@ -895,6 +916,31 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     {
         pClient->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
+
+    if ( !pSettings->strCarlaPresetPath.isEmpty() )
+    {
+        int carlaId = LoadCarlaPlugin();
+        if ( carlaId != -1 )
+        {
+            if ( !pClient->LoadPluginPreset ( carlaId, pSettings->strCarlaPresetPath.toStdString() ) )
+            {
+                qWarning() << "Failed to load Carla preset:" << pSettings->strCarlaPresetPath;
+            }
+            pClient->ShowPluginEditor(carlaId, nullptr);
+        }
+    }
+    else if ( pSettings->bCarlaWasActive && !pSettings->strCarlaStateBase64.isEmpty() )
+    {
+        int carlaId = LoadCarlaPlugin();
+        if ( carlaId != -1 )
+        {
+            QByteArray stateData = QByteArray::fromBase64(pSettings->strCarlaStateBase64.toUtf8());
+            if ( !pClient->RestorePluginState(carlaId, stateData) )
+            {
+                qWarning() << "Failed to restore Carla state";
+            }
+        }
+    }
 }
 
 void CClientDlg::closeEvent ( QCloseEvent* Event )
@@ -905,6 +951,23 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     pSettings->vecWindowPosChat     = ChatDlg.saveGeometry();
     pSettings->vecWindowPosEffects  = EffectsDlg.saveGeometry();
     pSettings->vecWindowPosConnect  = ConnectDlg.saveGeometry();
+
+    // Save Carla state
+    auto plugins = pClient->GetLoadedPluginsSnapshot();
+    if ( !plugins.empty() )
+    {
+        QByteArray stateData = pClient->SavePluginState(plugins[0].id);
+        if (!stateData.isEmpty())
+        {
+            pSettings->strCarlaStateBase64 = QString::fromUtf8(stateData.toBase64());
+        }
+        pSettings->bCarlaWasActive = true;
+    }
+    else
+    {
+        pSettings->strCarlaStateBase64 = "";
+        pSettings->bCarlaWasActive = false;
+    }
 
     pSettings->bWindowWasShownSettings = ClientSettingsDlg.isVisible();
     pSettings->bWindowWasShownChat     = ChatDlg.isVisible();
@@ -917,8 +980,6 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     EffectsDlg.close();
     ConnectDlg.close();
     AnalyzerConsole.close();
-    if ( pPluginLoaderDlg )
-        pPluginLoaderDlg->close();
 
     // if connected, terminate connection
     if ( pClient->IsRunning() )
@@ -2142,36 +2203,148 @@ void CClientDlg::OnInputGainMidiCCReceived ( int channel, int ccNumber, int midi
     }
 }
 
-void CClientDlg::OnOpenPluginLoader()
+int CClientDlg::LoadCarlaPlugin()
 {
-    // If already visible, a second press closes it (toggle behavior).
-    if ( pPluginLoaderDlg && pPluginLoaderDlg->isVisible() )
+    auto plugins = pClient->GetLoadedPluginsSnapshot();
+    if ( !plugins.empty() )
+        return plugins[0].id;
+
+#if defined( HAVE_LV2 )
+    const QString standardUri = "http://kxstudio.sf.net/carla/plugins/carlarack";
+    
+    // First try standard location
+    int carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
+
+    if ( carlaId == -1 )
     {
-        pPluginLoaderDlg->close();
+        // Try the saved path
+        if ( !pSettings->strCarlaPath.isEmpty() )
+        {
+            setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
+            carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
+        }
+
+        // Prompt if still not found
+        if ( carlaId == -1 )
+        {
+            QString strPath = QFileDialog::getExistingDirectory ( this, tr ( "Select Carla LV2 Bundle Directory (carla.lv2)" ) );
+            if ( !strPath.isEmpty() )
+            {
+                pSettings->strCarlaPath = strPath;
+                setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
+                carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
+            }
+        }
+    }
+#else
+    // Placeholder for VST2/AU on Windows/Mac
+    int carlaId = -1;
+    if ( !pSettings->strCarlaPath.isEmpty() )
+    {
+        carlaId = pClient->LoadPlugin ( pSettings->strCarlaPath.toStdString() );
+    }
+
+    if ( carlaId == -1 )
+    {
+        QString strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ) );
+        if ( !strPath.isEmpty() )
+        {
+            pSettings->strCarlaPath = strPath;
+            carlaId = pClient->LoadPlugin ( strPath.toStdString() );
+        }
+    }
+#endif
+    return carlaId;
+}
+
+void CClientDlg::OnOpenCarla()
+{
+    bool bWantOpen = butPlugins->isChecked();
+    if ( !bWantOpen )
+    {
+        auto plugins = pClient->GetLoadedPluginsSnapshot();
+        if ( !plugins.empty() )
+            pClient->ClosePluginEditor ( plugins[0].id );
         return;
     }
 
-    if ( !pPluginLoaderDlg )
+    if ( !pClient->IsRunning() )
     {
-        pPluginLoaderDlg = new CPluginLoaderDlg ( pClient, nullptr );
-
-        // Keep button state in sync when user closes the dialog directly.
-        connect ( pPluginLoaderDlg, &QDialog::finished, this, [this] {
-            if ( butPlugins->isChecked() )
-                butPlugins->setChecked ( false );
-        } );
-
-        connect ( pPluginLoaderDlg, &QObject::destroyed, this, [this] {
-            pPluginLoaderDlg = nullptr;
-            if ( butPlugins->isChecked() )
-                butPlugins->setChecked ( false );
-        } );
+        QMessageBox::information( this, "Offline Warning", "You are not connected to a server. Carla will load, but audio will not be processed." );
     }
 
-    pPluginLoaderDlg->show();
-    pPluginLoaderDlg->raise();
-    pPluginLoaderDlg->activateWindow();
+    int carlaId = LoadCarlaPlugin();
 
-    if ( !butPlugins->isChecked() )
-        butPlugins->setChecked ( true );
+    if ( carlaId != -1 )
+    {
+        pClient->ShowPluginEditor ( carlaId, nullptr );
+    }
+    else
+    {
+        QMessageBox::warning ( this, APP_NAME, tr ( "Could not load Carla plugin." ) );
+        butPlugins->setChecked ( false );
+    }
+}
+
+void CClientDlg::OnCarlaContextMenu( const QPoint& pos )
+{
+    QMenu menu(this);
+    
+    QAction* setDirAction = menu.addAction(tr("Set Presets Directory..."));
+    menu.addSeparator();
+
+    QList<QAction*> presetActions;
+    if ( !pSettings->strCarlaPresetsDir.isEmpty() )
+    {
+        QDir dir(pSettings->strCarlaPresetsDir);
+        QStringList filters;
+        filters << "*.carxp";
+        QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
+        
+        for ( const QFileInfo& file : files )
+        {
+            QAction* action = menu.addAction(file.completeBaseName());
+            action->setData(file.absoluteFilePath());
+            presetActions.append(action);
+        }
+        
+        if ( presetActions.isEmpty() )
+        {
+            QAction* emptyAction = menu.addAction(tr("No presets found"));
+            emptyAction->setEnabled(false);
+        }
+    }
+    else
+    {
+        QAction* emptyAction = menu.addAction(tr("No directory set"));
+        emptyAction->setEnabled(false);
+    }
+
+    QAction* selectedAction = menu.exec(butPlugins->mapToGlobal(pos));
+    if ( !selectedAction ) return;
+
+    if ( selectedAction == setDirAction )
+    {
+        QString dir = QFileDialog::getExistingDirectory(this, tr("Select Carla Presets Directory"), pSettings->strCarlaPresetsDir);
+        if ( !dir.isEmpty() )
+        {
+            pSettings->strCarlaPresetsDir = dir;
+        }
+    }
+    else if ( presetActions.contains(selectedAction) )
+    {
+        QString path = selectedAction->data().toString();
+        int carlaId = LoadCarlaPlugin();
+        if ( carlaId != -1 )
+        {
+            if ( !pClient->LoadPluginPreset(carlaId, path.toStdString()) )
+            {
+                QMessageBox::warning(this, APP_NAME, tr("Failed to load preset %1").arg(path));
+            }
+            else
+            {
+                pClient->ShowPluginEditor(carlaId, nullptr);
+            }
+        }
+    }
 }

@@ -36,17 +36,14 @@ QT += network \
     xml \
     concurrent
 
-# VST3 SDK support
-VST3_SDK_PATH = $$PWD/libs/vst3sdk
-exists($$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp) {
-    message("VST3 SDK found at $$VST3_SDK_PATH -- enabling HAVE_VST3")
-    DEFINES += HAVE_VST3
-    INCLUDEPATH += $$VST3_SDK_PATH
-    # Build the minimal VST3 SDK sources needed by the host
-    SOURCES += $$VST3_SDK_PATH/pluginterfaces/base/funknown.cpp \
-               $$VST3_SDK_PATH/public.sdk/source/vst/hosting/processdata.cpp \
-               $$VST3_SDK_PATH/public.sdk/source/vst/hosting/eventlist.cpp \
-               $$VST3_SDK_PATH/public.sdk/source/vst/vstinitiids.cpp
+# LV2 support (Linux)
+unix:!macx {
+    CONFIG += link_pkgconfig
+    packagesExist(lilv-0 suil-0) {
+        message("LV2 support enabled (lilv + suil found)")
+        DEFINES += HAVE_LV2
+        PKGCONFIG += lilv-0 suil-0
+    }
 }
 
 contains(CONFIG, "nosound") {
@@ -402,14 +399,14 @@ FORMS_GUI = src/aboutdlgbase.ui \
         src/clientsettingsdlgbase.ui \
         src/plugins/effectsdlgbase.ui \
         src/chatdlgbase.ui \
-        src/connectdlgbase.ui \
-        src/plugins/pluginloaderdlgbase.ui
+        src/connectdlgbase.ui
 }
 
 HEADERS += src/buffer.h \
     src/channel.h \
     src/global.h \
     src/plugins/pluginhost.h \
+    src/plugins/lv2_adapter.h \
     src/protocol.h \
     src/recorder/jamcontroller.h \
     src/threadpool.h \
@@ -437,7 +434,6 @@ HEADERS_GUI = src/serverdlg.h
         src/customknob.h \
         src/audiomixerboard.h \
         src/chatdlg.h \
-        src/plugins/pluginloaderdlg.h \
         src/plugins/effectsdlg.h \
         src/clientsettingsdlg.h \
         src/connectdlg.h \
@@ -523,8 +519,7 @@ SOURCES += src/buffer.cpp \
     src/channel.cpp \
     src/main.cpp \
     src/plugins/pluginhost.cpp \
-    src/plugins/vst3_adapter.cpp \
-    src/plugins/vst3_iids.cpp \
+    src/plugins/lv2_adapter.cpp \
     src/plugins/audioreverb.cpp \
     src/plugins/audioequalizer.cpp \
     src/plugins/audiocompressor.cpp \
@@ -553,7 +548,6 @@ SOURCES_GUI = src/serverdlg.cpp
     SOURCES_GUI += src/audiomixerboard.cpp \
         src/chatdlg.cpp \
         src/plugins/effectsdlg.cpp \
-        src/plugins/pluginloaderdlg.cpp \
         src/clientsettingsdlg.cpp \
         src/connectdlg.cpp \
         src/clientdlg.cpp \

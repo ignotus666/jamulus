@@ -385,11 +385,15 @@ public:
     // Plugin host control wrappers (UI can call these)
     // Returns plugin id (>0) on success or -1 on failure
     int LoadPlugin ( const std::string & sPath ) { return PluginHost.LoadPlugin ( sPath ); }
+    bool LoadPluginPreset ( int iPluginId, const std::string& presetPath ) { return PluginHost.LoadPluginPreset ( iPluginId, presetPath ); }
+    QByteArray SavePluginState ( int iPluginId ) { return PluginHost.SavePluginState ( iPluginId ); }
+    bool RestorePluginState ( int iPluginId, const QByteArray& stateData ) { return PluginHost.RestorePluginState ( iPluginId, stateData ); }
     bool UnloadPlugin ( int iPluginId ) { return PluginHost.UnloadPlugin ( iPluginId ); }
     bool ShowPluginEditor ( int iPluginId, void* parentWindow ) { return PluginHost.ShowPluginEditor ( iPluginId, parentWindow ); }
     bool ClosePluginEditor ( int iPluginId ) { return PluginHost.ClosePluginEditor ( iPluginId ); }
     bool GetPluginEditorSize ( int iPluginId, int& width, int& height ) { return PluginHost.GetPluginEditorSize ( iPluginId, width, height ); }
     bool ResizePluginEditor ( int iPluginId, int width, int height ) { return PluginHost.ResizePluginEditor ( iPluginId, width, height ); }
+    void IdlePluginEditors() { PluginHost.IdlePluginEditors(); }
     bool ResizePluginEditorFromPlugin ( int iPluginId, int width, int height )
     {
         return PluginHost.ResizePluginEditorFromPlugin ( iPluginId, width, height );

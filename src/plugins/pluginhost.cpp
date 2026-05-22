@@ -34,29 +34,13 @@
 #include <queue>
 #include <thread>
 
-#include "vst3_adapter.h"
+#include "lv2_adapter.h"
 
 namespace
 {
-static std::string TrimToVst3Binary ( const std::string & sPath )
+static bool IsLv2Uri ( const std::string & sPath )
 {
-	QFileInfo info ( QString::fromStdString ( sPath ) );
-	if ( info.isFile() && info.suffix().compare ( QLatin1String ( "so" ), Qt::CaseInsensitive ) == 0 )
-		return sPath;
-
-	if ( ! info.isDir() )
-		return {};
-
-	QDirIterator it ( QString::fromStdString ( sPath ), QStringList() << "*.so", QDir::Files,
-	                  QDirIterator::Subdirectories );
-	while ( it.hasNext() )
-	{
-		const QString candidate = it.next();
-		if ( candidate.contains ( QLatin1String ( "/Contents/" ) ) )
-			return candidate.toStdString();
-	}
-
-	return {};
+	return sPath.find ( "http://" ) == 0 || sPath.find ( "https://" ) == 0;
 }
 } // namespace
 
@@ -121,7 +105,7 @@ void CPluginHost::LoaderLoop()
 
 void CPluginHost::Clear()
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QWriteLocker lg ( &rwLockPlugins );
 	for ( auto & e : vecPlugins )
 	{
 		if ( e.closeEditor && e.instance )
@@ -137,7 +121,7 @@ void CPluginHost::Clear()
 
 bool CPluginHost::HasLoadedPlugins()
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QWriteLocker lg ( &rwLockPlugins );
 	return !vecPlugins.empty();
 }
 
@@ -171,7 +155,7 @@ bool CPluginHost::UnloadPlugin ( int iPluginId )
 
 bool CPluginHost::ShowPluginEditor ( int iPluginId, void* parentWindow )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QWriteLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() )
@@ -185,7 +169,7 @@ bool CPluginHost::ShowPluginEditor ( int iPluginId, void* parentWindow )
 
 bool CPluginHost::ClosePluginEditor ( int iPluginId )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QWriteLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							[iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() )
@@ -203,7 +187,7 @@ bool CPluginHost::ClosePluginEditor ( int iPluginId )
 		loaderCommands.push ( [inst, this] {
 			try {
 				// find matching plugin entry by instance and call its closeEditor callback
-				std::lock_guard<std::mutex> lg2 ( mtxPlugins );
+				QWriteLocker lg2 ( &rwLockPlugins );
 				auto jt = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 										 [inst] ( const PluginEntry& e ) { return e.instance == inst; } );
 				if ( jt != vecPlugins.end() && jt->closeEditor )
@@ -226,7 +210,7 @@ bool CPluginHost::ClosePluginEditor ( int iPluginId )
 
 bool CPluginHost::GetPluginEditorSize ( int iPluginId, int& width, int& height )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QReadLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() || !it->getEditorSize || !it->instance )
@@ -237,7 +221,7 @@ bool CPluginHost::GetPluginEditorSize ( int iPluginId, int& width, int& height )
 
 bool CPluginHost::ResizePluginEditor ( int iPluginId, int width, int height )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QReadLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() || !it->resizeEditor || !it->instance )
@@ -248,7 +232,7 @@ bool CPluginHost::ResizePluginEditor ( int iPluginId, int width, int height )
 
 bool CPluginHost::ResizePluginEditorFromPlugin ( int iPluginId, int width, int height )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QReadLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() || !it->resizeEditorFromPlugin || !it->instance )
@@ -269,7 +253,7 @@ void CPluginHost::HostResizeTrampoline ( void* context, int width, int height )
 
 bool CPluginHost::SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QReadLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 							 [iPluginId] ( const PluginEntry& e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() || !it->instance )
@@ -279,15 +263,14 @@ bool CPluginHost::SetPluginEditorHostResizeCallback ( int iPluginId, std::functi
 	ctx->callback = std::move ( callback );
 	it->hostResizeContext = ctx;
 
-	if ( it->handle == nullptr )
-		return vst3_set_host_resize_callback_handle ( it->instance, ctx.get(), &CPluginHost::HostResizeTrampoline );
-
+	// LV2 external UI manages its own window; host resize callbacks are not
+	// applicable for external-UI plugins like Carla.
 	return false;
 }
 
 std::vector<CPluginHost::LoadedPluginInfo> CPluginHost::GetLoadedPluginsSnapshot()
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QReadLocker lg ( &rwLockPlugins );
 	std::vector<LoadedPluginInfo> result;
 	result.reserve ( vecPlugins.size() );
 	for ( const auto & e : vecPlugins )
@@ -295,9 +278,65 @@ std::vector<CPluginHost::LoadedPluginInfo> CPluginHost::GetLoadedPluginsSnapshot
 		LoadedPluginInfo info;
 		info.id = e.id;
 		info.path = e.path;
+		info.bEditorVisible = e.isEditorVisible ? e.isEditorVisible ( e.instance ) : false;
 		result.push_back ( std::move ( info ) );
 	}
 	return result;
+}
+
+bool CPluginHost::LoadPluginPreset ( int iPluginId, const std::string& presetPath )
+{
+	QReadLocker lg ( &rwLockPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+	                        [iPluginId] ( const PluginEntry & e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->loadPreset || !it->instance )
+		return false;
+
+	return it->loadPreset ( it->instance, presetPath.c_str() );
+}
+
+QByteArray CPluginHost::SavePluginState ( int iPluginId )
+{
+	QReadLocker lg ( &rwLockPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+	                        [iPluginId] ( const PluginEntry & e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->saveState || !it->instance )
+		return QByteArray();
+
+    int size = 0;
+    char* data = it->saveState(it->instance, &size);
+    if (!data || size <= 0)
+        return QByteArray();
+
+    QByteArray result(data, size);
+    free(data);
+    return result;
+}
+
+bool CPluginHost::RestorePluginState ( int iPluginId, const QByteArray& stateData )
+{
+	QReadLocker lg ( &rwLockPlugins );
+	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
+	                        [iPluginId] ( const PluginEntry & e ) { return e.id == iPluginId; } );
+	if ( it == vecPlugins.end() || !it->restoreState || !it->instance )
+		return false;
+
+	return it->restoreState ( it->instance, stateData.constData(), stateData.size() );
+}
+
+void CPluginHost::IdlePluginEditors()
+{
+	QReadLocker lg ( &rwLockPlugins );
+	for ( auto& p : vecPlugins )
+	{
+		if ( p.idleEditor )
+		{
+			if ( !p.idleEditor ( p.instance ) )
+			{
+				p.closeEditor ( p.instance );
+			}
+		}
+	}
 }
 
 void CPluginHost::QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t iSampleOffset )
@@ -337,7 +376,7 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 
 		if ( create && destroy && process )
 		{
-			plugin_handle_t inst = create ( GetSampleRateHz(), GetStereoBlockSizeSam(), 2 );
+			plugin_handle_t inst = create ( GetSampleRateHz(), GetBlockSizeFrames(), 2 );
 			if ( ! inst )
 			{
 				qWarning() << "pluginhost: plugin_create failed:" << sPath.c_str();
@@ -347,7 +386,7 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 
 			PluginEntry e;
 			{
-				std::lock_guard<std::mutex> lg ( mtxPlugins );
+				QWriteLocker lg ( &rwLockPlugins );
 				e.id = iNextPluginId++;
 				e.handle = h;
 				e.instance = inst;
@@ -366,42 +405,46 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 		dlclose ( h );
 	}
 
-	// Fall back to a VST3 bundle or direct Linux VST3 binary.
+	// Fall back to LV2 plugin loading (by URI).
+	if ( ! IsLv2Uri ( sPath ) )
+	{
+		qWarning() << "pluginhost: path is neither a C-ABI library nor an LV2 URI:" << sPath.c_str();
+		return -1;
+	}
+
 	const int iHostChannels = 2;
-	const std::string binaryPath = TrimToVst3Binary ( sPath );
-	const std::string loadPath = binaryPath.empty() ? sPath : binaryPath;
-	plugin_handle_t inst = vst3_create_from_path ( loadPath.c_str(), GetSampleRateHz(),
-	                                              GetStereoBlockSizeSam(), iHostChannels );
+	plugin_handle_t inst = lv2_create_from_uri ( sPath.c_str(), GetSampleRateHz(),
+	                                              GetBlockSizeFrames(), iHostChannels );
 	if ( ! inst )
 	{
-		qWarning() << "pluginhost: failed to load plugin via VST3 adapter:" << sPath.c_str();
+		qWarning() << "pluginhost: failed to load plugin via LV2 adapter:" << sPath.c_str();
 		return -1;
 	}
 
 	PluginEntry e;
 	{
-		std::lock_guard<std::mutex> lg ( mtxPlugins );
+		QWriteLocker lg ( &rwLockPlugins );
 		e.id = iNextPluginId++;
 		e.handle = nullptr;
 		e.instance = inst;
 		e.create = nullptr;
-		e.destroy = []( plugin_handle_t x ) { vst3_destroy_handle ( x ); };
-		e.process = []( plugin_handle_t x, float * buf, int nframes, int nch ) {
-			vst3_process_handle ( x, buf, nframes, nch );
+		e.destroy = []( plugin_handle_t x ) { lv2_destroy_handle ( x ); };
+		e.process = []( plugin_handle_t x, float * buf, int nframes, int nch, const void* midi, int nmidi ) {
+			lv2_process_handle ( x, buf, nframes, nch, midi, nmidi );
 		};
-		e.closeEditor = []( plugin_handle_t x ) { vst3_close_editor_handle ( x ); };
-		e.showEditor = []( plugin_handle_t x, void* parentWindow ) {
-			return vst3_show_editor_handle ( x, parentWindow );
+		e.closeEditor = []( plugin_handle_t x ) { lv2_close_editor_handle ( x ); };
+		e.showEditor = []( plugin_handle_t x, void* /* parentWindow */ ) {
+			// LV2 external UI manages its own window; parentWindow is unused.
+			return lv2_show_editor_handle ( x );
 		};
-		e.getEditorSize = []( plugin_handle_t x, int& w, int& h ) {
-			return vst3_get_editor_size_handle ( x, &w, &h );
-		};
-		e.resizeEditor = []( plugin_handle_t x, int w, int h ) {
-			return vst3_resize_editor_handle ( x, w, h );
-		};
-		e.resizeEditorFromPlugin = []( plugin_handle_t x, int w, int h ) {
-			return vst3_resize_editor_from_plugin_handle ( x, w, h );
-		};
+		e.idleEditor = []( plugin_handle_t x ) { return lv2_idle_editor_handle ( x ); };
+		e.isEditorVisible = []( plugin_handle_t x ) { return lv2_is_editor_visible_handle ( x ); };
+		e.loadPreset = []( plugin_handle_t x, const char* path ) { return lv2_load_preset_handle ( x, path ); };
+		e.saveState = []( plugin_handle_t x, int* outSize ) { return lv2_save_state_handle ( x, outSize ); };
+		e.restoreState = []( plugin_handle_t x, const char* data, int size ) { return lv2_restore_state_handle ( x, data, size ); };
+		e.getEditorSize = nullptr;
+		e.resizeEditor = nullptr;
+		e.resizeEditorFromPlugin = nullptr;
 		e.path = sPath;
 		vecPlugins.push_back ( e );
 	}
@@ -411,7 +454,7 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 
 bool CPluginHost::UnloadPluginImpl ( int iPluginId )
 {
-	std::lock_guard<std::mutex> lg ( mtxPlugins );
+	QWriteLocker lg ( &rwLockPlugins );
 	auto it = std::find_if ( vecPlugins.begin(), vecPlugins.end(),
 	                        [iPluginId] ( const PluginEntry & e ) { return e.id == iPluginId; } );
 	if ( it == vecPlugins.end() )
@@ -456,7 +499,7 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 	if ( iFrames <= 0 )
 		return;
 
-	if ( ! mtxPlugins.try_lock() )
+	if ( ! rwLockPlugins.tryLockForRead() )
 		return;
 
 	constexpr int iChannels = 2;
@@ -469,30 +512,17 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		buffer[iIndex + 1] = static_cast<float> ( vecsStereoInOut[iIndex + 1] ) / 32768.0f;
 	}
 
-	// Convert queued MIDI events for VST3 processing and set them on adapter
+	std::vector<MidiEventData> localMidiEvents;
 	{
 		std::lock_guard<std::mutex> lockMIDI ( mtxMIDI );
-		std::vector<std::pair<uint8_t, std::vector<uint8_t>>> midiEventsForAdapter;
-		for ( const auto& evt : vecMIDIEvents )
-		{
-			std::vector<uint8_t> data ( evt.data, evt.data + evt.length );
-			uint8_t sampleOffset = static_cast<uint8_t>( evt.offset % iFrames );  // clamp to frame size
-			if ( !data.empty() )
-				qDebug() << "CPluginHost::Process: queuing MIDI" << data[0] << "at offset" << sampleOffset << "length" << evt.length;
-			midiEventsForAdapter.push_back ( { sampleOffset, data } );
-		}
-		if ( !midiEventsForAdapter.empty() )
-		{
-			qDebug() << "CPluginHost::Process: setting" << midiEventsForAdapter.size() << "MIDI events for frame";
-			vst3_set_midi_events ( midiEventsForAdapter );
-		}
+		localMidiEvents = std::move(vecMIDIEvents);
 		vecMIDIEvents.clear();
 	}
 
 	for ( const auto & e : vecPlugins )
 	{
 		if ( e.process && e.instance )
-			e.process ( e.instance, buffer.data(), iFrames, iChannels );
+			e.process ( e.instance, buffer.data(), iFrames, iChannels, localMidiEvents.data(), static_cast<int>(localMidiEvents.size()) );
 	}
 
 	for ( int iFrame = 0; iFrame < iFrames; ++iFrame )
@@ -508,5 +538,5 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		vecsStereoInOut[iIndex + 1] = static_cast<int16_t> ( fR * 32767.0f );
 	}
 
-	mtxPlugins.unlock();
+	rwLockPlugins.unlock();
 }

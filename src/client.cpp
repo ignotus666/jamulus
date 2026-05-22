@@ -1373,7 +1373,7 @@ void CClient::Init()
     AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
 
     // initialize local plugin host processing stage
-    PluginHost.Init ( SYSTEM_SAMPLE_RATE_HZ, iStereoBlockSizeSam );
+    PluginHost.Init ( SYSTEM_SAMPLE_RATE_HZ, iMonoBlockSizeSam );
     Sound.SetMidiEventCallback ( [this] ( const uint8_t* pData, int iLength, uint32_t iSampleOffset ) {
         if ( pData && iLength > 0 )
             qDebug() << "CClient: MIDI callback received status=" << pData[0] << "length=" << iLength << "offset=" << iSampleOffset;
