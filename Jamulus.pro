@@ -421,6 +421,13 @@ HEADERS += src/buffer.h \
     src/recorder/cwavestream.h \
     src/signalhandler.h
 
+win32 {
+    HEADERS += src/plugins/vestige/vestige.h \
+               src/plugins/vestige/aeffect.h \
+               src/plugins/vestige/aeffectx.h \
+               src/plugins/vst2_adapter.h
+}
+
 !contains(CONFIG, "serveronly") {
     HEADERS += src/client.h \
         src/sound/soundbase.h \
@@ -536,6 +543,10 @@ SOURCES += src/buffer.cpp \
     src/recorder/jamrecorder.cpp \
     src/recorder/creaperproject.cpp \
     src/recorder/cwavestream.cpp
+
+win32 {
+    SOURCES += src/plugins/vst2_adapter.cpp
+}
 
 !contains(CONFIG, "serveronly") {
     SOURCES += src/client.cpp \

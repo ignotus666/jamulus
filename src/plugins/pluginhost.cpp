@@ -35,6 +35,11 @@
 #include <thread>
 
 #include "lv2_adapter.h"
+#ifdef Q_OS_WIN
+#include "vst2_adapter.h"
+#endif
+
+#include "audioequalizer.h"
 
 namespace
 {
@@ -404,6 +409,59 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 
 		dlclose ( h );
 	}
+
+#ifdef Q_OS_WIN
+	// Try VST2 loading (by path)
+	if (QString::fromStdString(sPath).toLower().endsWith(".dll"))
+	{
+		const int iHostChannels = 2;
+		plugin_handle_t inst = vst2_create_from_path ( sPath.c_str(), GetSampleRateHz(),
+		                                              GetBlockSizeFrames(), iHostChannels );
+		if ( ! inst )
+		{
+			qWarning() << "pluginhost: failed to load VST2 plugin:" << sPath.c_str();
+			return -1;
+		}
+
+		PluginEntry e;
+		{
+			QWriteLocker lg ( &rwLockPlugins );
+			e.id = iNextPluginId++;
+			e.handle = nullptr;
+			e.instance = inst;
+			e.create = nullptr;
+			e.destroy = []( plugin_handle_t x ) { vst2_destroy_handle ( x ); };
+			e.process = []( plugin_handle_t x, float * buf, int nframes, int nch, const void* midi, int nmidi ) {
+				vst2_process_handle ( x, buf, nframes, nch, midi, nmidi );
+			};
+			e.closeEditor = []( plugin_handle_t x ) { vst2_close_editor_handle ( x ); };
+			e.showEditor = []( plugin_handle_t x, void* ) {
+				return vst2_show_editor_handle ( x );
+			};
+			e.idleEditor = []( plugin_handle_t x ) { return vst2_idle_editor_handle ( x ); };
+			e.loadPreset = []( plugin_handle_t x, const std::string& path ) {
+				return vst2_load_preset_handle ( x, path.c_str() );
+			};
+			e.saveState = []( plugin_handle_t x ) -> std::vector<uint8_t> {
+				int size = 0;
+				char* data = vst2_save_state_handle(x, &size);
+				if (data && size > 0)
+				{
+					std::vector<uint8_t> ret((uint8_t*)data, (uint8_t*)data + size);
+					free(data);
+					return ret;
+				}
+				return {};
+			};
+			e.restoreState = []( plugin_handle_t x, const std::vector<uint8_t>& data ) {
+				return vst2_restore_state_handle(x, (const char*)data.data(), data.size());
+			};
+			e.path = sPath;
+			vecPlugins.push_back ( e );
+		}
+		return e.id;
+	}
+#endif
 
 	// Fall back to LV2 plugin loading (by URI).
 	if ( ! IsLv2Uri ( sPath ) )

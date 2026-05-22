@@ -2237,8 +2237,10 @@ int CClientDlg::LoadCarlaPlugin()
         }
     }
 #else
-    // Placeholder for VST2/AU on Windows/Mac
+    // Windows/Mac fallback (VST2/AU)
     int carlaId = -1;
+    
+    // First try the saved path
     if ( !pSettings->strCarlaPath.isEmpty() )
     {
         carlaId = pClient->LoadPlugin ( pSettings->strCarlaPath.toStdString() );
@@ -2246,8 +2248,28 @@ int CClientDlg::LoadCarlaPlugin()
 
     if ( carlaId == -1 )
     {
-        QString strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ) );
-        if ( !strPath.isEmpty() )
+#ifdef Q_OS_WIN
+        // Try common standard locations for Carla VST2 on Windows
+        QStringList commonPaths = {
+            "C:/Program Files/Common Files/VST2/Carla.dll",
+            "C:/Program Files/Steinberg/Vstplugins/Carla.dll",
+            "C:/Program Files/Vstplugins/Carla.dll"
+        };
+        for (const QString& path : commonPaths) {
+            if (QFile::exists(path)) {
+                carlaId = pClient->LoadPlugin ( path.toStdString() );
+                if (carlaId != -1) {
+                    pSettings->strCarlaPath = path;
+                    break;
+                }
+            }
+        }
+#endif
+        if ( carlaId == -1 )
+        {
+            QString filter = tr ( "Plugin Files (*.dll *.vst3 *.component);;All Files (*.*)" );
+            QString strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ), "", filter );
+            if ( !strPath.isEmpty() )
         {
             pSettings->strCarlaPath = strPath;
             carlaId = pClient->LoadPlugin ( strPath.toStdString() );
