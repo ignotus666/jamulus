@@ -26,7 +26,9 @@
 #include <algorithm>
 #include <condition_variable>
 #include <cstring>
+#ifndef Q_OS_WIN
 #include <dlfcn.h>
+#endif
 #include <future>
 #include <QDebug>
 #include <QDirIterator>
@@ -372,6 +374,7 @@ std::vector<CPluginHost::MidiEventData> CPluginHost::GetAndClearMIDIEvents()
 int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 {
 	// First try a plain C-ABI plugin shared library.
+#ifndef Q_OS_WIN
 	void * h = dlopen ( sPath.c_str(), RTLD_NOW );
 	if ( h )
 	{
@@ -409,6 +412,7 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 
 		dlclose ( h );
 	}
+#endif
 
 #ifdef Q_OS_WIN
 	// Try VST2 loading (by path)
@@ -544,8 +548,10 @@ bool CPluginHost::UnloadPluginImpl ( int iPluginId )
 		qDebug() << "pluginhost: UnloadPluginImpl - destroying instance for id" << iPluginId;
 		it->destroy ( it->instance );
 	}
+#ifndef Q_OS_WIN
 	if ( it->handle )
 		dlclose ( it->handle );
+#endif
 
 	vecPlugins.erase ( it );
 	return true;
