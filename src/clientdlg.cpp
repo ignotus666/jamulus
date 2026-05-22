@@ -2270,9 +2270,10 @@ int CClientDlg::LoadCarlaPlugin()
             QString filter = tr ( "Plugin Files (*.dll *.vst3 *.component);;All Files (*.*)" );
             QString strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ), "", filter );
             if ( !strPath.isEmpty() )
-        {
-            pSettings->strCarlaPath = strPath;
-            carlaId = pClient->LoadPlugin ( strPath.toStdString() );
+            {
+                pSettings->strCarlaPath = strPath;
+                carlaId = pClient->LoadPlugin ( strPath.toStdString() );
+            }
         }
     }
 #endif

@@ -66,6 +66,7 @@
 #    include <QWhatsThis>
 #    include <QTextBrowser>
 #    include <QGuiApplication>
+#    include <QStyleHints>
 #    include <QIcon>
 #    include <QPalette>
 #    include <QLabel>
