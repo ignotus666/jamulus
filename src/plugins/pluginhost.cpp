@@ -119,8 +119,10 @@ void CPluginHost::Clear()
 			e.closeEditor ( e.instance );
 		if ( e.destroy && e.instance )
 			e.destroy ( e.instance );
+#ifndef Q_OS_WIN
 		if ( e.handle )
 			dlclose ( e.handle );
+#endif
 		e = PluginEntry();
 	}
 	vecPlugins.clear();
@@ -443,22 +445,14 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 				return vst2_show_editor_handle ( x );
 			};
 			e.idleEditor = []( plugin_handle_t x ) { return vst2_idle_editor_handle ( x ); };
-			e.loadPreset = []( plugin_handle_t x, const std::string& path ) {
-				return vst2_load_preset_handle ( x, path.c_str() );
+			e.loadPreset = []( plugin_handle_t x, const char* path ) {
+				return vst2_load_preset_handle ( x, path );
 			};
-			e.saveState = []( plugin_handle_t x ) -> std::vector<uint8_t> {
-				int size = 0;
-				char* data = vst2_save_state_handle(x, &size);
-				if (data && size > 0)
-				{
-					std::vector<uint8_t> ret((uint8_t*)data, (uint8_t*)data + size);
-					free(data);
-					return ret;
-				}
-				return {};
+			e.saveState = []( plugin_handle_t x, int* outSize ) {
+				return vst2_save_state_handle(x, outSize);
 			};
-			e.restoreState = []( plugin_handle_t x, const std::vector<uint8_t>& data ) {
-				return vst2_restore_state_handle(x, (const char*)data.data(), data.size());
+			e.restoreState = []( plugin_handle_t x, const char* data, int size ) {
+				return vst2_restore_state_handle(x, data, size);
 			};
 			e.path = sPath;
 			vecPlugins.push_back ( e );
