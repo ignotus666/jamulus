@@ -58,7 +58,7 @@ void CAudioFilter::SetLowPassCutoffHz ( const int iHz )
 void CAudioFilter::UpdateHighPassCoeff()
 {
     const float fCutoff = static_cast<float> ( std::max ( 20, iHighPassCutoffHz ) );
-    const float fW0     = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
+    const float fW0     = 2.0f * static_cast<float> ( 3.14159265358979323846 ) * fCutoff / iSampleRateHz;
     const float fCosW0  = std::cos ( fW0 );
     const float fSinW0  = std::sin ( fW0 );
     const float fAlpha  = fSinW0 / ( 2.0f * fQ );
@@ -80,7 +80,7 @@ void CAudioFilter::UpdateHighPassCoeff()
 void CAudioFilter::UpdateLowPassCoeff()
 {
     const float fCutoff = static_cast<float> ( std::max ( 20, iLowPassCutoffHz ) );
-    const float fW0     = 2.0f * static_cast<float> ( M_PI ) * fCutoff / iSampleRateHz;
+    const float fW0     = 2.0f * static_cast<float> ( 3.14159265358979323846 ) * fCutoff / iSampleRateHz;
     const float fCosW0  = std::cos ( fW0 );
     const float fSinW0  = std::sin ( fW0 );
     const float fAlpha  = fSinW0 / ( 2.0f * fQ );
