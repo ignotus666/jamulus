@@ -33,6 +33,12 @@ bool lv2_close_editor_handle ( plugin_handle_t h );
 // while the editor is visible. Returns true if the UI is still open.
 bool lv2_idle_editor_handle ( plugin_handle_t h );
 
+// Returns true if the editor is currently visible.
+bool lv2_is_editor_visible_handle ( plugin_handle_t h );
+
+// Loads a preset from the given path (if supported).
+bool lv2_load_preset_handle ( plugin_handle_t h, const char* presetPath );
+
 // Save plugin state to a newly allocated char array. Caller must free it with free().
 char* lv2_save_state_handle(plugin_handle_t inst, int* out_size);
 
