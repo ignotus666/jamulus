@@ -26,6 +26,7 @@ struct Vst2Runtime
     int numChannels = 2;
     bool bEditorVisible = false;
     HWND editorWindow = nullptr;
+    QString pluginDir; // directory containing the DLL and its resources
 
     // Buffer management
     float** inputs = nullptr;
@@ -211,14 +212,26 @@ struct Vst2Runtime
         // Store back-pointer so HostCallback can find us
         effect->user = this;
 
+        // Store the plugin directory for resource lookups
+        pluginDir = fi.absolutePath();
+
         qDebug() << "vst2_adapter: plugin loaded successfully, uniqueID:" << effect->uniqueID
                  << "inputs:" << effect->numInputs << "outputs:" << effect->numOutputs
                  << "hasEditor:" << (bool)(effect->flags & effFlagsHasEditor);
+
+        // Set DLL dir and PATH during effOpen so Carla can find its resources
+        SetDllDirectoryW((LPCWSTR)pluginDir.utf16());
+        // Also prepend to PATH so child processes (carla-bridge-native.exe etc.) can be found
+        QString currentPath = QString::fromWCharArray(_wgetenv(L"PATH"));
+        QString newPath = pluginDir + ";" + pluginDir + "/resources;" + currentPath;
+        _wputenv_s(L"PATH", (LPCWSTR)newPath.utf16());
 
         effect->dispatcher(effect, effOpen, 0, 0, nullptr, 0.0f);
         effect->dispatcher(effect, effSetSampleRate, 0, 0, nullptr, (float)sampleRate);
         effect->dispatcher(effect, effSetBlockSize, 0, blockSize, nullptr, 0.0f);
         effect->dispatcher(effect, effMainsChanged, 0, 1, nullptr, 0.0f); // Resume (turn on)
+
+        SetDllDirectoryW(nullptr); // restore default
 
         // Re-check I/O after effOpen
         qDebug() << "vst2_adapter: after effOpen - inputs:" << effect->numInputs
@@ -360,8 +373,28 @@ bool vst2_show_editor_handle(plugin_handle_t h)
         return false;
     }
 
+    // Set DLL directory during effEditOpen so Carla can find its UI resources
+    SetDllDirectoryW((LPCWSTR)rt->pluginDir.utf16());
+
     // Open editor inside our window
     rt->effect->dispatcher(rt->effect, effEditOpen, 0, 0, (void*)rt->editorWindow, 0.0f);
+
+    SetDllDirectoryW(nullptr);
+
+    // Debug: check if plugin created child windows
+    HWND child = GetWindow(rt->editorWindow, GW_CHILD);
+    int childCount = 0;
+    while (child)
+    {
+        childCount++;
+        RECT childRect;
+        GetWindowRect(child, &childRect);
+        qDebug() << "vst2_adapter: child window" << childCount
+                 << "visible:" << (bool)IsWindowVisible(child)
+                 << "size:" << (childRect.right - childRect.left) << "x" << (childRect.bottom - childRect.top);
+        child = GetWindow(child, GW_HWNDNEXT);
+    }
+    qDebug() << "vst2_adapter: total child windows after effEditOpen:" << childCount;
 
     // Re-query size after open (some plugins update it)
     rect = nullptr;
