@@ -15,7 +15,7 @@ typedef AEffect* (VstEntryProc)(audioMasterCallback audioMaster);
 constexpr int effShellGetNextPlugin = 70;
 
 // Thread-local storage for the shell plugin ID that the host callback should return
-static thread_local VstIntPtr s_shellCurrentId = 0;
+static thread_local intptr_t s_shellCurrentId = 0;
 
 struct Vst2Runtime
 {
@@ -52,8 +52,8 @@ struct Vst2Runtime
         }
     }
 
-    static VstIntPtr VSTCALLBACK HostCallback(AEffect* effect, VstInt32 opcode,
-                                              VstInt32 index, VstIntPtr value,
+    static intptr_t VST_CALL_CONV HostCallback(AEffect* effect, int32_t opcode,
+                                              int32_t index, intptr_t value,
                                               void* ptr, float opt)
     {
         switch (opcode)
@@ -141,8 +141,8 @@ struct Vst2Runtime
             {
                 // Enumerate sub-plugins
                 char name[256] = {0};
-                VstIntPtr subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, name, 0.0f);
-                VstIntPtr firstId = subId;
+                intptr_t subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, name, 0.0f);
+                intptr_t firstId = subId;
                 qDebug() << "vst2_adapter: shell sub-plugin:" << name << "id:" << subId;
 
                 // Look for more sub-plugins
@@ -336,7 +336,7 @@ char* vst2_save_state_handle(plugin_handle_t inst, int* out_size)
     if (auto* rt = static_cast<Vst2Runtime*>(inst))
     {
         void* chunk = nullptr;
-        VstIntPtr size = rt->effect->dispatcher(rt->effect, effGetChunk, 0, 0, &chunk, 0.0f);
+        intptr_t size = rt->effect->dispatcher(rt->effect, effGetChunk, 0, 0, &chunk, 0.0f);
         if (size > 0 && chunk)
         {
             char* copy = (char*)malloc(size);
