@@ -11,6 +11,11 @@
 
 // Define VSTPluginMain signature
 typedef AEffect* (VstEntryProc)(audioMasterCallback audioMaster);
+// Shell VST2 opcode not in vestige header
+constexpr int effShellGetNextPlugin = 70;
+
+// Thread-local storage for the shell plugin ID that the host callback should return
+static thread_local VstIntPtr s_shellCurrentId = 0;
 
 struct Vst2Runtime
 {
@@ -55,10 +60,11 @@ struct Vst2Runtime
         {
             case audioMasterVersion:
                 return 2400; // VST 2.4
+            case audioMasterCurrentId:
+                return s_shellCurrentId;
             case audioMasterIdle:
                 return 1;
             case audioMasterGetSampleRate:
-                // ideally return sampleRate, but we don't have user data here easily
                 return 48000; 
             case audioMasterGetBlockSize:
                 return 128;
@@ -66,7 +72,10 @@ struct Vst2Runtime
                 return 0; // unknown
             case audioMasterGetTime:
                 return 0; // null time info
+            case audioMasterIOChanged:
+                return 1;
             case audioMasterCanDo:
+                if (ptr && strcmp((char*)ptr, "shellCategory") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "sendVstEvents") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "sendVstMidiEvent") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "receiveVstEvents") == 0) return 1;
@@ -113,11 +122,57 @@ struct Vst2Runtime
             return false;
         }
 
+        // First call: try loading directly (non-shell plugin)
+        s_shellCurrentId = 0;
         effect = mainProc(HostCallback);
+
         if (!effect)
         {
-            qWarning() << "vst2_adapter: plugin main returned null";
-            return false;
+            // Might be a shell plugin. Create a temporary instance to enumerate
+            // sub-plugins, then re-instantiate with the correct ID.
+            qDebug() << "vst2_adapter: direct load returned null, trying shell enumeration";
+
+            // For shell enumeration, we need to set a non-zero ID.
+            // Use a dummy large ID first to get the shell to instantiate
+            // so we can query sub-plugins.
+            s_shellCurrentId = 1;
+            AEffect* shellEffect = mainProc(HostCallback);
+            if (shellEffect)
+            {
+                // Enumerate sub-plugins
+                char name[256] = {0};
+                VstIntPtr subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, name, 0.0f);
+                VstIntPtr firstId = subId;
+                qDebug() << "vst2_adapter: shell sub-plugin:" << name << "id:" << subId;
+
+                // Look for more sub-plugins
+                while (subId != 0)
+                {
+                    char nextName[256] = {0};
+                    subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, nextName, 0.0f);
+                    if (subId != 0)
+                    {
+                        qDebug() << "vst2_adapter: shell sub-plugin:" << nextName << "id:" << subId;
+                    }
+                }
+
+                // Close the temporary shell instance
+                shellEffect->dispatcher(shellEffect, effClose, 0, 0, nullptr, 0.0f);
+
+                // Re-instantiate with the first sub-plugin ID
+                if (firstId != 0)
+                {
+                    qDebug() << "vst2_adapter: re-instantiating with shell ID:" << firstId;
+                    s_shellCurrentId = firstId;
+                    effect = mainProc(HostCallback);
+                }
+            }
+
+            if (!effect)
+            {
+                qWarning() << "vst2_adapter: plugin main returned null (shell enumeration also failed)";
+                return false;
+            }
         }
 
         if (effect->magic != kEffectMagic)
@@ -125,6 +180,9 @@ struct Vst2Runtime
             qWarning() << "vst2_adapter: invalid plugin magic";
             return false;
         }
+
+        qDebug() << "vst2_adapter: plugin loaded successfully, uniqueID:" << effect->uniqueID
+                 << "inputs:" << effect->numInputs << "outputs:" << effect->numOutputs;
 
         effect->dispatcher(effect, effOpen, 0, 0, nullptr, 0.0f);
         effect->dispatcher(effect, effSetSampleRate, 0, 0, nullptr, (float)sampleRate);
