@@ -409,6 +409,28 @@ bool vst2_idle_editor_handle(plugin_handle_t h)
     {
         if (rt->effect && rt->bEditorVisible)
         {
+            // Pump Win32 messages for the editor window and its children
+            if (rt->editorWindow)
+            {
+                MSG msg;
+                while (PeekMessage(&msg, rt->editorWindow, 0, 0, PM_REMOVE))
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+                // Also pump messages for child windows
+                HWND child = GetWindow(rt->editorWindow, GW_CHILD);
+                while (child)
+                {
+                    while (PeekMessage(&msg, child, 0, 0, PM_REMOVE))
+                    {
+                        TranslateMessage(&msg);
+                        DispatchMessage(&msg);
+                    }
+                    child = GetWindow(child, GW_HWNDNEXT);
+                }
+            }
+
             rt->effect->dispatcher(rt->effect, effEditIdle, 0, 0, nullptr, 0.0f);
             return true;
         }
