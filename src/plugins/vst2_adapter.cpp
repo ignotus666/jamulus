@@ -25,6 +25,7 @@ struct Vst2Runtime
     int blockSize = 128;
     int numChannels = 2;
     bool bEditorVisible = false;
+    HWND editorWindow = nullptr;
 
     // Buffer management
     float** inputs = nullptr;
@@ -32,6 +33,13 @@ struct Vst2Runtime
 
     ~Vst2Runtime()
     {
+        if (editorWindow)
+        {
+            if (effect)
+                effect->dispatcher(effect, effEditClose, 0, 0, nullptr, 0.0f);
+            DestroyWindow(editorWindow);
+            editorWindow = nullptr;
+        }
         if (effect)
         {
             effect->dispatcher(effect, effClose, 0, 0, nullptr, 0.0f);
@@ -74,8 +82,24 @@ struct Vst2Runtime
                 return 0; // null time info
             case audioMasterIOChanged:
                 return 1;
+            case audioMasterSizeWindow:
+                // index = width, value = height
+                if (effect && effect->user)
+                {
+                    auto* rt = static_cast<Vst2Runtime*>(effect->user);
+                    if (rt->editorWindow)
+                    {
+                        RECT rc = {0, 0, index, (int)value};
+                        AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+                        SetWindowPos(rt->editorWindow, nullptr, 0, 0,
+                                     rc.right - rc.left, rc.bottom - rc.top,
+                                     SWP_NOMOVE | SWP_NOZORDER);
+                    }
+                }
+                return 1;
             case audioMasterCanDo:
                 if (ptr && strcmp((char*)ptr, "shellCategory") == 0) return 1;
+                if (ptr && strcmp((char*)ptr, "sizeWindow") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "sendVstEvents") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "sendVstMidiEvent") == 0) return 1;
                 if (ptr && strcmp((char*)ptr, "receiveVstEvents") == 0) return 1;
@@ -85,6 +109,11 @@ struct Vst2Runtime
                 break;
         }
         return 0;
+    }
+
+    static LRESULT CALLBACK EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
     bool init(const char* path)
@@ -122,57 +151,55 @@ struct Vst2Runtime
             return false;
         }
 
-        // First call: try loading directly (non-shell plugin)
+        // For shell plugins (like Carla), we must enumerate sub-plugins and pick one.
+        // First, try to get a shell instance to enumerate from.
+        qDebug() << "vst2_adapter: enumerating shell sub-plugins...";
         s_shellCurrentId = 0;
-        effect = mainProc(HostCallback);
+        AEffect* probeEffect = mainProc(HostCallback);
 
-        if (!effect)
+        if (probeEffect)
         {
-            // Might be a shell plugin. Create a temporary instance to enumerate
-            // sub-plugins, then re-instantiate with the correct ID.
-            qDebug() << "vst2_adapter: direct load returned null, trying shell enumeration";
+            // Check if this is a shell by trying to enumerate sub-plugins
+            char name[256] = {0};
+            intptr_t subId = probeEffect->dispatcher(probeEffect, effShellGetNextPlugin, 0, 0, name, 0.0f);
 
-            // For shell enumeration, we need to set a non-zero ID.
-            // Use a dummy large ID first to get the shell to instantiate
-            // so we can query sub-plugins.
-            s_shellCurrentId = 1;
-            AEffect* shellEffect = mainProc(HostCallback);
-            if (shellEffect)
+            if (subId != 0)
             {
-                // Enumerate sub-plugins
-                char name[256] = {0};
-                intptr_t subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, name, 0.0f);
+                // It IS a shell plugin. Close this probe and re-instantiate properly.
+                qDebug() << "vst2_adapter: detected shell plugin, first sub-plugin:" << name << "id:" << subId;
                 intptr_t firstId = subId;
-                qDebug() << "vst2_adapter: shell sub-plugin:" << name << "id:" << subId;
 
-                // Look for more sub-plugins
+                // Log remaining sub-plugins
                 while (subId != 0)
                 {
                     char nextName[256] = {0};
-                    subId = shellEffect->dispatcher(shellEffect, effShellGetNextPlugin, 0, 0, nextName, 0.0f);
+                    subId = probeEffect->dispatcher(probeEffect, effShellGetNextPlugin, 0, 0, nextName, 0.0f);
                     if (subId != 0)
                     {
                         qDebug() << "vst2_adapter: shell sub-plugin:" << nextName << "id:" << subId;
                     }
                 }
 
-                // Close the temporary shell instance
-                shellEffect->dispatcher(shellEffect, effClose, 0, 0, nullptr, 0.0f);
+                probeEffect->dispatcher(probeEffect, effClose, 0, 0, nullptr, 0.0f);
+                probeEffect = nullptr;
 
                 // Re-instantiate with the first sub-plugin ID
-                if (firstId != 0)
-                {
-                    qDebug() << "vst2_adapter: re-instantiating with shell ID:" << firstId;
-                    s_shellCurrentId = firstId;
-                    effect = mainProc(HostCallback);
-                }
+                qDebug() << "vst2_adapter: instantiating sub-plugin with ID:" << firstId;
+                s_shellCurrentId = firstId;
+                effect = mainProc(HostCallback);
             }
-
-            if (!effect)
+            else
             {
-                qWarning() << "vst2_adapter: plugin main returned null (shell enumeration also failed)";
-                return false;
+                // Not a shell plugin — use the probe effect directly
+                qDebug() << "vst2_adapter: not a shell plugin, using directly";
+                effect = probeEffect;
             }
+        }
+
+        if (!effect)
+        {
+            qWarning() << "vst2_adapter: plugin main returned null";
+            return false;
         }
 
         if (effect->magic != kEffectMagic)
@@ -181,17 +208,24 @@ struct Vst2Runtime
             return false;
         }
 
+        // Store back-pointer so HostCallback can find us
+        effect->user = this;
+
         qDebug() << "vst2_adapter: plugin loaded successfully, uniqueID:" << effect->uniqueID
-                 << "inputs:" << effect->numInputs << "outputs:" << effect->numOutputs;
+                 << "inputs:" << effect->numInputs << "outputs:" << effect->numOutputs
+                 << "hasEditor:" << (bool)(effect->flags & effFlagsHasEditor);
 
         effect->dispatcher(effect, effOpen, 0, 0, nullptr, 0.0f);
         effect->dispatcher(effect, effSetSampleRate, 0, 0, nullptr, (float)sampleRate);
         effect->dispatcher(effect, effSetBlockSize, 0, blockSize, nullptr, 0.0f);
         effect->dispatcher(effect, effMainsChanged, 0, 1, nullptr, 0.0f); // Resume (turn on)
 
+        // Re-check I/O after effOpen
+        qDebug() << "vst2_adapter: after effOpen - inputs:" << effect->numInputs
+                 << "outputs:" << effect->numOutputs;
+
         inputs = new float*[numChannels];
         outputs = new float*[numChannels];
-        // allocate a reasonable max block size (e.g. 2048)
         inputs[0] = new float[2048 * numChannels]();
         outputs[0] = new float[2048 * numChannels]();
         for (int i = 1; i < numChannels; i++)
@@ -262,27 +296,108 @@ void vst2_process_handle(plugin_handle_t handle, float* interleaved_buffer, int 
 
 bool vst2_show_editor_handle(plugin_handle_t h)
 {
-    if (auto* rt = static_cast<Vst2Runtime*>(h))
+    auto* rt = static_cast<Vst2Runtime*>(h);
+    if (!rt || !rt->effect)
+        return false;
+
+    if (!(rt->effect->flags & effFlagsHasEditor))
     {
-        if (rt->effect && (rt->effect->flags & effFlagsHasEditor))
+        qWarning() << "vst2_adapter: plugin does not have an editor";
+        return false;
+    }
+
+    if (rt->editorWindow)
+    {
+        // Already open, just bring to front
+        ShowWindow(rt->editorWindow, SW_SHOW);
+        SetForegroundWindow(rt->editorWindow);
+        rt->bEditorVisible = true;
+        return true;
+    }
+
+    // Register window class (once)
+    static bool classRegistered = false;
+    if (!classRegistered)
+    {
+        WNDCLASSW wc = {};
+        wc.lpfnWndProc = Vst2Runtime::EditorWndProc;
+        wc.hInstance = GetModuleHandle(nullptr);
+        wc.lpszClassName = L"JamulusVST2Editor";
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        RegisterClassW(&wc);
+        classRegistered = true;
+    }
+
+    // Query editor size
+    struct ERect { int16_t top; int16_t left; int16_t bottom; int16_t right; };
+    ERect* rect = nullptr;
+    rt->effect->dispatcher(rt->effect, effEditGetRect, 0, 0, &rect, 0.0f);
+
+    int width = 800, height = 600;
+    if (rect)
+    {
+        width = rect->right - rect->left;
+        height = rect->bottom - rect->top;
+        qDebug() << "vst2_adapter: editor size:" << width << "x" << height;
+    }
+
+    // Create the host window
+    RECT rc = {0, 0, width, height};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+
+    rt->editorWindow = CreateWindowW(
+        L"JamulusVST2Editor",
+        L"Carla",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        rc.right - rc.left, rc.bottom - rc.top,
+        nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+
+    if (!rt->editorWindow)
+    {
+        qWarning() << "vst2_adapter: failed to create editor window";
+        return false;
+    }
+
+    // Open editor inside our window
+    rt->effect->dispatcher(rt->effect, effEditOpen, 0, 0, (void*)rt->editorWindow, 0.0f);
+
+    // Re-query size after open (some plugins update it)
+    rect = nullptr;
+    rt->effect->dispatcher(rt->effect, effEditGetRect, 0, 0, &rect, 0.0f);
+    if (rect)
+    {
+        int newW = rect->right - rect->left;
+        int newH = rect->bottom - rect->top;
+        if (newW > 0 && newH > 0 && (newW != width || newH != height))
         {
-            rt->effect->dispatcher(rt->effect, effEditOpen, 0, 0, nullptr, 0.0f);
-            rt->bEditorVisible = true;
-            return true;
+            RECT rc2 = {0, 0, newW, newH};
+            AdjustWindowRect(&rc2, WS_OVERLAPPEDWINDOW, FALSE);
+            SetWindowPos(rt->editorWindow, nullptr, 0, 0,
+                         rc2.right - rc2.left, rc2.bottom - rc2.top,
+                         SWP_NOMOVE | SWP_NOZORDER);
         }
     }
-    return false;
+
+    ShowWindow(rt->editorWindow, SW_SHOW);
+    UpdateWindow(rt->editorWindow);
+    rt->bEditorVisible = true;
+    qDebug() << "vst2_adapter: editor window opened";
+    return true;
 }
 
 bool vst2_close_editor_handle(plugin_handle_t h)
 {
     if (auto* rt = static_cast<Vst2Runtime*>(h))
     {
-        if (rt->effect && rt->bEditorVisible)
+        if (rt->effect && rt->editorWindow)
         {
             rt->effect->dispatcher(rt->effect, effEditClose, 0, 0, nullptr, 0.0f);
-            rt->bEditorVisible = false;
+            DestroyWindow(rt->editorWindow);
+            rt->editorWindow = nullptr;
         }
+        rt->bEditorVisible = false;
         return true;
     }
     return false;
