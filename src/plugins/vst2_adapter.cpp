@@ -6,6 +6,7 @@
 #include <QString>
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include "vestige/aeffectx.h"
 
 // Define VSTPluginMain signature
@@ -80,10 +81,23 @@ struct Vst2Runtime
     bool init(const char* path)
     {
         QString wPath = QString::fromUtf8(path);
+
+        // Add the DLL's parent directory to the search path so that
+        // sibling dependencies (e.g. libcarla_utils.dll) can be found.
+        QFileInfo fi(wPath);
+        QString dirPath = fi.absolutePath();
+        SetDllDirectoryW((LPCWSTR)dirPath.utf16());
+        qDebug() << "vst2_adapter: loading" << wPath << "with DLL dir" << dirPath;
+
         library = LoadLibraryW((LPCWSTR)wPath.utf16());
+
+        // Restore default DLL search path
+        SetDllDirectoryW(nullptr);
+
         if (!library)
         {
-            qWarning() << "vst2_adapter: failed to load library" << path;
+            DWORD err = GetLastError();
+            qWarning() << "vst2_adapter: failed to load library" << path << "error code:" << err;
             return false;
         }
 
