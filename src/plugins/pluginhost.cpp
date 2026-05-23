@@ -419,36 +419,38 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 #ifdef Q_OS_WIN
 	// Try VST2 loading (by path to .dll or .vst bundle folder)
 	QString qPath = QString::fromStdString(sPath);
+	// Strip trailing slashes/backslashes that QFileDialog may add
+	while (qPath.endsWith('/') || qPath.endsWith('\\'))
+		qPath.chop(1);
 	QString dllPath;
 
 	if (qPath.toLower().endsWith(".dll"))
 	{
 		dllPath = qPath;
 	}
-	else if (qPath.toLower().endsWith(".vst"))
+	else if (QFileInfo(qPath).isDir())
 	{
-		// VST2 bundle folder: look for the actual DLL inside
+		// Directory path: could be a .vst bundle or any folder containing DLLs
 		QDir vstDir(qPath);
-		if (vstDir.exists())
+		// Prefer Carla effects shell, then synth shell, then any .dll
+		QStringList candidates = { "CarlaVstFxShell.dll", "CarlaVstShell.dll" };
+		for (const QString& name : candidates)
 		{
-			// Prefer Carla effects shell, then synth shell, then any .dll
-			QStringList candidates = { "CarlaVstFxShell.dll", "CarlaVstShell.dll" };
-			for (const QString& name : candidates)
+			if (vstDir.exists(name))
 			{
-				if (vstDir.exists(name))
-				{
-					dllPath = vstDir.filePath(name);
-					break;
-				}
+				dllPath = vstDir.filePath(name);
+				qDebug() << "pluginhost: found Carla DLL in bundle:" << dllPath;
+				break;
 			}
-			if (dllPath.isEmpty())
+		}
+		if (dllPath.isEmpty())
+		{
+			// Fall back to any .dll in the folder
+			QStringList dlls = vstDir.entryList(QStringList() << "*.dll", QDir::Files);
+			if (!dlls.isEmpty())
 			{
-				// Fall back to any .dll in the bundle
-				QStringList dlls = vstDir.entryList(QStringList() << "*.dll", QDir::Files);
-				if (!dlls.isEmpty())
-				{
-					dllPath = vstDir.filePath(dlls.first());
-				}
+				dllPath = vstDir.filePath(dlls.first());
+				qDebug() << "pluginhost: using first DLL in folder:" << dllPath;
 			}
 		}
 	}
