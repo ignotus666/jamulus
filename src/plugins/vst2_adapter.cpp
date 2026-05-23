@@ -381,20 +381,16 @@ bool vst2_show_editor_handle(plugin_handle_t h)
 
     SetDllDirectoryW(nullptr);
 
-    // Debug: check if plugin created child windows
+    // Show child windows created by the plugin and log them
     HWND child = GetWindow(rt->editorWindow, GW_CHILD);
     int childCount = 0;
     while (child)
     {
         childCount++;
-        RECT childRect;
-        GetWindowRect(child, &childRect);
-        qDebug() << "vst2_adapter: child window" << childCount
-                 << "visible:" << (bool)IsWindowVisible(child)
-                 << "size:" << (childRect.right - childRect.left) << "x" << (childRect.bottom - childRect.top);
+        ShowWindow(child, SW_SHOW);
         child = GetWindow(child, GW_HWNDNEXT);
     }
-    qDebug() << "vst2_adapter: total child windows after effEditOpen:" << childCount;
+    qDebug() << "vst2_adapter: showed" << childCount << "child windows after effEditOpen";
 
     // Re-query size after open (some plugins update it)
     rect = nullptr;
