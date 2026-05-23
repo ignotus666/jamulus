@@ -1,6 +1,6 @@
 #include "vst2_adapter.h"
 
-#ifdef Q_OS_WIN
+#ifdef _WIN32
 
 #include <windows.h>
 #include <QString>
@@ -373,4 +373,4 @@ bool vst2_load_preset_handle(plugin_handle_t, const char*) { return false; }
 char* vst2_save_state_handle(plugin_handle_t, int*) { return nullptr; }
 bool vst2_restore_state_handle(plugin_handle_t, const char*, int) { return false; }
 
-#endif
+#endif // _WIN32
