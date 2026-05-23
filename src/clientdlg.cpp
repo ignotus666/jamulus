@@ -2250,13 +2250,18 @@ int CClientDlg::LoadCarlaPlugin()
     {
 #ifdef Q_OS_WIN
         // Try common standard locations for Carla VST2 on Windows
+        // Carla ships as a .vst bundle folder containing CarlaVstFxShell.dll
         QStringList commonPaths = {
+            "C:/Program Files/Common Files/VST2/Carla.vst",
+            "C:/Program Files/Steinberg/Vstplugins/Carla.vst",
+            "C:/Program Files/Vstplugins/Carla.vst",
             "C:/Program Files/Common Files/VST2/Carla.dll",
             "C:/Program Files/Steinberg/Vstplugins/Carla.dll",
             "C:/Program Files/Vstplugins/Carla.dll"
         };
         for (const QString& path : commonPaths) {
-            if (QFile::exists(path)) {
+            // Check for both files and directories (.vst bundles)
+            if (QFile::exists(path) || QDir(path).exists()) {
                 carlaId = pClient->LoadPlugin ( path.toStdString() );
                 if (carlaId != -1) {
                     pSettings->strCarlaPath = path;
@@ -2267,8 +2272,15 @@ int CClientDlg::LoadCarlaPlugin()
 #endif
         if ( carlaId == -1 )
         {
-            QString filter = tr ( "Plugin Files (*.dll *.vst3 *.component);;All Files (*.*)" );
-            QString strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ), "", filter );
+            // Let the user browse for a .vst bundle folder or a .dll file
+            QString strPath = QFileDialog::getExistingDirectory ( this,
+                tr ( "Select Carla VST2 Bundle Folder (Carla.vst)" ) );
+            if ( strPath.isEmpty() )
+            {
+                // Fall back to file selection if they want a standalone .dll
+                QString filter = tr ( "Plugin Files (*.dll *.vst3 *.component);;All Files (*.*)" );
+                strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ), "", filter );
+            }
             if ( !strPath.isEmpty() )
             {
                 pSettings->strCarlaPath = strPath;

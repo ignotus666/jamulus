@@ -417,15 +417,50 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 #endif
 
 #ifdef Q_OS_WIN
-	// Try VST2 loading (by path)
-	if (QString::fromStdString(sPath).toLower().endsWith(".dll"))
+	// Try VST2 loading (by path to .dll or .vst bundle folder)
+	QString qPath = QString::fromStdString(sPath);
+	QString dllPath;
+
+	if (qPath.toLower().endsWith(".dll"))
+	{
+		dllPath = qPath;
+	}
+	else if (qPath.toLower().endsWith(".vst"))
+	{
+		// VST2 bundle folder: look for the actual DLL inside
+		QDir vstDir(qPath);
+		if (vstDir.exists())
+		{
+			// Prefer Carla effects shell, then synth shell, then any .dll
+			QStringList candidates = { "CarlaVstFxShell.dll", "CarlaVstShell.dll" };
+			for (const QString& name : candidates)
+			{
+				if (vstDir.exists(name))
+				{
+					dllPath = vstDir.filePath(name);
+					break;
+				}
+			}
+			if (dllPath.isEmpty())
+			{
+				// Fall back to any .dll in the bundle
+				QStringList dlls = vstDir.entryList(QStringList() << "*.dll", QDir::Files);
+				if (!dlls.isEmpty())
+				{
+					dllPath = vstDir.filePath(dlls.first());
+				}
+			}
+		}
+	}
+
+	if (!dllPath.isEmpty())
 	{
 		const int iHostChannels = 2;
-		plugin_handle_t inst = vst2_create_from_path ( sPath.c_str(), GetSampleRateHz(),
+		plugin_handle_t inst = vst2_create_from_path ( dllPath.toStdString().c_str(), GetSampleRateHz(),
 		                                              GetBlockSizeFrames(), iHostChannels );
 		if ( ! inst )
 		{
-			qWarning() << "pluginhost: failed to load VST2 plugin:" << sPath.c_str();
+			qWarning() << "pluginhost: failed to load VST2 plugin:" << dllPath;
 			return -1;
 		}
 
