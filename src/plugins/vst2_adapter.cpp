@@ -355,14 +355,14 @@ bool vst2_show_editor_handle(plugin_handle_t h)
         qDebug() << "vst2_adapter: editor size:" << width << "x" << height;
     }
 
-    // Create the host window
+    // Create the host window with WS_CLIPCHILDREN so child windows render properly
     RECT rc = {0, 0, width, height};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
 
     rt->editorWindow = CreateWindowW(
         L"JamulusVST2Editor",
         L"Carla",
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT,
         rc.right - rc.left, rc.bottom - rc.top,
         nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -373,6 +373,10 @@ bool vst2_show_editor_handle(plugin_handle_t h)
         return false;
     }
 
+    // Show parent window BEFORE effEditOpen — child windows need a visible parent
+    ShowWindow(rt->editorWindow, SW_SHOW);
+    UpdateWindow(rt->editorWindow);
+
     // Set DLL directory during effEditOpen so Carla can find its UI resources
     SetDllDirectoryW((LPCWSTR)rt->pluginDir.utf16());
 
@@ -381,13 +385,14 @@ bool vst2_show_editor_handle(plugin_handle_t h)
 
     SetDllDirectoryW(nullptr);
 
-    // Show child windows created by the plugin and log them
+    // Ensure child windows are visible and force repaint
     HWND child = GetWindow(rt->editorWindow, GW_CHILD);
     int childCount = 0;
     while (child)
     {
         childCount++;
         ShowWindow(child, SW_SHOW);
+        InvalidateRect(child, nullptr, TRUE);
         child = GetWindow(child, GW_HWNDNEXT);
     }
     qDebug() << "vst2_adapter: showed" << childCount << "child windows after effEditOpen";
@@ -402,14 +407,15 @@ bool vst2_show_editor_handle(plugin_handle_t h)
         if (newW > 0 && newH > 0 && (newW != width || newH != height))
         {
             RECT rc2 = {0, 0, newW, newH};
-            AdjustWindowRect(&rc2, WS_OVERLAPPEDWINDOW, FALSE);
+            AdjustWindowRect(&rc2, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
             SetWindowPos(rt->editorWindow, nullptr, 0, 0,
                          rc2.right - rc2.left, rc2.bottom - rc2.top,
                          SWP_NOMOVE | SWP_NOZORDER);
         }
     }
 
-    ShowWindow(rt->editorWindow, SW_SHOW);
+    // Force full repaint
+    InvalidateRect(rt->editorWindow, nullptr, TRUE);
     UpdateWindow(rt->editorWindow);
     rt->bEditorVisible = true;
     qDebug() << "vst2_adapter: editor window opened";
