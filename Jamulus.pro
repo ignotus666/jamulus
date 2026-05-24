@@ -48,19 +48,24 @@ unix:!macx {
 
 # LV2 support (Windows via vcpkg)
 win32 {
-    !isEmpty(VCPKG_INSTALLED_DIR) {
-        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/x64-windows
+    contains(CONFIG, x86_64) {
+        TRIPLET = x64-windows
+    } else:contains(CONFIG, x86) {
+        TRIPLET = x86-windows
     } else {
-        VCPKG_PREFIX = $$PWD/vcpkg_installed/x64-windows
+        TRIPLET = x64-windows
     }
-    exists($$VCPKG_PREFIX/include/lilv-0/lilv/lilv.h) {
-        message("LV2 support enabled (lilv found via vcpkg)")
+
+    !isEmpty(VCPKG_INSTALLED_DIR) {
+        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/$$TRIPLET
+    } else {
+        VCPKG_PREFIX = $$PWD/vcpkg_installed/$$TRIPLET
+    }
+
+    exists($$VCPKG_PREFIX/include/lilv/lilv.h) {
+        message("LV2 support enabled (lilv found via vcpkg) for $$TRIPLET")
         DEFINES += HAVE_LV2
-        INCLUDEPATH += $$VCPKG_PREFIX/include/lilv-0 \
-                       $$VCPKG_PREFIX/include/serd-0 \
-                       $$VCPKG_PREFIX/include/sord-0 \
-                       $$VCPKG_PREFIX/include/sratom-0 \
-                       $$VCPKG_PREFIX/include/lv2
+        INCLUDEPATH += $$VCPKG_PREFIX/include
         CONFIG(release, debug|release) {
             LIBS += -L$$VCPKG_PREFIX/lib
         } else {
@@ -68,7 +73,7 @@ win32 {
         }
         LIBS += -llilv-0 -lserd-0 -lsord-0 -lsratom-0 -lzix-0
     } else {
-        message("LV2 support disabled (lilv not found in vcpkg)")
+        message("LV2 support disabled (lilv not found in vcpkg for $$TRIPLET at $$VCPKG_PREFIX/include/lilv/lilv.h)")
     }
 }
 
