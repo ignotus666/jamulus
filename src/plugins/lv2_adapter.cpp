@@ -23,6 +23,7 @@
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <atomic>
 
 #include <lilv/lilv.h>
 #include <lv2/core/lv2.h>
@@ -588,16 +589,19 @@ public:
         // Call show
         if ( showInterface )
         {
+            bShowCompleted = false;
 #ifdef _WIN32
             std::thread([this]() {
                 qDebug() << "lv2_adapter: showing UI via showInterface->show in worker thread...";
                 showInterface->show ( uiInstance );
                 qDebug() << "lv2_adapter: UI show completed in worker thread";
+                bShowCompleted = true;
             }).detach();
 #else
             qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
             qDebug() << "lv2_adapter: UI show completed";
+            bShowCompleted = true;
 #endif
             bEditorVisible = true;
         }
@@ -613,12 +617,20 @@ public:
 
     bool closeEditor()
     {
+        // Safely wait for show thread if it is still running to prevent concurrent cleanup crashes
+        int waitCount = 0;
+        while ( !bShowCompleted && waitCount < 50 )
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            waitCount++;
+        }
+
         if ( uiInstance )
         {
-            if ( showInterface && bEditorVisible )
+            if ( showInterface && bEditorVisible && bShowCompleted )
                 showInterface->hide ( uiInstance );
 
-            if ( uiDescriptor && uiDescriptor->cleanup )
+            if ( uiDescriptor && uiDescriptor->cleanup && bShowCompleted )
                 uiDescriptor->cleanup ( uiInstance );
 
             uiInstance = nullptr;
@@ -639,6 +651,9 @@ public:
 
     bool idleEditor()
     {
+        if ( !bShowCompleted )
+            return false;
+
         // Copy queued DSP -> UI events safely
         std::vector<uint8_t> localDspToUiEvents;
         {
@@ -1113,6 +1128,7 @@ private:
     const LV2UI_Idle_Interface* idleInterface { nullptr };
     void*                     uiLibHandle   { nullptr };
     bool                      bEditorVisible { false };
+    std::atomic<bool>         bShowCompleted { true };
     
     // Concurrency
     std::mutex workerMutex;
