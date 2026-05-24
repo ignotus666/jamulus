@@ -211,7 +211,12 @@ Function Ensure-JACK
 Function Ensure-LV2
 {
     echo "Installing LV2 dependencies via vcpkg..."
-    $VcpkgRoot = "C:\vcpkg"
+    
+    $VcpkgRoot = $Env:VCPKG_INSTALLATION_ROOT
+    if ( -not $VcpkgRoot -or -not (Test-Path "$VcpkgRoot\vcpkg.exe") )
+    {
+        $VcpkgRoot = "C:\vcpkg"
+    }
 
     if ( -not (Test-Path "$VcpkgRoot\vcpkg.exe") )
     {
@@ -220,12 +225,18 @@ Function Ensure-LV2
         & "$VcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
     }
 
+    echo "Using vcpkg at $VcpkgRoot"
+
     # Install lilv (which pulls in serd, sord, sratom, lv2) for both x64 and x86
     & "$VcpkgRoot\vcpkg.exe" install lilv:x64-windows lilv:x86-windows
     if ( !$? )
     {
         throw "vcpkg install lilv failed with exit code $LastExitCode"
     }
+
+    # Debug: Search for lilv.h inside $VcpkgRoot to find where it is located
+    echo "Searching for lilv.h in $VcpkgRoot..."
+    Get-ChildItem -Path $VcpkgRoot -Recurse -Filter "lilv.h" -ErrorAction SilentlyContinue | % { echo "Found: $($_.FullName)" }
 
     # Set environment variable so Jamulus.pro can find the installed packages
     $Env:VCPKG_INSTALLED_DIR = "$VcpkgRoot\installed"
