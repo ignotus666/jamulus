@@ -56,8 +56,11 @@ win32 {
         TRIPLET = x64-windows
     }
 
-    !isEmpty(VCPKG_INSTALLED_DIR) {
-        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/$$TRIPLET
+    VCPKG_INSTALLED_DIR_ENV = $$(VCPKG_INSTALLED_DIR)
+    !isEmpty(VCPKG_INSTALLED_DIR_ENV) {
+        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR_ENV/$$TRIPLET
+    } else:exists(C:/vcpkg/installed/$$TRIPLET/include/lilv/lilv.h) {
+        VCPKG_PREFIX = C:/vcpkg/installed/$$TRIPLET
     } else {
         VCPKG_PREFIX = $$PWD/vcpkg_installed/$$TRIPLET
     }
