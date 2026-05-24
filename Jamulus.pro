@@ -64,7 +64,7 @@ win32 {
     } else {
         VCPKG_PREFIX = $$PWD/vcpkg_installed/$$TRIPLET
     }
-
+    VCPKG_PREFIX = $$clean_path($$VCPKG_PREFIX)
     exists($$VCPKG_PREFIX/include/lilv/lilv.h) {
         message("LV2 support enabled (lilv found via vcpkg) for $$TRIPLET")
         DEFINES += HAVE_LV2
