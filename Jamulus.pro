@@ -60,8 +60,11 @@ win32 {
         VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/$$TRIPLET
     } else {
         VCPKG_INSTALLED_DIR_ENV = $$(VCPKG_INSTALLED_DIR)
+        VCPKG_INSTALLATION_ROOT_ENV = $$(VCPKG_INSTALLATION_ROOT)
         !isEmpty(VCPKG_INSTALLED_DIR_ENV) {
             VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR_ENV/$$TRIPLET
+        } else:exists($$VCPKG_INSTALLATION_ROOT_ENV/installed/$$TRIPLET/include/lilv/lilv.h) {
+            VCPKG_PREFIX = $$VCPKG_INSTALLATION_ROOT_ENV/installed/$$TRIPLET
         } else:exists(C:/vcpkg/installed/$$TRIPLET/include/lilv/lilv.h) {
             VCPKG_PREFIX = C:/vcpkg/installed/$$TRIPLET
         } else {
