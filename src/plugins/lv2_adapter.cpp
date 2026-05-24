@@ -588,9 +588,17 @@ public:
         // Call show
         if ( showInterface )
         {
+#ifdef _WIN32
+            std::thread([this]() {
+                qDebug() << "lv2_adapter: showing UI via showInterface->show in worker thread...";
+                showInterface->show ( uiInstance );
+                qDebug() << "lv2_adapter: UI show completed in worker thread";
+            }).detach();
+#else
             qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
             qDebug() << "lv2_adapter: UI show completed";
+#endif
             bEditorVisible = true;
         }
         else
