@@ -12,7 +12,6 @@ permissions: {}
 jobs:
   build-deb-x86:
     name: Build Linux .deb amd64
-    if: false
     runs-on: ubuntu-22.04
     container: ubuntu:20.04
     steps:
@@ -90,34 +89,6 @@ jobs:
         env:
           JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
 
-      - name: Check vcpkg lilv path
-        shell: pwsh
-        run: |
-          Write-Host "VCPKG_INSTALLATION_ROOT=$Env:VCPKG_INSTALLATION_ROOT"
-          Write-Host "VCPKG_INSTALLED_DIR=$Env:VCPKG_INSTALLED_DIR"
-
-          if ($Env:VCPKG_INSTALLATION_ROOT) {
-            $p = Join-Path $Env:VCPKG_INSTALLATION_ROOT "installed\x64-windows\include\lilv-0\lilv\lilv.h"
-            Write-Host "Checking: $p"
-            Write-Host "Exists: " (Test-Path $p)
-            $pLegacy = Join-Path $Env:VCPKG_INSTALLATION_ROOT "installed\x64-windows\include\lilv\lilv.h"
-            Write-Host "Checking legacy: $pLegacy"
-            Write-Host "Exists: " (Test-Path $pLegacy)
-          } else {
-            Write-Host "VCPKG_INSTALLATION_ROOT is empty"
-          }
-
-          if ($Env:VCPKG_INSTALLED_DIR) {
-            $p2 = Join-Path $Env:VCPKG_INSTALLED_DIR "x64-windows\include\lilv-0\lilv\lilv.h"
-            Write-Host "Checking: $p2"
-            Write-Host "Exists: " (Test-Path $p2)
-            $p2Legacy = Join-Path $Env:VCPKG_INSTALLED_DIR "x64-windows\include\lilv\lilv.h"
-            Write-Host "Checking legacy: $p2Legacy"
-            Write-Host "Exists: " (Test-Path $p2Legacy)
-          } else {
-            Write-Host "VCPKG_INSTALLED_DIR is empty"
-          }
-
       - name: Build Windows app
         run: powershell .\.github\autobuild\windows.ps1 -Stage build
         env:
@@ -139,7 +110,6 @@ jobs:
 
   build-macos:
     name: Build macOS
-    if: false
     runs-on: macos-15
     steps:
       - name: Select Xcode version for Mac

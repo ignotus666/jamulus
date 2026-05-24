@@ -554,6 +554,7 @@ public:
         char* uiBundlePath = lilv_file_uri_parse ( lilv_node_as_uri ( uiBundleUri ), nullptr );
 
         LV2UI_Widget widget = nullptr;
+        qDebug() << "lv2_adapter: instantiating UI via uiDesc->instantiate for URI:" << savedPluginURI.c_str();
         uiInstance = uiDesc->instantiate ( uiDesc,
                                            savedPluginURI.c_str(),
                                            uiBundlePath ? uiBundlePath : "",
@@ -561,6 +562,7 @@ public:
                                            this,
                                            &widget,
                                            uiFeatures );
+        qDebug() << "lv2_adapter: UI instantiate finished, pointer:" << uiInstance;
         uiDescriptor = uiDesc;
 
         if ( uiBundlePath )
@@ -586,7 +588,9 @@ public:
         // Call show
         if ( showInterface )
         {
+            qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
+            qDebug() << "lv2_adapter: UI show completed";
             bEditorVisible = true;
         }
         else
@@ -651,7 +655,19 @@ public:
         if ( !uiInstance || !idleInterface || !bEditorVisible )
             return false;
 
+        static bool firstIdle = true;
+        if ( firstIdle )
+        {
+            qDebug() << "lv2_adapter: first call to idleInterface->idle...";
+            firstIdle = false;
+        }
         int result = idleInterface->idle ( uiInstance );
+        static bool firstIdleDone = true;
+        if ( firstIdleDone )
+        {
+            qDebug() << "lv2_adapter: first call to idle completed successfully, result:" << result;
+            firstIdleDone = false;
+        }
         if ( result != 0 )
         {
             // UI requested close
