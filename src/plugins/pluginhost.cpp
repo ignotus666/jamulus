@@ -37,9 +37,6 @@
 #include <thread>
 
 #include "lv2_adapter.h"
-#ifdef Q_OS_WIN
-#include "vst2_adapter.h"
-#endif
 
 #include "audioequalizer.h"
 
@@ -413,88 +410,6 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 		}
 
 		dlclose ( h );
-	}
-#endif
-
-#ifdef Q_OS_WIN
-	// Try VST2 loading (by path to .dll or .vst bundle folder)
-	QString qPath = QString::fromStdString(sPath);
-	// Strip trailing slashes/backslashes that QFileDialog may add
-	while (qPath.endsWith('/') || qPath.endsWith('\\'))
-		qPath.chop(1);
-	QString dllPath;
-
-	if (qPath.toLower().endsWith(".dll"))
-	{
-		dllPath = qPath;
-	}
-	else if (QFileInfo(qPath).isDir())
-	{
-		// Directory path: could be a .vst bundle or any folder containing DLLs
-		QDir vstDir(qPath);
-		// Prefer Carla effects shell, then synth shell, then any .dll
-		QStringList candidates = { "CarlaVstFxShell.dll", "CarlaVstShell.dll" };
-		for (const QString& name : candidates)
-		{
-			if (vstDir.exists(name))
-			{
-				dllPath = vstDir.filePath(name);
-				qDebug() << "pluginhost: found Carla DLL in bundle:" << dllPath;
-				break;
-			}
-		}
-		if (dllPath.isEmpty())
-		{
-			// Fall back to any .dll in the folder
-			QStringList dlls = vstDir.entryList(QStringList() << "*.dll", QDir::Files);
-			if (!dlls.isEmpty())
-			{
-				dllPath = vstDir.filePath(dlls.first());
-				qDebug() << "pluginhost: using first DLL in folder:" << dllPath;
-			}
-		}
-	}
-
-	if (!dllPath.isEmpty())
-	{
-		const int iHostChannels = 2;
-		plugin_handle_t inst = vst2_create_from_path ( dllPath.toStdString().c_str(), GetSampleRateHz(),
-		                                              GetBlockSizeFrames(), iHostChannels );
-		if ( ! inst )
-		{
-			qWarning() << "pluginhost: failed to load VST2 plugin:" << dllPath;
-			return -1;
-		}
-
-		PluginEntry e;
-		{
-			QWriteLocker lg ( &rwLockPlugins );
-			e.id = iNextPluginId++;
-			e.handle = nullptr;
-			e.instance = inst;
-			e.create = nullptr;
-			e.destroy = []( plugin_handle_t x ) { vst2_destroy_handle ( x ); };
-			e.process = []( plugin_handle_t x, float * buf, int nframes, int nch, const void* midi, int nmidi ) {
-				vst2_process_handle ( x, buf, nframes, nch, midi, nmidi );
-			};
-			e.closeEditor = []( plugin_handle_t x ) { vst2_close_editor_handle ( x ); };
-			e.showEditor = []( plugin_handle_t x, void* ) {
-				return vst2_show_editor_handle ( x );
-			};
-			e.idleEditor = []( plugin_handle_t x ) { return vst2_idle_editor_handle ( x ); };
-			e.loadPreset = []( plugin_handle_t x, const char* path ) {
-				return vst2_load_preset_handle ( x, path );
-			};
-			e.saveState = []( plugin_handle_t x, int* outSize ) {
-				return vst2_save_state_handle(x, outSize);
-			};
-			e.restoreState = []( plugin_handle_t x, const char* data, int size ) {
-				return vst2_restore_state_handle(x, data, size);
-			};
-			e.path = sPath;
-			vecPlugins.push_back ( e );
-		}
-		return e.id;
 	}
 #endif
 

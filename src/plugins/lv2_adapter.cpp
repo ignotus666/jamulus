@@ -36,7 +36,26 @@
 #include <lv2/worker/worker.h>
 #include <lv2/state/state.h>
 
+// Cross-platform dynamic library loading
+#ifdef _WIN32
+#include <windows.h>
+static void*  lv2_dlopen  ( const char* path, int )     { return (void*)LoadLibraryA ( path ); }
+static void*  lv2_dlsym   ( void* h, const char* sym )  { return (void*)GetProcAddress ( (HMODULE)h, sym ); }
+static int    lv2_dlclose ( void* h )                    { return FreeLibrary ( (HMODULE)h ) ? 0 : -1; }
+static const char* lv2_dlerror()
+{
+    static char buf[256];
+    FormatMessageA ( FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, buf, sizeof(buf), nullptr );
+    return buf;
+}
+#define RTLD_NOW 0 // unused on Windows, just keep the call sites compiling
+#else
 #include <dlfcn.h>
+static void*  lv2_dlopen  ( const char* path, int flags ) { return dlopen ( path, flags ); }
+static void*  lv2_dlsym   ( void* h, const char* sym )    { return dlsym ( h, sym ); }
+static int    lv2_dlclose ( void* h )                      { return dlclose ( h ); }
+static const char* lv2_dlerror()                           { return dlerror(); }
+#endif
 
 namespace
 {
@@ -472,21 +491,21 @@ public:
         }
 
         // Load the UI library
-        void* uiLib = dlopen ( uiBinaryPath, RTLD_NOW );
+        void* uiLib = lv2_dlopen ( uiBinaryPath, RTLD_NOW );
         lilv_free ( uiBinaryPath );
 
         if ( !uiLib )
         {
             lilv_uis_free ( uis );
-            errorDescription = std::string ( "Failed to load UI library: " ) + dlerror();
+            errorDescription = std::string ( "Failed to load UI library: " ) + lv2_dlerror();
             return false;
         }
 
         // Get the UI descriptor function
-        auto uiDescFunc = reinterpret_cast<LV2UI_DescriptorFunction> ( dlsym ( uiLib, "lv2ui_descriptor" ) );
+        auto uiDescFunc = reinterpret_cast<LV2UI_DescriptorFunction> ( lv2_dlsym ( uiLib, "lv2ui_descriptor" ) );
         if ( !uiDescFunc )
         {
-            dlclose ( uiLib );
+            lv2_dlclose ( uiLib );
             lilv_uis_free ( uis );
             errorDescription = "UI library does not export lv2ui_descriptor.";
             return false;
@@ -509,7 +528,7 @@ public:
 
         if ( !uiDesc )
         {
-            dlclose ( uiLib );
+            lv2_dlclose ( uiLib );
             lilv_uis_free ( uis );
             errorDescription = "UI descriptor not found for URI.";
             return false;
@@ -595,7 +614,7 @@ public:
 
         if ( uiLibHandle )
         {
-            dlclose ( uiLibHandle );
+            lv2_dlclose ( uiLibHandle );
             uiLibHandle = nullptr;
         }
 

@@ -2220,74 +2220,55 @@ int CClientDlg::LoadCarlaPlugin()
         // Try the saved path
         if ( !pSettings->strCarlaPath.isEmpty() )
         {
+#ifdef Q_OS_WIN
+            _putenv_s ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str() );
+#else
             setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
+#endif
             carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
         }
+
+        // Try common LV2 paths on Windows
+#ifdef Q_OS_WIN
+        if ( carlaId == -1 )
+        {
+            QStringList commonPaths = {
+                "C:/Program Files/Common Files/LV2",
+                "C:/Program Files/LV2",
+                QDir::homePath() + "/AppData/Roaming/LV2"
+            };
+            for (const QString& path : commonPaths) {
+                if (QDir(path).exists()) {
+                    _putenv_s ( "LV2_PATH", path.toStdString().c_str() );
+                    carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
+                    if (carlaId != -1) {
+                        pSettings->strCarlaPath = path;
+                        break;
+                    }
+                }
+            }
+        }
+#endif
 
         // Prompt if still not found
         if ( carlaId == -1 )
         {
-            QString strPath = QFileDialog::getExistingDirectory ( this, tr ( "Select Carla LV2 Bundle Directory (carla.lv2)" ) );
+            QString strPath = QFileDialog::getExistingDirectory ( this, tr ( "Select LV2 Directory Containing carla.lv2" ) );
             if ( !strPath.isEmpty() )
             {
                 pSettings->strCarlaPath = strPath;
+#ifdef Q_OS_WIN
+                _putenv_s ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str() );
+#else
                 setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
+#endif
                 carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
             }
         }
     }
 #else
-    // Windows/Mac fallback (VST2/AU)
     int carlaId = -1;
-    
-    // First try the saved path
-    if ( !pSettings->strCarlaPath.isEmpty() )
-    {
-        carlaId = pClient->LoadPlugin ( pSettings->strCarlaPath.toStdString() );
-    }
-
-    if ( carlaId == -1 )
-    {
-#ifdef Q_OS_WIN
-        // Try common standard locations for Carla VST2 on Windows
-        // Carla ships as a .vst bundle folder containing CarlaVstFxShell.dll
-        QStringList commonPaths = {
-            "C:/Program Files/Common Files/VST2/Carla.vst",
-            "C:/Program Files/Steinberg/Vstplugins/Carla.vst",
-            "C:/Program Files/Vstplugins/Carla.vst",
-            "C:/Program Files/Common Files/VST2/Carla.dll",
-            "C:/Program Files/Steinberg/Vstplugins/Carla.dll",
-            "C:/Program Files/Vstplugins/Carla.dll"
-        };
-        for (const QString& path : commonPaths) {
-            // Check for both files and directories (.vst bundles)
-            if (QFile::exists(path) || QDir(path).exists()) {
-                carlaId = pClient->LoadPlugin ( path.toStdString() );
-                if (carlaId != -1) {
-                    pSettings->strCarlaPath = path;
-                    break;
-                }
-            }
-        }
-#endif
-        if ( carlaId == -1 )
-        {
-            // Let the user browse for a .vst bundle folder or a .dll file
-            QString strPath = QFileDialog::getExistingDirectory ( this,
-                tr ( "Select Carla VST2 Bundle Folder (Carla.vst)" ) );
-            if ( strPath.isEmpty() )
-            {
-                // Fall back to file selection if they want a standalone .dll
-                QString filter = tr ( "Plugin Files (*.dll *.vst3 *.component);;All Files (*.*)" );
-                strPath = QFileDialog::getOpenFileName ( this, tr ( "Select Carla Plugin File" ), "", filter );
-            }
-            if ( !strPath.isEmpty() )
-            {
-                pSettings->strCarlaPath = strPath;
-                carlaId = pClient->LoadPlugin ( strPath.toStdString() );
-            }
-        }
-    }
+    QMessageBox::warning ( this, APP_NAME, tr ( "LV2 plugin support is not available in this build." ) );
 #endif
     return carlaId;
 }

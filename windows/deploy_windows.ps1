@@ -287,6 +287,29 @@ Function Build-App
         "$BuildPath\$BuildConfig\$AppName.exe")
 
     Move-Item -Path "$BuildPath\$BuildConfig\$AppName.exe" -Destination "$DeployPath\$BuildArch" -Force
+
+    # Copy vcpkg dependencies (lilv, serd, sord, sratom, zix, etc.) if they exist
+    $VcpkgInstalled = $Env:VCPKG_INSTALLED_DIR
+    if (-not $VcpkgInstalled)
+    {
+        $VcpkgInstalled = "C:\vcpkg\installed"
+        if (-not (Test-Path -Path $VcpkgInstalled))
+        {
+            $VcpkgInstalled = "$RootPath\vcpkg_installed"
+        }
+    }
+    $Triplet = if ($BuildArch -Eq "x86_64") { "x64-windows" } else { "x86-windows" }
+    $VcpkgBin = "$VcpkgInstalled\$Triplet\bin"
+    if (Test-Path -Path $VcpkgBin)
+    {
+        echo "Copying vcpkg DLLs from $VcpkgBin to $DeployPath\$BuildArch..."
+        Copy-Item -Path "$VcpkgBin\*.dll" -Destination "$DeployPath\$BuildArch" -Force
+    }
+    else
+    {
+        echo "Warning: vcpkg bin path not found at $VcpkgBin"
+    }
+
     Invoke-Native-Command -Command "nmake" -Arguments ("clean")
     Set-Location -Path $RootPath
 }

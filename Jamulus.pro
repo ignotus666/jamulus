@@ -46,6 +46,32 @@ unix:!macx {
     }
 }
 
+# LV2 support (Windows via vcpkg)
+win32 {
+    !isEmpty(VCPKG_INSTALLED_DIR) {
+        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/x64-windows
+    } else {
+        VCPKG_PREFIX = $$PWD/vcpkg_installed/x64-windows
+    }
+    exists($$VCPKG_PREFIX/include/lilv-0/lilv/lilv.h) {
+        message("LV2 support enabled (lilv found via vcpkg)")
+        DEFINES += HAVE_LV2
+        INCLUDEPATH += $$VCPKG_PREFIX/include/lilv-0 \
+                       $$VCPKG_PREFIX/include/serd-0 \
+                       $$VCPKG_PREFIX/include/sord-0 \
+                       $$VCPKG_PREFIX/include/sratom-0 \
+                       $$VCPKG_PREFIX/include/lv2
+        CONFIG(release, debug|release) {
+            LIBS += -L$$VCPKG_PREFIX/lib
+        } else {
+            LIBS += -L$$VCPKG_PREFIX/debug/lib
+        }
+        LIBS += -llilv-0 -lserd-0 -lsord-0 -lsratom-0 -lzix-0
+    } else {
+        message("LV2 support disabled (lilv not found in vcpkg)")
+    }
+}
+
 contains(CONFIG, "nosound") {
     CONFIG -= "nosound"
     CONFIG += "serveronly"
@@ -421,13 +447,6 @@ HEADERS += src/buffer.h \
     src/recorder/cwavestream.h \
     src/signalhandler.h
 
-win32 {
-    HEADERS += src/plugins/vestige/vestige.h \
-               src/plugins/vestige/aeffect.h \
-               src/plugins/vestige/aeffectx.h \
-               src/plugins/vst2_adapter.h
-}
-
 !contains(CONFIG, "serveronly") {
     HEADERS += src/client.h \
         src/sound/soundbase.h \
@@ -543,10 +562,6 @@ SOURCES += src/buffer.cpp \
     src/recorder/jamrecorder.cpp \
     src/recorder/creaperproject.cpp \
     src/recorder/cwavestream.cpp
-
-win32 {
-    SOURCES += src/plugins/vst2_adapter.cpp
-}
 
 !contains(CONFIG, "serveronly") {
     SOURCES += src/client.cpp \

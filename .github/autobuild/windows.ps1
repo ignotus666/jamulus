@@ -208,6 +208,35 @@ Function Ensure-JACK
     echo "32bit JACK installation completed successfully"
 }
 
+Function Ensure-LV2
+{
+    echo "Installing LV2 dependencies via vcpkg..."
+    $VcpkgRoot = "C:\vcpkg"
+
+    if ( -not (Test-Path "$VcpkgRoot\vcpkg.exe") )
+    {
+        echo "Bootstrapping vcpkg..."
+        git clone https://github.com/microsoft/vcpkg.git $VcpkgRoot
+        & "$VcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
+    }
+
+    # Install lilv (which pulls in serd, sord, sratom, lv2) for both x64 and x86
+    & "$VcpkgRoot\vcpkg.exe" install lilv:x64-windows lilv:x86-windows
+    if ( !$? )
+    {
+        throw "vcpkg install lilv failed with exit code $LastExitCode"
+    }
+
+    # Set environment variable so Jamulus.pro can find the installed packages
+    $Env:VCPKG_INSTALLED_DIR = "$VcpkgRoot\installed"
+    if ( $Env:GITHUB_ENV )
+    {
+        Add-Content -Path $Env:GITHUB_ENV -Value "VCPKG_INSTALLED_DIR=$VcpkgRoot\installed"
+    }
+
+    echo "LV2 dependencies installed successfully"
+}
+
 Function Build-App-With-Installer
 {
     echo "Build app and create installer..."
@@ -252,6 +281,7 @@ switch ( $Stage )
         Ensure-Qt
         Ensure-jom
         Ensure-JACK
+        Ensure-LV2
     }
     "build"
     {
