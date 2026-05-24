@@ -77,6 +77,9 @@ win32 {
         message("LV2 support enabled (lilv found via vcpkg) for $$TRIPLET")
         DEFINES += HAVE_LV2
         INCLUDEPATH += $$VCPKG_PREFIX/include
+        exists($$VCPKG_PREFIX/include/lilv-0/lilv/lilv.h) {
+            INCLUDEPATH += $$VCPKG_PREFIX/include/lilv-0
+        }
         CONFIG(release, debug|release) {
             LIBS += -L$$VCPKG_PREFIX/lib
         } else {

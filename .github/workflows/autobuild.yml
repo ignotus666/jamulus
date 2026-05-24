@@ -97,17 +97,23 @@ jobs:
           Write-Host "VCPKG_INSTALLED_DIR=$Env:VCPKG_INSTALLED_DIR"
 
           if ($Env:VCPKG_INSTALLATION_ROOT) {
-            $p = Join-Path $Env:VCPKG_INSTALLATION_ROOT "installed\x64-windows\include\lilv\lilv.h"
+            $p = Join-Path $Env:VCPKG_INSTALLATION_ROOT "installed\x64-windows\include\lilv-0\lilv\lilv.h"
             Write-Host "Checking: $p"
             Write-Host "Exists: " (Test-Path $p)
+            $pLegacy = Join-Path $Env:VCPKG_INSTALLATION_ROOT "installed\x64-windows\include\lilv\lilv.h"
+            Write-Host "Checking legacy: $pLegacy"
+            Write-Host "Exists: " (Test-Path $pLegacy)
           } else {
             Write-Host "VCPKG_INSTALLATION_ROOT is empty"
           }
 
           if ($Env:VCPKG_INSTALLED_DIR) {
-            $p2 = Join-Path $Env:VCPKG_INSTALLED_DIR "x64-windows\include\lilv\lilv.h"
+            $p2 = Join-Path $Env:VCPKG_INSTALLED_DIR "x64-windows\include\lilv-0\lilv\lilv.h"
             Write-Host "Checking: $p2"
             Write-Host "Exists: " (Test-Path $p2)
+            $p2Legacy = Join-Path $Env:VCPKG_INSTALLED_DIR "x64-windows\include\lilv\lilv.h"
+            Write-Host "Checking legacy: $p2Legacy"
+            Write-Host "Exists: " (Test-Path $p2Legacy)
           } else {
             Write-Host "VCPKG_INSTALLED_DIR is empty"
           }
