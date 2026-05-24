@@ -73,7 +73,7 @@ win32 {
     }
     VCPKG_PREFIX = $$clean_path($$VCPKG_PREFIX)
     message("LV2 vcpkg prefix: $$VCPKG_PREFIX")
-    exists($$VCPKG_PREFIX/include/lilv/lilv.h) {
+    exists($$VCPKG_PREFIX/include/lilv-0/lilv/lilv.h) | exists($$VCPKG_PREFIX/include/lilv/lilv.h) {
         message("LV2 support enabled (lilv found via vcpkg) for $$TRIPLET")
         DEFINES += HAVE_LV2
         INCLUDEPATH += $$VCPKG_PREFIX/include
@@ -84,7 +84,7 @@ win32 {
         }
         LIBS += -llilv-0 -lserd-0 -lsord-0 -lsratom-0 -lzix-0
     } else {
-        message("LV2 support disabled (lilv not found in vcpkg for $$TRIPLET at $$VCPKG_PREFIX/include/lilv/lilv.h)")
+        message("LV2 support disabled (lilv not found in vcpkg for $$TRIPLET at $$VCPKG_PREFIX/include/lilv-0/lilv/lilv.h)")
     }
 }
 
