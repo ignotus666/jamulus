@@ -267,8 +267,29 @@ Function Build-App
         [string] $BuildArch
     )
 
+    # Resolve vcpkg installed directory
+    $VcpkgInstalled = $Env:VCPKG_INSTALLED_DIR
+    if (-not $VcpkgInstalled)
+    {
+        $VcpkgInstalled = $Env:VCPKG_INSTALLATION_ROOT
+        if ($VcpkgInstalled)
+        {
+            $VcpkgInstalled = "$VcpkgInstalled\installed"
+        }
+        else
+        {
+            $VcpkgInstalled = "C:\vcpkg\installed"
+            if (-not (Test-Path -Path $VcpkgInstalled))
+            {
+                $VcpkgInstalled = "$RootPath\vcpkg_installed"
+            }
+        }
+    }
+
+    echo "Using VCPKG_INSTALLED_DIR=$VcpkgInstalled"
+
     Invoke-Native-Command -Command "$Env:QtQmakePath" `
-        -Arguments ("$RootPath\$AppName.pro", "CONFIG+=$BuildConfig $BuildArch $BuildOption", `
+        -Arguments ("$RootPath\$AppName.pro", "CONFIG+=$BuildConfig $BuildArch $BuildOption", "VCPKG_INSTALLED_DIR=$VcpkgInstalled", `
         "-o", "$BuildPath\Makefile")
 
     Set-Location -Path $BuildPath
@@ -289,15 +310,6 @@ Function Build-App
     Move-Item -Path "$BuildPath\$BuildConfig\$AppName.exe" -Destination "$DeployPath\$BuildArch" -Force
 
     # Copy vcpkg dependencies (lilv, serd, sord, sratom, zix, etc.) if they exist
-    $VcpkgInstalled = $Env:VCPKG_INSTALLED_DIR
-    if (-not $VcpkgInstalled)
-    {
-        $VcpkgInstalled = "C:\vcpkg\installed"
-        if (-not (Test-Path -Path $VcpkgInstalled))
-        {
-            $VcpkgInstalled = "$RootPath\vcpkg_installed"
-        }
-    }
     $Triplet = if ($BuildArch -Eq "x86_64") { "x64-windows" } else { "x86-windows" }
     $VcpkgBin = "$VcpkgInstalled\$Triplet\bin"
     if (Test-Path -Path $VcpkgBin)

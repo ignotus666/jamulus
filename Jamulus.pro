@@ -56,13 +56,17 @@ win32 {
         TRIPLET = x64-windows
     }
 
-    VCPKG_INSTALLED_DIR_ENV = $$(VCPKG_INSTALLED_DIR)
-    !isEmpty(VCPKG_INSTALLED_DIR_ENV) {
-        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR_ENV/$$TRIPLET
-    } else:exists(C:/vcpkg/installed/$$TRIPLET/include/lilv/lilv.h) {
-        VCPKG_PREFIX = C:/vcpkg/installed/$$TRIPLET
+    !isEmpty(VCPKG_INSTALLED_DIR) {
+        VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR/$$TRIPLET
     } else {
-        VCPKG_PREFIX = $$PWD/vcpkg_installed/$$TRIPLET
+        VCPKG_INSTALLED_DIR_ENV = $$(VCPKG_INSTALLED_DIR)
+        !isEmpty(VCPKG_INSTALLED_DIR_ENV) {
+            VCPKG_PREFIX = $$VCPKG_INSTALLED_DIR_ENV/$$TRIPLET
+        } else:exists(C:/vcpkg/installed/$$TRIPLET/include/lilv/lilv.h) {
+            VCPKG_PREFIX = C:/vcpkg/installed/$$TRIPLET
+        } else {
+            VCPKG_PREFIX = $$PWD/vcpkg_installed/$$TRIPLET
+        }
     }
     VCPKG_PREFIX = $$clean_path($$VCPKG_PREFIX)
     exists($$VCPKG_PREFIX/include/lilv/lilv.h) {
