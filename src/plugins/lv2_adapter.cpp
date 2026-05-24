@@ -665,7 +665,7 @@ public:
     bool idleEditor()
     {
         if ( !bShowCompleted )
-            return false;
+            return true;
 
         // Copy queued DSP -> UI events safely
         std::vector<uint8_t> localDspToUiEvents;
