@@ -641,12 +641,30 @@ public:
         {
             bShowCompleted = false;
 #ifdef _WIN32
-            std::thread([this]() {
-                qDebug() << "lv2_adapter: showing UI via showInterface->show in worker thread...";
+            uiThreadQuit = false;
+            uiThread = std::thread([this]() {
+                qDebug() << "lv2_adapter: showing UI via showInterface->show in UI thread...";
                 showInterface->show ( uiInstance );
-                qDebug() << "lv2_adapter: UI show completed in worker thread";
+                qDebug() << "lv2_adapter: UI show completed in UI thread";
                 bShowCompleted = true;
-            }).detach();
+
+                while ( !uiThreadQuit )
+                {
+                    drainDspToUiEvents();
+
+                    if ( uiInstance && idleInterface && bEditorVisible )
+                    {
+                        int result = idleInterface->idle ( uiInstance );
+                        if ( result != 0 )
+                        {
+                            bEditorVisible = false;
+                            break;
+                        }
+                    }
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+            });
 #else
             qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
@@ -675,6 +693,12 @@ public:
             waitCount++;
         }
 
+#ifdef _WIN32
+        uiThreadQuit = true;
+        if ( uiThread.joinable() )
+            uiThread.join();
+#endif
+
         if ( uiInstance )
         {
             if ( showInterface && bEditorVisible && bShowCompleted )
@@ -701,29 +725,14 @@ public:
 
     bool idleEditor()
     {
+#ifdef _WIN32
+        // UI idling runs on the dedicated UI thread on Windows.
+        return bEditorVisible;
+#else
         if ( !bShowCompleted )
             return true;
 
-        // Copy queued DSP -> UI events safely
-        std::vector<uint8_t> localDspToUiEvents;
-        {
-            std::lock_guard<std::mutex> lg(dspToUiMutex);
-            localDspToUiEvents = std::move(dspToUiEvents);
-            dspToUiEvents.clear();
-        }
-
-        // Forward atom events from DSP -> UI 
-        if ( uiInstance && uiDescriptor && uiDescriptor->port_event && !localDspToUiEvents.empty() )
-        {
-            size_t offset = 0;
-            while ( offset < localDspToUiEvents.size() )
-            {
-                LV2_Atom_Event* ev = reinterpret_cast<LV2_Atom_Event*>(localDspToUiEvents.data() + offset);
-                uiDescriptor->port_event(uiInstance, atomOutIdx, ev->body.size,
-                    UridAtomEventTransfer(), &ev->body);
-                offset += sizeof(LV2_Atom_Event) + lv2_atom_pad_size(ev->body.size);
-            }
-        }
+        drainDspToUiEvents();
         
         if ( !uiInstance || !idleInterface || !bEditorVisible )
             return false;
@@ -749,6 +758,7 @@ public:
         }
 
         return true;
+#endif
     }
 
     bool isEditorVisible() const { return bEditorVisible; }
@@ -942,6 +952,30 @@ public:
     }
 
 private:
+        void drainDspToUiEvents()
+        {
+            // Copy queued DSP -> UI events safely
+            std::vector<uint8_t> localDspToUiEvents;
+            {
+                std::lock_guard<std::mutex> lg(dspToUiMutex);
+                localDspToUiEvents = std::move(dspToUiEvents);
+                dspToUiEvents.clear();
+            }
+
+            // Forward atom events from DSP -> UI
+            if ( uiInstance && uiDescriptor && uiDescriptor->port_event && !localDspToUiEvents.empty() )
+            {
+                size_t offset = 0;
+                while ( offset < localDspToUiEvents.size() )
+                {
+                    LV2_Atom_Event* ev = reinterpret_cast<LV2_Atom_Event*>(localDspToUiEvents.data() + offset);
+                    uiDescriptor->port_event(uiInstance, atomOutIdx, ev->body.size,
+                        UridAtomEventTransfer(), &ev->body);
+                    offset += sizeof(LV2_Atom_Event) + lv2_atom_pad_size(ev->body.size);
+                }
+            }
+        }
+
     struct WorkerJob {
         std::vector<uint8_t> data;
     };
@@ -1195,6 +1229,11 @@ private:
     bool                      bEditorVisible { false };
     std::atomic<bool>         bShowCompleted { true };
     std::atomic<bool>         bWorkerBusy   { false };
+
+#ifdef _WIN32
+    std::thread               uiThread;
+    std::atomic<bool>         uiThreadQuit { false };
+#endif
     
     // Resize feature support
     LV2UI_Resize              uiResizeData  {};
