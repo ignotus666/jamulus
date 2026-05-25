@@ -11,6 +11,7 @@
 #if defined( HAVE_LV2 )
 
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QFile>
 
 #include <algorithm>
@@ -81,15 +82,8 @@ static std::unordered_map<LV2_URID, std::string>& IdToUri()
     return map;
 }
 
-static std::mutex& UridMutex()
-{
-    static std::mutex mutex;
-    return mutex;
-}
-
 static LV2_URID MapUri ( LV2_URID_Map_Handle, const char* uri )
 {
-    std::lock_guard<std::mutex> lock ( UridMutex() );
     auto& fwd = UriToId();
     auto it = fwd.find ( uri );
     if ( it != fwd.end() )
@@ -103,7 +97,6 @@ static LV2_URID MapUri ( LV2_URID_Map_Handle, const char* uri )
 
 static const char* UnmapUri ( LV2_URID_Unmap_Handle, LV2_URID urid )
 {
-    std::lock_guard<std::mutex> lock ( UridMutex() );
     auto& rev = IdToUri();
     auto it = rev.find ( urid );
     if ( it != rev.end() )
@@ -123,7 +116,6 @@ static LV2_URID UridBufSizeNomLen()   { static LV2_URID id = MapUri ( nullptr, L
 static LV2_URID UridParamSampleRate() { static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/parameters#sampleRate" ); return id; }
 static LV2_URID UridAtomEventTransfer(){ static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/atom#eventTransfer" ); return id; }
 static LV2_URID UridTimeFrame()       { static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/time#frame" ); return id; }
-static LV2_URID UridMidiEvent()       { static LV2_URID id = MapUri ( nullptr, LV2_MIDI__MidiEvent ); return id; }
 
 // ---------------------------------------------------------------------------
 // LV2 Runtime – manages a single LV2 plugin instance
@@ -360,38 +352,6 @@ public:
             
             // Append UI events to the atom sequence
             uint32_t capacity = atomInBuffer.size() - sizeof(LV2_Atom);
-
-            auto appendEvent = [&] ( uint32_t timeFrames, uint32_t type, const uint8_t* data, uint32_t size )
-            {
-                const uint32_t evSize = sizeof ( LV2_Atom_Event ) + size;
-                const uint32_t padded = lv2_atom_pad_size ( evSize );
-                if ( seq->atom.size + padded > capacity )
-                    return;
-
-                LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
-                    reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
-                );
-                aev->time.frames = timeFrames;
-                aev->body.type = type;
-                aev->body.size = size;
-                std::memcpy ( LV2_ATOM_BODY ( &aev->body ), data, size );
-                seq->atom.size += padded;
-            };
-
-            auto appendAtomEvent = [&] ( uint32_t timeFrames, const uint8_t* atomData, uint32_t atomSize )
-            {
-                const uint32_t evSize = sizeof ( LV2_Atom_Event ) + atomSize;
-                const uint32_t padded = lv2_atom_pad_size ( evSize );
-                if ( seq->atom.size + padded > capacity )
-                    return;
-
-                LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
-                    reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
-                );
-                aev->time.frames = timeFrames;
-                std::memcpy ( &aev->body, atomData, atomSize );
-                seq->atom.size += padded;
-            };
             
             // Append MIDI events
             if ( midiEvents && numMidiEvents > 0 )
@@ -401,8 +361,20 @@ public:
                 for ( int i = 0; i < numMidiEvents; ++i )
                 {
                     const MidiEv& ev = evs[i];
-                    if ( ev.length > 0 )
-                        appendEvent ( ev.offset, UridMidiEvent(), ev.data, static_cast<uint32_t>( ev.length ) );
+                    uint32_t ev_size = sizeof(LV2_Atom_Event) + ev.length;
+                    if ( seq->atom.size + ev_size <= capacity )
+                    {
+                        LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
+                            reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
+                        );
+                        aev->time.frames = ev.offset;
+                        aev->body.type = MapUri(nullptr, LV2_MIDI__MidiEvent);
+                        aev->body.size = ev.length;
+                        std::memcpy(LV2_ATOM_BODY(&aev->body), ev.data, ev.length);
+                        
+                        uint32_t padded_size = lv2_atom_pad_size(ev.length);
+                        seq->atom.size += sizeof(LV2_Atom_Event) + padded_size;
+                    }
                 }
             }
             
@@ -412,8 +384,18 @@ public:
                 if ( ev.port_protocol == UridAtomEventTransfer() && ev.port_index == static_cast<uint32_t>(atomInIdx) )
                 {
                     // For Atom events, the UI passes the atom itself
-                    if ( !ev.data.empty() )
-                        appendAtomEvent ( 0, ev.data.data(), static_cast<uint32_t>( ev.data.size() ) );
+                    const uint32_t ev_size = sizeof(LV2_Atom_Event) + ev.data.size();
+                    if ( seq->atom.size + ev_size <= capacity )
+                    {
+                        LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
+                            reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
+                        );
+                        aev->time.frames = 0;
+                        std::memcpy(&aev->body, ev.data.data(), ev.data.size());
+                        // Pad to 64-bit alignment
+                        uint32_t padded_size = lv2_atom_pad_size(ev.data.size());
+                        seq->atom.size += sizeof(LV2_Atom_Event) + padded_size;
+                    }
                 }
                 else if ( ev.port_protocol == 0 )
                 {
@@ -442,7 +424,14 @@ public:
             lilv_instance_connect_port ( instance, freewheelIdx, &freewheelValue );
 
         // Run the plugin
+        QElapsedTimer runTimer;
+        runTimer.start();
         lilv_instance_run ( instance, iFrames );
+        const qint64 runMs = runTimer.elapsed();
+        if ( runMs > 50 )
+        {
+            qWarning() << "lv2_adapter: lilv_instance_run took" << runMs << "ms for" << iFrames << "frames";
+        }
 
         // Post-run: copy any outgoing events to the DSP->UI queue
         if ( atomOutIdx >= 0 )
@@ -640,10 +629,19 @@ public:
         if ( showInterface )
         {
             bShowCompleted = false;
+#ifdef _WIN32
+            std::thread([this]() {
+                qDebug() << "lv2_adapter: showing UI via showInterface->show in worker thread...";
+                showInterface->show ( uiInstance );
+                qDebug() << "lv2_adapter: UI show completed in worker thread";
+                bShowCompleted = true;
+            }).detach();
+#else
             qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
             qDebug() << "lv2_adapter: UI show completed";
             bShowCompleted = true;
+#endif
             bEditorVisible = true;
         }
         else
@@ -692,10 +690,33 @@ public:
 
     bool idleEditor()
     {
-        if ( !bShowCompleted )
+        if ( !bShowCompleted || bWorkerBusy )
+        {
+            if ( bWorkerBusy )
+                qDebug() << "lv2_adapter: idleEditor skipped (worker busy)";
             return true;
+        }
 
-        drainDspToUiEvents();
+        // Copy queued DSP -> UI events safely
+        std::vector<uint8_t> localDspToUiEvents;
+        {
+            std::lock_guard<std::mutex> lg(dspToUiMutex);
+            localDspToUiEvents = std::move(dspToUiEvents);
+            dspToUiEvents.clear();
+        }
+
+        // Forward atom events from DSP -> UI 
+        if ( uiInstance && uiDescriptor && uiDescriptor->port_event && !localDspToUiEvents.empty() )
+        {
+            size_t offset = 0;
+            while ( offset < localDspToUiEvents.size() )
+            {
+                LV2_Atom_Event* ev = reinterpret_cast<LV2_Atom_Event*>(localDspToUiEvents.data() + offset);
+                uiDescriptor->port_event(uiInstance, atomOutIdx, ev->body.size,
+                    UridAtomEventTransfer(), &ev->body);
+                offset += sizeof(LV2_Atom_Event) + lv2_atom_pad_size(ev->body.size);
+            }
+        }
         
         if ( !uiInstance || !idleInterface || !bEditorVisible )
             return false;
@@ -707,6 +728,10 @@ public:
             firstIdle = false;
         }
         int result = idleInterface->idle ( uiInstance );
+        if ( result != 0 )
+        {
+            qWarning() << "lv2_adapter: idleInterface->idle returned" << result;
+        }
         static bool firstIdleDone = true;
         if ( firstIdleDone )
         {
@@ -914,30 +939,6 @@ public:
     }
 
 private:
-        void drainDspToUiEvents()
-        {
-            // Copy queued DSP -> UI events safely
-            std::vector<uint8_t> localDspToUiEvents;
-            {
-                std::lock_guard<std::mutex> lg(dspToUiMutex);
-                localDspToUiEvents = std::move(dspToUiEvents);
-                dspToUiEvents.clear();
-            }
-
-            // Forward atom events from DSP -> UI
-            if ( uiInstance && uiDescriptor && uiDescriptor->port_event && !localDspToUiEvents.empty() )
-            {
-                size_t offset = 0;
-                while ( offset < localDspToUiEvents.size() )
-                {
-                    LV2_Atom_Event* ev = reinterpret_cast<LV2_Atom_Event*>(localDspToUiEvents.data() + offset);
-                    uiDescriptor->port_event(uiInstance, atomOutIdx, ev->body.size,
-                        UridAtomEventTransfer(), &ev->body);
-                    offset += sizeof(LV2_Atom_Event) + lv2_atom_pad_size(ev->body.size);
-                }
-            }
-        }
-
     struct WorkerJob {
         std::vector<uint8_t> data;
     };
@@ -988,6 +989,7 @@ private:
                                                     const void*                data)
     {
         auto* self = static_cast<Lv2Runtime*>(handle);
+        qDebug() << "lv2_adapter: worker schedule requested, size=" << size;
         WorkerJob job;
         if ( size > 0 && data )
         {
@@ -1008,6 +1010,7 @@ private:
                                                    const void*               data)
     {
         auto* self = static_cast<Lv2Runtime*>(handle);
+        qDebug() << "lv2_adapter: worker respond requested, size=" << size;
         WorkerJob job;
         if ( size > 0 && data )
         {
@@ -1038,10 +1041,17 @@ private:
             
             if ( workerInterface && workerInterface->work )
             {
+                QElapsedTimer workTimer;
+                workTimer.start();
                 bWorkerBusy = true;
                 workerInterface->work(instance, RespondWorkTrampoline, this,
                                       job.data.size(), job.data.data());
                 bWorkerBusy = false;
+                const qint64 workMs = workTimer.elapsed();
+                if ( workMs > 50 )
+                {
+                    qWarning() << "lv2_adapter: workerInterface->work took" << workMs << "ms, size=" << job.data.size();
+                }
             }
         }
     }
@@ -1191,7 +1201,6 @@ private:
     bool                      bEditorVisible { false };
     std::atomic<bool>         bShowCompleted { true };
     std::atomic<bool>         bWorkerBusy   { false };
-
     
     // Resize feature support
     LV2UI_Resize              uiResizeData  {};
