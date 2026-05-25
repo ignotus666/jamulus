@@ -640,37 +640,10 @@ public:
         if ( showInterface )
         {
             bShowCompleted = false;
-#ifdef _WIN32
-            uiThreadQuit = false;
-            uiThread = std::thread([this]() {
-                qDebug() << "lv2_adapter: showing UI via showInterface->show in UI thread...";
-                showInterface->show ( uiInstance );
-                qDebug() << "lv2_adapter: UI show completed in UI thread";
-                bShowCompleted = true;
-
-                while ( !uiThreadQuit )
-                {
-                    drainDspToUiEvents();
-
-                    if ( uiInstance && idleInterface && bEditorVisible )
-                    {
-                        int result = idleInterface->idle ( uiInstance );
-                        if ( result != 0 )
-                        {
-                            bEditorVisible = false;
-                            break;
-                        }
-                    }
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-            });
-#else
             qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
             qDebug() << "lv2_adapter: UI show completed";
             bShowCompleted = true;
-#endif
             bEditorVisible = true;
         }
         else
@@ -692,12 +665,6 @@ public:
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             waitCount++;
         }
-
-#ifdef _WIN32
-        uiThreadQuit = true;
-        if ( uiThread.joinable() )
-            uiThread.join();
-#endif
 
         if ( uiInstance )
         {
@@ -725,10 +692,6 @@ public:
 
     bool idleEditor()
     {
-#ifdef _WIN32
-        // UI idling runs on the dedicated UI thread on Windows.
-        return bEditorVisible;
-#else
         if ( !bShowCompleted )
             return true;
 
@@ -758,7 +721,6 @@ public:
         }
 
         return true;
-#endif
     }
 
     bool isEditorVisible() const { return bEditorVisible; }
@@ -1230,10 +1192,6 @@ private:
     std::atomic<bool>         bShowCompleted { true };
     std::atomic<bool>         bWorkerBusy   { false };
 
-#ifdef _WIN32
-    std::thread               uiThread;
-    std::atomic<bool>         uiThreadQuit { false };
-#endif
     
     // Resize feature support
     LV2UI_Resize              uiResizeData  {};
