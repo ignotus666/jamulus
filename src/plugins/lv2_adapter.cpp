@@ -298,15 +298,10 @@ public:
         if ( workerInterface && workerInterface->work_response )
         {
             std::lock_guard<std::mutex> lg(responseMutex);
-            if ( !responseJobs.empty() )
-            {
-                qDebug() << "lv2_adapter: audio thread processing" << responseJobs.size() << "worker responses";
-            }
             while ( !responseJobs.empty() )
             {
                 const WorkerJob& job = responseJobs.front();
-                LV2_Worker_Status status = workerInterface->work_response(instance, job.data.size(), job.data.data());
-                qDebug() << "lv2_adapter: work_response processed, status:" << status;
+                workerInterface->work_response(instance, job.data.size(), job.data.data());
                 responseJobs.pop();
             }
         }
@@ -787,8 +782,6 @@ public:
             return false;
         }
 
-
-
         // Get the LV2 State interface from the plugin
         const LV2_State_Interface* stateIface =
             static_cast<const LV2_State_Interface*>(
@@ -975,7 +968,6 @@ private:
                                                     const void*                data)
     {
         auto* self = static_cast<Lv2Runtime*>(handle);
-        qDebug() << "lv2_adapter: ScheduleWorkTrampoline called, size:" << size;
         WorkerJob job;
         if ( size > 0 && data )
         {
@@ -996,7 +988,6 @@ private:
                                                    const void*               data)
     {
         auto* self = static_cast<Lv2Runtime*>(handle);
-        qDebug() << "lv2_adapter: RespondWorkTrampoline called, size:" << size;
         WorkerJob job;
         if ( size > 0 && data )
         {
@@ -1027,10 +1018,8 @@ private:
             
             if ( workerInterface && workerInterface->work )
             {
-                qDebug() << "lv2_adapter: worker thread processing job, size:" << job.data.size();
-                LV2_Worker_Status status = workerInterface->work(instance, RespondWorkTrampoline, this,
-                                                                 job.data.size(), job.data.data());
-                qDebug() << "lv2_adapter: worker thread job processed, status:" << status;
+                workerInterface->work(instance, RespondWorkTrampoline, this,
+                                      job.data.size(), job.data.data());
             }
         }
     }
