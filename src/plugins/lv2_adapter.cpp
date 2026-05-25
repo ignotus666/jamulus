@@ -297,12 +297,16 @@ public:
         // Process worker responses
         if ( workerInterface && workerInterface->work_response )
         {
-            std::lock_guard<std::mutex> lg(responseMutex);
-            while ( !responseJobs.empty() )
+            std::queue<WorkerJob> localResponses;
             {
-                const WorkerJob& job = responseJobs.front();
+                std::lock_guard<std::mutex> lg(responseMutex);
+                std::swap(responseJobs, localResponses);
+            }
+            while ( !localResponses.empty() )
+            {
+                const WorkerJob& job = localResponses.front();
                 workerInterface->work_response(instance, job.data.size(), job.data.data());
-                responseJobs.pop();
+                localResponses.pop();
             }
         }
 

@@ -43,8 +43,8 @@ struct InputGainPickupState
 };
 
 std::array<InputGainPickupState, 2> g_inputGainPickupStates;
-std::array<bool, 2>                 g_inputGainPickupInitialized { false, false };
-std::array<bool, 2>                 g_inputGainPickupWaitingForPickup { false, false };
+std::array<bool, 2>                 g_inputGainPickupInitialized{ false, false };
+std::array<bool, 2>                 g_inputGainPickupWaitingForPickup{ false, false };
 
 static void inputGainPickupInactivityCheck ( int                                    iTargetIdx,
                                              std::chrono::steady_clock::time_point& lastMidiTime,
@@ -147,11 +147,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pMetersRow->setSpacing ( 6 );
     pMetersContainer->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
 
-    QVBoxLayout* pInputColumn = new QVBoxLayout();
-    QHBoxLayout* pInputChannels = new QHBoxLayout();
-    QVBoxLayout* pInputLeftColumn = new QVBoxLayout();
-    QVBoxLayout* pInputRightColumn = new QVBoxLayout();
-    QHBoxLayout* pInputLeftMeterRow = new QHBoxLayout();
+    QVBoxLayout* pInputColumn        = new QVBoxLayout();
+    QHBoxLayout* pInputChannels      = new QHBoxLayout();
+    QVBoxLayout* pInputLeftColumn    = new QVBoxLayout();
+    QVBoxLayout* pInputRightColumn   = new QVBoxLayout();
+    QHBoxLayout* pInputLeftMeterRow  = new QHBoxLayout();
     QHBoxLayout* pInputRightMeterRow = new QHBoxLayout();
     pInputColumn->setContentsMargins ( 0, 0, 0, 0 );
     pInputColumn->setSpacing ( 2 );
@@ -168,8 +168,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     CCustomSlider* pInputGainSliderL = new CCustomSlider ( Qt::Vertical, backgroundFrame );
     CCustomSlider* pInputGainSliderR = new CCustomSlider ( Qt::Vertical, backgroundFrame );
-    m_pInputGainSliderL = pInputGainSliderL;
-    m_pInputGainSliderR = pInputGainSliderR;
+    m_pInputGainSliderL              = pInputGainSliderL;
+    m_pInputGainSliderR              = pInputGainSliderR;
     for ( CCustomSlider* pSlider : { pInputGainSliderL, pInputGainSliderR } )
     {
         pSlider->setRange ( 0, 200 );
@@ -201,7 +201,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         if ( !checked && pClient->GetAudioChannels() == CC_STEREO && m_pInputGainSliderL && m_pInputGainSliderR )
         {
             m_bInputGainSliderUpdateLock = true;
-            const int value = m_pInputGainSliderL->value();
+            const int value              = m_pInputGainSliderL->value();
             m_pInputGainSliderR->setValue ( value );
             pSettings->iInputGainR = value;
             pClient->SetInputGainR ( static_cast<float> ( value ) / 100.0f );
@@ -409,16 +409,15 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Use adaptive widths for action buttons in the left panel.
     const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
-                                      qMax ( qMax ( chbChat->sizeHint().width(), butConnect->sizeHint().width() ),
-                                             butPlugins->sizeHint().width() ) );
+                                      qMax ( qMax ( chbChat->sizeHint().width(), butConnect->sizeHint().width() ), butPlugins->sizeHint().width() ) );
 
     butConnect->setFixedHeight ( 40 );
     butConnect->setMinimumWidth ( iMainPillWidth );
-    chbLocalMute->setFixedHeight ( 24 );
-    chbSettings->setFixedHeight ( 24 );
-    chbChat->setFixedHeight ( 24 );
-    butEffects->setFixedHeight ( 24 );
-    butPlugins->setFixedHeight ( 24 );
+    chbLocalMute->setFixedHeight ( 20 );
+    chbSettings->setFixedHeight ( 20 );
+    chbChat->setFixedHeight ( 20 );
+    butEffects->setFixedHeight ( 20 );
+    butPlugins->setFixedHeight ( 20 );
     chbLocalMute->setMinimumWidth ( iMainPillWidth );
     chbSettings->setMinimumWidth ( iMainPillWidth );
     chbChat->setMinimumWidth ( iMainPillWidth );
@@ -455,8 +454,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // Plugins button opens the plugin loader dialog.
     connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenCarla );
-    butPlugins->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect( butPlugins, &QPushButton::customContextMenuRequested, this, &CClientDlg::OnCarlaContextMenu );
+    butPlugins->setContextMenuPolicy ( Qt::CustomContextMenu );
+    connect ( butPlugins, &QPushButton::customContextMenuRequested, this, &CClientDlg::OnCarlaContextMenu );
 
     // initialize pan control visibility (pan is not supported for mono)
     MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
@@ -715,7 +714,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
             }
         }
     } );
-    TimerPluginIdle.start( 20 ); // 50 Hz
+    TimerPluginIdle.start ( 20 ); // 50 Hz
 
     QObject::connect ( &TimerBuffersLED, &QTimer::timeout, this, &CClientDlg::OnTimerBuffersLED );
 
@@ -926,7 +925,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
             {
                 qWarning() << "Failed to load Carla preset:" << pSettings->strCarlaPresetPath;
             }
-            pClient->ShowPluginEditor(carlaId, nullptr);
+            pClient->ShowPluginEditor ( carlaId, nullptr );
         }
     }
     else if ( pSettings->bCarlaWasActive && !pSettings->strCarlaStateBase64.isEmpty() )
@@ -934,8 +933,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         int carlaId = LoadCarlaPlugin();
         if ( carlaId != -1 )
         {
-            QByteArray stateData = QByteArray::fromBase64(pSettings->strCarlaStateBase64.toUtf8());
-            if ( !pClient->RestorePluginState(carlaId, stateData) )
+            QByteArray stateData = QByteArray::fromBase64 ( pSettings->strCarlaStateBase64.toUtf8() );
+            if ( !pClient->RestorePluginState ( carlaId, stateData ) )
             {
                 qWarning() << "Failed to restore Carla state";
             }
@@ -956,17 +955,17 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     auto plugins = pClient->GetLoadedPluginsSnapshot();
     if ( !plugins.empty() )
     {
-        QByteArray stateData = pClient->SavePluginState(plugins[0].id);
-        if (!stateData.isEmpty())
+        QByteArray stateData = pClient->SavePluginState ( plugins[0].id );
+        if ( !stateData.isEmpty() )
         {
-            pSettings->strCarlaStateBase64 = QString::fromUtf8(stateData.toBase64());
+            pSettings->strCarlaStateBase64 = QString::fromUtf8 ( stateData.toBase64() );
         }
         pSettings->bCarlaWasActive = true;
     }
     else
     {
         pSettings->strCarlaStateBase64 = "";
-        pSettings->bCarlaWasActive = false;
+        pSettings->bCarlaWasActive     = false;
     }
 
     pSettings->bWindowWasShownSettings = ClientSettingsDlg.isVisible();
@@ -2025,10 +2024,10 @@ void CClientDlg::ApplyInputGainValue ( InputGainMidiLearnTarget target, int valu
         return;
     }
 
-    const int iClampedValue = qMax ( 0, qMin ( 200, value ) );
-    const float fGain       = static_cast<float> ( iClampedValue ) / 100.0f;
-    const bool  bLinked     = ( m_pInputGainLinkCheck != nullptr ) && !m_pInputGainLinkCheck->isChecked() && pClient->GetAudioChannels() == CC_STEREO;
-    const int   iTargetIdx  = ( target == InputGainLearnLeft ) ? 0 : 1;
+    const int   iClampedValue = qMax ( 0, qMin ( 200, value ) );
+    const float fGain         = static_cast<float> ( iClampedValue ) / 100.0f;
+    const bool  bLinked    = ( m_pInputGainLinkCheck != nullptr ) && !m_pInputGainLinkCheck->isChecked() && pClient->GetAudioChannels() == CC_STEREO;
+    const int   iTargetIdx = ( target == InputGainLearnLeft ) ? 0 : 1;
 
     if ( bFromMidi && pSettings && pSettings->bMIDIPickupMode )
     {
@@ -2045,9 +2044,9 @@ void CClientDlg::ApplyInputGainValue ( InputGainMidiLearnTarget target, int valu
             inputGainPickupInactivityCheck ( iTargetIdx, pickupState.lastMidiTime, pickupState.recentMidiValues, g_inputGainPickupWaitingForPickup );
         }
 
-        int current = ( target == InputGainLearnLeft ) ? m_pInputGainSliderL->value() : m_pInputGainSliderR->value();
+        int  current = ( target == InputGainLearnLeft ) ? m_pInputGainSliderL->value() : m_pInputGainSliderR->value();
         bool waiting = g_inputGainPickupWaitingForPickup[static_cast<size_t> ( iTargetIdx )];
-        waiting = inputGainPickupTryApply ( iClampedValue, current, MIDI_PICKUP_TOLERANCE, pickupState.recentMidiValues, waiting );
+        waiting      = inputGainPickupTryApply ( iClampedValue, current, MIDI_PICKUP_TOLERANCE, pickupState.recentMidiValues, waiting );
         g_inputGainPickupWaitingForPickup[static_cast<size_t> ( iTargetIdx )] = waiting;
 
         if ( waiting )
@@ -2211,7 +2210,7 @@ int CClientDlg::LoadCarlaPlugin()
 
 #if defined( HAVE_LV2 )
     const QString standardUri = "http://kxstudio.sf.net/carla/plugins/carlarack";
-    
+
     // First try standard location
     int carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
 
@@ -2220,35 +2219,34 @@ int CClientDlg::LoadCarlaPlugin()
         // Try the saved path
         if ( !pSettings->strCarlaPath.isEmpty() )
         {
-#ifdef Q_OS_WIN
+#    ifdef Q_OS_WIN
             _putenv_s ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str() );
-#else
+#    else
             setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
-#endif
+#    endif
             carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
         }
 
         // Try common LV2 paths on Windows
-#ifdef Q_OS_WIN
+#    ifdef Q_OS_WIN
         if ( carlaId == -1 )
         {
-            QStringList commonPaths = {
-                "C:/Program Files/Common Files/LV2",
-                "C:/Program Files/LV2",
-                QDir::homePath() + "/AppData/Roaming/LV2"
-            };
-            for (const QString& path : commonPaths) {
-                if (QDir(path).exists()) {
+            QStringList commonPaths = { "C:/Program Files/Common Files/LV2", "C:/Program Files/LV2", QDir::homePath() + "/AppData/Roaming/LV2" };
+            for ( const QString& path : commonPaths )
+            {
+                if ( QDir ( path ).exists() )
+                {
                     _putenv_s ( "LV2_PATH", path.toStdString().c_str() );
                     carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
-                    if (carlaId != -1) {
+                    if ( carlaId != -1 )
+                    {
                         pSettings->strCarlaPath = path;
                         break;
                     }
                 }
             }
         }
-#endif
+#    endif
 
         // Prompt if still not found
         if ( carlaId == -1 )
@@ -2257,11 +2255,11 @@ int CClientDlg::LoadCarlaPlugin()
             if ( !strPath.isEmpty() )
             {
                 pSettings->strCarlaPath = strPath;
-#ifdef Q_OS_WIN
+#    ifdef Q_OS_WIN
                 _putenv_s ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str() );
-#else
+#    else
                 setenv ( "LV2_PATH", pSettings->strCarlaPath.toStdString().c_str(), 1 );
-#endif
+#    endif
                 carlaId = pClient->LoadPlugin ( standardUri.toStdString() );
             }
         }
@@ -2286,7 +2284,7 @@ void CClientDlg::OnOpenCarla()
 
     if ( !pClient->IsRunning() )
     {
-        QMessageBox::information( this, "Offline Warning", "You are not connected to a server. Carla will load, but audio will not be processed." );
+        QMessageBox::information ( this, "Offline Warning", "You are not connected to a server. Carla will load, but audio will not be processed." );
     }
 
     int carlaId = LoadCarlaPlugin();
@@ -2302,64 +2300,65 @@ void CClientDlg::OnOpenCarla()
     }
 }
 
-void CClientDlg::OnCarlaContextMenu( const QPoint& pos )
+void CClientDlg::OnCarlaContextMenu ( const QPoint& pos )
 {
-    QMenu menu(this);
-    
-    QAction* setDirAction = menu.addAction(tr("Set Presets Directory..."));
+    QMenu menu ( this );
+
+    QAction* setDirAction = menu.addAction ( tr ( "Set Presets Directory..." ) );
     menu.addSeparator();
 
     QList<QAction*> presetActions;
     if ( !pSettings->strCarlaPresetsDir.isEmpty() )
     {
-        QDir dir(pSettings->strCarlaPresetsDir);
+        QDir        dir ( pSettings->strCarlaPresetsDir );
         QStringList filters;
         filters << "*.carxp";
-        QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
-        
+        QFileInfoList files = dir.entryInfoList ( filters, QDir::Files );
+
         for ( const QFileInfo& file : files )
         {
-            QAction* action = menu.addAction(file.completeBaseName());
-            action->setData(file.absoluteFilePath());
-            presetActions.append(action);
+            QAction* action = menu.addAction ( file.completeBaseName() );
+            action->setData ( file.absoluteFilePath() );
+            presetActions.append ( action );
         }
-        
+
         if ( presetActions.isEmpty() )
         {
-            QAction* emptyAction = menu.addAction(tr("No presets found"));
-            emptyAction->setEnabled(false);
+            QAction* emptyAction = menu.addAction ( tr ( "No presets found" ) );
+            emptyAction->setEnabled ( false );
         }
     }
     else
     {
-        QAction* emptyAction = menu.addAction(tr("No directory set"));
-        emptyAction->setEnabled(false);
+        QAction* emptyAction = menu.addAction ( tr ( "No directory set" ) );
+        emptyAction->setEnabled ( false );
     }
 
-    QAction* selectedAction = menu.exec(butPlugins->mapToGlobal(pos));
-    if ( !selectedAction ) return;
+    QAction* selectedAction = menu.exec ( butPlugins->mapToGlobal ( pos ) );
+    if ( !selectedAction )
+        return;
 
     if ( selectedAction == setDirAction )
     {
-        QString dir = QFileDialog::getExistingDirectory(this, tr("Select Carla Presets Directory"), pSettings->strCarlaPresetsDir);
+        QString dir = QFileDialog::getExistingDirectory ( this, tr ( "Select Carla Presets Directory" ), pSettings->strCarlaPresetsDir );
         if ( !dir.isEmpty() )
         {
             pSettings->strCarlaPresetsDir = dir;
         }
     }
-    else if ( presetActions.contains(selectedAction) )
+    else if ( presetActions.contains ( selectedAction ) )
     {
-        QString path = selectedAction->data().toString();
-        int carlaId = LoadCarlaPlugin();
+        QString path    = selectedAction->data().toString();
+        int     carlaId = LoadCarlaPlugin();
         if ( carlaId != -1 )
         {
-            if ( !pClient->LoadPluginPreset(carlaId, path.toStdString()) )
+            if ( !pClient->LoadPluginPreset ( carlaId, path.toStdString() ) )
             {
-                QMessageBox::warning(this, APP_NAME, tr("Failed to load preset %1").arg(path));
+                QMessageBox::warning ( this, APP_NAME, tr ( "Failed to load preset %1" ).arg ( path ) );
             }
             else
             {
-                pClient->ShowPluginEditor(carlaId, nullptr);
+                pClient->ShowPluginEditor ( carlaId, nullptr );
             }
         }
     }
