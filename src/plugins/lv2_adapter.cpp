@@ -681,7 +681,7 @@ public:
 
     bool idleEditor()
     {
-        if ( !bShowCompleted )
+        if ( !bShowCompleted || bWorkerBusy )
             return true;
 
         // Copy queued DSP -> UI events safely
@@ -1022,8 +1022,10 @@ private:
             
             if ( workerInterface && workerInterface->work )
             {
+                bWorkerBusy = true;
                 workerInterface->work(instance, RespondWorkTrampoline, this,
                                       job.data.size(), job.data.data());
+                bWorkerBusy = false;
             }
         }
     }
@@ -1172,6 +1174,7 @@ private:
     void*                     uiLibHandle   { nullptr };
     bool                      bEditorVisible { false };
     std::atomic<bool>         bShowCompleted { true };
+    std::atomic<bool>         bWorkerBusy   { false };
     
     // Resize feature support
     LV2UI_Resize              uiResizeData  {};
