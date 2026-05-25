@@ -577,6 +577,7 @@ public:
             &featureInstanceAccess,
             &featureUiResize,
             &featureExternalUiHost,
+            &featureWorkerSchedule,
             nullptr
         };
 
