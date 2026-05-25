@@ -36,7 +36,7 @@
 #    include <mach/mach_error.h>
 #    include <mach/mach_time.h>
 #else
-// using mach nanosleep for Linux
+// using nanosleep for Linux
 #    include <sys/time.h>
 #endif
 #include <QCoreApplication>
@@ -1149,8 +1149,10 @@ public:
         return OT_I_OS;
 #elif defined( Q_OS_ANDROID ) || defined( ANDROID )
         return OT_ANDROID;
-#else
+#elif defined( Q_OS_LINUX )
         return OT_LINUX;
+#else
+        return OT_UNIX;
 #endif
     }
 };

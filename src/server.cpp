@@ -391,9 +391,6 @@ void CServer::OnNewConnection ( int iChID, int iTotChans, CHostAddress RecHostAd
         vecChannels[iChID].CreateRawAudioSupportedMes();
     }
 
-    // inform the client that the server supports raw (uncompressed) audio
-    vecChannels[iChID].CreateRawAudioSupportedMes();
-
     // Send an empty channel list in order to force clients to reset their
     // audio mixer state. This is required to trigger clients to re-send their
     // gain levels upon reconnecting after server restarts.
@@ -1143,7 +1140,7 @@ void CServer::MixEncodeTransmitData ( const int iChanCnt, const int iNumClients 
     }
 
     int                iClientFrameSizeSamples = 0; // initialize to avoid a compiler warning
-    OpusCustomEncoder* CurOpusEncoder         = nullptr;
+    OpusCustomEncoder* CurOpusEncoder          = nullptr;
 
     // get current number of CELT coded bytes
     const int iCeltNumCodedBytes = vecChannels[iCurChanID].GetCeltNumCodedBytes();
@@ -1189,7 +1186,6 @@ void CServer::MixEncodeTransmitData ( const int iChanCnt, const int iNumClients 
             // get the large frame from the conversion buffer
             DoubleFrameSizeConvBufOut[iCurChanID].GetAll ( vecsSendData, DOUBLE_SYSTEM_FRAME_SIZE_SAMPLES * vecNumAudioChannels[iChanCnt] );
         }
-
         if ( iCeltNumCodedBytes != static_cast<int> ( sizeof ( int16_t ) * iClientFrameSizeSamples * vecNumAudioChannels[iChanCnt] ) )
         {
             // OPUS encoding

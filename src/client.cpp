@@ -1028,7 +1028,6 @@ void CClient::OnClientIDReceived ( int iServerChanID )
     emit ClientIDReceived ( iChanID );
 }
 
-
 void CClient::OnRawAudioSupported()
 {
     if ( !bRawAudioIsSupported )
@@ -1306,7 +1305,7 @@ void CClient::Init()
                 else
                 {
                     // fall back to highest OPUS quality
-                    iCeltNumCodedBytes = OPUS_NUM_BYTES_MONO_HIGH_QUALITY_DBLE_FRAMESIZE;
+                    iCeltNumCodedBytes = OPUS_NUM_BYTES_MONO_HIGH_QUALITY;
                 }
                 break;
             }
@@ -1340,7 +1339,7 @@ void CClient::Init()
                 else
                 {
                     // fall back to highest OPUS quality
-                    iCeltNumCodedBytes = OPUS_NUM_BYTES_STEREO_HIGH_QUALITY_DBLE_FRAMESIZE;
+                    iCeltNumCodedBytes = OPUS_NUM_BYTES_STEREO_HIGH_QUALITY;
                 }
                 break;
             }
@@ -1353,9 +1352,6 @@ void CClient::Init()
     vecCeltData.Init ( iCeltNumCodedBytes );
     vecZeros.Init ( iStereoBlockSizeSam, 0 );
     vecsStereoSndCrdMuteStream.Init ( iStereoBlockSizeSam );
-
-    // Set bUseRawAudio to true if we're using raw audio (indicated by CurOpusEncoder being nullptr)
-    bUseRawAudio = ( CurOpusEncoder == nullptr ) && bRawAudioIsSupported;
 
     // In case we are connected to a non raw audio server or we don't use raw audio we need to initialze the codec
     if ( CurOpusEncoder != nullptr )
@@ -1591,6 +1587,34 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 
     for ( i = 0, j = 0; i < iSndCrdFrameSizeFactor; i++, j += iNumAudioChannels * iOPUSFrameSizeSamples )
     {
+        // OPUS encoding or copying RAW audio?
+        if ( CurOpusEncoder != nullptr )
+        {
+            // OPUS encoding
+            if ( bMuteOutStream )
+            {
+                iUnused = opus_custom_encode ( CurOpusEncoder, &vecZeros[j], iOPUSFrameSizeSamples, &vecCeltData[0], iCeltNumCodedBytes );
+            }
+            else
+            {
+                iUnused = opus_custom_encode ( CurOpusEncoder, &vecsStereoSndCrd[j], iOPUSFrameSizeSamples, &vecCeltData[0], iCeltNumCodedBytes );
+            }
+        }
+        else if ( bRawAudioIsSupported )
+        {
+            // RAW audio
+            if ( bMuteOutStream )
+            {
+                // output muted - fill with silence
+                memset ( &vecCeltData[0], 0, iCeltNumCodedBytes );
+            }
+            else
+            {
+                // copy raw audio data
+                memcpy ( &vecCeltData[0], &vecsStereoSndCrd[j], iCeltNumCodedBytes );
+            }
+        }
+
         if ( !bUseRawAudio )
         {
             // OPUS encoding or copying RAW audio?
@@ -1654,6 +1678,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             bJitterBufferOK = false;
         }
 
+        // OPUS decoding or copying RAW audio?
         if ( CurOpusDecoder != nullptr )
         {
             // OPUS decoding
