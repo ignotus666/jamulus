@@ -414,11 +414,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     butConnect->setFixedHeight ( 40 );
     butConnect->setMinimumWidth ( iMainPillWidth );
-    chbLocalMute->setFixedHeight ( 20 );
-    chbSettings->setFixedHeight ( 20 );
-    chbChat->setFixedHeight ( 20 );
-    butEffects->setFixedHeight ( 20 );
-    butPlugins->setFixedHeight ( 20 );
+    chbLocalMute->setFixedHeight ( 24 );
+    chbSettings->setFixedHeight ( 24 );
+    chbChat->setFixedHeight ( 24 );
+    butEffects->setFixedHeight ( 24 );
+    butPlugins->setFixedHeight ( 24 );
     chbLocalMute->setMinimumWidth ( iMainPillWidth );
     chbSettings->setMinimumWidth ( iMainPillWidth );
     chbChat->setMinimumWidth ( iMainPillWidth );

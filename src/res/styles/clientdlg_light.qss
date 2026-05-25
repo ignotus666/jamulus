@@ -43,7 +43,7 @@ QPushButton#chbChat,
 QPushButton#butEffects,
 QPushButton#butPlugins {
     color: rgb(37, 37, 40);
-    font: bold;
+    font-weight: bold;
     spacing: 0px;
     padding: 4px 7px;
     border: 1px solid rgb(88, 88, 92);
@@ -51,8 +51,8 @@ QPushButton#butPlugins {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(234, 236, 238),
         stop:1 rgb(237, 246, 252));
-    min-height: 20px;
-    max-height: 20px;
+    min-height: 24px;
+    max-height: 24px;
     text-align: center;
     margin: 0px;
 }
@@ -112,7 +112,7 @@ QPushButton#chbLocalMute:checked:hover {
 
 QPushButton#butConnect {
     color:             rgb(37, 37, 40);
-    font:              bold;
+    font-weight:              bold;
     border:            2px solid rgb(88, 88, 92);
     border-radius:     6px;
     background:        qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -154,7 +154,7 @@ QPushButton#pcbGroup,
 QPushButton#pcbMute,
 QPushButton#pcbSolo {
     color: rgb(37, 37, 40);
-    font: bold;
+    font-weight: bold;
     spacing: 0px;
     padding: 4px 5px;
     border: 1px solid rgb(88, 88, 92);
@@ -162,8 +162,8 @@ QPushButton#pcbSolo {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(234, 236, 238),
         stop:1 rgb(237, 246, 252));
-    min-height: 20px;
-    max-height: 20px;
+    min-height: 24px;
+    max-height: 24px;
     text-align: center;
     margin: 0px;
 }
