@@ -60,6 +60,12 @@ static const char* lv2_dlerror()                           { return dlerror(); }
 
 namespace
 {
+struct LV2_External_UI_Host
+{
+    void (*ui_closed) ( LV2UI_Controller controller );
+    const char* plugin_human_id;
+};
+
 // ---------------------------------------------------------------------------
 // URID map – trivial implementation suitable for a single-plugin host
 // ---------------------------------------------------------------------------
@@ -550,6 +556,16 @@ public:
 
         uiLibHandle = uiLib;
 
+        // Set up resize feature
+        uiResizeData.handle = this;
+        uiResizeData.ui_resize = UiResizeTrampoline;
+        featureUiResize = { LV2_UI__resize, &uiResizeData };
+
+        // Set up external UI host feature
+        externalUiHostData.ui_closed = UiClosedTrampoline;
+        externalUiHostData.plugin_human_id = "Jamulus Carla Host";
+        featureExternalUiHost = { "http://kxstudio.sf.net/ns/lv2ext/external-ui#Host", &externalUiHostData };
+
         // Prepare features for the UI, including instance-access
         LV2_Feature featureInstanceAccess = { "http://lv2plug.in/ns/ext/instance-access",
                                               const_cast<void*> ( static_cast<const void*> (
@@ -560,6 +576,8 @@ public:
             &featureUnmap,
             &featureOptions,
             &featureInstanceAccess,
+            &featureUiResize,
+            &featureExternalUiHost,
             nullptr
         };
 
@@ -937,6 +955,21 @@ private:
         self->uiEvents.push_back(std::move(ev));
     }
     
+    static int UiResizeTrampoline ( LV2UI_Feature_Handle handle, int width, int height )
+    {
+        auto* self = static_cast<Lv2Runtime*> ( handle );
+        qDebug() << "lv2_adapter: UI for plugin" << self->savedPluginURI.c_str()
+                 << "requested resize to width:" << width << "height:" << height;
+        return 0;
+    }
+
+    static void UiClosedTrampoline ( LV2UI_Controller controller )
+    {
+        auto* self = static_cast<Lv2Runtime*> ( controller );
+        qDebug() << "lv2_adapter: UI closed callback invoked by external UI";
+        self->bEditorVisible = false;
+    }
+    
     static LV2_Worker_Status ScheduleWorkTrampoline(LV2_Worker_Schedule_Handle handle,
                                                     uint32_t                   size,
                                                     const void*                data)
@@ -1146,6 +1179,14 @@ private:
     void*                     uiLibHandle   { nullptr };
     bool                      bEditorVisible { false };
     std::atomic<bool>         bShowCompleted { true };
+    
+    // Resize feature support
+    LV2UI_Resize              uiResizeData  {};
+    LV2_Feature               featureUiResize {};
+
+    // External UI Host feature support
+    LV2_External_UI_Host      externalUiHostData {};
+    LV2_Feature               featureExternalUiHost {};
     
     // Concurrency
     std::mutex workerMutex;
