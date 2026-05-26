@@ -525,7 +525,21 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		return;
 
 	if ( ! rwLockPlugins.tryLockForRead() )
+	{
+		static QElapsedTimer midiSkipTimer;
+		static bool midiSkipStarted = false;
+		if ( !midiSkipStarted )
+		{
+			midiSkipTimer.start();
+			midiSkipStarted = true;
+		}
+		else if ( midiSkipTimer.elapsed() > 1000 )
+		{
+			qDebug() << "pluginhost: process skipped (rwLock busy)";
+			midiSkipTimer.restart();
+		}
 		return;
+	}
 
 	constexpr int iChannels = 2;
 	std::vector<float> buffer ( iFrames * iChannels );
@@ -553,7 +567,8 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 	}
 	else if ( midiDispatchTimer.elapsed() > 1000 )
 	{
-		qDebug() << "pluginhost: dispatching" << localMidiEvents.size() << "MIDI events";
+		qDebug() << "pluginhost: dispatching" << localMidiEvents.size()
+		         << "MIDI events to" << vecPlugins.size() << "plugins";
 		midiDispatchTimer.restart();
 	}
 
