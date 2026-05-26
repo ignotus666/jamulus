@@ -11,6 +11,7 @@
 #if defined( HAVE_LV2 )
 
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QFile>
 
 #include <algorithm>
@@ -350,7 +351,7 @@ public:
             seq->body.pad  = 0;
             
             // Append UI events to the atom sequence
-            uint32_t capacity = atomInBuffer.size() - sizeof(LV2_Atom);
+            uint32_t capacity = static_cast<uint32_t> ( atomInBuffer.size() - sizeof ( LV2_Atom ) );
             
             // Append MIDI events
             if ( midiEvents && numMidiEvents > 0 )
@@ -375,7 +376,7 @@ public:
                 for ( int i = 0; i < numMidiEvents; ++i )
                 {
                     const MidiEv& ev = evs[i];
-                    uint32_t ev_size = sizeof(LV2_Atom_Event) + ev.length;
+                    uint32_t ev_size = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + ev.length );
                     if ( seq->atom.size + ev_size <= capacity )
                     {
                         LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
@@ -386,8 +387,8 @@ public:
                         aev->body.size = ev.length;
                         std::memcpy(LV2_ATOM_BODY(&aev->body), ev.data, ev.length);
                         
-                        uint32_t padded_size = lv2_atom_pad_size(ev.length);
-                        seq->atom.size += sizeof(LV2_Atom_Event) + padded_size;
+                        uint32_t padded_size = lv2_atom_pad_size ( static_cast<uint32_t>( ev.length ) );
+                        seq->atom.size += sizeof ( LV2_Atom_Event ) + padded_size;
                     }
                 }
             }
@@ -398,7 +399,7 @@ public:
                 if ( ev.port_protocol == UridAtomEventTransfer() && ev.port_index == static_cast<uint32_t>(atomInIdx) )
                 {
                     // For Atom events, the UI passes the atom itself
-                    const uint32_t ev_size = sizeof(LV2_Atom_Event) + ev.data.size();
+                    const uint32_t ev_size = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + ev.data.size() );
                     if ( seq->atom.size + ev_size <= capacity )
                     {
                         LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
@@ -407,8 +408,8 @@ public:
                         aev->time.frames = 0;
                         std::memcpy(&aev->body, ev.data.data(), ev.data.size());
                         // Pad to 64-bit alignment
-                        uint32_t padded_size = lv2_atom_pad_size(ev.data.size());
-                        seq->atom.size += sizeof(LV2_Atom_Event) + padded_size;
+                        uint32_t padded_size = lv2_atom_pad_size ( static_cast<uint32_t>( ev.data.size() ) );
+                        seq->atom.size += sizeof ( LV2_Atom_Event ) + padded_size;
                     }
                 }
                 else if ( ev.port_protocol == 0 )
