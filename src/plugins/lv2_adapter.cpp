@@ -313,7 +313,7 @@ public:
         }
         else if ( procLogTimer.elapsed() > 1000 )
         {
-            qDebug() << "lv2_adapter: process tick, midiEvents=" << numMidiEvents;
+            qWarning() << "lv2_adapter: process tick, midiEvents=" << numMidiEvents;
             procLogTimer.restart();
         }
 

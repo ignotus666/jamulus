@@ -1481,7 +1481,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     }
     else if ( pluginHostTimer.elapsed() > 1000 )
     {
-        qDebug() << ( bHasPlugins ? "client: pluginhost process enabled" : "client: no plugins loaded" );
+        qWarning() << ( bHasPlugins ? "client: pluginhost process enabled" : "client: no plugins loaded" );
         pluginHostTimer.restart();
     }
 

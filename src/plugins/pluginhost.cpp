@@ -535,7 +535,7 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		}
 		else if ( midiSkipTimer.elapsed() > 1000 )
 		{
-			qDebug() << "pluginhost: process skipped (rwLock busy)";
+			qWarning() << "pluginhost: process skipped (rwLock busy)";
 			midiSkipTimer.restart();
 		}
 		return;
@@ -567,8 +567,8 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 	}
 	else if ( midiDispatchTimer.elapsed() > 1000 )
 	{
-		qDebug() << "pluginhost: dispatching" << localMidiEvents.size()
-		         << "MIDI events to" << vecPlugins.size() << "plugins";
+		qWarning() << "pluginhost: dispatching" << localMidiEvents.size()
+		           << "MIDI events to" << vecPlugins.size() << "plugins";
 		midiDispatchTimer.restart();
 	}
 
