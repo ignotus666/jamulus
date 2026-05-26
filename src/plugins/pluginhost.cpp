@@ -31,6 +31,7 @@
 #endif
 #include <future>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QDirIterator>
 #include <QFileInfo>
 #include <queue>
@@ -360,6 +361,20 @@ void CPluginHost::QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t i
 	evt.offset = iSampleOffset;
 	std::memcpy ( evt.data, pData, iLength );
 	vecMIDIEvents.push_back ( evt );
+
+	static QElapsedTimer midiQueueTimer;
+	static bool midiQueueStarted = false;
+	if ( !midiQueueStarted )
+	{
+		midiQueueTimer.start();
+		midiQueueStarted = true;
+	}
+	else if ( midiQueueTimer.elapsed() > 1000 )
+	{
+		qDebug() << "pluginhost: queued MIDI event, status=" << int(pData[0])
+		         << "len=" << iLength << "offset=" << iSampleOffset;
+		midiQueueTimer.restart();
+	}
 }
 
 std::vector<CPluginHost::MidiEventData> CPluginHost::GetAndClearMIDIEvents()
@@ -527,6 +542,19 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		std::lock_guard<std::mutex> lockMIDI ( mtxMIDI );
 		localMidiEvents = std::move(vecMIDIEvents);
 		vecMIDIEvents.clear();
+	}
+
+	static QElapsedTimer midiDispatchTimer;
+	static bool midiDispatchStarted = false;
+	if ( !midiDispatchStarted )
+	{
+		midiDispatchTimer.start();
+		midiDispatchStarted = true;
+	}
+	else if ( midiDispatchTimer.elapsed() > 1000 )
+	{
+		qDebug() << "pluginhost: dispatching" << localMidiEvents.size() << "MIDI events";
+		midiDispatchTimer.restart();
 	}
 
 	for ( const auto & e : vecPlugins )
