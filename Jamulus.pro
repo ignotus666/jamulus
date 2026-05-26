@@ -165,6 +165,8 @@ win32 {
             advapi32.lib \
             winmm.lib \
             ws2_32.lib
+        # Suppress MSVC deprecation warnings for standard C functions used in third-party code
+        DEFINES += _CRT_SECURE_NO_WARNINGS
         greaterThan(QT_MAJOR_VERSION, 5) {
             # Qt5 had a special qtmain library which took care of forwarding the MSVC default WinMain() entrypoint to
             # the platform-agnostic main().

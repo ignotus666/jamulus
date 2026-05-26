@@ -14,12 +14,15 @@
 #include <QFile>
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
+#include <cstdint>
+#include <limits>
 #include <thread>
 #include <condition_variable>
 #include <queue>
@@ -100,6 +103,13 @@ static LV2_URID MapUri ( LV2_URID_Map_Handle, const char* uri )
     fwd[uri] = id;
     IdToUri()[id] = uri;
     return id;
+}
+
+// Helper: safely convert size_t to uint32_t without MSVC C4267 warnings
+static inline uint32_t to_u32( size_t v )
+{
+    const size_t maxv = static_cast<size_t>( std::numeric_limits<uint32_t>::max() );
+    return static_cast<uint32_t>( v > maxv ? maxv : v );
 }
 
 static const char* UnmapUri ( LV2_URID_Unmap_Handle, LV2_URID urid )
@@ -315,7 +325,7 @@ public:
             while ( !localResponses.empty() )
             {
                 const WorkerJob& job = localResponses.front();
-                workerInterface->work_response(instance, job.data.size(), job.data.data());
+                workerInterface->work_response(instance, to_u32( job.data.size() ), job.data.data());
                 localResponses.pop();
             }
         }
@@ -360,11 +370,11 @@ public:
             seq->body.pad  = 0;
             
             // Append UI events to the atom sequence
-            uint32_t capacity = static_cast<uint32_t> ( atomInBuffer.size() - sizeof ( LV2_Atom ) );
+            uint32_t capacity = to_u32( atomInBuffer.size() - sizeof ( LV2_Atom ) );
 
             auto appendEvent = [&] ( uint32_t timeFrames, uint32_t type, const uint8_t* data, uint32_t size )
             {
-                const uint32_t evSize = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + size );
+                const uint32_t evSize = to_u32( sizeof ( LV2_Atom_Event ) + size );
                 const uint32_t padded = lv2_atom_pad_size ( evSize );
                 if ( seq->atom.size + padded > capacity )
                     return;
@@ -381,7 +391,7 @@ public:
 
             auto appendAtomEvent = [&] ( uint32_t timeFrames, const uint8_t* atomData, uint32_t atomSize )
             {
-                const uint32_t evSize = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + atomSize );
+                const uint32_t evSize = to_u32( sizeof ( LV2_Atom_Event ) + atomSize );
                 const uint32_t padded = lv2_atom_pad_size ( evSize );
                 if ( seq->atom.size + padded > capacity )
                     return;
@@ -403,18 +413,18 @@ public:
                 {
                     const MidiEv& ev = evs[i];
                     if ( ev.length > 0 )
-                        appendEvent ( ev.offset, UridMidiEvent(), ev.data, static_cast<uint32_t>( ev.length ) );
+                        appendEvent ( ev.offset, UridMidiEvent(), ev.data, to_u32( ev.length ) );
                 }
             }
             
             std::lock_guard<std::mutex> lg(uiEventMutex);
             for ( const auto& ev : uiEvents )
             {
-                if ( ev.port_protocol == UridAtomEventTransfer() && ev.port_index == static_cast<uint32_t>(atomInIdx) )
+                if ( ev.port_protocol == UridAtomEventTransfer() && ev.port_index == to_u32( atomInIdx ) )
                 {
                     // For Atom events, the UI passes the atom itself
                     if ( !ev.data.empty() )
-                        appendAtomEvent ( 0, ev.data.data(), static_cast<uint32_t>( ev.data.size() ) );
+                        appendAtomEvent ( 0, ev.data.data(), to_u32( ev.data.size() ) );
                 }
                 else if ( ev.port_protocol == 0 )
                 {
@@ -432,7 +442,7 @@ public:
         {
             LV2_Atom_Sequence* seq = reinterpret_cast<LV2_Atom_Sequence*> ( atomOutBuffer.data() );
             seq->atom.type = UridAtomSequence();
-            seq->atom.size = atomOutBuffer.size() - sizeof ( LV2_Atom );
+            seq->atom.size = to_u32( atomOutBuffer.size() - sizeof ( LV2_Atom ) );
             seq->body.unit = 0;
             seq->body.pad  = 0;
             lilv_instance_connect_port ( instance, atomOutIdx, atomOutBuffer.data() );
@@ -876,7 +886,7 @@ public:
         const void*      value,
         size_t           size,
         uint32_t         type,
-        uint32_t         flags)
+        uint32_t         /*flags*/)
     {
         auto* data = static_cast<PresetStoreData*>(handle);
         if (key == data->chunkKeyUrid && type == data->atomStringUrid)
@@ -1087,7 +1097,7 @@ private:
             {
                 bWorkerBusy = true;
                 workerInterface->work(instance, RespondWorkTrampoline, this,
-                                      job.data.size(), job.data.data());
+                                      to_u32( job.data.size() ), job.data.data());
                 bWorkerBusy = false;
             }
         }
@@ -1448,14 +1458,14 @@ int lv2_scan_plugins ( struct Lv2PluginInfo** outPlugins )
         {
             const char* uri = lilv_node_as_uri ( uriNode );
             if ( uri )
-                std::strncpy ( results[idx].uri, uri, sizeof ( results[idx].uri ) - 1 );
+                std::snprintf ( results[idx].uri, sizeof ( results[idx].uri ), "%s", uri );
         }
 
         if ( nameNode )
         {
             const char* name = lilv_node_as_string ( nameNode );
             if ( name )
-                std::strncpy ( results[idx].name, name, sizeof ( results[idx].name ) - 1 );
+                std::snprintf ( results[idx].name, sizeof ( results[idx].name ), "%s", name );
             lilv_node_free ( nameNode );
         }
 

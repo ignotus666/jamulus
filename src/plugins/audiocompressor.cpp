@@ -68,7 +68,6 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
 
     const float fAttackCoeff    = std::exp ( -1.0f / ( 0.001f * fAttackMs * iSampleRateHz ) );
     const float fReleaseCoeff   = std::exp ( -1.0f / ( 0.001f * fReleaseMs * iSampleRateHz ) );
-    const float fMakeupLin      = DbToLinear ( fMakeupDb );
     const float fLimiterCeilLin = DbToLinear ( fLimiterCeilDb );
 
     for ( int iSample = 0; iSample < iStereoBlockSizeSam; iSample += 2 )
