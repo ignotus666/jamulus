@@ -40,6 +40,7 @@
 // Cross-platform dynamic library loading
 #ifdef _WIN32
 #include <windows.h>
+#include <objbase.h>
 static void*  lv2_dlopen  ( const char* path, int )     { return (void*)LoadLibraryA ( path ); }
 static void*  lv2_dlsym   ( void* h, const char* sym )  { return (void*)GetProcAddress ( (HMODULE)h, sym ); }
 static int    lv2_dlclose ( void* h )                    { return FreeLibrary ( (HMODULE)h ) ? 0 : -1; }
@@ -643,6 +644,7 @@ public:
 #ifdef _WIN32
             uiThreadQuit = false;
             uiThread = std::thread ( [this]() {
+                CoInitializeEx ( nullptr, COINIT_APARTMENTTHREADED );
                 showInterface->show ( uiInstance );
                 bShowCompleted = true;
 
@@ -668,6 +670,8 @@ public:
 
                     std::this_thread::sleep_for ( std::chrono::milliseconds ( 10 ) );
                 }
+
+                CoUninitialize();
             } );
 #else
             showInterface->show ( uiInstance );
