@@ -146,5 +146,11 @@ void CALLBACK CMidi::MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInst
         vMIDIPaketBytes[2] = static_cast<uint8_t> ( data2 );
 
         pSound->ParseMIDIMessage ( vMIDIPaketBytes );
+
+        if ( pSound->midiEventCallback )
+        {
+            uint8_t midiBytes[3] = { vMIDIPaketBytes[0], vMIDIPaketBytes[1], vMIDIPaketBytes[2] };
+            pSound->midiEventCallback ( midiBytes, 3, 0 );
+        }
     }
 }

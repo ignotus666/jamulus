@@ -1107,6 +1107,11 @@ void CSound::callbackMIDI ( const MIDIPacketList* pktlist, void* refCon, void* )
             }
             pSound->ParseMIDIMessage ( vMIDIPaketBytes );
 
+            if ( pSound->midiEventCallback && midiPacket->length > 0 && midiPacket->length <= 4 )
+            {
+                pSound->midiEventCallback ( midiPacket->data, midiPacket->length, 0 );
+            }
+
             midiPacket = MIDIPacketNext ( midiPacket );
         }
     }
