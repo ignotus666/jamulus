@@ -117,6 +117,12 @@ public:
     using MidiEventCallback = std::function<void(const uint8_t*, int, uint32_t)>;
     void SetMidiEventCallback ( const MidiEventCallback& callback ) { midiEventCallback = callback; }
 
+    void DispatchMidiEvent ( const uint8_t* data, int length, uint32_t offset )
+    {
+        if ( midiEventCallback )
+            midiEventCallback ( data, length, offset );
+    }
+
     // TODO this should be protected but since it is used
     // in a callback function it has to be public -> better solution
     void EmitReinitRequestSignal ( const ESndCrdResetType eSndCrdResetType ) { emit ReinitRequest ( eSndCrdResetType ); }

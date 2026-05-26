@@ -147,10 +147,7 @@ void CALLBACK CMidi::MidiCallback ( HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInst
 
         pSound->ParseMIDIMessage ( vMIDIPaketBytes );
 
-        if ( pSound->midiEventCallback )
-        {
-            uint8_t midiBytes[3] = { vMIDIPaketBytes[0], vMIDIPaketBytes[1], vMIDIPaketBytes[2] };
-            pSound->midiEventCallback ( midiBytes, 3, 0 );
-        }
+        uint8_t midiBytes[3] = { vMIDIPaketBytes[0], vMIDIPaketBytes[1], vMIDIPaketBytes[2] };
+        pSound->DispatchMidiEvent ( midiBytes, 3, 0 );
     }
 }
