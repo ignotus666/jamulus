@@ -11,7 +11,6 @@
 #if defined( HAVE_LV2 )
 
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QFile>
 
 #include <algorithm>
@@ -82,8 +81,15 @@ static std::unordered_map<LV2_URID, std::string>& IdToUri()
     return map;
 }
 
+static std::mutex& UridMutex()
+{
+    static std::mutex mutex;
+    return mutex;
+}
+
 static LV2_URID MapUri ( LV2_URID_Map_Handle, const char* uri )
 {
+    std::lock_guard<std::mutex> lock ( UridMutex() );
     auto& fwd = UriToId();
     auto it = fwd.find ( uri );
     if ( it != fwd.end() )
@@ -97,6 +103,7 @@ static LV2_URID MapUri ( LV2_URID_Map_Handle, const char* uri )
 
 static const char* UnmapUri ( LV2_URID_Unmap_Handle, LV2_URID urid )
 {
+    std::lock_guard<std::mutex> lock ( UridMutex() );
     auto& rev = IdToUri();
     auto it = rev.find ( urid );
     if ( it != rev.end() )
@@ -116,6 +123,7 @@ static LV2_URID UridBufSizeNomLen()   { static LV2_URID id = MapUri ( nullptr, L
 static LV2_URID UridParamSampleRate() { static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/parameters#sampleRate" ); return id; }
 static LV2_URID UridAtomEventTransfer(){ static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/atom#eventTransfer" ); return id; }
 static LV2_URID UridTimeFrame()       { static LV2_URID id = MapUri ( nullptr, "http://lv2plug.in/ns/ext/time#frame" ); return id; }
+static LV2_URID UridMidiEvent()       { static LV2_URID id = MapUri ( nullptr, LV2_MIDI__MidiEvent ); return id; }
 
 // ---------------------------------------------------------------------------
 // LV2 Runtime – manages a single LV2 plugin instance
@@ -352,44 +360,49 @@ public:
             
             // Append UI events to the atom sequence
             uint32_t capacity = static_cast<uint32_t> ( atomInBuffer.size() - sizeof ( LV2_Atom ) );
+
+            auto appendEvent = [&] ( uint32_t timeFrames, uint32_t type, const uint8_t* data, uint32_t size )
+            {
+                const uint32_t evSize = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + size );
+                const uint32_t padded = lv2_atom_pad_size ( evSize );
+                if ( seq->atom.size + padded > capacity )
+                    return;
+
+                LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
+                    reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
+                );
+                aev->time.frames = timeFrames;
+                aev->body.type = type;
+                aev->body.size = size;
+                std::memcpy ( LV2_ATOM_BODY ( &aev->body ), data, size );
+                seq->atom.size += padded;
+            };
+
+            auto appendAtomEvent = [&] ( uint32_t timeFrames, const uint8_t* atomData, uint32_t atomSize )
+            {
+                const uint32_t evSize = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + atomSize );
+                const uint32_t padded = lv2_atom_pad_size ( evSize );
+                if ( seq->atom.size + padded > capacity )
+                    return;
+
+                LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
+                    reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
+                );
+                aev->time.frames = timeFrames;
+                std::memcpy ( &aev->body, atomData, atomSize );
+                seq->atom.size += padded;
+            };
             
             // Append MIDI events
             if ( midiEvents && numMidiEvents > 0 )
             {
-                static QElapsedTimer midiLogTimer;
-                static bool midiLogStarted = false;
-                if ( !midiLogStarted )
-                {
-                    midiLogTimer.start();
-                    midiLogStarted = true;
-                }
-                else if ( midiLogTimer.elapsed() > 1000 )
-                {
-                    const uint8_t* b = static_cast<const uint8_t*>(midiEvents);
-                    qDebug() << "lv2_adapter: received" << numMidiEvents
-                             << "MIDI events, first status=" << ( b ? int(b[0]) : -1 );
-                    midiLogTimer.restart();
-                }
-
                 struct MidiEv { uint8_t data[4]; int length; uint32_t offset; };
                 const MidiEv* evs = static_cast<const MidiEv*>(midiEvents);
                 for ( int i = 0; i < numMidiEvents; ++i )
                 {
                     const MidiEv& ev = evs[i];
-                    uint32_t ev_size = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + ev.length );
-                    if ( seq->atom.size + ev_size <= capacity )
-                    {
-                        LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
-                            reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
-                        );
-                        aev->time.frames = ev.offset;
-                        aev->body.type = MapUri(nullptr, LV2_MIDI__MidiEvent);
-                        aev->body.size = ev.length;
-                        std::memcpy(LV2_ATOM_BODY(&aev->body), ev.data, ev.length);
-                        
-                        uint32_t padded_size = lv2_atom_pad_size ( static_cast<uint32_t>( ev.length ) );
-                        seq->atom.size += sizeof ( LV2_Atom_Event ) + padded_size;
-                    }
+                    if ( ev.length > 0 )
+                        appendEvent ( ev.offset, UridMidiEvent(), ev.data, static_cast<uint32_t>( ev.length ) );
                 }
             }
             
@@ -399,18 +412,8 @@ public:
                 if ( ev.port_protocol == UridAtomEventTransfer() && ev.port_index == static_cast<uint32_t>(atomInIdx) )
                 {
                     // For Atom events, the UI passes the atom itself
-                    const uint32_t ev_size = static_cast<uint32_t> ( sizeof ( LV2_Atom_Event ) + ev.data.size() );
-                    if ( seq->atom.size + ev_size <= capacity )
-                    {
-                        LV2_Atom_Event* aev = reinterpret_cast<LV2_Atom_Event*>(
-                            reinterpret_cast<uint8_t*>(&seq->body) + seq->atom.size
-                        );
-                        aev->time.frames = 0;
-                        std::memcpy(&aev->body, ev.data.data(), ev.data.size());
-                        // Pad to 64-bit alignment
-                        uint32_t padded_size = lv2_atom_pad_size ( static_cast<uint32_t>( ev.data.size() ) );
-                        seq->atom.size += sizeof ( LV2_Atom_Event ) + padded_size;
-                    }
+                    if ( !ev.data.empty() )
+                        appendAtomEvent ( 0, ev.data.data(), static_cast<uint32_t>( ev.data.size() ) );
                 }
                 else if ( ev.port_protocol == 0 )
                 {
@@ -1062,9 +1065,11 @@ private:
         LilvNode* inputClass   = lilv_new_uri ( world, LILV_URI_INPUT_PORT );
         LilvNode* outputClass  = lilv_new_uri ( world, LILV_URI_OUTPUT_PORT );
         LilvNode* atomSupports = lilv_new_uri ( world, LV2_ATOM__supports );
+        LilvNode* midiEvent    = lilv_new_uri ( world, LV2_MIDI__MidiEvent );
 
         int audioInCount  = 0;
         int audioOutCount = 0;
+        int atomInMidiIdx = -1;
 
         for ( uint32_t i = 0; i < numPorts; ++i )
         {
@@ -1093,24 +1098,24 @@ private:
             {
                 if ( lilv_port_is_a ( plugin, port, inputClass ) )
                 {
-                    std::string supportsList;
+                    bool supportsMidi = false;
                     LilvNodes* supports = lilv_port_get_value ( plugin, port, atomSupports );
                     if ( supports )
                     {
                         LILV_FOREACH ( nodes, sit, supports )
                         {
                             const LilvNode* n = lilv_nodes_get ( supports, sit );
-                            const char* uri = lilv_node_as_uri ( n );
-                            if ( uri )
+                            if ( lilv_node_equals ( n, midiEvent ) )
                             {
-                                if ( !supportsList.empty() )
-                                    supportsList += ", ";
-                                supportsList += uri;
+                                supportsMidi = true;
+                                break;
                             }
                         }
                         lilv_nodes_free ( supports );
                     }
-                    qDebug() << "lv2_adapter: atom input port" << i << "supports:" << supportsList.c_str();
+
+                    if ( supportsMidi && atomInMidiIdx < 0 )
+                        atomInMidiIdx = static_cast<int> ( i );
 
                     if ( atomInIdx < 0 )
                         atomInIdx = static_cast<int> ( i );
@@ -1118,7 +1123,6 @@ private:
                 else if ( lilv_port_is_a ( plugin, port, outputClass ) && atomOutIdx < 0 )
                 {
                     atomOutIdx = static_cast<int> ( i );
-                    qDebug() << "lv2_adapter: atom output port" << i << "selected";
                 }
             }
             else if ( lilv_port_is_a ( plugin, port, controlClass ) )
@@ -1140,9 +1144,10 @@ private:
         lilv_node_free ( inputClass );
         lilv_node_free ( outputClass );
         lilv_node_free ( atomSupports );
+        lilv_node_free ( midiEvent );
 
-        qDebug() << "lv2_adapter: selected atom input index" << atomInIdx
-             << "atom output index" << atomOutIdx;
+        if ( atomInMidiIdx >= 0 )
+            atomInIdx = atomInMidiIdx;
 
         if ( audioOutLeftIdx < 0 )
         {
