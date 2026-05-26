@@ -355,6 +355,21 @@ public:
             // Append MIDI events
             if ( midiEvents && numMidiEvents > 0 )
             {
+                static QElapsedTimer midiLogTimer;
+                static bool midiLogStarted = false;
+                if ( !midiLogStarted )
+                {
+                    midiLogTimer.start();
+                    midiLogStarted = true;
+                }
+                else if ( midiLogTimer.elapsed() > 1000 )
+                {
+                    const uint8_t* b = static_cast<const uint8_t*>(midiEvents);
+                    qDebug() << "lv2_adapter: received" << numMidiEvents
+                             << "MIDI events, first status=" << ( b ? int(b[0]) : -1 );
+                    midiLogTimer.restart();
+                }
+
                 struct MidiEv { uint8_t data[4]; int length; uint32_t offset; };
                 const MidiEv* evs = static_cast<const MidiEv*>(midiEvents);
                 for ( int i = 0; i < numMidiEvents; ++i )
