@@ -558,6 +558,32 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		vecMIDIEvents.clear();
 	}
 
+	if ( vecPlugins.empty() )
+	{
+		static QElapsedTimer emptyPluginTimer;
+		static bool emptyPluginStarted = false;
+		if ( !emptyPluginStarted )
+		{
+			emptyPluginTimer.start();
+			emptyPluginStarted = true;
+		}
+		else if ( emptyPluginTimer.elapsed() > 1000 )
+		{
+			qWarning() << "pluginhost: no plugins loaded in Process";
+			emptyPluginTimer.restart();
+		}
+	}
+
+	if ( !localMidiEvents.empty() )
+	{
+		static bool firstMidiBatch = true;
+		if ( firstMidiBatch )
+		{
+			qWarning() << "pluginhost: first MIDI batch size" << localMidiEvents.size();
+			firstMidiBatch = false;
+		}
+	}
+
 	static QElapsedTimer midiDispatchTimer;
 	static bool midiDispatchStarted = false;
 	if ( !midiDispatchStarted )
