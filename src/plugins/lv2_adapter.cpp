@@ -304,6 +304,19 @@ public:
 
         const int iFrames = std::min ( numFrames, blockSize );
 
+        static QElapsedTimer procLogTimer;
+        static bool procLogStarted = false;
+        if ( !procLogStarted )
+        {
+            procLogTimer.start();
+            procLogStarted = true;
+        }
+        else if ( procLogTimer.elapsed() > 1000 )
+        {
+            qDebug() << "lv2_adapter: process tick, midiEvents=" << numMidiEvents;
+            procLogTimer.restart();
+        }
+
         // Process worker responses
         if ( workerInterface && workerInterface->work_response )
         {
