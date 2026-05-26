@@ -11,7 +11,6 @@
 #if defined( HAVE_LV2 )
 
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QFile>
 
 #include <algorithm>
@@ -214,14 +213,8 @@ public:
 
         workerInterface = static_cast<const LV2_Worker_Interface*> (
             lilv_instance_get_extension_data ( instance, LV2_WORKER__interface ) );
-        if ( workerInterface )
-        {
-            qDebug() << "lv2_adapter: resolved LV2 Worker Interface successfully";
-        }
-        else
-        {
+        if ( !workerInterface )
             qWarning() << "lv2_adapter: WARNING - LV2 Worker Interface NOT supported by this plugin!";
-        }
 
         // Discover and connect ports
         if ( !setupPorts ( errorDescription ) )
@@ -303,19 +296,6 @@ public:
             return;
 
         const int iFrames = std::min ( numFrames, blockSize );
-
-        static QElapsedTimer procLogTimer;
-        static bool procLogStarted = false;
-        if ( !procLogStarted )
-        {
-            procLogTimer.start();
-            procLogStarted = true;
-        }
-        else if ( procLogTimer.elapsed() > 1000 )
-        {
-            qWarning() << "lv2_adapter: process tick, midiEvents=" << numMidiEvents;
-            procLogTimer.restart();
-        }
 
         // Process worker responses
         if ( workerInterface && workerInterface->work_response )
@@ -410,21 +390,6 @@ public:
             // Append MIDI events
             if ( midiEvents && numMidiEvents > 0 )
             {
-                static QElapsedTimer midiLogTimer;
-                static bool midiLogStarted = false;
-                if ( !midiLogStarted )
-                {
-                    midiLogTimer.start();
-                    midiLogStarted = true;
-                }
-                else if ( midiLogTimer.elapsed() > 1000 )
-                {
-                    const uint8_t* b = static_cast<const uint8_t*>(midiEvents);
-                    qDebug() << "lv2_adapter: received" << numMidiEvents
-                             << "MIDI events, first status=" << ( b ? int(b[0]) : -1 );
-                    midiLogTimer.restart();
-                }
-
                 struct MidiEv { uint8_t data[4]; int length; uint32_t offset; };
                 const MidiEv* evs = static_cast<const MidiEv*>(midiEvents);
                 for ( int i = 0; i < numMidiEvents; ++i )
@@ -634,7 +599,6 @@ public:
         char* uiBundlePath = lilv_file_uri_parse ( lilv_node_as_uri ( uiBundleUri ), nullptr );
 
         LV2UI_Widget widget = nullptr;
-        qDebug() << "lv2_adapter: instantiating UI via uiDesc->instantiate for URI:" << savedPluginURI.c_str();
         uiInstance = uiDesc->instantiate ( uiDesc,
                                            savedPluginURI.c_str(),
                                            uiBundlePath ? uiBundlePath : "",
@@ -642,7 +606,6 @@ public:
                                            this,
                                            &widget,
                                            uiFeatures );
-        qDebug() << "lv2_adapter: UI instantiate finished, pointer:" << uiInstance;
         uiDescriptor = uiDesc;
 
         if ( uiBundlePath )
@@ -670,16 +633,36 @@ public:
         {
             bShowCompleted = false;
 #ifdef _WIN32
-            std::thread([this]() {
-                qDebug() << "lv2_adapter: showing UI via showInterface->show in worker thread...";
+            uiThreadQuit = false;
+            uiThread = std::thread ( [this]() {
                 showInterface->show ( uiInstance );
-                qDebug() << "lv2_adapter: UI show completed in worker thread";
                 bShowCompleted = true;
-            }).detach();
+
+                while ( !uiThreadQuit && bEditorVisible && uiInstance && idleInterface )
+                {
+                    MSG msg;
+                    while ( PeekMessage ( &msg, nullptr, 0, 0, PM_REMOVE ) )
+                    {
+                        TranslateMessage ( &msg );
+                        DispatchMessage ( &msg );
+                    }
+
+                    drainDspToUiEvents();
+
+                    if ( !bEditorVisible || !uiInstance || !idleInterface )
+                        break;
+
+                    if ( idleInterface->idle ( uiInstance ) != 0 )
+                    {
+                        bEditorVisible = false;
+                        break;
+                    }
+
+                    std::this_thread::sleep_for ( std::chrono::milliseconds ( 10 ) );
+                }
+            } );
 #else
-            qDebug() << "lv2_adapter: showing UI via showInterface->show...";
             showInterface->show ( uiInstance );
-            qDebug() << "lv2_adapter: UI show completed";
             bShowCompleted = true;
 #endif
             bEditorVisible = true;
@@ -696,6 +679,11 @@ public:
 
     bool closeEditor()
     {
+#ifdef _WIN32
+        uiThreadQuit = true;
+        if ( uiThread.joinable() )
+            uiThread.join();
+#else
         // Safely wait for show thread if it is still running to prevent concurrent cleanup crashes
         int waitCount = 0;
         while ( !bShowCompleted && waitCount < 50 )
@@ -703,6 +691,7 @@ public:
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             waitCount++;
         }
+#endif
 
         if ( uiInstance )
         {
@@ -730,6 +719,9 @@ public:
 
     bool idleEditor()
     {
+#ifdef _WIN32
+        return bEditorVisible;
+#else
         if ( !bShowCompleted || bWorkerBusy )
             return true;
 
@@ -757,19 +749,7 @@ public:
         if ( !uiInstance || !idleInterface || !bEditorVisible )
             return false;
 
-        static bool firstIdle = true;
-        if ( firstIdle )
-        {
-            qDebug() << "lv2_adapter: first call to idleInterface->idle...";
-            firstIdle = false;
-        }
         int result = idleInterface->idle ( uiInstance );
-        static bool firstIdleDone = true;
-        if ( firstIdleDone )
-        {
-            qDebug() << "lv2_adapter: first call to idle completed successfully, result:" << result;
-            firstIdleDone = false;
-        }
         if ( result != 0 )
         {
             // UI requested close
@@ -778,6 +758,7 @@ public:
         }
 
         return true;
+#endif
     }
 
     bool isEditorVisible() const { return bEditorVisible; }
@@ -1004,16 +985,35 @@ private:
     static int UiResizeTrampoline ( LV2UI_Feature_Handle handle, int width, int height )
     {
         auto* self = static_cast<Lv2Runtime*> ( handle );
-        qDebug() << "lv2_adapter: UI for plugin" << self->savedPluginURI.c_str()
-                 << "requested resize to width:" << width << "height:" << height;
         return 0;
     }
 
     static void UiClosedTrampoline ( LV2UI_Controller controller )
     {
         auto* self = static_cast<Lv2Runtime*> ( controller );
-        qDebug() << "lv2_adapter: UI closed callback invoked by external UI";
         self->bEditorVisible = false;
+    }
+
+    void drainDspToUiEvents()
+    {
+        std::vector<uint8_t> localDspToUiEvents;
+        {
+            std::lock_guard<std::mutex> lg(dspToUiMutex);
+            localDspToUiEvents = std::move(dspToUiEvents);
+            dspToUiEvents.clear();
+        }
+
+        if ( uiInstance && uiDescriptor && uiDescriptor->port_event && !localDspToUiEvents.empty() )
+        {
+            size_t offset = 0;
+            while ( offset < localDspToUiEvents.size() )
+            {
+                LV2_Atom_Event* ev = reinterpret_cast<LV2_Atom_Event*>(localDspToUiEvents.data() + offset);
+                uiDescriptor->port_event ( uiInstance, atomOutIdx, ev->body.size,
+                    UridAtomEventTransfer(), &ev->body );
+                offset += sizeof ( LV2_Atom_Event ) + lv2_atom_pad_size ( ev->body.size );
+            }
+        }
     }
     
     static LV2_Worker_Status ScheduleWorkTrampoline(LV2_Worker_Schedule_Handle handle,
@@ -1271,6 +1271,11 @@ private:
     std::queue<WorkerJob> workerJobs;
     bool workerQuit { false };
     std::thread workerThread;
+
+#ifdef _WIN32
+    std::atomic<bool> uiThreadQuit { false };
+    std::thread uiThread;
+#endif
 
     std::mutex responseMutex;
     std::queue<WorkerJob> responseJobs;

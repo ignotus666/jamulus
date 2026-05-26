@@ -31,7 +31,6 @@
 #endif
 #include <future>
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QDirIterator>
 #include <QFileInfo>
 #include <queue>
@@ -361,20 +360,6 @@ void CPluginHost::QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t i
 	evt.offset = iSampleOffset;
 	std::memcpy ( evt.data, pData, iLength );
 	vecMIDIEvents.push_back ( evt );
-
-	static QElapsedTimer midiQueueTimer;
-	static bool midiQueueStarted = false;
-	if ( !midiQueueStarted )
-	{
-		midiQueueTimer.start();
-		midiQueueStarted = true;
-	}
-	else if ( midiQueueTimer.elapsed() > 1000 )
-	{
-		qDebug() << "pluginhost: queued MIDI event, status=" << int(pData[0])
-		         << "len=" << iLength << "offset=" << iSampleOffset;
-		midiQueueTimer.restart();
-	}
 }
 
 std::vector<CPluginHost::MidiEventData> CPluginHost::GetAndClearMIDIEvents()
@@ -525,21 +510,7 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		return;
 
 	if ( ! rwLockPlugins.tryLockForRead() )
-	{
-		static QElapsedTimer midiSkipTimer;
-		static bool midiSkipStarted = false;
-		if ( !midiSkipStarted )
-		{
-			midiSkipTimer.start();
-			midiSkipStarted = true;
-		}
-		else if ( midiSkipTimer.elapsed() > 1000 )
-		{
-			qWarning() << "pluginhost: process skipped (rwLock busy)";
-			midiSkipTimer.restart();
-		}
 		return;
-	}
 
 	constexpr int iChannels = 2;
 	std::vector<float> buffer ( iFrames * iChannels );
@@ -556,46 +527,6 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		std::lock_guard<std::mutex> lockMIDI ( mtxMIDI );
 		localMidiEvents = std::move(vecMIDIEvents);
 		vecMIDIEvents.clear();
-	}
-
-	if ( vecPlugins.empty() )
-	{
-		static QElapsedTimer emptyPluginTimer;
-		static bool emptyPluginStarted = false;
-		if ( !emptyPluginStarted )
-		{
-			emptyPluginTimer.start();
-			emptyPluginStarted = true;
-		}
-		else if ( emptyPluginTimer.elapsed() > 1000 )
-		{
-			qWarning() << "pluginhost: no plugins loaded in Process";
-			emptyPluginTimer.restart();
-		}
-	}
-
-	if ( !localMidiEvents.empty() )
-	{
-		static bool firstMidiBatch = true;
-		if ( firstMidiBatch )
-		{
-			qWarning() << "pluginhost: first MIDI batch size" << localMidiEvents.size();
-			firstMidiBatch = false;
-		}
-	}
-
-	static QElapsedTimer midiDispatchTimer;
-	static bool midiDispatchStarted = false;
-	if ( !midiDispatchStarted )
-	{
-		midiDispatchTimer.start();
-		midiDispatchStarted = true;
-	}
-	else if ( midiDispatchTimer.elapsed() > 1000 )
-	{
-		qWarning() << "pluginhost: dispatching" << localMidiEvents.size()
-		           << "MIDI events to" << vecPlugins.size() << "plugins";
-		midiDispatchTimer.restart();
 	}
 
 	for ( const auto & e : vecPlugins )

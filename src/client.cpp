@@ -26,7 +26,6 @@
 #include "settings.h"
 #include "util.h"
 #include <cmath>
-#include <QElapsedTimer>
 
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
@@ -1372,8 +1371,6 @@ void CClient::Init()
     // initialize local plugin host processing stage
     PluginHost.Init ( SYSTEM_SAMPLE_RATE_HZ, iMonoBlockSizeSam );
     Sound.SetMidiEventCallback ( [this] ( const uint8_t* pData, int iLength, uint32_t iSampleOffset ) {
-        if ( pData && iLength > 0 )
-            qDebug() << "CClient: MIDI callback received status=" << pData[0] << "length=" << iLength << "offset=" << iSampleOffset;
         PluginHost.QueueMIDIEvent ( pData, iLength, iSampleOffset );
     } );
 
@@ -1471,19 +1468,6 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     }
 
     const bool bHasPlugins = PluginHost.HasLoadedPlugins();
-
-    static QElapsedTimer pluginHostTimer;
-    static bool pluginHostTimerStarted = false;
-    if ( !pluginHostTimerStarted )
-    {
-        pluginHostTimer.start();
-        pluginHostTimerStarted = true;
-    }
-    else if ( pluginHostTimer.elapsed() > 1000 )
-    {
-        qWarning() << ( bHasPlugins ? "client: pluginhost process enabled" : "client: no plugins loaded" );
-        pluginHostTimer.restart();
-    }
 
     if ( bHasPlugins )
     {
