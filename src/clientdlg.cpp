@@ -2288,8 +2288,7 @@ void CClientDlg::OnOpenCarla()
         bWarnedAboutOfflineCarla = true;
         QMessageBox::information (
             this,
-            tr ( "Carla Requires a Server" ),
-            tr ( "Carla loads here as a plugin host. MIDI only reaches Carla while Jamulus is connected to a server, so connect first if you want plugin MIDI input." ) );
+            tr ( "Carla will load, but Jamulus must be connected to a Server for audio or MIDI to pass through to any plugins." ) );
     }
 
     int carlaId = LoadCarlaPlugin();

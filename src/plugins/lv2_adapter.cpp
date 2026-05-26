@@ -213,8 +213,14 @@ public:
 
         workerInterface = static_cast<const LV2_Worker_Interface*> (
             lilv_instance_get_extension_data ( instance, LV2_WORKER__interface ) );
-        if ( !workerInterface )
+        if ( workerInterface )
+        {
+            qDebug() << "lv2_adapter: resolved LV2 Worker Interface successfully";
+        }
+        else
+        {
             qWarning() << "lv2_adapter: WARNING - LV2 Worker Interface NOT supported by this plugin!";
+        }
 
         // Discover and connect ports
         if ( !setupPorts ( errorDescription ) )
@@ -599,6 +605,7 @@ public:
         char* uiBundlePath = lilv_file_uri_parse ( lilv_node_as_uri ( uiBundleUri ), nullptr );
 
         LV2UI_Widget widget = nullptr;
+        qDebug() << "lv2_adapter: instantiating UI via uiDesc->instantiate for URI:" << savedPluginURI.c_str();
         uiInstance = uiDesc->instantiate ( uiDesc,
                                            savedPluginURI.c_str(),
                                            uiBundlePath ? uiBundlePath : "",
@@ -606,6 +613,7 @@ public:
                                            this,
                                            &widget,
                                            uiFeatures );
+        qDebug() << "lv2_adapter: UI instantiate finished, pointer:" << uiInstance;
         uiDescriptor = uiDesc;
 
         if ( uiBundlePath )
@@ -985,6 +993,8 @@ private:
     static int UiResizeTrampoline ( LV2UI_Feature_Handle handle, int width, int height )
     {
         auto* self = static_cast<Lv2Runtime*> ( handle );
+        qDebug() << "lv2_adapter: UI for plugin" << self->savedPluginURI.c_str()
+                 << "requested resize to width:" << width << "height:" << height;
         return 0;
     }
 
