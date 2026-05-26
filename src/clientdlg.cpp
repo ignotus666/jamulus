@@ -2288,6 +2288,7 @@ void CClientDlg::OnOpenCarla()
         bWarnedAboutOfflineCarla = true;
         QMessageBox::information (
             this,
+            APP_NAME,
             tr ( "Carla will load, but Jamulus must be connected to a Server for audio or MIDI to pass through to any plugins." ) );
     }
 
