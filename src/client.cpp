@@ -26,6 +26,7 @@
 #include "settings.h"
 #include "util.h"
 #include <cmath>
+#include <QElapsedTimer>
 
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
@@ -1470,6 +1471,19 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     }
 
     const bool bHasPlugins = PluginHost.HasLoadedPlugins();
+
+    static QElapsedTimer pluginHostTimer;
+    static bool pluginHostTimerStarted = false;
+    if ( !pluginHostTimerStarted )
+    {
+        pluginHostTimer.start();
+        pluginHostTimerStarted = true;
+    }
+    else if ( pluginHostTimer.elapsed() > 1000 )
+    {
+        qDebug() << ( bHasPlugins ? "client: pluginhost process enabled" : "client: no plugins loaded" );
+        pluginHostTimer.restart();
+    }
 
     if ( bHasPlugins )
     {
