@@ -109,6 +109,7 @@ jobs:
           if-no-files-found: error
 
   build-macos:
+    if: false
     name: Build macOS
     runs-on: macos-15
     steps:
