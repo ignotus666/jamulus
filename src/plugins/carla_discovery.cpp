@@ -96,7 +96,7 @@ void CCarlaDiscoveryWorker::doScan() {
         QStringList listToScan = pathsToScan.value(fmt.type);
         if (listToScan.isEmpty()) {
             // Fallback to default
-            listToScan = fmt.defaultPaths.split(':', QString::SkipEmptyParts);
+            listToScan = fmt.defaultPaths.split(':', Qt::SkipEmptyParts);
         }
         
         // Resolve ~ to QDir::homePath()
