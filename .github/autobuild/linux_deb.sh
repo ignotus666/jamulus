@@ -56,18 +56,49 @@ setup() {
 
     setup_cross_compilation_apt_sources
 
-    echo "Enabling KXStudio repositories for Carla support..."
-    sudo apt-get -qq update
-    sudo apt-get -qq --no-install-recommends -y install curl gpgv
-    curl -fsSL -o /tmp/kxstudio-repos.deb https://launchpad.net/~kxstudio-debian/+archive/kxstudio/+files/kxstudio-repos_11.2.0_all.deb
-    sudo dpkg -i /tmp/kxstudio-repos.deb
-    sudo apt-get -qq update
-
     echo "Installing dependencies..."
     sudo apt-get -qq update
-    sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev carla-dev
+    sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot cmake pkg-config libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev
+
+    build_carla_from_source
 
     setup_cross_compiler
+}
+
+build_carla_from_source() {
+    if [[ "${TARGET_ARCH}" != "${APT_ARCH}" ]]; then
+        echo "Skipping Carla source build for cross-compile target ${TARGET_ARCH}."
+        return
+    fi
+
+    local carlaSourceDir="/tmp/Carla"
+    local carlaBuildDir="/tmp/Carla-build"
+
+    echo "Building Carla from source..."
+    rm -rf "${carlaSourceDir}" "${carlaBuildDir}"
+    git clone --recursive --depth 1 https://github.com/falkTX/Carla.git "${carlaSourceDir}"
+
+    cmake -S "${carlaSourceDir}/cmake" -B "${carlaBuildDir}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DCMAKE_INSTALL_BINDIR=bin
+
+    cmake --build "${carlaBuildDir}" --target \
+        carla-host-plugin \
+        carla-native-plugin \
+        carla-utils \
+        carla-discovery-native \
+        carla-bridge-native \
+        carla-standalone \
+        -j"$(nproc)"
+
+    sudo cmake --install "${carlaBuildDir}"
+
+    export PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    if [[ -n "${GITHUB_ENV:-}" ]]; then
+        echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> "${GITHUB_ENV}"
+    fi
 }
 
 setup_cross_compilation_apt_sources() {
