@@ -84,14 +84,7 @@ build_carla_from_source() {
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_INSTALL_BINDIR=bin
 
-    cmake --build "${carlaBuildDir}" --target \
-        carla-host-plugin \
-        carla-native-plugin \
-        carla-utils \
-        carla-discovery-native \
-        carla-bridge-native \
-        carla-standalone \
-        -j"$(nproc)"
+    cmake --build "${carlaBuildDir}" --parallel "$(nproc)"
 
     sudo cmake --install "${carlaBuildDir}"
 
