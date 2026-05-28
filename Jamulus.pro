@@ -36,13 +36,20 @@ QT += network \
     xml \
     concurrent
 
-# LV2 support (Linux)
+# LV2 support disabled in favor of Carla standalone integration
+
+# Carla Native Plugin API support (Linux)
 unix:!macx {
     CONFIG += link_pkgconfig
-    packagesExist(lilv-0 suil-0) {
-        message("LV2 support enabled (lilv + suil found)")
-        DEFINES += HAVE_LV2
-        PKGCONFIG += lilv-0 suil-0
+    packagesExist(carla-host-plugin carla-utils) {
+        message("Carla Native Plugin API support enabled")
+        DEFINES += HAVE_CARLA
+        PKGCONFIG += carla-host-plugin carla-utils
+
+        # Align register layout/ABI conventions (specifically preserving %rbp as frame pointer)
+        # to prevent segmentation faults during process callbacks into libcarla_host-plugin
+        QMAKE_CXXFLAGS += -fno-omit-frame-pointer
+        QMAKE_CFLAGS += -fno-omit-frame-pointer
     }
 }
 
@@ -452,7 +459,9 @@ HEADERS += src/buffer.h \
     src/channel.h \
     src/global.h \
     src/plugins/pluginhost.h \
-    src/plugins/lv2_adapter.h \
+    src/plugins/carla_adapter.h \
+    src/plugins/carla_discovery.h \
+    src/plugins/pluginbrowserwidget.h \
     src/protocol.h \
     src/recorder/jamcontroller.h \
     src/threadpool.h \
@@ -565,7 +574,9 @@ SOURCES += src/buffer.cpp \
     src/channel.cpp \
     src/main.cpp \
     src/plugins/pluginhost.cpp \
-    src/plugins/lv2_adapter.cpp \
+    src/plugins/carla_adapter.cpp \
+    src/plugins/carla_discovery.cpp \
+    src/plugins/pluginbrowserwidget.cpp \
     src/plugins/audioreverb.cpp \
     src/plugins/audioequalizer.cpp \
     src/plugins/audiocompressor.cpp \

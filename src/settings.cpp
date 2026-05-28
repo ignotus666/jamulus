@@ -807,6 +807,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     strCarlaPresetsDir = GetIniSetting ( IniXMLDocument, "client", "carlapresetsdir", "" );
 
     strCarlaStateBase64 = GetIniSetting ( IniXMLDocument, "client", "carlastate_base64", "" );
+
+    const QString strFavoritePlugins = GetIniSetting ( IniXMLDocument, "client", "favoriteplugins_base64", "" );
+    if ( !strFavoritePlugins.isEmpty() )
+    {
+        vstrFavoritePlugins = FromBase64ToString ( strFavoritePlugins ).split ( '\n', Qt::SkipEmptyParts );
+    }
     
     bool bCarlaWasActiveVal = false;
     if ( GetFlagIniSet ( IniXMLDocument, "client", "carlawasactive", bCarlaWasActiveVal ) )
@@ -920,6 +926,8 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         vstrEffectsPresetNames[iIdx] =
             FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", QString ( "effectpresetname%1_base64" ).arg ( iIdx ), "" ) );
+        vstrEffectsPresetCarlaStateBase64[iIdx] =
+            GetIniSetting ( IniXMLDocument, "client", QString ( "effectpreset%1_carlastate_base64" ).arg ( iIdx ), "" );
 
         bEffectsPresetEQBypass[iIdx] = true;
         for ( int iBand = 0; iBand < NUM_EQ_BANDS; ++iBand )
@@ -1116,6 +1124,11 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
     // window position of the effects window
     vecWindowPosEffects = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "winposeff_base64" ) );
+
+    // plugin browser tab layout state
+    vecPluginBrowserSplitter = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "pluginbrowsersplitter_base64" ) );
+    vecPluginBrowserScannedHeader = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "pluginbrowserscannedheader_base64" ) );
+    vecPluginBrowserLoadedHeader = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "pluginbrowserloadedheader_base64" ) );
 
     // window position of the connect window
     vecWindowPosConnect = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "winposcon_base64" ) );
@@ -1386,6 +1399,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     for ( iIdx = 0; iIdx < MAX_NUM_EFFECT_PRESETS; ++iIdx )
     {
         PutIniSetting ( IniXMLDocument, "client", QString ( "effectpresetname%1_base64" ).arg ( iIdx ), ToBase64 ( vstrEffectsPresetNames[iIdx] ) );
+        PutIniSetting ( IniXMLDocument,
+                        "client",
+                        QString ( "effectpreset%1_carlastate_base64" ).arg ( iIdx ),
+                        vstrEffectsPresetCarlaStateBase64[iIdx] );
 
         SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bEffectsPresetEQBypass[iIdx] );
         for ( int iBand = 0; iBand < NUM_EQ_BANDS; ++iBand )
@@ -1447,6 +1464,17 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // window position of the effects window
     PutIniSetting ( IniXMLDocument, "client", "winposeff_base64", ToBase64 ( vecWindowPosEffects ) );
 
+    // plugin browser tab layout state
+    PutIniSetting ( IniXMLDocument, "client", "pluginbrowsersplitter_base64", ToBase64 ( vecPluginBrowserSplitter ) );
+    PutIniSetting ( IniXMLDocument,
+                    "client",
+                    "pluginbrowserscannedheader_base64",
+                    ToBase64 ( vecPluginBrowserScannedHeader ) );
+    PutIniSetting ( IniXMLDocument,
+                    "client",
+                    "pluginbrowserloadedheader_base64",
+                    ToBase64 ( vecPluginBrowserLoadedHeader ) );
+
     // window position of the connect window
     PutIniSetting ( IniXMLDocument, "client", "winposcon_base64", ToBase64 ( vecWindowPosConnect ) );
 
@@ -1506,6 +1534,11 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     if ( !strCarlaStateBase64.isEmpty() )
     {
         PutIniSetting ( IniXMLDocument, "client", "carlastate_base64", strCarlaStateBase64 );
+    }
+
+    if ( !vstrFavoritePlugins.isEmpty() )
+    {
+        PutIniSetting ( IniXMLDocument, "client", "favoriteplugins_base64", ToBase64 ( vstrFavoritePlugins.join ( "\n" ) ) );
     }
     
     SetFlagIniSet ( IniXMLDocument, "client", "carlawasactive", bCarlaWasActive );

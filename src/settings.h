@@ -89,6 +89,9 @@ public:
     // common settings
     QByteArray vecWindowPosMain;
     QString    strLanguage;
+    QByteArray vecPluginBrowserSplitter;
+    QByteArray vecPluginBrowserScannedHeader;
+    QByteArray vecPluginBrowserLoadedHeader;
 
 protected:
     virtual void WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool isAboutToQuit )                              = 0;
@@ -167,6 +170,7 @@ public:
         vstrDirectoryAddress ( MAX_NUM_SERVER_ADDR_ITEMS, "" ),
         vstrEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
         vstrEffectsPresetNames ( MAX_NUM_EFFECT_PRESETS, "" ),
+        vstrEffectsPresetCarlaStateBase64 ( MAX_NUM_EFFECT_PRESETS, "" ),
         eDirectoryType ( AT_DEFAULT ),
         bEnableFeedbackDetection ( true ),
         bEnableAudioAlerts ( false ),
@@ -233,6 +237,7 @@ public:
 
         for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
         {
+            vstrEffectsPresetCarlaStateBase64[iPreset].clear();
             bEffectsPresetEQBypass[iPreset] = true;
             for ( int iBand = 0; iBand < NUM_EQ_BANDS; ++iBand )
             {
@@ -317,6 +322,7 @@ public:
     CVector<QString> vstrEQPresetNames;
     int              aiEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][NUM_EQ_BANDS];
     CVector<QString> vstrEffectsPresetNames;
+    CVector<QString> vstrEffectsPresetCarlaStateBase64;
     bool             bEffectsPresetEQBypass[MAX_NUM_EFFECT_PRESETS];
     int              aiEffectsPresetEQBandGainDb[MAX_NUM_EFFECT_PRESETS][NUM_EQ_BANDS];
     int              iEffectsPresetReverbLevel[MAX_NUM_EFFECT_PRESETS];
@@ -404,6 +410,7 @@ public:
     QString strCarlaPath;
     QString strCarlaPresetPath;
     QString strCarlaStateBase64;
+    QStringList vstrFavoritePlugins;
     QString strCarlaPresetsDir;
     bool    bCarlaWasActive{ false };
 

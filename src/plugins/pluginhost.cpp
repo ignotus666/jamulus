@@ -23,6 +23,10 @@
 
 #include "pluginhost.h"
 
+#ifdef HAVE_CARLA
+#include "carla_adapter.h"
+#endif
+
 #include <algorithm>
 #include <condition_variable>
 #include <cstring>
@@ -36,7 +40,9 @@
 #include <queue>
 #include <thread>
 
+#ifdef HAVE_LV2
 #include "lv2_adapter.h"
+#endif
 
 #include "audioequalizer.h"
 
@@ -57,6 +63,23 @@ CPluginHost::~CPluginHost()
 {
 	StopLoaderThread();
 	Clear();
+}
+
+void CPluginHost::Init ( const int iNSampleRateHz, const int iNBlockSizeFrames )
+{
+	int iOldSampleRate = iSampleRateHz.exchange ( iNSampleRateHz );
+	int iOldBlockSize  = iBlockSizeFrames.exchange ( iNBlockSizeFrames );
+#ifdef HAVE_CARLA
+	if ( ! carlaAdapterHandle || iNSampleRateHz != iOldSampleRate || iNBlockSizeFrames != iOldBlockSize )
+	{
+		if ( carlaAdapterHandle )
+		{
+			carla_adapter_shutdown ( carlaAdapterHandle );
+			carlaAdapterHandle = nullptr;
+		}
+		carlaAdapterHandle = carla_adapter_init ( iNSampleRateHz, iNBlockSizeFrames, 2 );
+	}
+#endif
 }
 
 void CPluginHost::StartLoaderThread()
@@ -123,11 +146,23 @@ void CPluginHost::Clear()
 		e = PluginEntry();
 	}
 	vecPlugins.clear();
+
+#ifdef HAVE_CARLA
+	if ( carlaAdapterHandle )
+	{
+		carla_adapter_shutdown ( carlaAdapterHandle );
+		carlaAdapterHandle = nullptr;
+	}
+#endif
 }
 
 bool CPluginHost::HasLoadedPlugins()
 {
 	QWriteLocker lg ( &rwLockPlugins );
+#ifdef HAVE_CARLA
+	if ( carlaAdapterHandle && carla_adapter_get_plugin_count ( carlaAdapterHandle ) > 0 )
+		return true;
+#endif
 	return !vecPlugins.empty();
 }
 
@@ -332,6 +367,12 @@ bool CPluginHost::RestorePluginState ( int iPluginId, const QByteArray& stateDat
 
 void CPluginHost::IdlePluginEditors()
 {
+#ifdef HAVE_CARLA
+	if ( carlaAdapterHandle )
+	{
+		carla_adapter_idle ( carlaAdapterHandle );
+	}
+#endif
 	QReadLocker lg ( &rwLockPlugins );
 	for ( auto& p : vecPlugins )
 	{
@@ -353,6 +394,14 @@ void CPluginHost::QueueMIDIEvent ( const uint8_t* pData, int iLength, uint32_t i
 			qWarning() << "CPluginHost::QueueMIDIEvent - invalid length" << iLength;
 		return;
 	}
+
+	// Only forward channel voice messages to instrument plugins.
+	// Realtime/system messages (clock, active sensing, sysex, etc.)
+	// can arrive at very high rates from hardware controllers and
+	// cause unnecessary processing load in the audio callback.
+	const uint8_t iStatusByte = pData[0];
+	if ( iStatusByte < 0x80 || iStatusByte >= 0xF0 )
+		return;
 
 	std::lock_guard<std::mutex> lock ( mtxMIDI );
 	MidiEventData evt;
@@ -413,6 +462,7 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 	}
 #endif
 
+#ifdef HAVE_LV2
 	// Fall back to LV2 plugin loading (by URI).
 	if ( ! IsLv2Uri ( sPath ) )
 	{
@@ -458,6 +508,10 @@ int CPluginHost::LoadPluginImpl ( const std::string & sPath )
 	}
 
 	return e.id;
+#else
+	qWarning() << "pluginhost: LV2 URI loading not supported in this build:" << sPath.c_str();
+	return -1;
+#endif
 }
 
 bool CPluginHost::UnloadPluginImpl ( int iPluginId )
@@ -529,10 +583,19 @@ void CPluginHost::Process ( CVector<int16_t>& vecsStereoInOut, const int iBlockS
 		vecMIDIEvents.clear();
 	}
 
-	for ( const auto & e : vecPlugins )
+#ifdef HAVE_CARLA
+	if ( carlaAdapterHandle )
 	{
-		if ( e.process && e.instance )
-			e.process ( e.instance, buffer.data(), iFrames, iChannels, localMidiEvents.data(), static_cast<int>(localMidiEvents.size()) );
+		carla_adapter_process ( carlaAdapterHandle, buffer.data(), iFrames, iChannels, localMidiEvents.data(), static_cast<int>(localMidiEvents.size()) );
+	}
+	else
+#endif
+	{
+		for ( const auto & e : vecPlugins )
+		{
+			if ( e.process && e.instance )
+				e.process ( e.instance, buffer.data(), iFrames, iChannels, localMidiEvents.data(), static_cast<int>(localMidiEvents.size()) );
+		}
 	}
 
 	for ( int iFrame = 0; iFrame < iFrames; ++iFrame )

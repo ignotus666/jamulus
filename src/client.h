@@ -404,6 +404,10 @@ public:
     }
     std::vector<CPluginHost::LoadedPluginInfo> GetLoadedPluginsSnapshot() { return PluginHost.GetLoadedPluginsSnapshot(); }
 
+#ifdef HAVE_CARLA
+    void* GetCarlaAdapterHandle() { return PluginHost.GetCarlaAdapterHandle(); }
+#endif
+
 public:
     void SetSettings ( CClientSettings* settings );
 

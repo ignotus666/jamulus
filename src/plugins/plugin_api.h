@@ -27,12 +27,7 @@ typedef bool (*plugin_load_preset_t)(plugin_handle_t, const char* presetPath);
 typedef char* (*plugin_save_state_t)(plugin_handle_t, int* out_size);
 typedef bool (*plugin_restore_state_t)(plugin_handle_t, const char* data, int size);
 
-#ifdef HAVE_LV2
-bool lv2_is_editor_visible_handle(plugin_handle_t inst);
-bool lv2_load_preset_handle(plugin_handle_t inst, const char* presetPath);
-char* lv2_save_state_handle(plugin_handle_t inst, int* out_size);
-bool lv2_restore_state_handle(plugin_handle_t inst, const char* data, int size);
-#endif
+// End of plugin API definitions
 
 #ifdef __cplusplus
 }

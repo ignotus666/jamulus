@@ -37,7 +37,9 @@ git submodule update --recursive
 
 ### Install dependencies
 
-On Debian 11+ you can install the dependencies by issuing the following command: `sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev`
+On Debian 11+ you can install the dependencies by issuing the following command: `sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev carla-dev`
+
+On Ubuntu 20.04, you also need to enable the KXStudio repositories first so `carla-dev` is available. The CI workflow does this automatically.
 
 **Note:** The exact dependencies might be different for older distributions. See [this comment by softins](https://github.com/jamulussoftware/jamulus/pull/2267#issuecomment-1022127426)
 

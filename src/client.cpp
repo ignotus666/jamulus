@@ -1613,40 +1613,10 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             }
         }
 
-        if ( !bUseRawAudio )
-        {
-            // OPUS encoding or copying RAW audio?
-            if ( CurOpusEncoder != nullptr )
-            {
-                // OPUS encoding
-                if ( bMuteOutStream )
-                {
-                    iUnused = opus_custom_encode ( CurOpusEncoder, &vecZeros[j], iOPUSFrameSizeSamples, &vecCeltData[0], iCeltNumCodedBytes );
-                }
-                else
-                {
-                    iUnused = opus_custom_encode ( CurOpusEncoder, &vecsStereoSndCrd[j], iOPUSFrameSizeSamples, &vecCeltData[0], iCeltNumCodedBytes );
-                }
-            }
-        }
-        else if ( bRawAudioIsSupported )
-        {
-            // RAW audio
-            if ( bMuteOutStream )
-            {
-                // output muted - fill with silence
-                memset ( &vecCeltData[0], 0, iCeltNumCodedBytes );
-            }
-            else
-            {
-                // copy raw audio data
-                memcpy ( &vecCeltData[0], &vecsStereoSndCrd[j], iCeltNumCodedBytes );
-            }
-        }
         // send coded audio through the network
         Channel.PrepAndSendPacket ( &Socket, vecCeltData, iCeltNumCodedBytes );
     }
-
+        
     // Receive signal ----------------------------------------------------------
     // in case of mute stream, store local data
     if ( bMuteOutStream )

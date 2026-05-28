@@ -44,6 +44,8 @@
 #include "ui_effectsdlgbase.h"
 #include "util.h"
 
+class CPluginBrowserWidget;
+
 class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
 {
     Q_OBJECT
@@ -58,6 +60,7 @@ public:
     void UpdateEQReadouts();
     void UpdateOutputBandLevels ( const CVector<float>& vecOutLevels );
     void OnUIThemeChanged();
+    void RefreshPluginBrowser();
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
@@ -95,6 +98,7 @@ signals:
 
 private:
     CClient*                   pClient;
+    CPluginBrowserWidget*      pPluginBrowser = nullptr;
     CClientSettings*           pSettings;
     QPointer<COutputBandMeter> pOutputBandMeterSafe;
     QPointer<CCustomSlider>    pSldEQBands[CAudioEqualizer::NUM_BANDS]      = {};
@@ -102,6 +106,7 @@ private:
     bool                       bEQBandWidgetsReady                          = false;
 
     void PopulateEffectsPresetCombo();
+    void SaveCurrentCarlaStartupState();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
     void ApplyEffectsPresetFromSlot ( const int iPresetSlot );
     int  FindEffectsPresetSlotByName ( const QString& strName ) const;

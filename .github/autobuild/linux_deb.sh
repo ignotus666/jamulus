@@ -56,9 +56,16 @@ setup() {
 
     setup_cross_compilation_apt_sources
 
+    echo "Enabling KXStudio repositories for Carla support..."
+    sudo apt-get -qq update
+    sudo apt-get -qq --no-install-recommends -y install curl gpgv
+    curl -fsSL -o /tmp/kxstudio-repos.deb https://launchpad.net/~kxstudio-debian/+archive/kxstudio/+files/kxstudio-repos_11.2.0_all.deb
+    sudo dpkg -i /tmp/kxstudio-repos.deb
+    sudo apt-get -qq update
+
     echo "Installing dependencies..."
     sudo apt-get -qq update
-    sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev
+    sudo apt-get -qq --no-install-recommends -y install devscripts build-essential debhelper fakeroot libjack-jackd2-dev qtbase5-dev qttools5-dev-tools qtmultimedia5-dev carla-dev
 
     setup_cross_compiler
 }

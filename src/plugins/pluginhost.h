@@ -52,11 +52,7 @@ public:
     CPluginHost();
     ~CPluginHost();
 
-    void Init ( const int iNSampleRateHz, const int iNBlockSizeFrames )
-    {
-        iSampleRateHz.store ( iNSampleRateHz );
-        iBlockSizeFrames.store ( iNBlockSizeFrames );
-    }
+    void Init ( const int iNSampleRateHz, const int iNBlockSizeFrames );
 
     void Clear();
 
@@ -94,7 +90,15 @@ public:
     // Retrieve and consume MIDI events queued for the audio block (called by lv2_adapter)
     struct MidiEventData { uint8_t data[4]; int length; uint32_t offset; };
     std::vector<MidiEventData> GetAndClearMIDIEvents();
+
+#ifdef HAVE_CARLA
+    void* GetCarlaAdapterHandle() { return carlaAdapterHandle; }
+#endif
+
 private:
+#ifdef HAVE_CARLA
+    void* carlaAdapterHandle { nullptr };
+#endif
     struct HostResizeContext
     {
         std::function<void ( int, int )> callback;

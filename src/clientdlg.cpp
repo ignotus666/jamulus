@@ -34,6 +34,10 @@
 #include "customslider.h"
 #include "util.h"
 
+#ifdef HAVE_CARLA
+#    include "plugins/carla_adapter.h"
+#endif
+
 namespace
 {
 struct InputGainPickupState
@@ -453,9 +457,13 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     UpdateInputGainControls();
 
     // Plugins button opens the plugin loader dialog.
+#ifdef HAVE_CARLA
+    butPlugins->setVisible ( false );
+#else
     connect ( butPlugins, &QPushButton::clicked, this, &CClientDlg::OnOpenCarla );
     butPlugins->setContextMenuPolicy ( Qt::CustomContextMenu );
     connect ( butPlugins, &QPushButton::customContextMenuRequested, this, &CClientDlg::OnCarlaContextMenu );
+#endif
 
     // initialize pan control visibility (pan is not supported for mono)
     MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
@@ -930,6 +938,18 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     }
     else if ( pSettings->bCarlaWasActive && !pSettings->strCarlaStateBase64.isEmpty() )
     {
+#ifdef HAVE_CARLA
+        void* pCarlaHandle = pClient->GetCarlaAdapterHandle();
+        if ( pCarlaHandle )
+        {
+            const QByteArray stateData = QByteArray::fromBase64 ( pSettings->strCarlaStateBase64.toUtf8() );
+            if ( !stateData.isEmpty() && !carla_adapter_restore_state ( pCarlaHandle, stateData.constData() ) )
+            {
+                qWarning() << "Failed to restore Carla state";
+            }
+            EffectsDlg.RefreshPluginBrowser();
+        }
+#else
         int carlaId = LoadCarlaPlugin();
         if ( carlaId != -1 )
         {
@@ -938,7 +958,9 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
             {
                 qWarning() << "Failed to restore Carla state";
             }
+            EffectsDlg.RefreshPluginBrowser();
         }
+#endif
     }
 }
 
@@ -951,7 +973,37 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     pSettings->vecWindowPosEffects  = EffectsDlg.saveGeometry();
     pSettings->vecWindowPosConnect  = ConnectDlg.saveGeometry();
 
-    // Save Carla state
+    // Save Carla/plugin state for automatic restore on next startup
+#ifdef HAVE_CARLA
+    if ( void* pCarlaHandle = pClient->GetCarlaAdapterHandle() )
+    {
+        if ( carla_adapter_get_plugin_count ( pCarlaHandle ) > 0 )
+        {
+            char* pState = carla_adapter_save_state ( pCarlaHandle );
+            if ( pState )
+            {
+                pSettings->strCarlaStateBase64 = QString::fromLatin1 ( QByteArray ( pState ).toBase64() );
+                pSettings->bCarlaWasActive     = true;
+                free ( pState );
+            }
+            else
+            {
+                pSettings->strCarlaStateBase64.clear();
+                pSettings->bCarlaWasActive = false;
+            }
+        }
+        else
+        {
+            pSettings->strCarlaStateBase64.clear();
+            pSettings->bCarlaWasActive = false;
+        }
+    }
+    else
+    {
+        pSettings->strCarlaStateBase64.clear();
+        pSettings->bCarlaWasActive = false;
+    }
+#else
     auto plugins = pClient->GetLoadedPluginsSnapshot();
     if ( !plugins.empty() )
     {
@@ -964,9 +1016,10 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     }
     else
     {
-        pSettings->strCarlaStateBase64 = "";
-        pSettings->bCarlaWasActive     = false;
+        pSettings->strCarlaStateBase64.clear();
+        pSettings->bCarlaWasActive = false;
     }
+#endif
 
     pSettings->bWindowWasShownSettings = ClientSettingsDlg.isVisible();
     pSettings->bWindowWasShownChat     = ChatDlg.isVisible();
@@ -2264,6 +2317,8 @@ int CClientDlg::LoadCarlaPlugin()
             }
         }
     }
+#elif defined( HAVE_CARLA )
+    int carlaId = -1;
 #else
     int carlaId = -1;
     QMessageBox::warning ( this, APP_NAME, tr ( "LV2 plugin support is not available in this build." ) );

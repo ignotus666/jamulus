@@ -23,11 +23,22 @@
 \******************************************************************************/
 
 #include "effectsdlg.h"
+#include "pluginbrowserwidget.h"
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <cstdlib>
+
+#ifdef HAVE_CARLA
+#    include "carla_adapter.h"
+#endif
+
+namespace
+{
+constexpr const char* kEmptyCarlaPresetStateMarker = "__EMPTY__";
+}
 
 CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
     CBaseDlg ( parent, Qt::Window ),
@@ -36,6 +47,17 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 {
     setupUi ( this );
     pOutputBandMeterSafe = pOutputBandMeter;
+
+#ifdef HAVE_CARLA
+    pPluginBrowser = new CPluginBrowserWidget ( pClient->GetCarlaAdapterHandle(), pSettings, this );
+    pTabs->insertTab ( 0, pPluginBrowser, tr ( "Plugins (Input Audio)" ) );
+#endif
+
+    // Clarify stream type for output-stage effects
+    pTabs->setTabText ( pTabs->indexOf ( pReverbTab ), tr ( "Reverb (Output Audio)" ) );
+    pTabs->setTabText ( pTabs->indexOf ( pFilterTab ), tr ( "Filters (Output Audio)" ) );
+    pTabs->setTabText ( pTabs->indexOf ( pCompressorTab ), tr ( "Compressor (Output Audio)" ) );
+    pTabs->setTabText ( pTabs->indexOf ( pEQTab ), tr ( "Equalizer (Output Audio)" ) );
 
     // Save tab index on change
     connect ( pTabs, &QTabWidget::currentChanged, this, [this] ( int idx ) { pSettings->iEffectsTab = idx; } );
@@ -326,6 +348,14 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     UpdateCompressorControls();
     UpdateEQControls();
     UpdateEQPresetSelection();
+
+#ifdef HAVE_CARLA
+    if ( pPluginBrowser )
+    {
+        pPluginBrowser->setCarlaAdapter ( pClient->GetCarlaAdapterHandle() );
+    }
+#endif
+
     CBaseDlg::showEvent ( Event );
 }
 
@@ -345,6 +375,16 @@ void CEffectsDlg::hideEvent ( QHideEvent* Event )
 }
 
 void CEffectsDlg::OnUIThemeChanged() { ApplyThemeToCustomWidgets(); }
+
+void CEffectsDlg::RefreshPluginBrowser()
+{
+#ifdef HAVE_CARLA
+    if ( pPluginBrowser )
+    {
+        pPluginBrowser->setCarlaAdapter ( pClient->GetCarlaAdapterHandle() );
+    }
+#endif
+}
 
 void CEffectsDlg::ApplyThemeToCustomWidgets()
 {
@@ -675,6 +715,30 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
         pClient->SetEQBandGainDb ( iBand, pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] );
     }
 
+#ifdef HAVE_CARLA
+    if ( void* pCarlaHandle = pClient->GetCarlaAdapterHandle() )
+    {
+        const QString& strEncodedCarlaState = pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot];
+        if ( strEncodedCarlaState == QLatin1String ( kEmptyCarlaPresetStateMarker ) )
+        {
+            carla_adapter_remove_all_plugins ( pCarlaHandle );
+        }
+        else if ( !strEncodedCarlaState.isEmpty() )
+        {
+            const QByteArray carlaState = QByteArray::fromBase64 ( strEncodedCarlaState.toLatin1() );
+            if ( !carlaState.isEmpty() )
+            {
+                carla_adapter_restore_state ( pCarlaHandle, carlaState.constData() );
+            }
+        }
+
+        if ( pPluginBrowser )
+        {
+            pPluginBrowser->refreshLoadedPlugins();
+        }
+    }
+#endif
+
     UpdateReverbControls();
     UpdateFilterControls();
     UpdateCompressorControls();
@@ -706,6 +770,32 @@ int CEffectsDlg::FindFreeEffectsPresetSlot() const
     }
 
     return INVALID_INDEX;
+}
+
+void CEffectsDlg::SaveCurrentCarlaStartupState()
+{
+#ifdef HAVE_CARLA
+    if ( !pSettings || !pClient )
+        return;
+
+    if ( void* pCarlaHandle = pClient->GetCarlaAdapterHandle() )
+    {
+        if ( carla_adapter_get_plugin_count ( pCarlaHandle ) > 0 )
+        {
+            char* pState = carla_adapter_save_state ( pCarlaHandle );
+            if ( pState )
+            {
+                pSettings->strCarlaStateBase64 = QString::fromLatin1 ( QByteArray ( pState ).toBase64() );
+                pSettings->bCarlaWasActive     = true;
+                free ( pState );
+                return;
+            }
+        }
+    }
+
+    pSettings->strCarlaStateBase64.clear();
+    pSettings->bCarlaWasActive = false;
+#endif
 }
 
 void CEffectsDlg::OnSaveEffectsPresetClicked()
@@ -756,6 +846,32 @@ void CEffectsDlg::OnSaveEffectsPresetClicked()
     pSettings->bEffectsPresetLowPassEnabled[iPresetSlot]   = pClient->GetLowPassEnabled();
     pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
     pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot]  = pClient->GetLowPassCutoffHz();
+
+#ifdef HAVE_CARLA
+    if ( void* pCarlaHandle = pClient->GetCarlaAdapterHandle() )
+    {
+        if ( carla_adapter_get_plugin_count ( pCarlaHandle ) == 0 )
+        {
+            pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot] = QLatin1String ( kEmptyCarlaPresetStateMarker );
+        }
+        else
+        {
+            char* pState = carla_adapter_save_state ( pCarlaHandle );
+            if ( pState )
+            {
+                pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot] =
+                    QString::fromLatin1 ( QByteArray ( pState ).toBase64() );
+                free ( pState );
+            }
+            else
+            {
+                pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot].clear();
+            }
+        }
+    }
+#endif
+
+    SaveCurrentCarlaStartupState();
 
     PopulateEffectsPresetCombo();
     const int iUpdatedIndex = pCbxEffectsPresets->findText ( strName );
@@ -867,6 +983,32 @@ void CEffectsDlg::OnSaveAsEffectsPresetClicked()
     pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
     pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot]  = pClient->GetLowPassCutoffHz();
 
+#ifdef HAVE_CARLA
+    if ( void* pCarlaHandle = pClient->GetCarlaAdapterHandle() )
+    {
+        if ( carla_adapter_get_plugin_count ( pCarlaHandle ) == 0 )
+        {
+            pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot] = QLatin1String ( kEmptyCarlaPresetStateMarker );
+        }
+        else
+        {
+            char* pState = carla_adapter_save_state ( pCarlaHandle );
+            if ( pState )
+            {
+                pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot] =
+                    QString::fromLatin1 ( QByteArray ( pState ).toBase64() );
+                free ( pState );
+            }
+            else
+            {
+                pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot].clear();
+            }
+        }
+    }
+#endif
+
+    SaveCurrentCarlaStartupState();
+
     PopulateEffectsPresetCombo();
     const int iSavedIndex = pCbxEffectsPresets->findText ( strName );
     if ( iSavedIndex >= 0 )
@@ -884,6 +1026,7 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
     }
 
     pSettings->vstrEffectsPresetNames[iPresetSlot].clear();
+    pSettings->vstrEffectsPresetCarlaStateBase64[iPresetSlot].clear();
     pSettings->bEffectsPresetEQBypass[iPresetSlot] = true;
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
