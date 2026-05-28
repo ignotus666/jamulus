@@ -811,7 +811,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     const QString strFavoritePlugins = GetIniSetting ( IniXMLDocument, "client", "favoriteplugins_base64", "" );
     if ( !strFavoritePlugins.isEmpty() )
     {
+        // Use version-appropriate enum for splitting strings
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         vstrFavoritePlugins = FromBase64ToString ( strFavoritePlugins ).split ( '\n', Qt::SkipEmptyParts );
+    #else
+        vstrFavoritePlugins = FromBase64ToString ( strFavoritePlugins ).split ( '\n', QString::SkipEmptyParts );
+    #endif
     }
     
     bool bCarlaWasActiveVal = false;
