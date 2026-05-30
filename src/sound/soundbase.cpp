@@ -24,6 +24,18 @@
 
 #include "soundbase.h"
 
+// This is used as a lookup table for parsing option letters, mapping
+// a single character to an EMidiCtlType
+char const sMidiCtlChar[] = {
+    // Has to follow order of EMidiCtlType
+    /* [EMidiCtlType::Fader]       = */ 'f',
+    /* [EMidiCtlType::Pan]         = */ 'p',
+    /* [EMidiCtlType::Solo]        = */ 's',
+    /* [EMidiCtlType::Mute]        = */ 'm',
+    /* [EMidiCtlType::MuteMyself]  = */ 'o',
+    /* [EMidiCtlType::Device]      = */ 'd',
+    /* [EMidiCtlType::None]        = */ '\0' };
+
 /* Implementation *************************************************************/
 CSoundBase::CSoundBase ( const QString& strNewSystemDriverTechniqueName,
                          void ( *fpNewProcessCallback ) ( CVector<int16_t>& psData, void* pParg ),
@@ -314,10 +326,11 @@ void CSoundBase::ParseMIDIMessage ( const CVector<uint8_t>& vMIDIPaketBytes )
                     // make sure packet is long enough
                     if ( vMIDIPaketBytes.Size() > 2 && vMIDIPaketBytes[1] <= uint8_t ( 127 ) && vMIDIPaketBytes[2] <= uint8_t ( 127 ) )
                     {
-                        const CMidiCtlEntry& cCtrl  = aMidiCtls[vMIDIPaketBytes[1]];
-                        const int            iValue = vMIDIPaketBytes[2];
+                        const CMidiCtlEntry& cCtrl    = aMidiCtls[vMIDIPaketBytes[1]];
+                        const int            iValue   = vMIDIPaketBytes[2];
+                        const int            iChannel = vMIDIPaketBytes[0] & 0x0F;
 
-                        emit MidiCCReceived ( vMIDIPaketBytes[1] );
+                        emit MidiCCReceived ( iChannel, vMIDIPaketBytes[1], iValue );
 
                         switch ( cCtrl.eType )
                         {

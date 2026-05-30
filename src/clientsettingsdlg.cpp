@@ -23,6 +23,7 @@
 \******************************************************************************/
 
 #include "clientsettingsdlg.h"
+#include <QAbstractItemView>
 
 /* Implementation *************************************************************/
 CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
@@ -263,18 +264,15 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     butDriverSetup->setToolTip ( strSndCardDriverSetupTT );
 #endif
 
-    // fancy skin
+    // UI mode
     lblSkin->setWhatsThis ( "<b>" + tr ( "Skin" ) + ":</b> " + tr ( "Select the skin to be used for the main window." ) );
 
     cbxSkin->setAccessibleName ( tr ( "Skin combo box" ) );
 
     // MeterStyle
     lblMeterStyle->setWhatsThis ( "<b>" + tr ( "Meter Style" ) + ":</b> " +
-                                  tr ( "Select the meter style to be used for the level meters. The "
-                                       "Bar (narrow) and LEDs (round, small) options only apply to the mixerboard. When "
-                                       "Bar (narrow) is selected, the input meters are set to Bar (wide). When "
-                                       "LEDs (round, small) is selected, the input meters are set to LEDs (round, big). "
-                                       "The remaining options apply to the mixerboard and input meters." ) );
+                                  tr ( "Select the meter style to be used for the level meters. "
+                                       "Only bar styles are available: narrow or wide." ) );
 
     cbxMeterStyle->setAccessibleName ( tr ( "Meter Style combo box" ) );
 
@@ -476,7 +474,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // init slider controls ---
     // network buffer sliders
     sldNetBuf->setRange ( MIN_NET_BUF_SIZE_NUM_BL, MAX_NET_BUF_SIZE_NUM_BL );
+    sldNetBuf->setTickInterval ( 1 );
+    sldNetBuf->setTickPosition ( QSlider::TicksBothSides );
     sldNetBufServer->setRange ( MIN_NET_BUF_SIZE_NUM_BL, MAX_NET_BUF_SIZE_NUM_BL );
+    sldNetBufServer->setTickInterval ( 1 );
+    sldNetBufServer->setTickPosition ( QSlider::TicksBothSides );
     UpdateJitterBufferFrame();
 
     // init sound card channel selection frame
@@ -488,6 +490,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     cbxAudioChannels->addItem ( tr ( "Mono-in/Stereo-out" ) ); // CC_MONO_IN_STEREO_OUT
     cbxAudioChannels->addItem ( tr ( "Stereo" ) );             // CC_STEREO
     cbxAudioChannels->setCurrentIndex ( static_cast<int> ( pClient->GetAudioChannels() ) );
+    UpdateAudioPanVisibility();
 
     // Audio Quality combo box
     cbxAudioQuality->clear();
@@ -497,21 +500,24 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     cbxAudioQuality->addItem ( tr ( "Max" ) );    // AQ_RAW
     cbxAudioQuality->setCurrentIndex ( static_cast<int> ( pClient->GetAudioQuality() ) );
 
-    // GUI design (skin) combo box
+    // GUI design (mode) combo box
     cbxSkin->clear();
     cbxSkin->addItem ( tr ( "Normal" ) );  // GD_STANDARD
-    cbxSkin->addItem ( tr ( "Fancy" ) );   // GD_ORIGINAL
     cbxSkin->addItem ( tr ( "Compact" ) ); // GD_SLIMFADER
-    cbxSkin->setCurrentIndex ( static_cast<int> ( pClient->GetGUIDesign() ) );
+    cbxSkin->setCurrentIndex ( pClient->GetGUIDesign() == GD_SLIMFADER ? 1 : 0 );
+
+    // GUI theme combo box
+    cbxTheme->clear();
+    cbxTheme->addItem ( tr ( "System" ) );
+    cbxTheme->addItem ( tr ( "Light" ) );
+    cbxTheme->addItem ( tr ( "Dark" ) );
+    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_SYSTEM ? 0 : ( pSettings->eUITheme == UIT_LIGHT ? 1 : 2 ) );
 
     // MeterStyle combo box
     cbxMeterStyle->clear();
-    cbxMeterStyle->addItem ( tr ( "Bar (narrow)" ) );        // MT_BAR_NARROW
-    cbxMeterStyle->addItem ( tr ( "Bar (wide)" ) );          // MT_BAR_WIDE
-    cbxMeterStyle->addItem ( tr ( "LEDs (stripe)" ) );       // MT_LED_STRIPE
-    cbxMeterStyle->addItem ( tr ( "LEDs (round, small)" ) ); // MT_LED_ROUND_SMALL
-    cbxMeterStyle->addItem ( tr ( "LEDs (round, big)" ) );   // MT_LED_ROUND_BIG
-    cbxMeterStyle->setCurrentIndex ( static_cast<int> ( pClient->GetMeterStyle() ) );
+    cbxMeterStyle->addItem ( tr ( "Bar (narrow)" ) ); // MT_BAR_NARROW
+    cbxMeterStyle->addItem ( tr ( "Bar (wide)" ) );   // MT_BAR_WIDE
+    cbxMeterStyle->setCurrentIndex ( pClient->GetMeterStyle() == MT_BAR_NARROW ? 0 : 1 );
 
     // language combo box (corrects the setting if language not found)
     cbxLanguage->Init ( pSettings->strLanguage );
@@ -691,9 +697,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     QObject::connect ( &TimerStatus, &QTimer::timeout, this, &CClientSettingsDlg::OnTimerStatus );
 
     // slider controls
-    QObject::connect ( sldNetBuf, &QSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufValueChanged );
+    QObject::connect ( sldNetBuf, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufValueChanged );
 
-    QObject::connect ( sldNetBufServer, &QSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufServerValueChanged );
+    QObject::connect ( sldNetBufServer, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnNetBufServerValueChanged );
 
     // check boxes
     QObject::connect ( chbAutoJitBuf, &QCheckBox::stateChanged, this, &CClientSettingsDlg::OnAutoJitBufStateChanged );
@@ -748,6 +754,11 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
                        this,
                        &CClientSettingsDlg::OnGUIDesignActivated );
 
+    QObject::connect ( cbxTheme,
+                       static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
+                       this,
+                       &CClientSettingsDlg::OnUIThemeActivated );
+
     QObject::connect ( cbxMeterStyle,
                        static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ),
                        this,
@@ -775,7 +786,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // misc
     // sliders
-    QObject::connect ( sldAudioPan, &QSlider::valueChanged, this, &CClientSettingsDlg::OnAudioPanValueChanged );
+    QObject::connect ( sldAudioPan, &CCustomSlider::valueChanged, this, &CClientSettingsDlg::OnAudioPanValueChanged );
 
     QObject::connect ( &SndCrdBufferDelayButtonGroup,
                        static_cast<void ( QButtonGroup::* ) ( QAbstractButton* )> ( &QButtonGroup::buttonClicked ),
@@ -925,6 +936,23 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
         QObject::connect ( button, &QPushButton::clicked, this, &CClientSettingsDlg::OnLearnButtonClicked );
     }
 
+    // MIDI activity indicator / log
+    MidiActivityTimer.setSingleShot ( true );
+    MidiActivityTimer.setInterval ( 50 );
+
+    lstMidiActivityLog->setSelectionMode ( QAbstractItemView::NoSelection );
+    lstMidiActivityLog->setFocusPolicy ( Qt::NoFocus );
+    butClearMidiActivityLog->setAccessibleName ( tr ( "Clear MIDI activity log button" ) );
+    butClearMidiActivityLog->setToolTip ( tr ( "Clear MIDI activity log" ) );
+    butClearMidiActivityLog->setText ( u8"\U0001F5D1" );
+    ResetMidiActivityLog();
+
+    QObject::connect ( &MidiActivityTimer, &QTimer::timeout, this, [this] {
+        lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+    } );
+
+    QObject::connect ( butClearMidiActivityLog, &QPushButton::clicked, this, &CClientSettingsDlg::OnClearMidiActivityLogClicked );
+
     QObject::connect ( pClient, &CClient::MidiCCReceived, this, &CClientSettingsDlg::OnMidiCCReceived );
 
     QObject::connect ( tabSettings, &QTabWidget::currentChanged, this, &CClientSettingsDlg::OnTabChanged );
@@ -938,6 +966,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
 void CClientSettingsDlg::showEvent ( QShowEvent* event )
 {
+    ApplyThemeToCustomWidgets();
+
+    UpdateAudioPanVisibility();
     UpdateDisplay();
     UpdateDirectoryComboBox();
 
@@ -1227,6 +1258,7 @@ void CClientSettingsDlg::OnROutChanActivated ( int iChanIdx )
 void CClientSettingsDlg::OnAudioChannelsActivated ( int iChanIdx )
 {
     pClient->SetAudioChannels ( static_cast<EAudChanConf> ( iChanIdx ) );
+    UpdateAudioPanVisibility();
     emit AudioChannelsChanged();
     UpdateDisplay(); // upload rate will be changed
 }
@@ -1239,14 +1271,36 @@ void CClientSettingsDlg::OnAudioQualityActivated ( int iQualityIdx )
 
 void CClientSettingsDlg::OnGUIDesignActivated ( int iDesignIdx )
 {
-    pClient->SetGUIDesign ( static_cast<EGUIDesign> ( iDesignIdx ) );
+    pClient->SetGUIDesign ( iDesignIdx == 0 ? GD_STANDARD : GD_SLIMFADER );
     emit GUIDesignChanged();
     UpdateDisplay();
 }
 
+void CClientSettingsDlg::OnUIThemeActivated ( int iThemeIdx )
+{
+    pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    ApplyThemeToCustomWidgets();
+    emit UIThemeChanged();
+    UpdateDisplay();
+}
+
+void CClientSettingsDlg::ApplyThemeToCustomWidgets()
+{
+    const bool bDarkTheme = ( ResolveUITheme ( pSettings->eUITheme ) == UIT_DARK );
+
+    CCustomSlider* apThemeSliders[] = { sldNetBuf, sldNetBufServer, sldAudioPan };
+    for ( CCustomSlider* pSlider : apThemeSliders )
+    {
+        if ( pSlider )
+        {
+            pSlider->SetDarkTheme ( bDarkTheme );
+        }
+    }
+}
+
 void CClientSettingsDlg::OnMeterStyleActivated ( int iMeterStyleIdx )
 {
-    pClient->SetMeterStyle ( static_cast<EMeterStyle> ( iMeterStyleIdx ) );
+    pClient->SetMeterStyle ( iMeterStyleIdx == 0 ? MT_BAR_NARROW : MT_BAR_WIDE );
     emit MeterStyleChanged();
     UpdateDisplay();
 }
@@ -1466,6 +1520,12 @@ void CClientSettingsDlg::UpdateAudioFaderSlider()
     }
 }
 
+void CClientSettingsDlg::UpdateAudioPanVisibility()
+{
+    const bool bShowPan = pClient->GetAudioChannels() != CC_MONO;
+    groupBox->setVisible ( bShowPan );
+}
+
 void CClientSettingsDlg::OnAudioPanValueChanged ( int value )
 {
     pClient->SetAudioInFader ( value );
@@ -1482,8 +1542,13 @@ void CClientSettingsDlg::ResetMidiLearn()
     for ( int i = 0; i < 5; i++ )
     {
         midiLearnButtons[i]->setText ( tr ( "Learn" ) );
+        midiLearnButtons[i]->setProperty ( "learnActive", false );
+        midiLearnButtons[i]->style()->unpolish ( midiLearnButtons[i] );
+        midiLearnButtons[i]->style()->polish ( midiLearnButtons[i] );
+        midiLearnButtons[i]->update();
         // Only enable learn button if the corresponding groupbox is checked
         midiLearnButtons[i]->setEnabled ( groupBoxes[i]->isChecked() );
+        midiLearnButtons[i]->updateGeometry();
     }
 }
 
@@ -1629,7 +1694,12 @@ void CClientSettingsDlg::SetMidiLearnTarget ( MidiLearnTarget target, QPushButto
 
     ResetMidiLearn();
     midiLearnTarget = target;
-    activeButton->setText ( tr ( "Listening..." ) );
+    activeButton->setText ( tr ( "Listening" ) );
+    activeButton->setProperty ( "learnActive", true );
+    activeButton->style()->unpolish ( activeButton );
+    activeButton->style()->polish ( activeButton );
+    activeButton->update();
+    activeButton->updateGeometry();
 
     // Disable all buttons except the active one
     for ( QPushButton* button : midiLearnButtons )
@@ -1649,17 +1719,59 @@ void CClientSettingsDlg::OnLearnButtonClicked()
     SetMidiLearnTarget ( buttonToTarget.value ( sender, None ), sender );
 }
 
-void CClientSettingsDlg::OnMidiCCReceived ( int ccNumber )
+void CClientSettingsDlg::ResetMidiActivityLog()
 {
-    if ( midiLearnTarget == None )
-        return;
+    midiActivityLog.clear();
+    lstMidiActivityLog->clear();
+    MidiActivityTimer.stop();
 
+    lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDBlackSmall.png" ) );
+}
+
+void CClientSettingsDlg::OnClearMidiActivityLogClicked() { ResetMidiActivityLog(); }
+
+void CClientSettingsDlg::OnMidiCCReceived ( int channel, int ccNumber, int midiValue )
+{
     // Validate MIDI CC number is within valid range (0-127)
     if ( ccNumber < 0 || ccNumber > 127 )
     {
-        qWarning() << "CClientSettingsDlg::OnMidiCCReceived: Invalid MIDI CC number received:" << ccNumber;
+        qWarning() << "CClientSettingsDlg::OnMidiCCReceived: Invalid MIDI CC number received:" << ccNumber << "on channel" << channel;
         return;
     }
+
+    // Update MIDI activity indicator / log (newest on top)
+    const QString chStyle = "<span style=\"color:#D219E0;\">%1</span>";
+    const QString ccStyle = "<span style=\"color:#006AF1;\">%1</span>";
+    const QString vStyle  = "<span style=\"color:#14E81D;\">%1</span>";
+
+    const QString activityText =
+        tr ( "Ch %1, CC %2, V %3" ).arg ( chStyle.arg ( channel + 1 ) ).arg ( ccStyle.arg ( ccNumber ) ).arg ( vStyle.arg ( midiValue ) );
+
+    midiActivityLog.append ( activityText );
+    while ( midiActivityLog.size() > 15 )
+    {
+        midiActivityLog.removeFirst();
+    }
+
+    lstMidiActivityLog->clear();
+    for ( const QString& itemText : midiActivityLog )
+    {
+        auto* item  = new QListWidgetItem();
+        auto* label = new QLabel ( itemText );
+
+        label->setTextFormat ( Qt::RichText );
+        label->setTextInteractionFlags ( Qt::NoTextInteraction );
+
+        item->setSizeHint ( label->sizeHint() );
+        lstMidiActivityLog->addItem ( item );
+        lstMidiActivityLog->setItemWidget ( item, label );
+    }
+
+    lblMidiActivityLogLED->setPixmap ( QPixmap ( ":/png/LEDs/res/CLEDGreenSmall.png" ) );
+    MidiActivityTimer.start();
+
+    if ( midiLearnTarget == None )
+        return;
 
     static const QMap<MidiLearnTarget, QSpinBox*> midiTargetToSpinBox = { { Fader, spnFaderOffset },
                                                                           { Pan, spnPanOffset },

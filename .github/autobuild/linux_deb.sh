@@ -99,18 +99,30 @@ build_app_as_deb() {
 }
 
 pass_artifacts_to_job() {
-    mkdir deploy
+    mkdir -p deploy
 
-    # rename headless first, so wildcard pattern matches only one file each
+    # Try to move headless artifact, but don't fail if it doesn't exist
     local artifact_1="jamulus-headless_${JAMULUS_BUILD_VERSION}_ubuntu_${TARGET_ARCH}.deb"
-    echo "Moving headless build artifact to deploy/${artifact_1}"
-    mv ../jamulus-headless*"_${TARGET_ARCH}.deb" "./deploy/${artifact_1}"
-    echo "artifact_1=${artifact_1}" >> "$GITHUB_OUTPUT"
+        if compgen -G "jamulus-headless*_${TARGET_ARCH}.deb" > /dev/null; then
+            echo "Moving headless build artifact to deploy/${artifact_1}"
+            mv jamulus-headless*"_${TARGET_ARCH}.deb" "./deploy/${artifact_1}"
+        echo "artifact_1=${artifact_1}" >> "$GITHUB_OUTPUT"
+    else
+        echo "No headless artifact found, skipping."
+    fi
 
-    local artifact_2="jamulus_${JAMULUS_BUILD_VERSION}_ubuntu_${TARGET_ARCH}.deb"
-    echo "Moving regular build artifact to deploy/${artifact_2}"
-    mv ../jamulus*_"${TARGET_ARCH}.deb" "./deploy/${artifact_2}"
-    echo "artifact_2=${artifact_2}" >> "$GITHUB_OUTPUT"
+    # Find any jamulus .deb file for this arch
+    local found_deb
+    found_deb=$(ls ../jamulus_*.deb 2>/dev/null | head -n1 || true)
+    if [[ -n "$found_deb" ]]; then
+        deb_basename=$(basename "$found_deb")
+        echo "Moving regular build artifact to deploy/$deb_basename"
+        mv "$found_deb" "./deploy/$deb_basename"
+        echo "artifact_2=$deb_basename" >> "$GITHUB_OUTPUT"
+    else
+        echo "No jamulus .deb artifact found for arch ${TARGET_ARCH}!"
+        exit 1
+    fi
 }
 
 case "${1:-}" in

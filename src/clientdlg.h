@@ -31,7 +31,6 @@
 #include <QProgressBar>
 #include <QWhatsThis>
 #include <QTimer>
-#include <QSlider>
 #include <QRadioButton>
 #include <QMenuBar>
 #include <QLayout>
@@ -39,6 +38,7 @@
 #include <QFileDialog>
 #include <QActionGroup>
 #include <QSoundEffect>
+#include <QEvent>
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
 #    include <QVersionNumber>
 #endif
@@ -55,6 +55,7 @@
 #include "chatdlg.h"
 #include "connectdlg.h"
 #include "analyzerconsole.h"
+#include "effectsdlg.h"
 #include "ui_clientdlgbase.h"
 #if defined( Q_OS_MACOS )
 #    include "mac/badgelabel.h"
@@ -87,19 +88,21 @@ public:
                  QWidget*         parent = nullptr );
 
 protected:
-    void SetGUIDesign ( const EGUIDesign eNewDesign );
-    void SetMeterStyle ( const EMeterStyle eNewMeterStyle );
-    void SetMyWindowTitle ( const int iNumClients );
-    void ShowConnectionSetupDialog();
-    void ShowGeneralSettings ( int iTab );
-    void ShowChatWindow ( const bool bForceRaise = true );
-    void ShowAnalyzerConsole();
-    void UpdateAudioFaderSlider();
-    void UpdateRevSelection();
-    void Connect ( const QString& strSelectedAddress, const QString& strMixerBoardLabel );
-    void Disconnect();
-    void ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept );
-    void SetPingTime ( const int iPingTime, const int iOverallDelayMs, const CMultiColorLED::ELightColor eOverallDelayLEDColor );
+    void         SetGUIDesign ( const EGUIDesign eNewDesign );
+    void         SetMeterStyle ( const EMeterStyle eNewMeterStyle );
+    void         SetMyWindowTitle ( const int iNumClients );
+    void         ShowConnectionSetupDialog();
+    void         ShowGeneralSettings ( int iTab );
+    void         ShowChatWindow ( const bool bForceRaise = true );
+    void         ShowAnalyzerConsole();
+    void         ShowEffectsWindow();
+    void         UpdateAudioFaderSlider();
+    void         UpdateRevSelection();
+    void         Connect ( const QString& strSelectedAddress, const QString& strMixerBoardLabel );
+    void         Disconnect();
+    virtual void changeEvent ( QEvent* Event ) override;
+    void         ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept );
+    void         SetPingTime ( const int iPingTime, const int iOverallDelayMs, const CMultiColorLED::ELightColor eOverallDelayLEDColor );
 
     CClient*         pClient;
     CClientSettings* pSettings;
@@ -107,10 +110,12 @@ protected:
     int            iClients;
     bool           bConnected;
     bool           bConnectDlgWasShown;
+    bool           bApplyingThemeChange = false;
     bool           bDetectFeedback;
     bool           bEnableIPv6;
     ERecorderState eLastRecorderState;
     EGUIDesign     eLastDesign;
+    EUITheme       eLastUITheme;
     QTimer         TimerSigMet;
     QTimer         TimerBuffersLED;
     QTimer         TimerStatus;
@@ -127,6 +132,7 @@ protected:
     CChatDlg           ChatDlg;
     CConnectDlg        ConnectDlg;
     CAnalyzerConsole   AnalyzerConsole;
+    CEffectsDlg        EffectsDlg;
 
 public slots:
     void OnConnectDisconBut();
@@ -179,11 +185,35 @@ public slots:
     void OnAutoAdjustAllFaderLevels() { MainMixerBoard->AutoAdjustAllFaderLevels(); }
     void OnNumMixerPanelRowsChanged ( int value ) { MainMixerBoard->SetNumMixerPanelRows ( value ); }
 
-    void OnSettingsStateChanged ( int value );
-    void OnChatStateChanged ( int value );
-    void OnLocalMuteStateChanged ( int value );
+    void OnSettingsStateChanged ( bool bChecked );
+    void OnChatStateChanged ( bool bChecked );
+    void OnEffectsStateChanged ( bool bChecked );
+    void OnLocalMuteStateChanged ( bool bChecked );
 
-    void OnAudioReverbValueChanged ( int value ) { pClient->SetReverbLevel ( value ); }
+    void OnAudioReverbValueChanged ( int value );
+    void OnReverbPreDelayChanged ( int value );
+    void OnReverbRoomSizeChanged ( int value );
+    void OnReverbDampingChanged ( int value );
+    void OnReverbWetMixChanged ( int value );
+    void OnReverbEarlyLevelChanged ( int value );
+    void OnReverbWidthChanged ( int value );
+    void OnReverbEarlyEnabledChanged ( bool enabled );
+    void OnReverbFreezeChanged ( bool enabled );
+    void OnReverbBypassChanged ( bool bypassed );
+
+    void OnCompressorBypassChanged ( bool bypassed );
+    void OnCompressorThresholdChanged ( int value );
+    void OnCompressorRatioChanged ( int value );
+    void OnCompressorAttackChanged ( int value );
+    void OnCompressorReleaseChanged ( int value );
+    void OnCompressorMakeupChanged ( int value );
+    void OnCompressorLimiterChanged ( bool enabled );
+
+    void OnFilterBypassChanged ( bool bypassed );
+    void OnHighPassEnabledChanged ( bool enabled );
+    void OnLowPassEnabledChanged ( bool enabled );
+    void OnHighPassCutoffChanged ( int value );
+    void OnLowPassCutoffChanged ( int value );
 
     void OnReverbSelLClicked() { pClient->SetReverbOnLeftChan ( true ); }
 
@@ -237,6 +267,7 @@ public slots:
     void OnConnectDlgAccepted();
     void OnDisconnected() { Disconnect(); }
     void OnGUIDesignChanged();
+    void OnUIThemeChanged();
     void OnMeterStyleChanged();
     void OnRecorderStateReceived ( ERecorderState eRecorderState );
     void SetMixerBoardDeco ( const ERecorderState newRecorderState, const EGUIDesign eNewDesign );

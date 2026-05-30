@@ -96,22 +96,22 @@ LED bar:      lbr
 #define MAX_DELAY_PANNING_SAMPLES 64
 
 // default server address and port numbers
-#define DEFAULT_QOS_NUMBER            128                           // CS4 (Quality of Service)
-#define DEFAULT_SERVER_ADDRESS        "anygenre1.jamulus.app:22124" // default port explicit to avoid unneeded SRV lookup
+#define DEFAULT_QOS_NUMBER            128                          // CS4 (Quality of Service)
+#define DEFAULT_SERVER_ADDRESS        "anygenre1.jamulus.io:22124" // default port explicit to avoid unneeded SRV lookup
 #define DEFAULT_PORT_NUMBER           22124
-#define DIR_ADDR_ANY_GENRE2           "anygenre2.jamulus.app:22224"
-#define DIR_ADDR_ANY_GENRE_ASIA       "asia.jamulus.app:22624"
-#define DIR_ADDR_GENRE_ROCK           "rock.jamulus.app:22424"
-#define DIR_ADDR_GENRE_JAZZ           "jazz.jamulus.app:22324"
-#define DIR_ADDR_GENRE_CLASSICAL_FOLK "classical.jamulus.app:22524"
-#define DIR_ADDR_GENRE_CHORAL         "choral.jamulus.app:22724"
+#define CENTSERV_ANY_GENRE2           "anygenre2.jamulus.io:22224"
+#define CENTSERV_ANY_GENRE3           "anygenre3.jamulus.io:22624"
+#define CENTSERV_GENRE_ROCK           "rock.jamulus.io:22424"
+#define CENTSERV_GENRE_JAZZ           "jazz.jamulus.io:22324"
+#define CENTSERV_GENRE_CLASSICAL_FOLK "classical.jamulus.io:22524"
+#define CENTSERV_GENRE_CHORAL         "choral.jamulus.io:22724"
 
 // specify an invalid port to disable the server
 #define INVALID_PORT -1
 
 // servers to check for new versions
-#define UPDATECHECK1_ADDRESS "updatecheck1.jamulus.app"
-#define UPDATECHECK2_ADDRESS "updatecheck2.jamulus.app"
+#define UPDATECHECK1_ADDRESS "updatecheck1.jamulus.io"
+#define UPDATECHECK2_ADDRESS "updatecheck2.jamulus.io"
 
 // getting started and software manual URL
 #define CLIENT_GETTING_STARTED_URL "https://jamulus.io/wiki/Getting-Started"
@@ -210,10 +210,8 @@ LED bar:      lbr
 #define LOW_BOUND_SIG_METER   ( -50.0 ) // dB
 #define UPPER_BOUND_SIG_METER ( 0.0 )   // dB
 
-// defines for LED level meter CLevelMeter
-#define NUM_STEPS_LED_BAR    8
-#define RED_BOUND_LED_BAR    7
-#define YELLOW_BOUND_LED_BAR 5
+// defines for segmented bar meter CLevelMeter
+#define NUM_STEPS_LED_BAR 25
 
 // maximum number of connected clients at the server (must not be larger than 256)
 #define MAX_NUM_CHANNELS 150 // max number channels for server
@@ -229,9 +227,6 @@ LED bar:      lbr
 
 // defines the time interval at which the ping time is updated in the GUI
 #define PING_UPDATE_TIME_MS 500 // ms
-
-// defines a factor to compensate for larger than ideal jitter buffer sizes for estimated overall delay calculation
-#define JITTBUF_COMP_FACTOR 0.7f
 
 // defines the time interval at which the ping time is updated for the server list
 #define PING_UPDATE_TIME_SERVER_LIST_MS 2500 // ms

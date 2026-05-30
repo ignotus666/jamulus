@@ -35,23 +35,13 @@
 #include <functional>
 #include <stdexcept>
 
-// compatibility with C++17 deprecation of result_of
-#if __cplusplus >= 201703L
-// std::invoke_result_t should be used from C++17 onwards, but is not available in C++14 and earlier
-template<class F, class... Args>
-using threadpool_result_t = std::invoke_result_t<F, Args...>;
-#else
-// std::result_of should be used on C++14 and earlier, but is deprecated in C++17
-template<class F, class... Args>
-using threadpool_result_t = typename std::result_of<F ( Args... )>::type;
-#endif
-
 class CThreadPool
 {
 public:
+    CThreadPool() = default;
     CThreadPool ( size_t );
     template<class F, class... Args>
-    auto enqueue ( F&& f, Args&&... args ) -> std::future<threadpool_result_t<F, Args...>>;
+    auto enqueue ( F&& f, Args&&... args ) -> std::future<typename std::result_of<F ( Args... )>::type>;
     ~CThreadPool();
 
 private:
@@ -97,9 +87,9 @@ inline CThreadPool::CThreadPool ( size_t threads ) : stop ( false )
 
 // add new work item to the pool
 template<class F, class... Args>
-auto CThreadPool::enqueue ( F&& f, Args&&... args ) -> std::future<threadpool_result_t<F, Args...>>
+auto CThreadPool::enqueue ( F&& f, Args&&... args ) -> std::future<typename std::result_of<F ( Args... )>::type>
 {
-    using return_type = threadpool_result_t<F, Args...>;
+    using return_type = typename std::result_of<F ( Args... )>::type;
 
     auto task = std::make_shared<std::packaged_task<return_type()>> ( std::bind ( std::forward<F> ( f ), std::forward<Args> ( args )... ) );
 

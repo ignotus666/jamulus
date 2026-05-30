@@ -87,7 +87,6 @@ int main ( int argc, char** argv )
     bool         bDisconnectAllClientsOnQuit = false;
     bool         bUseDoubleSystemFrameSize   = true; // default is 128 samples frame size
     bool         bUseMultithreading          = false;
-    bool         bDisableRaw                 = false;
     bool         bShowAnalyzerConsole        = false;
     bool         bMuteStream                 = false;
     bool         bMuteMeInPersonalMix        = false;
@@ -479,19 +478,6 @@ int main ( int argc, char** argv )
             continue;
         }
 
-        // Disable raw audio feature -------------------------------------------
-        if ( GetFlagArgument ( argv,
-                               i,
-                               "--noraw", // no short form
-                               "--noraw" ) )
-        {
-            bDisableRaw = true;
-            qInfo() << "- raw audio is disabled";
-            CommandLineOptions << "--noraw";
-            ServerOnlyOptions << "--noraw";
-            continue;
-        }
-
         // Client only:
 
         // Connect on startup --------------------------------------------------
@@ -839,6 +825,10 @@ int main ( int argc, char** argv )
     QApplication* pApp       = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
+    if ( bUseGUI )
+    {
+        QApplication::setStyle ( "Fusion" );
+    }
 #    endif
 #endif
 
@@ -876,10 +866,10 @@ int main ( int argc, char** argv )
     activity.BeginActivity();
 #endif
 
+#ifndef SERVER_ONLY
     // init resources
     Q_INIT_RESOURCE ( resources );
 
-#ifndef SERVER_ONLY
     //### TEST: BEGIN ###//
     // activate the following line to activate the test bench,
     // CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
@@ -952,6 +942,12 @@ int main ( int argc, char** argv )
 #    ifndef HEADLESS
             if ( bUseGUI )
             {
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ),
+                      eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" ) : QString ( ":/styles/clientdlg_light.qss" ) } );
                 // load translation
                 if ( bUseTranslation )
                 {
@@ -1003,7 +999,6 @@ int main ( int argc, char** argv )
                              strRecordingDirName,
                              bDisconnectAllClientsOnQuit,
                              bUseDoubleSystemFrameSize,
-                             bDisableRaw,
                              bUseMultithreading,
                              bDisableRecording,
                              bDelayPan,
@@ -1023,6 +1018,11 @@ int main ( int argc, char** argv )
                 // load settings from init-file (command line options override)
                 CServerSettings Settings ( &Server, strIniFileName );
                 Settings.Load ( CommandLineOptions );
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ) } );
 
                 // load translation
                 if ( bUseTranslation )
@@ -1130,7 +1130,6 @@ QString UsageArguments ( char** argv )
            "  -P, --delaypan          start with delay panning enabled\n"
            "  -R, --recording         set server recording directory; server will record when a session is active by default\n"
            "      --norecord          set server not to record by default when recording is configured\n"
-           "      --noraw             disable raw audio\n"
            "  -s, --server            start Server\n"
            "      --serverbindip      IP address the Server will bind to (rather than all)\n"
            "  -T, --multithreading    use multithreading to make better use of\n"
