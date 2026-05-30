@@ -44,9 +44,9 @@ class CPluginHost
 public:
     struct LoadedPluginInfo
     {
-        int id { -1 };
+        int         id{ -1 };
         std::string path;
-        bool bEditorVisible { false };
+        bool        bEditorVisible{ false };
     };
 
     CPluginHost();
@@ -74,21 +74,26 @@ public:
 
     // Plugin management (non-RT functions)
     // Returns an integer id for the loaded plugin, or -1 on error.
-    int LoadPlugin ( const std::string & sPath );
-    bool UnloadPlugin ( int iPluginId );
-    bool ShowPluginEditor ( int iPluginId, void* parentWindow );
-    bool ClosePluginEditor ( int iPluginId );
-    bool GetPluginEditorSize ( int iPluginId, int& width, int& height );
-    bool ResizePluginEditor ( int iPluginId, int width, int height );
-    bool ResizePluginEditorFromPlugin ( int iPluginId, int width, int height );
-    bool SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback );
-    void IdlePluginEditors();
+    int                           LoadPlugin ( const std::string& sPath );
+    bool                          UnloadPlugin ( int iPluginId );
+    bool                          ShowPluginEditor ( int iPluginId, void* parentWindow );
+    bool                          ClosePluginEditor ( int iPluginId );
+    bool                          GetPluginEditorSize ( int iPluginId, int& width, int& height );
+    bool                          ResizePluginEditor ( int iPluginId, int width, int height );
+    bool                          ResizePluginEditorFromPlugin ( int iPluginId, int width, int height );
+    bool                          SetPluginEditorHostResizeCallback ( int iPluginId, std::function<void ( int, int )> callback );
+    void                          IdlePluginEditors();
     std::vector<LoadedPluginInfo> GetLoadedPluginsSnapshot();
-    bool LoadPluginPreset ( int iPluginId, const std::string& presetPath );
-    QByteArray SavePluginState( int iPluginId );
-    bool RestorePluginState( int iPluginId, const QByteArray& stateData );
+    bool                          LoadPluginPreset ( int iPluginId, const std::string& presetPath );
+    QByteArray                    SavePluginState ( int iPluginId );
+    bool                          RestorePluginState ( int iPluginId, const QByteArray& stateData );
     // Retrieve and consume MIDI events queued for the audio block (called by lv2_adapter)
-    struct MidiEventData { uint8_t data[4]; int length; uint32_t offset; };
+    struct MidiEventData
+    {
+        uint8_t  data[4];
+        int      length;
+        uint32_t offset;
+    };
     std::vector<MidiEventData> GetAndClearMIDIEvents();
 
 #ifdef HAVE_CARLA
@@ -97,7 +102,7 @@ public:
 
 private:
 #ifdef HAVE_CARLA
-    void* carlaAdapterHandle { nullptr };
+    void* carlaAdapterHandle{ nullptr };
 #endif
     struct HostResizeContext
     {
@@ -108,49 +113,49 @@ private:
 
     struct PluginEntry
     {
-        int id{ -1 };
-        void* handle{ nullptr };
-        plugin_handle_t instance{ nullptr };
-        plugin_create_t create{ nullptr };
-        plugin_destroy_t destroy { nullptr };
-        plugin_process_t process { nullptr };
-
+        int              id{ -1 };
+        void*            handle{ nullptr };
+        plugin_handle_t  instance{ nullptr };
+        plugin_create_t  create{ nullptr };
+        plugin_destroy_t destroy{ nullptr };
+        plugin_process_t process{ nullptr };
 
         // For host-provided editor features
-        std::function<void ( plugin_handle_t )> closeEditor;
-        std::function<bool ( plugin_handle_t, void* )> showEditor;
-        std::function<bool ( plugin_handle_t )> idleEditor;
-        std::function<bool ( plugin_handle_t )> isEditorVisible;
-        std::function<bool ( plugin_handle_t, const char* )> loadPreset;
-        std::function<char* ( plugin_handle_t, int* )> saveState;
+        std::function<void ( plugin_handle_t )>                   closeEditor;
+        std::function<bool ( plugin_handle_t, void* )>            showEditor;
+        std::function<bool ( plugin_handle_t )>                   idleEditor;
+        std::function<bool ( plugin_handle_t )>                   isEditorVisible;
+        std::function<bool ( plugin_handle_t, const char* )>      loadPreset;
+        std::function<char*( plugin_handle_t, int* )>             saveState;
         std::function<bool ( plugin_handle_t, const char*, int )> restoreState;
-        std::function<bool ( plugin_handle_t, int&, int& )> getEditorSize;
-        std::function<bool ( plugin_handle_t, int, int )> resizeEditor;
-        std::function<bool ( plugin_handle_t, int, int )> resizeEditorFromPlugin;
-        std::shared_ptr<HostResizeContext> hostResizeContext;
-        std::string path;
+        std::function<bool ( plugin_handle_t, int&, int& )>       getEditorSize;
+        std::function<bool ( plugin_handle_t, int, int )>         resizeEditor;
+        std::function<bool ( plugin_handle_t, int, int )>         resizeEditorFromPlugin;
+        std::shared_ptr<HostResizeContext>                        hostResizeContext;
+        std::string                                               path;
     };
 
     std::atomic<int> iSampleRateHz{ 0 };
     std::atomic<int> iBlockSizeFrames{ 0 };
+    std::atomic<int> audioActiveTicks{ 0 };
 
-    QReadWriteLock rwLockPlugins;
+    QReadWriteLock           rwLockPlugins;
     std::vector<PluginEntry> vecPlugins;
-    int iNextPluginId{ 1 };
+    int                      iNextPluginId{ 1 };
 
-    std::mutex mtxMIDI;
+    std::mutex                 mtxMIDI;
     std::vector<MidiEventData> vecMIDIEvents;
 
-    std::thread loaderThread;
-    std::mutex mtxLoader;
-    std::condition_variable cvLoader;
+    std::thread                       loaderThread;
+    std::mutex                        mtxLoader;
+    std::condition_variable           cvLoader;
     std::queue<std::function<void()>> loaderCommands;
-    bool bStopLoader{ false };
-    bool bLoaderStarted{ false };
+    bool                              bStopLoader{ false };
+    bool                              bLoaderStarted{ false };
 
     void StartLoaderThread();
     void StopLoaderThread();
     void LoaderLoop();
-    int LoadPluginImpl ( const std::string & sPath );
+    int  LoadPluginImpl ( const std::string& sPath );
     bool UnloadPluginImpl ( int iPluginId );
 };

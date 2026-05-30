@@ -1366,8 +1366,6 @@ void CClient::Init()
     // set the channel network properties
     Channel.SetAudioStreamProperties ( eAudioCompressionType, iCeltNumCodedBytes, iSndCrdFrameSizeFactor, iNumAudioChannels );
 
-    AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
-
     // initialize local plugin host processing stage
     PluginHost.Init ( SYSTEM_SAMPLE_RATE_HZ, iMonoBlockSizeSam );
     Sound.SetMidiEventCallback ( [this] ( const uint8_t* pData, int iLength, uint32_t iSampleOffset ) {
@@ -1558,8 +1556,8 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         else
         {
             // For mono keep the classic pan crossfade.
-            const float fGainL = MathUtils::GetLeftPan ( fPan, true );
-            const float fGainR = MathUtils::GetRightPan ( fPan, true );
+            const float fGainL = MathUtils::GetLeftPan ( fPan, eAudioChannelConf != CC_MONO_IN_STEREO_OUT );
+            const float fGainR = MathUtils::GetRightPan ( fPan, eAudioChannelConf != CC_MONO_IN_STEREO_OUT );
 
             for ( i = 0, j = 0; i < iMonoBlockSizeSam; i++, j += 2 )
             {

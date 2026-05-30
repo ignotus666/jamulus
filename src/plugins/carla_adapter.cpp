@@ -499,8 +499,7 @@ extern "C"
         if ( !state->hostHandle )
             return false;
 
-        const float activeValue =
-            carla_get_internal_parameter_value ( state->hostHandle, (uint) pluginId, CarlaBackend::PARAMETER_ACTIVE );
+        const float activeValue = carla_get_internal_parameter_value ( state->hostHandle, (uint) pluginId, CarlaBackend::PARAMETER_ACTIVE );
         return activeValue >= 0.5f;
     }
 
