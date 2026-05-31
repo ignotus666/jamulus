@@ -18,7 +18,7 @@
     <normaloff>:/png/main/res/fronticon.png</normaloff>:/png/main/res/fronticon.png</iconset>
   </property>
   <property name="sizeGripEnabled">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_7">
    <item>
@@ -1245,7 +1245,7 @@
                    </spacer>
                   </item>
                   <item>
-                    <widget class="CCustomSlider" name="sldAudioPan">
+                   <widget class="CCustomSlider" name="sldAudioPan">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                       <horstretch>0</horstretch>
