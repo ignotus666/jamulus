@@ -24,6 +24,59 @@
 
 #include "util.h"
 
+#ifndef HEADLESS
+#    include <QApplication>
+#    include <QFile>
+
+void SetAppPaletteForTheme ( EUITheme eTheme )
+{
+    if ( eTheme == UIT_LIGHT )
+    {
+        QPalette lightPalette;
+        lightPalette.setColor ( QPalette::Window, QColor ( 247, 248, 250 ) );
+        lightPalette.setColor ( QPalette::WindowText, QColor ( 28, 34, 42 ) );
+        lightPalette.setColor ( QPalette::Base, QColor ( 255, 255, 255 ) );
+        lightPalette.setColor ( QPalette::AlternateBase, QColor ( 232, 238, 246 ) );
+        lightPalette.setColor ( QPalette::ToolTipBase, QColor ( 255, 255, 220 ) );
+        lightPalette.setColor ( QPalette::ToolTipText, QColor ( 28, 34, 42 ) );
+        lightPalette.setColor ( QPalette::Text, QColor ( 28, 34, 42 ) );
+        lightPalette.setColor ( QPalette::Button, QColor ( 247, 248, 250 ) );
+        lightPalette.setColor ( QPalette::ButtonText, QColor ( 28, 34, 42 ) );
+        lightPalette.setColor ( QPalette::BrightText, Qt::red );
+        lightPalette.setColor ( QPalette::Highlight, QColor ( 198, 220, 245 ) );
+        lightPalette.setColor ( QPalette::HighlightedText, QColor ( 28, 34, 42 ) );
+        QApplication::setPalette ( lightPalette );
+    }
+    else
+    {
+        QApplication::setPalette ( QApplication::style()->standardPalette() );
+    }
+}
+
+void SetAppStyleSheetFromResources ( const QStringList& resourcePaths )
+{
+    QString combinedStyleSheet;
+
+    for ( const QString& resourcePath : resourcePaths )
+    {
+        QFile styleFile ( resourcePath );
+        if ( !styleFile.open ( QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::Text ) )
+        {
+            qWarning() << "Unable to open stylesheet resource:" << resourcePath;
+            continue;
+        }
+
+        combinedStyleSheet += QString::fromUtf8 ( styleFile.readAll() );
+        combinedStyleSheet += '\n';
+    }
+
+    if ( QApplication* pApp = qobject_cast<QApplication*> ( QCoreApplication::instance() ) )
+    {
+        pApp->setStyleSheet ( combinedStyleSheet );
+    }
+}
+#endif
+
 /* Implementation *************************************************************/
 // Input level meter implementation --------------------------------------------
 void CStereoSignalLevelMeter::Update ( const CVector<short>& vecsAudio, const int iMonoBlockSizeSam, const bool bIsStereoIn )

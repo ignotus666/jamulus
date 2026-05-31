@@ -141,6 +141,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="butConnect">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>20</height>
+        </size>
+       </property>
        <property name="text">
         <string>&amp;Connect</string>
        </property>

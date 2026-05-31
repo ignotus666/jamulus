@@ -839,6 +839,10 @@ int main ( int argc, char** argv )
     QApplication* pApp       = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
+    if ( bUseGUI )
+    {
+        QApplication::setStyle ( "Fusion" );
+    }
 #    endif
 #endif
 
@@ -952,6 +956,12 @@ int main ( int argc, char** argv )
 #    ifndef HEADLESS
             if ( bUseGUI )
             {
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ),
+                      eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" ) : QString ( ":/styles/clientdlg_light.qss" ) } );
                 // load translation
                 if ( bUseTranslation )
                 {
@@ -1023,6 +1033,11 @@ int main ( int argc, char** argv )
                 // load settings from init-file (command line options override)
                 CServerSettings Settings ( &Server, strIniFileName );
                 Settings.Load ( CommandLineOptions );
+                // Apply palette and application stylesheet before creating dialogs.
+                const EUITheme eResolvedTheme = ResolveUITheme ( Settings.eUITheme );
+                SetAppPaletteForTheme ( eResolvedTheme );
+                SetAppStyleSheetFromResources (
+                    { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ) } );
 
                 // load translation
                 if ( bUseTranslation )

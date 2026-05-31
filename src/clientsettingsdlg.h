@@ -31,12 +31,13 @@
 #include <QProgressBar>
 #include <QWhatsThis>
 #include <QTimer>
-#include <QSlider>
+#include "customslider.h"
 #include <QRadioButton>
 #include <QMenuBar>
 #include <QLayout>
 #include <QButtonGroup>
 #include <QMessageBox>
+#include <QStringList>
 #include "global.h"
 #include "util.h"
 #include "client.h"
@@ -67,6 +68,7 @@ protected:
     void    UpdateSoundCardFrame();
     void    UpdateDirectoryComboBox();
     void    UpdateAudioFaderSlider();
+    void    UpdateAudioPanVisibility();
     QString GenSndCrdBufferDelayString ( const int iFrameSize, const QString strAddText = "" );
 
     virtual void showEvent ( QShowEvent* ) override;
@@ -96,6 +98,7 @@ public slots:
     void OnAudioChannelsActivated ( int iChanIdx );
     void OnAudioQualityActivated ( int iQualityIdx );
     void OnGUIDesignActivated ( int iDesignIdx );
+    void OnUIThemeActivated ( int iThemeIdx );
     void OnMeterStyleActivated ( int iMeterStyleIdx );
     void OnAudioAlertsChanged ( int value );
     void OnLanguageChanged ( QString strLanguage ) { pSettings->strLanguage = strLanguage; }
@@ -116,6 +119,7 @@ public slots:
 
 signals:
     void GUIDesignChanged();
+    void UIThemeChanged();
     void MeterStyleChanged();
     void AudioAlertsChanged();
     void AudioChannelsChanged();
@@ -124,6 +128,8 @@ signals:
     void MIDIControllerUsageChanged ( bool bEnabled );
 
 private:
+    void ApplyThemeToCustomWidgets();
+
     enum MidiLearnTarget
     {
         None,
@@ -136,13 +142,17 @@ private:
     MidiLearnTarget midiLearnTarget;
 
     QPushButton* midiLearnButtons[5];
+    QTimer       MidiActivityTimer;
+    QStringList  midiActivityLog;
     void         SetMidiLearnTarget ( MidiLearnTarget target, QPushButton* activeButton );
     void         ResetMidiLearn();
     void         SetMIDIControlsEnabled ( bool enabled );
     void         UpdateMIDIDeviceSelection ( bool bShowWarnings = true );
+    void         ResetMidiActivityLog();
 
 private slots:
     void OnLearnButtonClicked();
-    void OnMidiCCReceived ( int ccNumber );
+    void OnMidiCCReceived ( int channel, int ccNumber, int midiValue );
     void OnMIDIPickupModeToggled ( bool checked );
+    void OnClearMidiActivityLogClicked();
 };

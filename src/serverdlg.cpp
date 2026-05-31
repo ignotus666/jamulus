@@ -29,6 +29,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     CBaseDlg ( parent, Qt::Window ), // use Qt::Window to get min/max window buttons
     pServer ( pNServP ),
     pSettings ( pNSetP ),
+    pMenu ( nullptr ),
     BitmapSystemTrayInactive ( QString::fromUtf8 ( ":/png/main/res/servertrayiconinactive.png" ) ),
     BitmapSystemTrayActive ( QString::fromUtf8 ( ":/png/main/res/servertrayiconactive.png" ) )
 {
@@ -36,6 +37,8 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     bSystemTrayIconAvailable = SystemTrayIcon.isSystemTrayAvailable();
 
     setupUi ( this );
+
+    ApplyTheme();
 
     // always start on the main tab
     tabWidget->setCurrentIndex ( 0 );
@@ -170,6 +173,11 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     cbxLanguage->setWhatsThis ( strWTLanguage );
 
     cbxLanguage->setAccessibleName ( tr ( "Language combo box" ) );
+
+    QString strWTTheme = "<b>" + tr ( "Theme" ) + ":</b> " + tr ( "Select the color theme for this window." );
+    lblTheme->setWhatsThis ( strWTTheme );
+    cbxTheme->setWhatsThis ( strWTTheme );
+    cbxTheme->setAccessibleName ( tr ( "Theme combo box" ) );
 
     // recording directory
     pbtRecordingDir->setAccessibleName ( tr ( "Display dialog to select recording directory button" ) );
@@ -340,6 +348,13 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     // language combo box (corrects the setting if language not found)
     cbxLanguage->Init ( pSettings->strLanguage );
 
+    // UI theme combo box
+    cbxTheme->clear();
+    cbxTheme->addItem ( tr ( "System" ) );
+    cbxTheme->addItem ( tr ( "Light" ) );
+    cbxTheme->addItem ( tr ( "Dark" ) );
+    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_SYSTEM ? 0 : ( pSettings->eUITheme == UIT_LIGHT ? 1 : 2 ) );
+
     // recorder options
     pbtRecordingDir->setAutoDefault ( false );
     tbtClearRecordingDir->setText ( u8"\u232B" );
@@ -397,7 +412,8 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     pMenu = new QMenuBar ( this );
 
     pMenu->addMenu ( pViewMenu );
-    pMenu->addMenu ( new CHelpMenu ( false, this ) );
+    CHelpMenu* pHelpMenu = new CHelpMenu ( false, this );
+    pMenu->addMenu ( pHelpMenu );
 
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
@@ -436,6 +452,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
                        &CServerDlg::OnLocationCountryCurrentIndexChanged );
 
     QObject::connect ( cbxLanguage, &CLanguageComboBox::LanguageChanged, this, &CServerDlg::OnLanguageChanged );
+    QObject::connect ( cbxTheme, static_cast<void ( QComboBox::* ) ( int )> ( &QComboBox::activated ), this, &CServerDlg::OnUIThemeActivated );
 
     // push buttons
     QObject::connect ( pbtNewRecording, &QPushButton::released, this, &CServerDlg::OnNewRecordingClicked );
@@ -493,6 +510,20 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     {
         pServer->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
+}
+
+void CServerDlg::ApplyTheme()
+{
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    SetAppPaletteForTheme ( eResolvedTheme );
+    SetAppStyleSheetFromResources (
+        { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ) } );
+}
+
+void CServerDlg::OnUIThemeActivated ( int iThemeIdx )
+{
+    pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    ApplyTheme();
 }
 
 void CServerDlg::closeEvent ( QCloseEvent* Event )
@@ -609,6 +640,8 @@ void CServerDlg::OnRecordingDirClicked()
         pServer->SetRecordingDir ( newRecordingDir );
         UpdateRecorderStatus ( QString() );
     }
+    // Always return focus to the line edit to prevent button focus outline
+    edtRecordingDir->setFocus();
 }
 
 void CServerDlg::OnClearRecordingDirClicked()
@@ -638,6 +671,8 @@ void CServerDlg::OnServerListPersistenceClicked()
             UpdateGUIDependencies();
         }
     }
+    // Always return focus to the line edit to prevent button focus outline
+    edtServerListPersistence->setFocus();
 }
 
 void CServerDlg::OnClearServerListPersistenceClicked()

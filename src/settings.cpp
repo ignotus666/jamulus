@@ -486,6 +486,111 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetReverbOnLeftChan ( bValue );
     }
 
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revpredelay", 0, REVERB_PRE_DELAY_MAX_MS, iValue ) )
+    {
+        pClient->SetReverbPreDelayMs ( iValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revroom", 0, REVERB_ROOM_SIZE_MAX, iValue ) )
+    {
+        pClient->SetReverbRoomSize ( iValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revdamping", 0, REVERB_DAMPING_MAX, iValue ) )
+    {
+        pClient->SetReverbDamping ( iValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revwet", 0, REVERB_WET_MIX_MAX, iValue ) )
+    {
+        pClient->SetReverbWetMix ( iValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revearlylevel", 0, REVERB_EARLY_LEVEL_MAX, iValue ) )
+    {
+        pClient->SetReverbEarlyLevel ( iValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "revearlyenable", bValue ) )
+    {
+        pClient->SetReverbEarlyEnabled ( bValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "revwidth", 0, REVERB_WIDTH_MAX, iValue ) )
+    {
+        pClient->SetReverbWidth ( iValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "revfreeze", bValue ) )
+    {
+        pClient->SetReverbFreeze ( bValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "revbypass", bValue ) )
+    {
+        pClient->SetReverbBypass ( bValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "compbypass", bValue ) )
+    {
+        pClient->SetCompressorBypass ( bValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "compthreshold", -60, 0, iValue ) )
+    {
+        pClient->SetCompressorThresholdDb ( static_cast<float> ( iValue ) );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "compratio", 1, 20, iValue ) )
+    {
+        pClient->SetCompressorRatio ( static_cast<float> ( iValue ) / 1.0f );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "compattack", 1, 200, iValue ) )
+    {
+        pClient->SetCompressorAttackMs ( static_cast<float> ( iValue ) );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "comprelease", 10, 500, iValue ) )
+    {
+        pClient->SetCompressorReleaseMs ( static_cast<float> ( iValue ) );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "compmakeup", 0, 24, iValue ) )
+    {
+        pClient->SetCompressorMakeupDb ( static_cast<float> ( iValue ) );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "complimiter", bValue ) )
+    {
+        pClient->SetCompressorLimiterEnabled ( bValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "filterbypass", bValue ) )
+    {
+        pClient->SetFilterBypass ( bValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "highpassenabled", bValue ) )
+    {
+        pClient->SetHighPassEnabled ( bValue );
+    }
+
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "lowpassenabled", bValue ) )
+    {
+        pClient->SetLowPassEnabled ( bValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "highpasscutoff", 20, 1000, iValue ) )
+    {
+        pClient->SetHighPassCutoffHz ( iValue );
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "lowpasscutoff", 1000, 20000, iValue ) )
+    {
+        pClient->SetLowPassCutoffHz ( iValue );
+    }
+
     // sound card selection
     const QString strError = pClient->SetSndCrdDev ( FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", "auddev_base64", "" ) ) );
 
@@ -561,40 +666,50 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetEnableOPUS64 ( bValue );
     }
 
+    // equalizer bypass
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "eqbypass", bValue ) )
+    {
+        bEQBypass = bValue;
+    }
+    pClient->SetEQBypass ( bEQBypass );
+
+    // equalizer per-band gains in dB
+    for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
+    {
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), -12, 12, iValue ) )
+        {
+            aiEQBandGainDb[iIdx] = iValue;
+        }
+
+        pClient->SetEQBandGainDb ( iIdx, aiEQBandGainDb[iIdx] );
+    }
+
+    // UI theme
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "uitheme", 0, 2 /* UIT_SYSTEM */, iValue ) )
+    {
+        eUITheme = static_cast<EUITheme> ( iValue );
+    }
+
     // GUI design
     if ( GetNumericIniSet ( IniXMLDocument, "client", "guidesign", 0, 2 /* GD_SLIMFADER */, iValue ) )
     {
-        pClient->SetGUIDesign ( static_cast<EGUIDesign> ( iValue ) );
+        pClient->SetGUIDesign ( ( iValue == GD_SLIMFADER ) ? GD_SLIMFADER : GD_STANDARD );
     }
 
     // MeterStyle
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "meterstyle", 0, 4 /* MT_LED_ROUND_BIG */, iValue ) )
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "meterstyle", 0, 4 /* legacy max */, iValue ) )
     {
-        pClient->SetMeterStyle ( static_cast<EMeterStyle> ( iValue ) );
+        // Preserve backward compatibility with legacy config values:
+        // 0=narrow bar, 1=wide bar, 2=LED stripe (wide), 3=LED round small (narrow), 4=LED round big (wide).
+        const EMeterStyle eNormalizedMeterStyle = ( iValue == 0 || iValue == 3 ) ? MT_BAR_NARROW : MT_BAR_WIDE;
+        pClient->SetMeterStyle ( eNormalizedMeterStyle );
     }
     else
     {
         // if MeterStyle is not found in the ini, set it based on the GUI design
         if ( GetNumericIniSet ( IniXMLDocument, "client", "guidesign", 0, 2 /* GD_SLIMFADER */, iValue ) )
         {
-            switch ( iValue )
-            {
-            case GD_STANDARD:
-                pClient->SetMeterStyle ( MT_BAR_WIDE );
-                break;
-
-            case GD_ORIGINAL:
-                pClient->SetMeterStyle ( MT_LED_STRIPE );
-                break;
-
-            case GD_SLIMFADER:
-                pClient->SetMeterStyle ( MT_BAR_NARROW );
-                break;
-
-            default:
-                pClient->SetMeterStyle ( MT_LED_STRIPE );
-                break;
-            }
+            pClient->SetMeterStyle ( iValue == GD_SLIMFADER ? MT_BAR_NARROW : MT_BAR_WIDE );
         }
     }
 
@@ -733,6 +848,175 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         strDirectoryAddress        = "";
     }
 
+    // user EQ presets
+    for ( iIdx = 0; iIdx < MAX_NUM_EQ_USER_PRESETS; ++iIdx )
+    {
+        vstrEQPresetNames[iIdx] =
+            FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", QString ( "eqpresetname%1_base64" ).arg ( iIdx ), "" ) );
+
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            aiEQPresetBandGainDb[iIdx][iBand] = 0;
+
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
+            {
+                aiEQPresetBandGainDb[iIdx][iBand] = iValue;
+            }
+        }
+    }
+
+    // user effects presets
+    for ( iIdx = 0; iIdx < MAX_NUM_EFFECT_PRESETS; ++iIdx )
+    {
+        vstrEffectsPresetNames[iIdx] =
+            FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", QString ( "effectpresetname%1_base64" ).arg ( iIdx ), "" ) );
+
+        bEffectsPresetEQBypass[iIdx] = true;
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            aiEffectsPresetEQBandGainDb[iIdx][iBand] = 0;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
+            {
+                aiEffectsPresetEQBandGainDb[iIdx][iBand] = iValue;
+            }
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetEQBypass[iIdx] = bValue;
+        }
+
+        iEffectsPresetReverbLevel[iIdx]        = 0;
+        iEffectsPresetReverbPreDelayMs[iIdx]   = 0;
+        iEffectsPresetReverbRoomSize[iIdx]     = 60;
+        iEffectsPresetReverbDamping[iIdx]      = 30;
+        iEffectsPresetReverbWetMix[iIdx]       = 25;
+        iEffectsPresetReverbEarlyLevel[iIdx]   = 30;
+        iEffectsPresetReverbWidth[iIdx]        = 100;
+        bEffectsPresetReverbEarlyEnabled[iIdx] = true;
+        bEffectsPresetReverbFreeze[iIdx]       = false;
+        bEffectsPresetReverbBypass[iIdx]       = true;
+        bEffectsPresetReverbOnLeftChan[iIdx]   = false;
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revlev" ).arg ( iIdx ), 0, AUD_REVERB_MAX, iValue ) )
+        {
+            iEffectsPresetReverbLevel[iIdx] = iValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_reverblchan" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetReverbOnLeftChan[iIdx] = bValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument,
+                                "client",
+                                QString ( "effectpreset%1_revpredelay" ).arg ( iIdx ),
+                                0,
+                                REVERB_PRE_DELAY_MAX_MS,
+                                iValue ) )
+        {
+            iEffectsPresetReverbPreDelayMs[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revroom" ).arg ( iIdx ), 0, REVERB_ROOM_SIZE_MAX, iValue ) )
+        {
+            iEffectsPresetReverbRoomSize[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revdamping" ).arg ( iIdx ), 0, REVERB_DAMPING_MAX, iValue ) )
+        {
+            iEffectsPresetReverbDamping[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revwet" ).arg ( iIdx ), 0, REVERB_WET_MIX_MAX, iValue ) )
+        {
+            iEffectsPresetReverbWetMix[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument,
+                                "client",
+                                QString ( "effectpreset%1_revearlylevel" ).arg ( iIdx ),
+                                0,
+                                REVERB_EARLY_LEVEL_MAX,
+                                iValue ) )
+        {
+            iEffectsPresetReverbEarlyLevel[iIdx] = iValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revearlyenable" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetReverbEarlyEnabled[iIdx] = bValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revwidth" ).arg ( iIdx ), 0, REVERB_WIDTH_MAX, iValue ) )
+        {
+            iEffectsPresetReverbWidth[iIdx] = iValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revfreeze" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetReverbFreeze[iIdx] = bValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revbypass" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetReverbBypass[iIdx] = bValue;
+        }
+
+        bEffectsPresetCompressorBypass[iIdx]         = true;
+        iEffectsPresetCompressorThresholdDb[iIdx]    = -12;
+        iEffectsPresetCompressorRatio[iIdx]          = 3;
+        iEffectsPresetCompressorAttackMs[iIdx]       = 5;
+        iEffectsPresetCompressorReleaseMs[iIdx]      = 120;
+        iEffectsPresetCompressorMakeupDb[iIdx]       = 3;
+        bEffectsPresetCompressorLimiterEnabled[iIdx] = true;
+
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compbypass" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetCompressorBypass[iIdx] = bValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compthreshold" ).arg ( iIdx ), -60, 0, iValue ) )
+        {
+            iEffectsPresetCompressorThresholdDb[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compratio" ).arg ( iIdx ), 1, 20, iValue ) )
+        {
+            iEffectsPresetCompressorRatio[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compattack" ).arg ( iIdx ), 1, 200, iValue ) )
+        {
+            iEffectsPresetCompressorAttackMs[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_comprelease" ).arg ( iIdx ), 10, 500, iValue ) )
+        {
+            iEffectsPresetCompressorReleaseMs[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compmakeup" ).arg ( iIdx ), 0, 24, iValue ) )
+        {
+            iEffectsPresetCompressorMakeupDb[iIdx] = iValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_complimiter" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetCompressorLimiterEnabled[iIdx] = bValue;
+        }
+
+        bEffectsPresetFilterBypass[iIdx]     = true;
+        bEffectsPresetHighPassEnabled[iIdx]  = false;
+        bEffectsPresetLowPassEnabled[iIdx]   = false;
+        iEffectsPresetHighPassCutoffHz[iIdx] = 80;
+        iEffectsPresetLowPassCutoffHz[iIdx]  = 12000;
+
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_filterbypass" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetFilterBypass[iIdx] = bValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpassenabled" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetHighPassEnabled[iIdx] = bValue;
+        }
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpassenabled" ).arg ( iIdx ), bValue ) )
+        {
+            bEffectsPresetLowPassEnabled[iIdx] = bValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpasscutoff" ).arg ( iIdx ), 20, 1000, iValue ) )
+        {
+            iEffectsPresetHighPassCutoffHz[iIdx] = iValue;
+        }
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpasscutoff" ).arg ( iIdx ), 1000, 20000, iValue ) )
+        {
+            iEffectsPresetLowPassCutoffHz[iIdx] = iValue;
+        }
+    }
+
     // directory type
 
     //### TODO: BEGIN ###//
@@ -780,6 +1064,9 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // window position of the chat window
     vecWindowPosChat = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "winposchat_base64" ) );
 
+    // window position of the effects window
+    vecWindowPosEffects = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "winposeff_base64" ) );
+
     // window position of the connect window
     vecWindowPosConnect = FromBase64ToByteArray ( GetIniSetting ( IniXMLDocument, "client", "winposcon_base64" ) );
 
@@ -795,6 +1082,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         bWindowWasShownChat = bValue;
     }
 
+    // visibility state of the effects window
+    if ( GetFlagIniSet ( IniXMLDocument, "client", "winviseff", bValue ) )
+    {
+        bWindowWasShownEffects = bValue;
+    }
+
     // visibility state of the connect window
     if ( GetFlagIniSet ( IniXMLDocument, "client", "winviscon", bValue ) )
     {
@@ -805,6 +1098,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     if ( GetNumericIniSet ( IniXMLDocument, "client", "settingstab", 0, 3, iValue ) )
     {
         iSettingsTab = iValue;
+    }
+
+    // selected Effects Tab
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "effectstab", 0, 3, iValue ) )
+    {
+        iEffectsTab = iValue;
     }
 
     // fader settings
@@ -928,6 +1227,29 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
     // reverberation channel assignment
     SetFlagIniSet ( IniXMLDocument, "client", "reverblchan", pClient->IsReverbOnLeftChan() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revpredelay", pClient->GetReverbPreDelayMs() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revroom", pClient->GetReverbRoomSize() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revdamping", pClient->GetReverbDamping() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revwet", pClient->GetReverbWetMix() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revearlylevel", pClient->GetReverbEarlyLevel() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revearlyenable", pClient->GetReverbEarlyEnabled() );
+    SetNumericIniSet ( IniXMLDocument, "client", "revwidth", pClient->GetReverbWidth() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revfreeze", pClient->GetReverbFreeze() );
+    SetFlagIniSet ( IniXMLDocument, "client", "revbypass", pClient->GetReverbBypass() );
+
+    SetFlagIniSet ( IniXMLDocument, "client", "compbypass", pClient->GetCompressorBypass() );
+    SetNumericIniSet ( IniXMLDocument, "client", "compthreshold", static_cast<int> ( pClient->GetCompressorThresholdDb() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compratio", static_cast<int> ( pClient->GetCompressorRatio() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compattack", static_cast<int> ( pClient->GetCompressorAttackMs() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "comprelease", static_cast<int> ( pClient->GetCompressorReleaseMs() ) );
+    SetNumericIniSet ( IniXMLDocument, "client", "compmakeup", static_cast<int> ( pClient->GetCompressorMakeupDb() ) );
+    SetFlagIniSet ( IniXMLDocument, "client", "complimiter", pClient->GetCompressorLimiterEnabled() );
+
+    SetFlagIniSet ( IniXMLDocument, "client", "filterbypass", pClient->GetFilterBypass() );
+    SetFlagIniSet ( IniXMLDocument, "client", "highpassenabled", pClient->GetHighPassEnabled() );
+    SetFlagIniSet ( IniXMLDocument, "client", "lowpassenabled", pClient->GetLowPassEnabled() );
+    SetNumericIniSet ( IniXMLDocument, "client", "highpasscutoff", pClient->GetHighPassCutoffHz() );
+    SetNumericIniSet ( IniXMLDocument, "client", "lowpasscutoff", pClient->GetLowPassCutoffHz() );
 
     // sound card selection
     PutIniSetting ( IniXMLDocument, "client", "auddev_base64", ToBase64 ( pClient->GetSndCrdDev() ) );
@@ -959,8 +1281,22 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // enable OPUS64 setting
     SetFlagIniSet ( IniXMLDocument, "client", "enableopussmall", pClient->GetEnableOPUS64() );
 
+    // equalizer bypass
+    bEQBypass = pClient->GetEQBypass();
+    SetFlagIniSet ( IniXMLDocument, "client", "eqbypass", bEQBypass );
+
+    // equalizer per-band gains in dB
+    for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
+    {
+        aiEQBandGainDb[iIdx] = pClient->GetEQBandGainDb ( iIdx );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), aiEQBandGainDb[iIdx] );
+    }
+
     // GUI design
     SetNumericIniSet ( IniXMLDocument, "client", "guidesign", static_cast<int> ( pClient->GetGUIDesign() ) );
+
+    // UI theme
+    SetNumericIniSet ( IniXMLDocument, "client", "uitheme", static_cast<int> ( eUITheme ) );
 
     // MeterStyle
     SetNumericIniSet ( IniXMLDocument, "client", "meterstyle", static_cast<int> ( pClient->GetMeterStyle() ) );
@@ -975,6 +1311,67 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     for ( iIdx = 0; iIdx < MAX_NUM_SERVER_ADDR_ITEMS; iIdx++ )
     {
         PutIniSetting ( IniXMLDocument, "client", QString ( "directoryaddress%1" ).arg ( iIdx ), vstrDirectoryAddress[iIdx] );
+    }
+
+    // user EQ presets
+    for ( iIdx = 0; iIdx < MAX_NUM_EQ_USER_PRESETS; ++iIdx )
+    {
+        PutIniSetting ( IniXMLDocument, "client", QString ( "eqpresetname%1_base64" ).arg ( iIdx ), ToBase64 ( vstrEQPresetNames[iIdx] ) );
+
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandGainDb[iIdx][iBand] );
+        }
+    }
+
+    // user effects presets
+    for ( iIdx = 0; iIdx < MAX_NUM_EFFECT_PRESETS; ++iIdx )
+    {
+        PutIniSetting ( IniXMLDocument, "client", QString ( "effectpresetname%1_base64" ).arg ( iIdx ), ToBase64 ( vstrEffectsPresetNames[iIdx] ) );
+
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bEffectsPresetEQBypass[iIdx] );
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandGainDb[iIdx][iBand] );
+        }
+
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revlev" ).arg ( iIdx ), iEffectsPresetReverbLevel[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_reverblchan" ).arg ( iIdx ), bEffectsPresetReverbOnLeftChan[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revpredelay" ).arg ( iIdx ), iEffectsPresetReverbPreDelayMs[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revroom" ).arg ( iIdx ), iEffectsPresetReverbRoomSize[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revdamping" ).arg ( iIdx ), iEffectsPresetReverbDamping[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revwet" ).arg ( iIdx ), iEffectsPresetReverbWetMix[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revearlylevel" ).arg ( iIdx ), iEffectsPresetReverbEarlyLevel[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revearlyenable" ).arg ( iIdx ), bEffectsPresetReverbEarlyEnabled[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revwidth" ).arg ( iIdx ), iEffectsPresetReverbWidth[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revfreeze" ).arg ( iIdx ), bEffectsPresetReverbFreeze[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revbypass" ).arg ( iIdx ), bEffectsPresetReverbBypass[iIdx] );
+
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compbypass" ).arg ( iIdx ), bEffectsPresetCompressorBypass[iIdx] );
+        SetNumericIniSet ( IniXMLDocument,
+                           "client",
+                           QString ( "effectpreset%1_compthreshold" ).arg ( iIdx ),
+                           iEffectsPresetCompressorThresholdDb[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compratio" ).arg ( iIdx ), iEffectsPresetCompressorRatio[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compattack" ).arg ( iIdx ), iEffectsPresetCompressorAttackMs[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_comprelease" ).arg ( iIdx ), iEffectsPresetCompressorReleaseMs[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_compmakeup" ).arg ( iIdx ), iEffectsPresetCompressorMakeupDb[iIdx] );
+        SetFlagIniSet ( IniXMLDocument,
+                        "client",
+                        QString ( "effectpreset%1_complimiter" ).arg ( iIdx ),
+                        bEffectsPresetCompressorLimiterEnabled[iIdx] );
+
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_filterbypass" ).arg ( iIdx ), bEffectsPresetFilterBypass[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpassenabled" ).arg ( iIdx ), bEffectsPresetHighPassEnabled[iIdx] );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpassenabled" ).arg ( iIdx ), bEffectsPresetLowPassEnabled[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpasscutoff" ).arg ( iIdx ), iEffectsPresetHighPassCutoffHz[iIdx] );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpasscutoff" ).arg ( iIdx ), iEffectsPresetLowPassCutoffHz[iIdx] );
     }
 
     // directory type
@@ -992,6 +1389,9 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // window position of the chat window
     PutIniSetting ( IniXMLDocument, "client", "winposchat_base64", ToBase64 ( vecWindowPosChat ) );
 
+    // window position of the effects window
+    PutIniSetting ( IniXMLDocument, "client", "winposeff_base64", ToBase64 ( vecWindowPosEffects ) );
+
     // window position of the connect window
     PutIniSetting ( IniXMLDocument, "client", "winposcon_base64", ToBase64 ( vecWindowPosConnect ) );
 
@@ -1001,11 +1401,17 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // visibility state of the chat window
     SetFlagIniSet ( IniXMLDocument, "client", "winvischat", bWindowWasShownChat );
 
+    // visibility state of the effects window
+    SetFlagIniSet ( IniXMLDocument, "client", "winviseff", bWindowWasShownEffects );
+
     // visibility state of the connect window
     SetFlagIniSet ( IniXMLDocument, "client", "winviscon", bWindowWasShownConnect );
 
     // Settings Tab
     SetNumericIniSet ( IniXMLDocument, "client", "settingstab", iSettingsTab );
+
+    // Effects Tab
+    SetNumericIniSet ( IniXMLDocument, "client", "effectstab", iEffectsTab );
 
     // MIDI settings
     SetNumericIniSet ( IniXMLDocument, "client", "midichannel", iMidiChannel );
@@ -1107,6 +1513,12 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // language
     strLanguage =
         GetIniSetting ( IniXMLDocument, "server", "language", CLocale::FindSysLangTransFileName ( CLocale::GetAvailableTranslations() ).first );
+
+    // UI theme
+    if ( GetNumericIniSet ( IniXMLDocument, "server", "uitheme", 0, 2 /* UIT_DARK */, iValue ) )
+    {
+        eUITheme = static_cast<EUITheme> ( iValue );
+    }
 
     // base recording directory
     if ( !CommandLineOptions.contains ( "--recording" ) )
@@ -1248,6 +1660,9 @@ void CServerSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
     // language
     PutIniSetting ( IniXMLDocument, "server", "language", strLanguage );
+
+    // UI theme
+    SetNumericIniSet ( IniXMLDocument, "server", "uitheme", static_cast<int> ( eUITheme ) );
 
     // base recording directory
     PutIniSetting ( IniXMLDocument, "server", "recordingdir_base64", ToBase64 ( pServer->GetRecordingDir() ) );

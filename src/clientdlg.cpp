@@ -23,6 +23,8 @@
 \******************************************************************************/
 
 #include "clientdlg.h"
+#include <QBoxLayout>
+#include <QFile>
 #include "util.h"
 
 /* Implementation *************************************************************/
@@ -42,12 +44,59 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     bEnableIPv6 ( bNEnableIPv6 ),
     eLastRecorderState ( RS_UNDEFINED ), // for SetMixerBoardDeco
     eLastDesign ( GD_DEFAULT ),          //          "
+    eLastUITheme ( pNSetP->eUITheme ),
     ClientSettingsDlg ( pNCliP, pNSetP, parent ),
     ChatDlg ( parent ),
     ConnectDlg ( pNSetP, bNewShowComplRegConnList, bNEnableIPv6, parent ),
-    AnalyzerConsole ( pNCliP, parent )
+    AnalyzerConsole ( pNCliP, parent ),
+    EffectsDlg ( pNCliP, pNSetP, parent )
 {
     setupUi ( this );
+
+    // Keep the input-meter local separator hidden and add a full-height divider
+    // between the whole left control section and the mixer area.
+    lineMeter->hide();
+    QFrame* pMainDivider = new QFrame ( backgroundFrame );
+    pMainDivider->setObjectName ( "lineMainDivider" );
+    pMainDivider->setFrameShape ( QFrame::NoFrame );
+    pMainDivider->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
+    pMainDivider->setMinimumWidth ( 1 );
+    pMainDivider->setMaximumWidth ( 1 );
+    horizontalLayout_2->insertWidget ( 1, pMainDivider );
+
+    QWidget*     pMetersContainer = new QWidget ( backgroundFrame );
+    QHBoxLayout* pMetersRow       = new QHBoxLayout ( pMetersContainer );
+    pMetersRow->setContentsMargins ( 0, 0, 0, 0 );
+    pMetersRow->setSpacing ( 6 );
+    pMetersContainer->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
+
+    QVBoxLayout* pInputColumn = new QVBoxLayout();
+    QHBoxLayout* pInputBars   = new QHBoxLayout();
+    QHBoxLayout* pInputLabels = new QHBoxLayout();
+    pInputColumn->setContentsMargins ( 0, 0, 0, 0 );
+    pInputColumn->setSpacing ( 2 );
+    pInputBars->setContentsMargins ( 0, 0, 0, 0 );
+    pInputBars->setSpacing ( 2 );
+    pInputLabels->setContentsMargins ( 0, 0, 0, 0 );
+    pInputLabels->setSpacing ( 2 );
+
+    pInputColumn->addWidget ( lblInputLEDMeter, 0, Qt::AlignHCenter );
+    pInputBars->addWidget ( lbrInputLevelL );
+    pInputBars->addWidget ( lbrInputLevelR );
+    pInputColumn->addLayout ( pInputBars, 1 );
+    pInputLabels->addWidget ( lblLevelMeterLeft );
+    pInputLabels->addWidget ( lblLevelMeterRight );
+    pInputColumn->addLayout ( pInputLabels );
+
+    pMetersRow->addStretch();
+    pMetersRow->addLayout ( pInputColumn );
+    pMetersRow->addStretch();
+
+    verticalLayout_3->insertWidget ( 1, pMetersContainer );
+    verticalLayout_3->setStretch ( 1, 3 );
+    verticalLayout_3->setStretch ( 2, 1 );
+    verticalLayout_3->setStretch ( 3, 1 );
+    verticalLayout_3->setStretch ( 4, 1 );
 
     // Add help text to controls -----------------------------------------------
     // input level meter
@@ -92,37 +141,17 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     lbrInputLevelR->setEnabled ( false );
 
     // connect/disconnect button
+
     butConnect->setWhatsThis ( "<b>" + tr ( "Connect/Disconnect Button" ) + ":</b> " +
                                tr ( "Opens a dialog where you can select a server to connect to. "
                                     "If you are connected, pressing this button will end the session." ) );
 
     butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
+    // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
-    // reverberation level
-    QString strAudReverb = "<b>" + tr ( "Reverb effect" ) + ":</b> " +
-                           tr ( "Reverb can be applied to one local mono audio channel or to both "
-                                "channels in stereo mode. The mono channel selection and the "
-                                "reverb level can be modified. For example, if "
-                                "a microphone signal is fed in to the right audio channel of the "
-                                "sound card and a reverb effect needs to be applied, set the "
-                                "channel selector to right and move the fader upwards until the "
-                                "desired reverb level is reached." );
-
-    lblAudioReverb->setWhatsThis ( strAudReverb );
-    sldAudioReverb->setWhatsThis ( strAudReverb );
-
-    sldAudioReverb->setAccessibleName ( tr ( "Reverb effect level setting" ) );
-
-    // reverberation channel selection
-    QString strRevChanSel = "<b>" + tr ( "Reverb Channel Selection" ) + ":</b> " +
-                            tr ( "With these radio buttons the audio input channel on which the "
-                                 "reverb effect is applied can be chosen. Either the left "
-                                 "or right input channel can be selected." );
-
-    rbtReverbSelL->setWhatsThis ( strRevChanSel );
-    rbtReverbSelL->setAccessibleName ( tr ( "Left channel selection for reverb" ) );
-    rbtReverbSelR->setWhatsThis ( strRevChanSel );
-    rbtReverbSelR->setAccessibleName ( tr ( "Right channel selection for reverb" ) );
+    butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
+                               tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
+    butEffects->setAccessibleName ( tr ( "Open effects window" ) );
 
     // delay LED
     QString strLEDDelay = "<b>" + tr ( "Delay Status LED" ) + ":</b> " + tr ( "Shows the current audio delay status:" ) +
@@ -216,6 +245,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // set the settings pointer to the mixer board (must be done early)
     MainMixerBoard->SetSettingsPointer ( pSettings );
+    SetGUIDesign ( pClient->GetGUIDesign() );
     MainMixerBoard->SetNumMixerPanelRows ( pSettings->iNumMixerPanelRows );
 
     // Pass through flag for MIDICtrlUsed
@@ -229,6 +259,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     // init connection button text
     butConnect->setText ( tr ( "C&onnect" ) );
+    butConnect->setProperty ( "connectedState", false );
+    butConnect->setProperty ( "mainConnectButton", true );
 
     // init input level meter bars
     lbrInputLevelL->SetValue ( 0 );
@@ -237,12 +269,44 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // init status LEDs
     ledBuffers->Reset();
     ledDelay->Reset();
+    ledBuffers->hide();
+    ledDelay->hide();
 
-    // init audio reverberation
-    sldAudioReverb->setRange ( 0, AUD_REVERB_MAX );
-    const int iCurAudReverb = pClient->GetReverbLevel();
-    sldAudioReverb->setValue ( iCurAudReverb );
-    sldAudioReverb->setTickInterval ( AUD_REVERB_MAX / 5 );
+    // Use adaptive widths for action buttons in the left panel.
+    const int iMainPillWidth = qMax ( qMax ( chbLocalMute->sizeHint().width(), chbSettings->sizeHint().width() ),
+                                      qMax ( qMax ( chbChat->sizeHint().width(), butEffects->sizeHint().width() ), butConnect->sizeHint().width() ) );
+
+    butConnect->setFixedHeight ( 40 );
+    butConnect->setMinimumWidth ( iMainPillWidth );
+    chbLocalMute->setFixedHeight ( 20 );
+    chbSettings->setFixedHeight ( 20 );
+    chbChat->setFixedHeight ( 20 );
+    butEffects->setFixedHeight ( 20 );
+    chbLocalMute->setMinimumWidth ( iMainPillWidth );
+    chbSettings->setMinimumWidth ( iMainPillWidth );
+    chbChat->setMinimumWidth ( iMainPillWidth );
+    butEffects->setMinimumWidth ( iMainPillWidth );
+    butEffects->setCheckable ( true );
+
+    const int iMeterLabelWidth = qMax ( lbrInputLevelL->minimumWidth(), lbrInputLevelL->sizeHint().width() );
+    lblLevelMeterLeft->setFixedWidth ( iMeterLabelWidth );
+    lblLevelMeterRight->setFixedWidth ( iMeterLabelWidth );
+
+    // Qt sometimes finalizes font and style metrics only after the first event loop
+    // turn. Re-run the design pass once after construction so startup matches the
+    // state reached after the first UI settings change.
+    QTimer::singleShot ( 0, this, [this] {
+        SetGUIDesign ( pClient->GetGUIDesign() );
+        SetMeterStyle ( pClient->GetMeterStyle() );
+
+        if ( layout() != nullptr )
+        {
+            layout()->invalidate();
+            layout()->activate();
+        }
+
+        updateGeometry();
+    } );
 
     // init input boost
     pClient->SetInputBoost ( pSettings->iInputBoost );
@@ -294,6 +358,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     pFileMenu->addSeparator();
 
     pFileMenu->addAction ( tr ( "E&xit" ), this, SLOT ( close() ), QKeySequence ( Qt::CTRL + Qt::Key_Q ) );
+    // Menu styling is now handled by .qss files
 
     // Edit menu  --------------------------------------------------------------
     QMenu* pEditMenu = new QMenu ( tr ( "&Edit" ), this );
@@ -306,6 +371,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
                            QKeySequence ( Qt::CTRL + Qt::Key_L ) );
 
     pEditMenu->addAction ( tr ( "Auto-Adjust all &Faders" ), this, SLOT ( OnAutoAdjustAllFaderLevels() ), QKeySequence ( Qt::CTRL + Qt::Key_F ) );
+    // Menu styling is now handled by .qss files
 
     // View menu  --------------------------------------------------------------
     QMenu* pViewMenu = new QMenu ( tr ( "&View" ), this );
@@ -388,6 +454,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     {
         pViewMenu->addAction ( tr ( "&Analyzer Console..." ), this, SLOT ( OnOpenAnalyzerConsole() ) );
     }
+    // Menu styling is now handled by .qss files
 
     pViewMenu->addSeparator();
 
@@ -405,15 +472,21 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         this,
         [this] { ShowGeneralSettings ( SETTING_TAB_MIDI ); },
         QKeySequence ( Qt::CTRL + Qt::Key_M ) );
+    // Menu styling is now handled by .qss files
 
     // Main menu bar -----------------------------------------------------------
     QMenuBar* pMenu = new QMenuBar ( this );
+    pMenu->setNativeMenuBar ( false );
 
     pMenu->addMenu ( pFileMenu );
     pMenu->addMenu ( pEditMenu );
     pMenu->addMenu ( pViewMenu );
     pMenu->addMenu ( pSettingsMenu );
-    pMenu->addMenu ( new CHelpMenu ( true, this ) );
+    CHelpMenu* pHelpMenu = new CHelpMenu ( true, this );
+    // Menu styling is now handled by .qss files
+    pMenu->addMenu ( pHelpMenu );
+    pMenu->setObjectName ( "mainMenuBar" );
+    pMenu->setAttribute ( Qt::WA_StyledBackground, true );
 
     // Now tell the layout about the menu
     layout()->setMenuBar ( pMenu );
@@ -447,6 +520,17 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         ShowChatWindow();
     }
 
+    // effects window
+    if ( !pSettings->vecWindowPosEffects.isEmpty() && !pSettings->vecWindowPosEffects.isNull() )
+    {
+        EffectsDlg.restoreGeometry ( pSettings->vecWindowPosEffects );
+    }
+
+    if ( pSettings->bWindowWasShownEffects )
+    {
+        ShowEffectsWindow();
+    }
+
     // connection setup window
     if ( !pSettings->vecWindowPosConnect.isEmpty() && !pSettings->vecWindowPosConnect.isNull() )
     {
@@ -457,12 +541,14 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // push buttons
     QObject::connect ( butConnect, &QPushButton::clicked, this, &CClientDlg::OnConnectDisconBut );
 
-    // check boxes
-    QObject::connect ( chbSettings, &QCheckBox::stateChanged, this, &CClientDlg::OnSettingsStateChanged );
+    // toggle buttons
+    QObject::connect ( chbSettings, &QPushButton::toggled, this, &CClientDlg::OnSettingsStateChanged );
 
-    QObject::connect ( chbChat, &QCheckBox::stateChanged, this, &CClientDlg::OnChatStateChanged );
+    QObject::connect ( chbChat, &QPushButton::toggled, this, &CClientDlg::OnChatStateChanged );
 
-    QObject::connect ( chbLocalMute, &QCheckBox::stateChanged, this, &CClientDlg::OnLocalMuteStateChanged );
+    QObject::connect ( butEffects, &QPushButton::toggled, this, &CClientDlg::OnEffectsStateChanged );
+
+    QObject::connect ( chbLocalMute, &QPushButton::toggled, this, &CClientDlg::OnLocalMuteStateChanged );
 
     // timers
     QObject::connect ( &TimerSigMet, &QTimer::timeout, this, &CClientDlg::OnTimerSigMet );
@@ -477,12 +563,65 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &TimerDetectFeedback, &QTimer::timeout, this, &CClientDlg::OnTimerDetectFeedback );
 
-    QObject::connect ( sldAudioReverb, &QSlider::valueChanged, this, &CClientDlg::OnAudioReverbValueChanged );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbValueChanged, this, &CClientDlg::OnAudioReverbValueChanged );
 
-    // radio buttons
-    QObject::connect ( rbtReverbSelL, &QRadioButton::clicked, this, &CClientDlg::OnReverbSelLClicked );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbPreDelayChanged, this, &CClientDlg::OnReverbPreDelayChanged );
 
-    QObject::connect ( rbtReverbSelR, &QRadioButton::clicked, this, &CClientDlg::OnReverbSelRClicked );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRoomSizeChanged, this, &CClientDlg::OnReverbRoomSizeChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbDampingChanged, this, &CClientDlg::OnReverbDampingChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWetMixChanged, this, &CClientDlg::OnReverbWetMixChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbEarlyLevelChanged, this, &CClientDlg::OnReverbEarlyLevelChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWidthChanged, this, &CClientDlg::OnReverbWidthChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbLeftSelected, this, [this] {
+        pClient->SetReverbOnLeftChan ( true );
+        UpdateRevSelection();
+    } );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRightSelected, this, [this] {
+        pClient->SetReverbOnLeftChan ( false );
+        UpdateRevSelection();
+    } );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbEarlyEnabledChanged, this, &CClientDlg::OnReverbEarlyEnabledChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbFreezeChanged, this, &CClientDlg::OnReverbFreezeChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbBypassChanged, this, &CClientDlg::OnReverbBypassChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorBypassChanged, this, &CClientDlg::OnCompressorBypassChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorThresholdChanged, this, &CClientDlg::OnCompressorThresholdChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorRatioChanged, this, &CClientDlg::OnCompressorRatioChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorAttackChanged, this, &CClientDlg::OnCompressorAttackChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorReleaseChanged, this, &CClientDlg::OnCompressorReleaseChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorMakeupChanged, this, &CClientDlg::OnCompressorMakeupChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorLimiterChanged, this, &CClientDlg::OnCompressorLimiterChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::FilterBypassChanged, this, &CClientDlg::OnFilterBypassChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassEnabledChanged, this, &CClientDlg::OnHighPassEnabledChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassEnabledChanged, this, &CClientDlg::OnLowPassEnabledChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassCutoffChanged, this, &CClientDlg::OnHighPassCutoffChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassCutoffChanged, this, &CClientDlg::OnLowPassCutoffChanged );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBandGainChanged, this, [this] ( int iBandIndex, int iGainDb ) {
+        pClient->SetEQBandGainDb ( iBandIndex, iGainDb );
+    } );
+
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQResetRequested, this, [this] { pClient->ResetEQ(); } );
 
     // other
     QObject::connect ( pClient, &CClient::ConClientListMesReceived, this, &CClientDlg::OnConClientListMesReceived );
@@ -501,6 +640,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // protocol, a modal licence dialog is opened. Since this blocks the thread, we need
     // a queued connection to make sure the core protocol mechanism is not blocked, too.
     qRegisterMetaType<ELicenceType> ( "ELicenceType" );
+
     QObject::connect ( pClient, &CClient::LicenceRequired, this, &CClientDlg::OnLicenceRequired, Qt::QueuedConnection );
 
     QObject::connect ( pClient, &CClient::PingTimeReceived, this, &CClientDlg::OnPingTimeResult );
@@ -532,6 +672,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( pClient, &CClient::SoundDeviceChanged, this, &CClientDlg::OnSoundDeviceChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::GUIDesignChanged, this, &CClientDlg::OnGUIDesignChanged );
+
+    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, this, &CClientDlg::OnUIThemeChanged );
+
+    QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::UIThemeChanged, &EffectsDlg, &CEffectsDlg::OnUIThemeChanged );
 
     QObject::connect ( &ClientSettingsDlg, &CClientSettingsDlg::MeterStyleChanged, this, &CClientDlg::OnMeterStyleChanged );
 
@@ -583,7 +727,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // mute stream on startup (must be done after the signal connections)
     if ( bMuteStream )
     {
-        chbLocalMute->setCheckState ( Qt::Checked );
+        chbLocalMute->setChecked ( true );
     }
 
     // query the update server version number needed for update check (note
@@ -614,15 +758,18 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
     pSettings->vecWindowPosMain     = saveGeometry();
     pSettings->vecWindowPosSettings = ClientSettingsDlg.saveGeometry();
     pSettings->vecWindowPosChat     = ChatDlg.saveGeometry();
+    pSettings->vecWindowPosEffects  = EffectsDlg.saveGeometry();
     pSettings->vecWindowPosConnect  = ConnectDlg.saveGeometry();
 
     pSettings->bWindowWasShownSettings = ClientSettingsDlg.isVisible();
     pSettings->bWindowWasShownChat     = ChatDlg.isVisible();
+    pSettings->bWindowWasShownEffects  = EffectsDlg.isVisible();
     pSettings->bWindowWasShownConnect  = ConnectDlg.isVisible();
 
     // if settings/connect dialog or chat dialog is open, close it
     ClientSettingsDlg.close();
     ChatDlg.close();
+    EffectsDlg.close();
     ConnectDlg.close();
     AnalyzerConsole.close();
 
@@ -641,6 +788,25 @@ void CClientDlg::closeEvent ( QCloseEvent* Event )
 
     // default implementation of this event handler routine
     Event->accept();
+}
+
+void CClientDlg::ShowEffectsWindow()
+{
+    EffectsDlg.UpdateReverbControls();
+    EffectsDlg.show();
+    EffectsDlg.raise();
+    EffectsDlg.activateWindow();
+}
+
+void CClientDlg::changeEvent ( QEvent* Event )
+{
+    if ( ( pSettings->eUITheme == UIT_SYSTEM ) && !bApplyingThemeChange &&
+         ( ( Event->type() == QEvent::ApplicationPaletteChange ) || ( Event->type() == QEvent::PaletteChange ) ) )
+    {
+        OnUIThemeChanged();
+    }
+
+    CBaseDlg::changeEvent ( Event );
 }
 
 void CClientDlg::ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept )
@@ -673,29 +839,7 @@ void CClientDlg::ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept )
 
 void CClientDlg::UpdateRevSelection()
 {
-    if ( pClient->GetAudioChannels() == CC_STEREO )
-    {
-        // for stereo make channel selection invisible since
-        // reverberation effect is always applied to both channels
-        rbtReverbSelL->setVisible ( false );
-        rbtReverbSelR->setVisible ( false );
-    }
-    else
-    {
-        // make radio buttons visible
-        rbtReverbSelL->setVisible ( true );
-        rbtReverbSelR->setVisible ( true );
-
-        // update value
-        if ( pClient->IsReverbOnLeftChan() )
-        {
-            rbtReverbSelL->setChecked ( true );
-        }
-        else
-        {
-            rbtReverbSelR->setChecked ( true );
-        }
-    }
+    EffectsDlg.UpdateReverbControls();
 
     // update visibility of the pan controls in the audio mixer board (pan is not supported for mono)
     MainMixerBoard->SetDisplayPans ( pClient->GetAudioChannels() != CC_MONO );
@@ -890,7 +1034,7 @@ void CClientDlg::OnLicenceRequired ( ELicenceType eLicenceType )
         }
 
         // unmute the client output stream if local mute button is not pressed
-        if ( chbLocalMute->checkState() == Qt::Unchecked )
+        if ( !chbLocalMute->isChecked() )
         {
             pClient->SetMuteOutStream ( false );
         }
@@ -1036,9 +1180,9 @@ void CClientDlg::ShowAnalyzerConsole()
     AnalyzerConsole.activateWindow();
 }
 
-void CClientDlg::OnSettingsStateChanged ( int value )
+void CClientDlg::OnSettingsStateChanged ( bool bChecked )
 {
-    if ( value == Qt::Checked )
+    if ( bChecked )
     {
         ShowGeneralSettings ( SETTING_TAB_AUDIONET );
     }
@@ -1048,9 +1192,9 @@ void CClientDlg::OnSettingsStateChanged ( int value )
     }
 }
 
-void CClientDlg::OnChatStateChanged ( int value )
+void CClientDlg::OnChatStateChanged ( bool bChecked )
 {
-    if ( value == Qt::Checked )
+    if ( bChecked )
     {
         ShowChatWindow();
     }
@@ -1060,12 +1204,24 @@ void CClientDlg::OnChatStateChanged ( int value )
     }
 }
 
-void CClientDlg::OnLocalMuteStateChanged ( int value )
+void CClientDlg::OnEffectsStateChanged ( bool bChecked )
 {
-    pClient->SetMuteOutStream ( value == Qt::Checked );
+    if ( bChecked )
+    {
+        ShowEffectsWindow();
+    }
+    else
+    {
+        EffectsDlg.hide();
+    }
+}
+
+void CClientDlg::OnLocalMuteStateChanged ( bool bChecked )
+{
+    pClient->SetMuteOutStream ( bChecked );
 
     // show/hide info label
-    if ( value == Qt::Checked )
+    if ( bChecked )
     {
         lblGlobalInfoLabel->show();
     }
@@ -1081,11 +1237,18 @@ void CClientDlg::OnTimerSigMet()
     lbrInputLevelL->SetValue ( pClient->GetLevelForMeterdBLeft() );
     lbrInputLevelR->SetValue ( pClient->GetLevelForMeterdBRight() );
 
+    if ( EffectsDlg.isVisible() )
+    {
+        CVector<float> vecOutLevels;
+        pClient->GetOutputBandLevels ( vecOutLevels );
+        EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
+    }
+
     if ( bDetectFeedback &&
          ( pClient->GetLevelForMeterdBLeft() > NUM_STEPS_LED_BAR - 0.5 || pClient->GetLevelForMeterdBRight() > NUM_STEPS_LED_BAR - 0.5 ) )
     {
         // mute locally and mute channel
-        chbLocalMute->setCheckState ( Qt::Checked );
+        chbLocalMute->setChecked ( true );
         MainMixerBoard->MuteMyChannel();
 
         // show message box about feedback issue
@@ -1249,6 +1412,10 @@ void CClientDlg::Connect ( const QString& strSelectedAddress, const QString& str
 
         // change connect button text to "disconnect"
         butConnect->setText ( tr ( "&Disconnect" ) );
+        butConnect->setProperty ( "connectedState", true );
+        butConnect->style()->unpolish ( butConnect );
+        butConnect->style()->polish ( butConnect );
+        butConnect->update();
 
         // set server name in audio mixer group box title
         MainMixerBoard->SetServerName ( strMixerBoardLabel );
@@ -1258,6 +1425,9 @@ void CClientDlg::Connect ( const QString& strSelectedAddress, const QString& str
         TimerBuffersLED.start ( BUFFER_LED_UPDATE_TIME_MS );
         TimerPing.start ( PING_UPDATE_TIME_MS );
         TimerCheckAudioDeviceOk.start ( CHECK_AUDIO_DEV_OK_TIME_MS ); // is single shot timer
+
+        ledBuffers->show();
+        ledDelay->show();
 
         // audio feedback detection
         if ( pSettings->bEnableFeedbackDetection )
@@ -1281,6 +1451,10 @@ void CClientDlg::Disconnect()
 
     // change connect button text to "connect"
     butConnect->setText ( tr ( "C&onnect" ) );
+    butConnect->setProperty ( "connectedState", false );
+    butConnect->style()->unpolish ( butConnect );
+    butConnect->style()->polish ( butConnect );
+    butConnect->update();
 
     // reset server name in audio mixer group box title
     MainMixerBoard->SetServerName ( "" );
@@ -1291,6 +1465,10 @@ void CClientDlg::Disconnect()
     lbrInputLevelR->setEnabled ( false );
     lbrInputLevelL->SetValue ( 0 );
     lbrInputLevelR->SetValue ( 0 );
+    if ( EffectsDlg.isVisible() )
+    {
+        EffectsDlg.UpdateOutputBandLevels ( CVector<float> ( 16, 0.0f ) );
+    }
 
     // show connect to server message
     lblConnectToServer->show();
@@ -1311,6 +1489,8 @@ void CClientDlg::Disconnect()
     // reset LEDs
     ledBuffers->Reset();
     ledDelay->Reset();
+    ledBuffers->hide();
+    ledDelay->hide();
 
     // clear text labels with client parameters
     lblPingVal->setText ( "---" );
@@ -1350,68 +1530,41 @@ void CClientDlg::UpdateDisplay()
         chbChat->setChecked ( true );
         chbChat->blockSignals ( false );
     }
+
+    if ( butEffects->isChecked() && !EffectsDlg.isVisible() )
+    {
+        butEffects->blockSignals ( true );
+        butEffects->setChecked ( false );
+        butEffects->blockSignals ( false );
+    }
+    if ( !butEffects->isChecked() && EffectsDlg.isVisible() )
+    {
+        butEffects->blockSignals ( true );
+        butEffects->setChecked ( true );
+        butEffects->blockSignals ( false );
+    }
 }
 
 void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
     // remove any styling from the mixer board - reapply after changing skin
     MainMixerBoard->setStyleSheet ( "" );
+    lbrInputLevelL->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
+    lbrInputLevelR->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    lbrInputLevelL->SetDarkTheme ( eResolvedTheme == UIT_DARK );
+    lbrInputLevelR->SetDarkTheme ( eResolvedTheme == UIT_DARK );
+    // All widget and menu styling is now handled by .qss files
 
     // apply GUI design to current window
     switch ( eNewDesign )
     {
-    case GD_ORIGINAL:
-        backgroundFrame->setStyleSheet (
-            "QFrame#backgroundFrame { border-image:  url(:/png/fader/res/mixerboardbackground.png) 34px 30px 40px 40px;"
-            "                         border-top:    34px transparent;"
-            "                         border-bottom: 40px transparent;"
-            "                         border-left:   30px transparent;"
-            "                         border-right:  40px transparent;"
-            "                         padding:       -5px;"
-            "                         margin:        -5px, -5px, 0px, 0px; }"
-            "QLabel {                 color:          rgb(220, 220, 220);"
-            "                         font:           bold; }"
-            "QRadioButton {           color:          rgb(220, 220, 220);"
-            "                         font:           bold; }"
-            "QScrollArea {            background:     transparent; }"
-            ".QWidget {               background:     transparent; }" // note: matches instances of QWidget, but not of its subclasses
-            "QGroupBox {              background:     transparent; }"
-            "QGroupBox::title {       color:          rgb(220, 220, 220); }"
-            "QCheckBox::indicator {   width:          38px;"
-            "                         height:         21px; }"
-            "QCheckBox::indicator:unchecked {"
-            "                         image:          url(:/png/fader/res/ledbuttonnotpressed.png); }"
-            "QCheckBox::indicator:checked {"
-            "                         image:          url(:/png/fader/res/ledbuttonpressed.png); }"
-            "QCheckBox {              color:          rgb(220, 220, 220);"
-            "                         font:           bold; }" );
-#ifdef _WIN32
-        // Workaround QT-Windows problem: This should not be necessary since in the
-        // background frame the style sheet for QRadioButton was already set. But it
-        // seems that it is only applied if the style was set to default and then back
-        // to GD_ORIGINAL. This seems to be a QT related issue...
-        rbtReverbSelL->setStyleSheet ( "color: rgb(220, 220, 220);"
-                                       "font:  bold;" );
-        rbtReverbSelR->setStyleSheet ( "color: rgb(220, 220, 220);"
-                                       "font:  bold;" );
-#endif
-
+    case GD_STANDARD:
+    case GD_SLIMFADER:
+    default:
+        // Use the same LED icon set in all layouts.
         ledBuffers->SetType ( CMultiColorLED::MT_LED );
         ledDelay->SetType ( CMultiColorLED::MT_LED );
-        break;
-
-    default:
-        // reset style sheet and set original parameters
-        backgroundFrame->setStyleSheet ( "" );
-
-#ifdef _WIN32
-        // Workaround QT-Windows problem: See above description
-        rbtReverbSelL->setStyleSheet ( "" );
-        rbtReverbSelR->setStyleSheet ( "" );
-#endif
-
-        ledBuffers->SetType ( CMultiColorLED::MT_INDICATOR );
-        ledDelay->SetType ( CMultiColorLED::MT_INDICATOR );
         break;
     }
 
@@ -1419,36 +1572,81 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
     MainMixerBoard->SetGUIDesign ( eNewDesign );
 }
 
+void CClientDlg::OnAudioReverbValueChanged ( int value )
+{
+    pClient->SetReverbLevel ( value );
+    EffectsDlg.UpdateReverbControls();
+}
+
+void CClientDlg::OnReverbPreDelayChanged ( int value ) { pClient->SetReverbPreDelayMs ( value ); }
+
+void CClientDlg::OnReverbRoomSizeChanged ( int value ) { pClient->SetReverbRoomSize ( value ); }
+
+void CClientDlg::OnReverbDampingChanged ( int value ) { pClient->SetReverbDamping ( value ); }
+
+void CClientDlg::OnReverbWetMixChanged ( int value ) { pClient->SetReverbWetMix ( value ); }
+
+void CClientDlg::OnReverbEarlyLevelChanged ( int value ) { pClient->SetReverbEarlyLevel ( value ); }
+
+void CClientDlg::OnReverbWidthChanged ( int value ) { pClient->SetReverbWidth ( value ); }
+
+void CClientDlg::OnReverbEarlyEnabledChanged ( bool enabled ) { pClient->SetReverbEarlyEnabled ( enabled ); }
+
+void CClientDlg::OnReverbFreezeChanged ( bool enabled ) { pClient->SetReverbFreeze ( enabled ); }
+
+void CClientDlg::OnReverbBypassChanged ( bool bypassed )
+{
+    pClient->SetReverbBypass ( bypassed );
+    EffectsDlg.UpdateReverbControls();
+}
+
+void CClientDlg::OnCompressorBypassChanged ( bool bypassed )
+{
+    pClient->SetCompressorBypass ( bypassed );
+    EffectsDlg.UpdateCompressorControls();
+}
+
+void CClientDlg::OnCompressorThresholdChanged ( int value ) { pClient->SetCompressorThresholdDb ( static_cast<float> ( value ) ); }
+
+void CClientDlg::OnCompressorRatioChanged ( int value ) { pClient->SetCompressorRatio ( static_cast<float> ( value ) ); }
+
+void CClientDlg::OnCompressorAttackChanged ( int value ) { pClient->SetCompressorAttackMs ( static_cast<float> ( value ) ); }
+
+void CClientDlg::OnCompressorReleaseChanged ( int value ) { pClient->SetCompressorReleaseMs ( static_cast<float> ( value ) ); }
+
+void CClientDlg::OnCompressorMakeupChanged ( int value ) { pClient->SetCompressorMakeupDb ( static_cast<float> ( value ) ); }
+
+void CClientDlg::OnCompressorLimiterChanged ( bool enabled ) { pClient->SetCompressorLimiterEnabled ( enabled ); }
+
+void CClientDlg::OnFilterBypassChanged ( bool bypassed )
+{
+    pClient->SetFilterBypass ( bypassed );
+    EffectsDlg.UpdateFilterControls();
+}
+
+void CClientDlg::OnHighPassEnabledChanged ( bool enabled )
+{
+    pClient->SetHighPassEnabled ( enabled );
+    EffectsDlg.UpdateFilterControls();
+}
+
+void CClientDlg::OnLowPassEnabledChanged ( bool enabled )
+{
+    pClient->SetLowPassEnabled ( enabled );
+    EffectsDlg.UpdateFilterControls();
+}
+
+void CClientDlg::OnHighPassCutoffChanged ( int value ) { pClient->SetHighPassCutoffHz ( value ); }
+
+void CClientDlg::OnLowPassCutoffChanged ( int value ) { pClient->SetLowPassCutoffHz ( value ); }
+
 void CClientDlg::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {
-    // apply MeterStyle to current window
-    switch ( eNewMeterStyle )
-    {
-    case MT_LED_STRIPE:
-        lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_LED_STRIPE );
-        lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_LED_STRIPE );
-        break;
+    Q_UNUSED ( eNewMeterStyle );
 
-    case MT_LED_ROUND_BIG:
-        lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_BIG );
-        lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_BIG );
-        break;
-
-    case MT_BAR_WIDE:
-        lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        break;
-
-    case MT_BAR_NARROW:
-        lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        break;
-
-    case MT_LED_ROUND_SMALL:
-        lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_BIG );
-        lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_LED_ROUND_BIG );
-        break;
-    }
+    // Keep input meters visually consistent regardless of the narrow/wide menu option.
+    lbrInputLevelL->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
+    lbrInputLevelR->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
 
     // also apply MeterStyle to child GUI controls
     MainMixerBoard->SetMeterStyle ( eNewMeterStyle );
@@ -1466,15 +1664,38 @@ void CClientDlg::OnGUIDesignChanged()
     SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );
 }
 
+void CClientDlg::OnUIThemeChanged()
+{
+    if ( bApplyingThemeChange )
+    {
+        return;
+    }
+    bApplyingThemeChange = true;
+
+    // Reapply palette and application stylesheet using the current theme.
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+    SetAppPaletteForTheme ( eResolvedTheme );
+    SetAppStyleSheetFromResources (
+        { eResolvedTheme == UIT_DARK ? QString ( ":/styles/dialog_common_dark.qss" ) : QString ( ":/styles/dialog_common_light.qss" ),
+          eResolvedTheme == UIT_DARK ? QString ( ":/styles/clientdlg_dark.qss" ) : QString ( ":/styles/clientdlg_light.qss" ) } );
+
+    SetGUIDesign ( pClient->GetGUIDesign() );
+    SetMixerBoardDeco ( MainMixerBoard->GetRecorderState(), pClient->GetGUIDesign() );
+    bApplyingThemeChange = false;
+}
+
 void CClientDlg::OnMeterStyleChanged() { SetMeterStyle ( pClient->GetMeterStyle() ); }
 
 void CClientDlg::SetMixerBoardDeco ( const ERecorderState newRecorderState, const EGUIDesign eNewDesign )
 {
+    const EUITheme eResolvedTheme = ResolveUITheme ( pSettings->eUITheme );
+
     // return if no change
-    if ( ( newRecorderState == eLastRecorderState ) && ( eNewDesign == eLastDesign ) )
+    if ( ( newRecorderState == eLastRecorderState ) && ( eNewDesign == eLastDesign ) && ( eResolvedTheme == eLastUITheme ) )
         return;
     eLastRecorderState = newRecorderState;
     eLastDesign        = eNewDesign;
+    eLastUITheme       = eResolvedTheme;
 
     // set base style
     QString sTitleStyle = "QGroupBox::title { subcontrol-origin: margin;"
@@ -1488,30 +1709,13 @@ void CClientDlg::SetMixerBoardDeco ( const ERecorderState newRecorderState, cons
     }
     else
     {
-        if ( eNewDesign == GD_ORIGINAL )
+        if ( eResolvedTheme == UIT_DARK )
         {
-            // no need to set the background color for dark mode in fancy skin, as the background is already dark.
             sTitleStyle += "color: rgb(220,220,220); }";
         }
         else
         {
-#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
-            // for Qt 6.5.0 or later, we use the inbuilt cross platform color scheme picker.
-            if ( QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark )
-#else
-            // for earlier versions, check darkmode as proposed in https://www.qt.io/blog/dark-mode-on-windows-11-with-qt-6.5
-            const QPalette defaultPalette;
-            if ( defaultPalette.color ( QPalette::WindowText ).lightness() > defaultPalette.color ( QPalette::Window ).lightness() )
-#endif
-            {
-                // Dark mode needs a light color
-
-                sTitleStyle += "color: rgb(220,220,220); }";
-            }
-            else
-            {
-                sTitleStyle += "color: rgb(0,0,0); }";
-            }
+            sTitleStyle += "color: rgb(28,34,42); }";
         }
     }
 

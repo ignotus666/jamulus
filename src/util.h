@@ -40,6 +40,7 @@
 #    include <sys/time.h>
 #endif
 #include <QCoreApplication>
+#include <QStringList>
 #include <QUdpSocket>
 #include <QHostAddress>
 #include <QHostInfo>
@@ -64,6 +65,9 @@
 #    include <QMenu>
 #    include <QWhatsThis>
 #    include <QTextBrowser>
+#    include <QGuiApplication>
+#    include <QIcon>
+#    include <QPalette>
 #    include <QLabel>
 #    include <QCheckBox>
 #    include <QComboBox>
@@ -374,7 +378,10 @@ class CBaseDlg : public QDialog
     Q_OBJECT
 
 public:
-    CBaseDlg ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags() ) : QDialog ( parent, flags ) {}
+    CBaseDlg ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags() ) : QDialog ( parent, flags )
+    {
+        setWindowIcon ( QIcon ( QString::fromUtf8 ( ":/png/main/res/fronticon.png" ) ) );
+    }
 
 public slots:
     void keyPressEvent ( QKeyEvent* pEvent )
@@ -523,27 +530,53 @@ enum EGUIDesign
 {
     // used for settings -> enum values should be fixed
     GD_STANDARD  = 0,
-    GD_ORIGINAL  = 1,
     GD_SLIMFADER = 2
 };
+
+// UI theme enum ---------------------------------------------------------------
+enum EUITheme
+{
+    UIT_LIGHT  = 0,
+    UIT_DARK   = 1,
+    UIT_SYSTEM = 2
+};
+
+inline bool IsDarkUITheme ( const EUITheme eTheme )
+{
+    if ( eTheme == UIT_SYSTEM )
+    {
+#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
+        return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+#else
+        const QPalette defaultPalette;
+        return defaultPalette.color ( QPalette::WindowText ).lightness() > defaultPalette.color ( QPalette::Window ).lightness();
+#endif
+    }
+
+    return eTheme == UIT_DARK;
+}
+
+inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme ( eTheme ) ? UIT_DARK : UIT_LIGHT; }
+
+#ifndef HEADLESS
+void SetAppPaletteForTheme ( EUITheme eTheme );
+void SetAppStyleSheetFromResources ( const QStringList& resourcePaths );
+#endif
 
 // Default, fallback skin if no skin was selected
 #if defined( Q_OS_IOS ) || defined( ANDROID ) || defined( Q_OS_ANDROID )
 // on mobile, slim UI is preferred for space reasons
 #    define GD_DEFAULT GD_SLIMFADER
 #else
-#    define GD_DEFAULT GD_ORIGINAL
+#    define GD_DEFAULT GD_STANDARD
 #endif
 
 // MeterStyle enum -------------------------------------------------------------
 enum EMeterStyle
 {
     // used for settings -> enum values should be fixed
-    MT_BAR_NARROW      = 0,
-    MT_BAR_WIDE        = 1,
-    MT_LED_STRIPE      = 2,
-    MT_LED_ROUND_SMALL = 3,
-    MT_LED_ROUND_BIG   = 4
+    MT_BAR_NARROW = 0,
+    MT_BAR_WIDE   = 1
 };
 
 // Server licence type enum ----------------------------------------------------

@@ -25,6 +25,7 @@
 #include "client.h"
 #include "settings.h"
 #include "util.h"
+#include <cmath>
 
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
@@ -55,6 +56,15 @@ CClient::CClient ( const quint16  iPortNumber,
     iAudioInFader ( AUD_FADER_IN_MIDDLE ),
     bReverbOnLeftChan ( false ),
     iReverbLevel ( 0 ),
+    iReverbPreDelayMs ( 0 ),
+    iReverbRoomSize ( 60 ),
+    iReverbDamping ( 30 ),
+    iReverbWetMix ( 25 ),
+    iReverbEarlyLevel ( 30 ),
+    iReverbWidth ( 100 ),
+    bReverbEarlyEnabled ( true ),
+    bReverbFreeze ( false ),
+    bReverbBypass ( true ),
     iInputBoost ( 1 ),
     iSndCrdPrefFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
     iSndCrdFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
@@ -64,7 +74,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bFraSiFactDefSupported ( false ),
     bFraSiFactSafeSupported ( false ),
     eGUIDesign ( GD_DEFAULT ),
-    eMeterStyle ( MT_LED_STRIPE ),
+    eMeterStyle ( MT_BAR_WIDE ),
     bEnableAudioAlerts ( false ),
     bEnableOPUS64 ( false ),
     bJitterBufferOK ( true ),
@@ -177,7 +187,7 @@ CClient::CClient ( const quint16  iPortNumber,
 
     QObject::connect ( pSignalHandler, &CSignalHandler::HandledSignal, this, &CClient::OnHandledSignal );
 
-    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, [this] ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); } );
+    QObject::connect ( &Sound, &CSoundBase::MidiCCReceived, this, &CClient::OnMidiCCReceived );
 
     // start timer so that elapsed time works
     PreciseTime.start();
@@ -196,6 +206,23 @@ CClient::CClient ( const quint16  iPortNumber,
     {
         SetServerAddr ( strConnOnStartupAddress );
         Start();
+    }
+
+    for ( float& fLevel : afOutputBandLevels )
+    {
+        fLevel = 0.0f;
+    }
+}
+
+void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
+{
+    constexpr int kOutputBands = 16;
+    vecOutLevels.Init ( kOutputBands );
+
+    QMutexLocker locker ( &MutexOutputBandLevels );
+    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    {
+        vecOutLevels[iBand] = afOutputBandLevels[iBand];
     }
 }
 
@@ -396,6 +423,32 @@ void CClient::OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo )
     // pass the received list onwards, now containing client channel IDs
 
     emit ConClientListMesReceived ( vecChanInfo );
+}
+
+void CClient::OnVersionAndOSReceived ( COSUtil::EOpSystemType eOSType, QString strVersion )
+{
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
+    const bool bWasRunning = Sound.IsRunning();
+    if ( bWasRunning )
+    {
+        Sound.Stop();
+    }
+    if ( QVersionNumber::compare ( QVersionNumber::fromString ( strVersion ), QVersionNumber ( 3, 11, 1 ) ) == 0 )
+    {
+        bRawAudioIsSupported = true;
+        Init();
+    }
+    else
+    {
+        bRawAudioIsSupported = false;
+        Init();
+    }
+    if ( bWasRunning )
+    {
+        Sound.Start();
+    }
+#endif
+    emit VersionAndOSReceived ( eOSType, strVersion );
 }
 
 void CClient::CreateServerJitterBufferMessage()
@@ -1332,6 +1385,9 @@ void CClient::Init()
 
     // init reverberation
     AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
+    AudioFilter.Init ( SYSTEM_SAMPLE_RATE_HZ );
+    AudioEqualizer.Init ( SYSTEM_SAMPLE_RATE_HZ );
+    AudioCompressor.Init ( SYSTEM_SAMPLE_RATE_HZ );
 
     // init the sound card conversion buffers
     if ( bSndCrdConversionBufferRequired )
@@ -1426,10 +1482,32 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 #endif
 
     // add reverberation effect if activated
-    if ( iReverbLevel != 0 )
+    if ( !bReverbBypass && iReverbLevel != 0 )
     {
-        AudioReverb.Process ( vecsStereoSndCrd, bReverbOnLeftChan, static_cast<float> ( iReverbLevel ) / AUD_REVERB_MAX / 4 );
+        SReverbParams sParams;
+        sParams.fWet          = static_cast<float> ( iReverbWetMix ) / REVERB_WET_MIX_MAX;
+        sParams.fDry          = 1.0f - sParams.fWet;
+        sParams.fEarlyLevel   = static_cast<float> ( iReverbEarlyLevel ) / REVERB_EARLY_LEVEL_MAX;
+        sParams.fWidth        = static_cast<float> ( iReverbWidth ) / REVERB_WIDTH_MAX;
+        sParams.fDamping      = static_cast<float> ( iReverbDamping ) / REVERB_DAMPING_MAX;
+        sParams.iPreDelayMs   = iReverbPreDelayMs;
+        sParams.bEarlyEnabled = bReverbEarlyEnabled;
+        sParams.bFreeze       = bReverbFreeze;
+
+        const float fRoomSize   = static_cast<float> ( iReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
+        sParams.fT60            = 0.3f + 4.2f * fRoomSize;
+        const float fLevelScale = static_cast<float> ( iReverbLevel ) / AUD_REVERB_MAX;
+        sParams.fWet *= fLevelScale;
+        sParams.fDry = 1.0f - sParams.fWet;
+        sParams.fEarlyLevel *= fLevelScale;
+
+        AudioReverb.Process ( vecsStereoSndCrd, bReverbOnLeftChan, sParams );
     }
+
+    // apply filters and equalizer before dynamics
+    AudioFilter.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
 
     // apply pan (audio fader) and mix mono signals
     if ( !( ( iAudioInFader == AUD_FADER_IN_MIDDLE ) && ( eAudioChannelConf == CC_STEREO ) ) )
@@ -1531,7 +1609,6 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         if ( bReceiveDataOk )
         {
             pCurCodedData = &vecbyNetwData[0];
-
             // on any valid received packet, we clear the initialization phase flag
             bIsInitializationPhase = false;
         }
@@ -1598,7 +1675,53 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     // update socket buffer size
     Channel.UpdateSocketBufferSize();
 
+    // update compact output frequency meter data for the GUI
+    UpdateOutputBandLevels ( vecsStereoSndCrd );
+
     Q_UNUSED ( iUnused )
+}
+
+void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
+{
+    constexpr float fPi          = 3.14159265358979323846f;
+    constexpr int   kOutputBands = 16;
+    const float     afFreqs[kOutputBands] =
+        { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f, 1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
+
+    if ( iMonoBlockSizeSam <= 0 )
+    {
+        return;
+    }
+
+    float afNewLevels[kOutputBands] = { 0.0f };
+
+    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    {
+        const float omega = 2.0f * fPi * afFreqs[iBand] / SYSTEM_SAMPLE_RATE_HZ;
+        const float coeff = 2.0f * std::cos ( omega );
+
+        float q0 = 0.0f;
+        float q1 = 0.0f;
+        float q2 = 0.0f;
+
+        for ( int i = 0, j = 0; i < iMonoBlockSizeSam; ++i, j += 2 )
+        {
+            const float x = 0.5f * ( vecsStereoSndCrd[j] + vecsStereoSndCrd[j + 1] ) / 32768.0f;
+            q0            = coeff * q1 - q2 + x;
+            q2            = q1;
+            q1            = q0;
+        }
+
+        const float power  = q1 * q1 + q2 * q2 - coeff * q1 * q2;
+        const float mag    = std::sqrt ( qMax ( power, 0.0f ) ) / iMonoBlockSizeSam;
+        afNewLevels[iBand] = qBound ( 0.0f, mag * 16.0f, 1.0f );
+    }
+
+    QMutexLocker locker ( &MutexOutputBandLevels );
+    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    {
+        afOutputBandLevels[iBand] = 0.85f * afOutputBandLevels[iBand] + 0.15f * afNewLevels[iBand];
+    }
 }
 
 int CClient::EstimatedOverallDelay ( const int iPingTimeMs )
@@ -1695,7 +1818,7 @@ void CClient::FreeClientChannel ( const int iServerChannelID )
      */
 }
 
-void CClient::OnMidiCCReceived ( int ccNumber ) { emit MidiCCReceived ( ccNumber ); }
+void CClient::OnMidiCCReceived ( int channel, int ccNumber, int midiValue ) { emit MidiCCReceived ( channel, ccNumber, midiValue ); }
 
 // find, and optionally create, a client channel for the supplied server channel ID
 // returns a client channel ID or INVALID_INDEX

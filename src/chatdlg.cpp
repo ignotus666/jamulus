@@ -23,11 +23,18 @@
 \******************************************************************************/
 
 #include "chatdlg.h"
+#include <QTextDocument>
 
 /* Implementation *************************************************************/
 CChatDlg::CChatDlg ( QWidget* parent ) : CBaseDlg ( parent, Qt::Window ) // use Qt::Window to get min/max window buttons
 {
     setupUi ( this );
+    setSizeGripEnabled ( false );
+
+    // Make rich-text chat content inherit readable theme colors.
+    const QColor textColor = txvChatWindow->palette().color ( QPalette::Text );
+    const QColor linkColor = txvChatWindow->palette().color ( QPalette::Link );
+    txvChatWindow->document()->setDefaultStyleSheet ( QString ( "body { color: %1; } a { color: %2; }" ).arg ( textColor.name(), linkColor.name() ) );
 
     // Add help text to controls -----------------------------------------------
     // chat window
@@ -101,6 +108,8 @@ void CChatDlg::OnSendText()
         emit NewLocalInputText ( edtLocalInputText->text() );
         edtLocalInputText->clear();
     }
+    // Always return focus to the input field to prevent button focus outline
+    edtLocalInputText->setFocus();
 }
 
 void CChatDlg::OnClearChatHistory()
