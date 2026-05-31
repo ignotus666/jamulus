@@ -1,4 +1,4 @@
-VERSION = 3.12.0dev
+VERSION = 3.12.1dev
 
 # Using lrelease and embed_translations only works for Qt 5.12 or later.
 # See https://github.com/jamulussoftware/jamulus/pull/3288 for these changes.
@@ -85,7 +85,7 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\" \
     CUSTOM_MODES \
     _REENTRANT
 
-# some depreciated functions need to be kept for older versions to build
+# some deprecated functions need to be kept for older versions to build
 # TODO as soon as we drop support for the old Qt version, remove the following line
 DEFINES += QT_NO_DEPRECATED_WARNINGS
 

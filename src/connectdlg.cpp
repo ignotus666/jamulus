@@ -744,6 +744,12 @@ void CConnectDlg::UpdateListFilter()
                     bFilterFound = true;
                 }
 
+                // search version
+                if ( pCurListViewItem->text ( LVC_VERSION ).indexOf ( sFilterText, 0, Qt::CaseInsensitive ) >= 0 )
+                {
+                    bFilterFound = true;
+                }
+
                 // search children
                 for ( int iCCnt = 0; iCCnt < pCurListViewItem->childCount(); iCCnt++ )
                 {
@@ -1114,7 +1120,7 @@ void CConnectDlg::UpdateDirectoryComboBox()
     cbxDirectory->clear();
     cbxDirectory->addItem ( DirectoryTypeToString ( AT_DEFAULT ) );
     cbxDirectory->addItem ( DirectoryTypeToString ( AT_ANY_GENRE2 ) );
-    cbxDirectory->addItem ( DirectoryTypeToString ( AT_ANY_GENRE3 ) );
+    cbxDirectory->addItem ( DirectoryTypeToString ( AT_ANY_GENRE_ASIA ) );
     cbxDirectory->addItem ( DirectoryTypeToString ( AT_GENRE_ROCK ) );
     cbxDirectory->addItem ( DirectoryTypeToString ( AT_GENRE_JAZZ ) );
     cbxDirectory->addItem ( DirectoryTypeToString ( AT_GENRE_CLASSICAL_FOLK ) );

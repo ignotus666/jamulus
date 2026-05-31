@@ -87,6 +87,7 @@ int main ( int argc, char** argv )
     bool         bDisconnectAllClientsOnQuit = false;
     bool         bUseDoubleSystemFrameSize   = true; // default is 128 samples frame size
     bool         bUseMultithreading          = false;
+    bool         bDisableRaw                 = false;
     bool         bShowAnalyzerConsole        = false;
     bool         bMuteStream                 = false;
     bool         bMuteMeInPersonalMix        = false;
@@ -478,6 +479,19 @@ int main ( int argc, char** argv )
             continue;
         }
 
+        // Disable raw audio feature -------------------------------------------
+        if ( GetFlagArgument ( argv,
+                               i,
+                               "--noraw", // no short form
+                               "--noraw" ) )
+        {
+            bDisableRaw = true;
+            qInfo() << "- raw audio is disabled";
+            CommandLineOptions << "--noraw";
+            ServerOnlyOptions << "--noraw";
+            continue;
+        }
+
         // Client only:
 
         // Connect on startup --------------------------------------------------
@@ -866,10 +880,10 @@ int main ( int argc, char** argv )
     activity.BeginActivity();
 #endif
 
-#ifndef SERVER_ONLY
     // init resources
     Q_INIT_RESOURCE ( resources );
 
+#ifndef SERVER_ONLY
     //### TEST: BEGIN ###//
     // activate the following line to activate the test bench,
     // CTestbench Testbench ( "127.0.0.1", DEFAULT_PORT_NUMBER );
@@ -999,6 +1013,7 @@ int main ( int argc, char** argv )
                              strRecordingDirName,
                              bDisconnectAllClientsOnQuit,
                              bUseDoubleSystemFrameSize,
+                             bDisableRaw,
                              bUseMultithreading,
                              bDisableRecording,
                              bDelayPan,
@@ -1130,6 +1145,7 @@ QString UsageArguments ( char** argv )
            "  -P, --delaypan          start with delay panning enabled\n"
            "  -R, --recording         set server recording directory; server will record when a session is active by default\n"
            "      --norecord          set server not to record by default when recording is configured\n"
+           "      --noraw             disable raw audio\n"
            "  -s, --server            start Server\n"
            "      --serverbindip      IP address the Server will bind to (rather than all)\n"
            "  -T, --multithreading    use multithreading to make better use of\n"

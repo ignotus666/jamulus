@@ -1203,7 +1203,7 @@ void CAudioMixerBoard::SetDisplayPans ( const bool eNDP )
 
     for ( size_t i = 0; i < MAX_NUM_CHANNELS; i++ )
     {
-        vecpChanFader[i]->SetDisplayPans ( eNDP );
+        vecpChanFader[i]->SetDisplayPans ( eNDP && bIsPanSupported );
     }
 }
 

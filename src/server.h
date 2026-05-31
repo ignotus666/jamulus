@@ -250,6 +250,9 @@ protected:
     CConvBuf<int16_t>  DoubleFrameSizeConvBufIn[MAX_NUM_CHANNELS];
     CConvBuf<int16_t>  DoubleFrameSizeConvBufOut[MAX_NUM_CHANNELS];
 
+    // needed for disabling raw audio transmission
+    bool bDisableRaw;
+
     CVector<QString> vstrChatColors;
     CVector<int>     vecChanIDsCurConChan;
 
