@@ -280,8 +280,8 @@ const std::unordered_map<EDirectoryType, std::string>
     CServerRpc::sumDirectoryTypeToString = {
         { EDirectoryType::AT_NONE, "none" },
         { EDirectoryType::AT_DEFAULT, "any_genre_1" },
+        { EDirectoryType::AT_ANY_GENRE2, "any_genre_2" },
         { EDirectoryType::AT_ANY_GENRE_ASIA, "any_genre_asia" },
-        { EDirectoryType::AT_ANY_GENRE3, "any_genre_3" },
         { EDirectoryType::AT_GENRE_ROCK, "genre_rock" },
         { EDirectoryType::AT_GENRE_JAZZ, "genre_jazz" },
         { EDirectoryType::AT_GENRE_CLASSICAL_FOLK, "genre_classical_folk" },

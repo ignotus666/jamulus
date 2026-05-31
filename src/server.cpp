@@ -1145,7 +1145,7 @@ void CServer::MixEncodeTransmitData ( const int iChanCnt, const int iNumClients 
     }
 
     int                iClientFrameSizeSamples = 0; // initialize to avoid a compiler warning
-    OpusCustomEncoder* CurOpusEncoder         = nullptr;
+    OpusCustomEncoder* CurOpusEncoder          = nullptr;
 
     // get current number of CELT coded bytes
     const int iCeltNumCodedBytes = vecChannels[iCurChanID].GetCeltNumCodedBytes();

@@ -100,6 +100,7 @@ public:
               const QString&     strRecordingDirName,
               const bool         bNDisconnectAllClientsOnQuit,
               const bool         bNUseDoubleSystemFrameSize,
+              const bool         bNDisableRaw,
               const bool         bNUseMultithreading,
               const bool         bDisableRecording,
               const bool         bNDelayPan,

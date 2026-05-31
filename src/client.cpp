@@ -425,32 +425,6 @@ void CClient::OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo )
     emit ConClientListMesReceived ( vecChanInfo );
 }
 
-void CClient::OnVersionAndOSReceived ( COSUtil::EOpSystemType eOSType, QString strVersion )
-{
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
-    const bool bWasRunning = Sound.IsRunning();
-    if ( bWasRunning )
-    {
-        Sound.Stop();
-    }
-    if ( QVersionNumber::compare ( QVersionNumber::fromString ( strVersion ), QVersionNumber ( 3, 11, 1 ) ) == 0 )
-    {
-        bRawAudioIsSupported = true;
-        Init();
-    }
-    else
-    {
-        bRawAudioIsSupported = false;
-        Init();
-    }
-    if ( bWasRunning )
-    {
-        Sound.Start();
-    }
-#endif
-    emit VersionAndOSReceived ( eOSType, strVersion );
-}
-
 void CClient::CreateServerJitterBufferMessage()
 {
     // per definition in the client: if auto jitter buffer is enabled, both,
