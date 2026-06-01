@@ -391,7 +391,6 @@ FORMS_GUI = src/aboutdlgbase.ui \
 HEADERS += src/plugins/audioreverb.h \
     src/plugins/audioequalizer.h \
     src/plugins/audiocompressor.h \
-    src/plugins/audiofilter.h \
     src/buffer.h \
     src/channel.h \
     src/global.h \
@@ -506,7 +505,6 @@ HEADERS_OPUS_X86 = libs/opus/celt/x86/celt_lpc_sse.h \
 SOURCES += src/plugins/audioreverb.cpp \
     src/plugins/audioequalizer.cpp \
     src/plugins/audiocompressor.cpp \
-    src/plugins/audiofilter.cpp \
     src/buffer.cpp \
     src/channel.cpp \
     src/main.cpp \

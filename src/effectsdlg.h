@@ -44,6 +44,129 @@
 #include "ui_effectsdlgbase.h"
 #include "util.h"
 
+#include <QWidget>
+#include <QPainter>
+#include <QLinearGradient>
+#include <algorithm>
+
+class CGRMeter : public QWidget
+{
+    Q_OBJECT
+public:
+    CGRMeter ( QWidget* parent = nullptr ) :
+        QWidget ( parent ),
+        fGainReductionDb ( 0.0f ),
+        fVisualGRDb ( 0.0f ),
+        bDarkTheme ( true )
+    {
+        setFixedWidth ( 40 );
+        setMinimumHeight ( 120 );
+    }
+
+    void SetGainReductionDb ( const float fGRDb )
+    {
+        const float fVal = std::min ( 0.0f, fGRDb );
+        if ( fVal < fGainReductionDb )
+        {
+            fGainReductionDb = fVal;
+        }
+        else
+        {
+            fGainReductionDb = 0.9f * fGainReductionDb + 0.1f * fVal;
+        }
+
+        if ( fGainReductionDb < fVisualGRDb )
+        {
+            fVisualGRDb = fGainReductionDb;
+        }
+        else
+        {
+            fVisualGRDb = 0.93f * fVisualGRDb + 0.07f * 0.0f;
+        }
+        update();
+    }
+
+    void SetDarkTheme ( const bool bEnable )
+    {
+        if ( bDarkTheme != bEnable )
+        {
+            bDarkTheme = bEnable;
+            update();
+        }
+    }
+
+protected:
+    void paintEvent ( QPaintEvent* event ) override
+    {
+        Q_UNUSED ( event );
+        QPainter painter ( this );
+        painter.setRenderHint ( QPainter::Antialiasing, true );
+
+        const QRect r = rect();
+        if ( !r.isValid() )
+            return;
+
+        painter.fillRect ( r, bDarkTheme ? QColor ( 18, 24, 31 ) : QColor ( 240, 242, 245 ) );
+
+        const int iBarW = 8;
+        const int iBarL = 6;
+        const int iBarT = 20;
+        const int iBarH = r.height() - 30;
+        QRect barRect ( iBarL, iBarT, iBarW, iBarH );
+
+        painter.fillRect ( barRect, bDarkTheme ? QColor ( 28, 35, 45 ) : QColor ( 214, 220, 228 ) );
+
+        const float fMaxGRDb = -20.0f;
+        const float fNormGR = std::max ( 0.0f, std::min ( 1.0f, fVisualGRDb / fMaxGRDb ) );
+        const int iActiveH = static_cast<int> ( fNormGR * iBarH );
+
+        if ( iActiveH > 0 )
+        {
+            QRect activeRect ( iBarL, iBarT, iBarW, iActiveH );
+            QLinearGradient grad ( activeRect.left(), activeRect.top(), activeRect.left(), activeRect.bottom() );
+            grad.setColorAt ( 0.0, QColor ( 255, 140, 0 ) );
+            grad.setColorAt ( 1.0, QColor ( 255, 69, 0 ) );
+
+            painter.setPen ( Qt::NoPen );
+            painter.setBrush ( grad );
+            painter.drawRoundedRect ( activeRect, 1.5, 1.5 );
+        }
+
+        painter.setPen ( bDarkTheme ? QColor ( 170, 185, 200 ) : QColor ( 80, 90, 100 ) );
+        QFont font = painter.font();
+        font.setPointSize ( 7 );
+        font.setBold ( true );
+        painter.setFont ( font );
+        painter.drawText ( QRect ( 0, 4, r.width(), 12 ), Qt::AlignCenter, "GR" );
+
+        font.setBold ( false );
+        painter.setFont ( font );
+        painter.setPen ( bDarkTheme ? QColor ( 100, 115, 130 ) : QColor ( 140, 150, 160 ) );
+
+        const int iTickX = iBarL + iBarW + 4;
+        const int iLabelX = iTickX + 5;
+
+        const float adBValues[] = { 0.0f, -3.0f, -6.0f, -9.0f, -12.0f, -18.0f, -20.0f };
+        for ( float fDb : adBValues )
+        {
+            const float fNorm = fDb / fMaxGRDb;
+            const int iY = iBarT + static_cast<int> ( fNorm * iBarH );
+
+            painter.drawLine ( iTickX, iY, iTickX + 3, iY );
+
+            if ( fDb != -20.0f || r.height() > 140 )
+            {
+                painter.drawText ( iLabelX, iY + 3, QString::number ( static_cast<int> ( fDb ) ) );
+            }
+        }
+    }
+
+private:
+    float fGainReductionDb;
+    float fVisualGRDb;
+    bool  bDarkTheme;
+};
+
 class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
 {
     Q_OBJECT
@@ -52,11 +175,11 @@ public:
     CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent = nullptr );
 
     void UpdateReverbControls();
-    void UpdateFilterControls();
     void UpdateCompressorControls();
     void UpdateEQControls();
     void UpdateEQReadouts();
     void UpdateOutputBandLevels ( const CVector<float>& vecOutLevels );
+    void UpdateCompressorGainReduction ( const float fGRDb );
     void OnUIThemeChanged();
 
 protected:
@@ -77,11 +200,6 @@ signals:
     void ReverbRightSelected();
     void ReverbEarlyEnabledChanged ( bool enabled );
     void ReverbFreezeChanged ( bool enabled );
-    void FilterBypassChanged ( bool bypassed );
-    void HighPassEnabledChanged ( bool enabled );
-    void LowPassEnabledChanged ( bool enabled );
-    void HighPassCutoffChanged ( int value );
-    void LowPassCutoffChanged ( int value );
     void CompressorBypassChanged ( bool bypassed );
     void CompressorThresholdChanged ( int value );
     void CompressorRatioChanged ( int value );
@@ -97,6 +215,7 @@ private:
     CClient*         pClient;
     CClientSettings* pSettings;
     int              iSelectedBand = 0;
+    CGRMeter*        pGRMeter = nullptr;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
@@ -114,7 +233,6 @@ private:
 
 private slots:
     void OnResetReverbClicked();
-    void OnResetFilterClicked();
     void OnResetCompressorClicked();
     void OnSaveEffectsPresetClicked();
     void OnSaveAsEffectsPresetClicked();

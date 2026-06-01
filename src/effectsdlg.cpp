@@ -38,6 +38,9 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 {
     setupUi ( this );
 
+    pGRMeter = new CGRMeter ( this );
+    gridLayoutCompressorRows->addWidget ( pGRMeter, 0, 3, 5, 1 );
+
     // Save tab index on change
     connect ( pTabs, &QTabWidget::currentChanged, this, [this] ( int idx ) { pSettings->iEffectsTab = idx; } );
 
@@ -78,16 +81,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pSldReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
     pSldReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
-    pLblHighPassValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    pLblLowPassValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    pLblHighPassValue->setMinimumWidth ( 36 );
-    pLblLowPassValue->setMinimumWidth ( 36 );
-    pSldHighPassCutoff->setRange ( 20, 1000 );
-    pSldHighPassCutoff->setTickInterval ( std::max ( 1, ( 1000 - 20 ) / 5 ) );
-    pSldHighPassCutoff->setTickPosition ( QSlider::TicksBothSides );
-    pSldLowPassCutoff->setRange ( 1000, 20000 );
-    pSldLowPassCutoff->setTickInterval ( std::max ( 1, ( 20000 - 1000 ) / 5 ) );
-    pSldLowPassCutoff->setTickPosition ( QSlider::TicksBothSides );
+
 
     pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblCompressorRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -188,27 +182,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     } );
     QObject::connect ( pChbReverbFreeze, &QCheckBox::toggled, this, &CEffectsDlg::ReverbFreezeChanged );
     QObject::connect ( pButReverbReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetReverbClicked );
-    QObject::connect ( pChbFilterBypass, &QCheckBox::toggled, this, [this] ( bool bypassed ) {
-        emit FilterBypassChanged ( bypassed );
-        UpdateFilterControls();
-    } );
-    QObject::connect ( pChbHighPass, &QCheckBox::toggled, this, [this] ( bool enabled ) {
-        pSldHighPassCutoff->setEnabled ( enabled );
-        emit HighPassEnabledChanged ( enabled );
-    } );
-    QObject::connect ( pChbLowPass, &QCheckBox::toggled, this, [this] ( bool enabled ) {
-        pSldLowPassCutoff->setEnabled ( enabled );
-        emit LowPassEnabledChanged ( enabled );
-    } );
-    QObject::connect ( pSldHighPassCutoff, &CCustomSlider::valueChanged, this, [this] ( int value ) {
-        pLblHighPassValue->setText ( QString::number ( value ) + tr ( " Hz" ) );
-        emit HighPassCutoffChanged ( value );
-    } );
-    QObject::connect ( pSldLowPassCutoff, &CCustomSlider::valueChanged, this, [this] ( int value ) {
-        pLblLowPassValue->setText ( QString::number ( value ) + tr ( " Hz" ) );
-        emit LowPassCutoffChanged ( value );
-    } );
-    QObject::connect ( pButFilterReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetFilterClicked );
+
     QObject::connect ( pChbCompressorBypass, &QCheckBox::toggled, this, &CEffectsDlg::CompressorBypassChanged );
     QObject::connect ( pChbCompressorLimiter, &QCheckBox::toggled, this, &CEffectsDlg::CompressorLimiterChanged );
     QObject::connect ( pSldCompressorThreshold, &CCustomSlider::valueChanged, this, [this] ( int value ) {
@@ -247,7 +221,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pButEQDeletePreset, &QPushButton::clicked, this, &CEffectsDlg::OnDeleteEQPresetClicked );
 
     UpdateReverbControls();
-    UpdateFilterControls();
     UpdateCompressorControls();
     UpdateEQReadouts();
     PopulateEffectsPresetCombo();
@@ -276,6 +249,14 @@ void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
     }
 }
 
+void CEffectsDlg::UpdateCompressorGainReduction ( const float fGRDb )
+{
+    if ( pGRMeter )
+    {
+        pGRMeter->SetGainReductionDb ( fGRDb );
+    }
+}
+
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
     if ( pClient )
@@ -291,7 +272,6 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     }
     PopulateEffectsPresetCombo();
     UpdateReverbControls();
-    UpdateFilterControls();
     UpdateCompressorControls();
     UpdateEQControls();
     UpdateEQPresetSelection();
@@ -321,8 +301,6 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         pSldReverbWet,
         pSldReverbEarly,
         pSldReverbWidth,
-        pSldHighPassCutoff,
-        pSldLowPassCutoff,
         pSldCompressorThreshold,
         pSldCompressorRatio,
         pSldCompressorAttack,
@@ -346,40 +324,14 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
     {
         pEQCurveWidget->SetDarkTheme ( bDarkTheme );
     }
+
+    if ( pGRMeter )
+    {
+        pGRMeter->SetDarkTheme ( bDarkTheme );
+    }
 }
 
-void CEffectsDlg::UpdateFilterControls()
-{
-    pChbFilterBypass->blockSignals ( true );
-    pChbFilterBypass->setChecked ( pClient->GetFilterBypass() );
-    pChbFilterBypass->blockSignals ( false );
 
-    pChbHighPass->blockSignals ( true );
-    pChbHighPass->setChecked ( pClient->GetHighPassEnabled() );
-    pChbHighPass->blockSignals ( false );
-
-    pChbLowPass->blockSignals ( true );
-    pChbLowPass->setChecked ( pClient->GetLowPassEnabled() );
-    pChbLowPass->blockSignals ( false );
-
-    pSldHighPassCutoff->blockSignals ( true );
-    pSldHighPassCutoff->setValue ( pClient->GetHighPassCutoffHz() );
-    pSldHighPassCutoff->blockSignals ( false );
-
-    pSldLowPassCutoff->blockSignals ( true );
-    pSldLowPassCutoff->setValue ( pClient->GetLowPassCutoffHz() );
-    pSldLowPassCutoff->blockSignals ( false );
-
-    const bool bBypass = pClient->GetFilterBypass();
-    (void) bBypass;
-    pChbHighPass->setEnabled ( true );
-    pChbLowPass->setEnabled ( true );
-    pSldHighPassCutoff->setEnabled ( pClient->GetHighPassEnabled() );
-    pSldLowPassCutoff->setEnabled ( pClient->GetLowPassEnabled() );
-
-    pLblHighPassValue->setText ( QString::number ( pSldHighPassCutoff->value() ) + tr ( " Hz" ) );
-    pLblLowPassValue->setText ( QString::number ( pSldLowPassCutoff->value() ) + tr ( " Hz" ) );
-}
 
 void CEffectsDlg::UpdateCompressorControls()
 {
@@ -591,12 +543,6 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
     pClient->SetCompressorMakeupDb ( static_cast<float> ( pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot] ) );
     pClient->SetCompressorLimiterEnabled ( pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] );
 
-    pClient->SetFilterBypass ( pSettings->bEffectsPresetFilterBypass[iPresetSlot] );
-    pClient->SetHighPassEnabled ( pSettings->bEffectsPresetHighPassEnabled[iPresetSlot] );
-    pClient->SetLowPassEnabled ( pSettings->bEffectsPresetLowPassEnabled[iPresetSlot] );
-    pClient->SetHighPassCutoffHz ( pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] );
-    pClient->SetLowPassCutoffHz ( pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot] );
-
     pClient->SetEQBypass ( pSettings->bEffectsPresetEQBypass[iPresetSlot] );
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
@@ -610,7 +556,6 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
     }
 
     UpdateReverbControls();
-    UpdateFilterControls();
     UpdateCompressorControls();
     UpdateEQControls();
     UpdateEQPresetSelection();
@@ -691,12 +636,6 @@ void CEffectsDlg::OnSaveEffectsPresetClicked()
     pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot]       = static_cast<int> ( pClient->GetCompressorMakeupDb() );
     pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = pClient->GetCompressorLimiterEnabled();
 
-    pSettings->bEffectsPresetFilterBypass[iPresetSlot]     = pClient->GetFilterBypass();
-    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot]  = pClient->GetHighPassEnabled();
-    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot]   = pClient->GetLowPassEnabled();
-    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
-    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot]  = pClient->GetLowPassCutoffHz();
-
     PopulateEffectsPresetCombo();
     const int iUpdatedIndex = pCbxEffectsPresets->findText ( strName );
     if ( iUpdatedIndex >= 0 )
@@ -720,19 +659,6 @@ void CEffectsDlg::OnResetReverbClicked()
     pClient->SetReverbBypass ( true );
 
     UpdateReverbControls();
-    // Remove focus from the button to prevent blue outline
-    pTabs->setFocus();
-}
-
-void CEffectsDlg::OnResetFilterClicked()
-{
-    pClient->SetFilterBypass ( true );
-    pClient->SetHighPassEnabled ( false );
-    pClient->SetLowPassEnabled ( false );
-    pClient->SetHighPassCutoffHz ( 80 );
-    pClient->SetLowPassCutoffHz ( 12000 );
-
-    UpdateFilterControls();
     // Remove focus from the button to prevent blue outline
     pTabs->setFocus();
 }
@@ -807,12 +733,6 @@ void CEffectsDlg::OnSaveAsEffectsPresetClicked()
     pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot]       = static_cast<int> ( pClient->GetCompressorMakeupDb() );
     pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = pClient->GetCompressorLimiterEnabled();
 
-    pSettings->bEffectsPresetFilterBypass[iPresetSlot]     = pClient->GetFilterBypass();
-    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot]  = pClient->GetHighPassEnabled();
-    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot]   = pClient->GetLowPassEnabled();
-    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = pClient->GetHighPassCutoffHz();
-    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot]  = pClient->GetLowPassCutoffHz();
-
     PopulateEffectsPresetCombo();
     const int iSavedIndex = pCbxEffectsPresets->findText ( strName );
     if ( iSavedIndex >= 0 )
@@ -861,11 +781,6 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
     pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot]       = 3;
     pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = true;
 
-    pSettings->bEffectsPresetFilterBypass[iPresetSlot]     = true;
-    pSettings->bEffectsPresetHighPassEnabled[iPresetSlot]  = false;
-    pSettings->bEffectsPresetLowPassEnabled[iPresetSlot]   = false;
-    pSettings->iEffectsPresetHighPassCutoffHz[iPresetSlot] = 80;
-    pSettings->iEffectsPresetLowPassCutoffHz[iPresetSlot]  = 12000;
 
     PopulateEffectsPresetCombo();
 }

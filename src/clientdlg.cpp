@@ -605,16 +605,6 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorLimiterChanged, this, &CClientDlg::OnCompressorLimiterChanged );
 
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::FilterBypassChanged, this, &CClientDlg::OnFilterBypassChanged );
-
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassEnabledChanged, this, &CClientDlg::OnHighPassEnabledChanged );
-
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassEnabledChanged, this, &CClientDlg::OnLowPassEnabledChanged );
-
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::HighPassCutoffChanged, this, &CClientDlg::OnHighPassCutoffChanged );
-
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::LowPassCutoffChanged, this, &CClientDlg::OnLowPassCutoffChanged );
-
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBandGainChanged, this, [this] ( int iBandIndex, int iGainDb ) {
@@ -1242,6 +1232,7 @@ void CClientDlg::OnTimerSigMet()
         CVector<float> vecOutLevels;
         pClient->GetOutputBandLevels ( vecOutLevels );
         EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
+        EffectsDlg.UpdateCompressorGainReduction ( pClient->GetCompressorGainReductionDb() );
     }
 
     if ( bDetectFeedback &&
@@ -1617,28 +1608,6 @@ void CClientDlg::OnCompressorReleaseChanged ( int value ) { pClient->SetCompress
 void CClientDlg::OnCompressorMakeupChanged ( int value ) { pClient->SetCompressorMakeupDb ( static_cast<float> ( value ) ); }
 
 void CClientDlg::OnCompressorLimiterChanged ( bool enabled ) { pClient->SetCompressorLimiterEnabled ( enabled ); }
-
-void CClientDlg::OnFilterBypassChanged ( bool bypassed )
-{
-    pClient->SetFilterBypass ( bypassed );
-    EffectsDlg.UpdateFilterControls();
-}
-
-void CClientDlg::OnHighPassEnabledChanged ( bool enabled )
-{
-    pClient->SetHighPassEnabled ( enabled );
-    EffectsDlg.UpdateFilterControls();
-}
-
-void CClientDlg::OnLowPassEnabledChanged ( bool enabled )
-{
-    pClient->SetLowPassEnabled ( enabled );
-    EffectsDlg.UpdateFilterControls();
-}
-
-void CClientDlg::OnHighPassCutoffChanged ( int value ) { pClient->SetHighPassCutoffHz ( value ); }
-
-void CClientDlg::OnLowPassCutoffChanged ( int value ) { pClient->SetLowPassCutoffHz ( value ); }
 
 void CClientDlg::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {

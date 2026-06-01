@@ -16,8 +16,14 @@ CAudioCompressor::CAudioCompressor() :
     fMakeupDb ( 3.0f ),
     fEnvelope ( 0.0f ),
     fKneeDb ( 6.0f ),
-    fLimiterCeilDb ( -1.0f )
+    fLimiterCeilDb ( -1.0f ),
+    fGainReductionDb ( 0.0f )
 {}
+
+float CAudioCompressor::GetGainReductionDb()
+{
+    return fGainReductionDb.exchange ( 0.0f );
+}
 
 void CAudioCompressor::Init ( const int iNSampleRateHz )
 {
@@ -71,6 +77,8 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
     const float fMakeupLin      = DbToLinear ( fMakeupDb );
     const float fLimiterCeilLin = DbToLinear ( fLimiterCeilDb );
 
+    float fMinGRDb = 0.0f;
+
     for ( int iSample = 0; iSample < iStereoBlockSizeSam; iSample += 2 )
     {
         const float fL   = vecsStereoInOut[iSample];
@@ -87,7 +95,13 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
         }
 
         const float fInputDb = LinearToDb ( fEnvelope / 32768.0f );
-        const float fGainDb  = ComputeGainDb ( fInputDb ) + fMakeupDb;
+        const float fGRDb    = ComputeGainDb ( fInputDb );
+        if ( fGRDb < fMinGRDb )
+        {
+            fMinGRDb = fGRDb;
+        }
+
+        const float fGainDb  = fGRDb + fMakeupDb;
         float       fGainLin = DbToLinear ( fGainDb );
 
         float fOutL = fL * fGainLin;
@@ -101,5 +115,12 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
 
         vecsStereoInOut[iSample]     = Float2Short ( fOutL );
         vecsStereoInOut[iSample + 1] = Float2Short ( fOutR );
+    }
+
+    // Accumulate the peak gain reduction (most negative value) until the GUI reads it
+    float fCurrentGR = fGainReductionDb.load();
+    if ( fMinGRDb < fCurrentGR )
+    {
+        fGainReductionDb.store ( fMinGRDb );
     }
 }

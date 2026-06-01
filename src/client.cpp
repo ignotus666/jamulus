@@ -27,6 +27,11 @@
 #include "util.h"
 #include <cmath>
 
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#include <xmmintrin.h>
+#include <pmmintrin.h>
+#endif
+
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
                    const quint16  iQosNumber,
@@ -78,9 +83,9 @@ CClient::CClient ( const quint16  iPortNumber,
     bEnableAudioAlerts ( false ),
     bEnableOPUS64 ( false ),
     bJitterBufferOK ( true ),
-    bOutputBandLevelsEnabled ( false ),
     bEnableIPv6 ( bNEnableIPv6 ),
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
+    bOutputBandLevelsEnabled ( false ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
     bRawAudioIsSupported ( false )
 {
@@ -1360,7 +1365,6 @@ void CClient::Init()
 
     // init reverberation
     AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
-    AudioFilter.Init ( SYSTEM_SAMPLE_RATE_HZ );
     AudioEqualizer.Init ( SYSTEM_SAMPLE_RATE_HZ );
     AudioCompressor.Init ( SYSTEM_SAMPLE_RATE_HZ );
 
@@ -1388,6 +1392,15 @@ void CClient::Init()
 
 void CClient::AudioCallback ( CVector<int16_t>& psData, void* arg )
 {
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+    // Enable Flush-to-Zero (bit 15) and Denormals-are-Zero (bit 6) in the MXCSR register.
+    // This prevents denormal floating-point values in feedback loops (reverb, EQ filters, compressor)
+    // from dropping into CPU microcode handling, which otherwise spikes CPU usage and causes audio glitches over time.
+    unsigned int mxcsr = _mm_getcsr();
+    mxcsr |= 0x8040; // 0x8000 (FTZ) | 0x0040 (DAZ)
+    _mm_setcsr ( mxcsr );
+#endif
+
     // get the pointer to the object
     CClient* pMyClientObj = static_cast<CClient*> ( arg );
 
@@ -1479,8 +1492,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         AudioReverb.Process ( vecsStereoSndCrd, bReverbOnLeftChan, sParams );
     }
 
-    // apply filters and equalizer before dynamics
-    AudioFilter.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+    // apply equalizer before dynamics
     AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
     AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
 

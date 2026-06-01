@@ -42,7 +42,6 @@
 #include "plugins/audioreverb.h"
 #include "plugins/audioequalizer.h"
 #include "plugins/audiocompressor.h"
-#include "plugins/audiofilter.h"
 #include "buffer.h"
 #include "signalhandler.h"
 
@@ -249,17 +248,9 @@ public:
     float GetCompressorMakeupDb() const { return AudioCompressor.GetMakeupDb(); }
     void  SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
     bool  GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
+    float GetCompressorGainReductionDb() { return AudioCompressor.GetGainReductionDb(); }
 
-    void SetFilterBypass ( const bool bNBypass ) { AudioFilter.SetBypass ( bNBypass ); }
-    bool GetFilterBypass() const { return AudioFilter.GetBypass(); }
-    void SetHighPassEnabled ( const bool bEnabled ) { AudioFilter.SetHighPassEnabled ( bEnabled ); }
-    bool GetHighPassEnabled() const { return AudioFilter.GetHighPassEnabled(); }
-    void SetLowPassEnabled ( const bool bEnabled ) { AudioFilter.SetLowPassEnabled ( bEnabled ); }
-    bool GetLowPassEnabled() const { return AudioFilter.GetLowPassEnabled(); }
-    void SetHighPassCutoffHz ( const int iHz ) { AudioFilter.SetHighPassCutoffHz ( iHz ); }
-    void SetLowPassCutoffHz ( const int iHz ) { AudioFilter.SetLowPassCutoffHz ( iHz ); }
-    int  GetHighPassCutoffHz() const { return AudioFilter.GetHighPassCutoffHz(); }
-    int  GetLowPassCutoffHz() const { return AudioFilter.GetLowPassCutoffHz(); }
+
 
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }
@@ -478,7 +469,6 @@ protected:
     CAudioReverb     AudioReverb;
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
-    CAudioFilter     AudioFilter;
     int              iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;

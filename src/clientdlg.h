@@ -209,11 +209,7 @@ public slots:
     void OnCompressorMakeupChanged ( int value );
     void OnCompressorLimiterChanged ( bool enabled );
 
-    void OnFilterBypassChanged ( bool bypassed );
-    void OnHighPassEnabledChanged ( bool enabled );
-    void OnLowPassEnabledChanged ( bool enabled );
-    void OnHighPassCutoffChanged ( int value );
-    void OnLowPassCutoffChanged ( int value );
+
 
     void OnReverbSelLClicked() { pClient->SetReverbOnLeftChan ( true ); }
 
