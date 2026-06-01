@@ -34,6 +34,7 @@
 #include <QTabWidget>
 #include <QPointer>
 #include <QShowEvent>
+#include <QHideEvent>
 #include <QResizeEvent>
 #include <QEvent>
 #include <QVBoxLayout>
@@ -60,6 +61,7 @@ public:
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
+    virtual void hideEvent ( QHideEvent* Event ) override;
     virtual bool eventFilter ( QObject* pObj, QEvent* pEvent ) override;
 
 signals:

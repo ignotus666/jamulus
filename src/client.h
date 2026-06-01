@@ -29,6 +29,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QMutex>
+#include <atomic>
 #ifdef USE_OPUS_SHARED_LIB
 #    include "opus/opus_custom.h"
 #else
@@ -339,6 +340,9 @@ public:
 
     void SetMuteOutStream ( const bool bDoMute ) { bMuteOutStream = bDoMute; }
 
+    void SetOutputBandLevelsEnabled ( const bool bEnabled ) { bOutputBandLevelsEnabled = bEnabled; }
+    bool GetOutputBandLevelsEnabled() const { return bOutputBandLevelsEnabled; }
+
     void SetRemoteChanGain ( const int iId, const float fGain, const bool bIsMyOwnFader );
     void SetRemoteChanPan ( const int iId, const float fPan );
     void OnTimerRemoteChanGainOrPan();
@@ -506,6 +510,7 @@ protected:
     QMutex MutexDriverReinit;
     QMutex MutexOutputBandLevels;
     float  afOutputBandLevels[8];
+    std::atomic<bool> bOutputBandLevelsEnabled;
 
     // server settings
     int  iServerSockBufNumFrames;

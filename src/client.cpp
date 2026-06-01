@@ -78,6 +78,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bEnableAudioAlerts ( false ),
     bEnableOPUS64 ( false ),
     bJitterBufferOK ( true ),
+    bOutputBandLevelsEnabled ( false ),
     bEnableIPv6 ( bNEnableIPv6 ),
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
@@ -1657,6 +1658,11 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 
 void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
 {
+    if ( !bOutputBandLevelsEnabled )
+    {
+        return;
+    }
+
     constexpr float fPi                   = 3.14159265358979323846f;
     constexpr int   kOutputBands          = 8;
 
