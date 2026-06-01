@@ -35,9 +35,9 @@
 #include <QPointer>
 #include <QShowEvent>
 #include <QResizeEvent>
+#include <QEvent>
 #include <QVBoxLayout>
 #include "client.h"
-#include "outputbandmeter.h"
 #include "plugins/audioequalizer.h"
 #include "settings.h"
 #include "ui_effectsdlgbase.h"
@@ -60,7 +60,7 @@ public:
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
-    virtual void resizeEvent ( QResizeEvent* Event ) override;
+    virtual bool eventFilter ( QObject* pObj, QEvent* pEvent ) override;
 
 signals:
     void ReverbValueChanged ( int value );
@@ -92,12 +92,9 @@ signals:
     void EQResetRequested();
 
 private:
-    CClient*                   pClient;
-    CClientSettings*           pSettings;
-    QPointer<COutputBandMeter> pOutputBandMeterSafe;
-    QPointer<CCustomSlider>    pSldEQBands[CAudioEqualizer::NUM_BANDS]      = {};
-    QPointer<QLabel>           pLblEQBandValues[CAudioEqualizer::NUM_BANDS] = {};
-    bool                       bEQBandWidgetsReady                          = false;
+    CClient*         pClient;
+    CClientSettings* pSettings;
+    int              iSelectedBand = 0;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
@@ -108,9 +105,10 @@ private:
     void ApplyPresetFromComboIndex ( const int iPresetIndex );
     void UpdateEQPresetSelection();
     void ApplyThemeToCustomWidgets();
-    void UpdateOutputBandAlignment();
+
     int  FindPresetSlotByName ( const QString& strName ) const;
     int  FindFreePresetSlot() const;
+    void UpdateEQDynControls ( const int iBand );
 
 private slots:
     void OnResetReverbClicked();
@@ -123,4 +121,16 @@ private slots:
     void OnSaveEQPresetClicked();
     void OnSaveAsEQPresetClicked();
     void OnDeleteEQPresetClicked();
+
+    // EQ dynamics and curve interaction slots
+    void OnEQBandGainChanged ( int iBand, int iGainDb );
+    void OnEQBandFrequencyChanged ( int iBand, float fFreqHz );
+    void OnEQBandSelected ( int iBand );
+    void OnEQBandGainReset ( int iBand );
+    void OnEQDynEnabledChanged ( bool bEnabled );
+    void OnEQDynThresholdChanged ( int iValue );
+    void OnEQDynRatioChanged ( int iValue );
+    void OnEQDynAttackChanged ( int iValue );
+    void OnEQDynReleaseChanged ( int iValue );
+    void OnEQDynFreqEditFinished();
 };
