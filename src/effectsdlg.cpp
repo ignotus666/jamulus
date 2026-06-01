@@ -23,9 +23,11 @@
 \******************************************************************************/
 
 #include "effectsdlg.h"
+#include "eqcurvewidget.h"
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
+#include <QIntValidator>
 #include <QLineEdit>
 #include <QMessageBox>
 
@@ -35,7 +37,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pSettings ( pNSetP )
 {
     setupUi ( this );
-    pOutputBandMeterSafe = pOutputBandMeter;
 
     // Save tab index on change
     connect ( pTabs, &QTabWidget::currentChanged, this, [this] ( int idx ) { pSettings->iEffectsTab = idx; } );
@@ -114,91 +115,42 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pSldCompressorMakeup->setTickInterval ( std::max ( 1, 24 / 5 ) );
     pSldCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
 
-    pOutputBandMeter->setObjectName ( "pOutputBandMeter" );
-    pOutputBandMeter->setMinimumHeight ( 72 );
-    pOutputBandMeter->setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
+    pEQCurveWidget->SetSampleRate ( SYSTEM_SAMPLE_RATE_HZ );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainChanged, this, &CEffectsDlg::OnEQBandGainChanged );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandFrequencyChanged, this, &CEffectsDlg::OnEQBandFrequencyChanged );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandSelected, this, &CEffectsDlg::OnEQBandSelected );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainReset, this, &CEffectsDlg::OnEQBandGainReset );
 
-    QLabel* apFreqLabels[CAudioEqualizer::NUM_BANDS] = { pLblEQBandFreq0,
-                                                         pLblEQBandFreq1,
-                                                         pLblEQBandFreq2,
-                                                         pLblEQBandFreq3,
-                                                         pLblEQBandFreq4,
-                                                         pLblEQBandFreq5,
-                                                         pLblEQBandFreq6,
-                                                         pLblEQBandFreq7,
-                                                         pLblEQBandFreq8,
-                                                         pLblEQBandFreq9,
-                                                         pLblEQBandFreq10,
-                                                         pLblEQBandFreq11,
-                                                         pLblEQBandFreq12,
-                                                         pLblEQBandFreq13,
-                                                         pLblEQBandFreq14,
-                                                         pLblEQBandFreq15 };
+    pSldEQDynThreshold->setRange ( -60, 0 );
+    pSldEQDynThreshold->setTickInterval ( 12 );
+    pSldEQDynThreshold->setTickPosition ( QSlider::TicksBothSides );
 
-    CCustomSlider* apBandSliders[CAudioEqualizer::NUM_BANDS] = { pSldEQBand0,
-                                                                 pSldEQBand1,
-                                                                 pSldEQBand2,
-                                                                 pSldEQBand3,
-                                                                 pSldEQBand4,
-                                                                 pSldEQBand5,
-                                                                 pSldEQBand6,
-                                                                 pSldEQBand7,
-                                                                 pSldEQBand8,
-                                                                 pSldEQBand9,
-                                                                 pSldEQBand10,
-                                                                 pSldEQBand11,
-                                                                 pSldEQBand12,
-                                                                 pSldEQBand13,
-                                                                 pSldEQBand14,
-                                                                 pSldEQBand15 };
+    pSldEQDynRatio->setRange ( 1, 20 );
+    pSldEQDynRatio->setTickInterval ( 4 );
+    pSldEQDynRatio->setTickPosition ( QSlider::TicksBothSides );
 
-    QLabel* apBandValues[CAudioEqualizer::NUM_BANDS] = { pLblEQBandValue0,
-                                                         pLblEQBandValue1,
-                                                         pLblEQBandValue2,
-                                                         pLblEQBandValue3,
-                                                         pLblEQBandValue4,
-                                                         pLblEQBandValue5,
-                                                         pLblEQBandValue6,
-                                                         pLblEQBandValue7,
-                                                         pLblEQBandValue8,
-                                                         pLblEQBandValue9,
-                                                         pLblEQBandValue10,
-                                                         pLblEQBandValue11,
-                                                         pLblEQBandValue12,
-                                                         pLblEQBandValue13,
-                                                         pLblEQBandValue14,
-                                                         pLblEQBandValue15 };
+    pSldEQDynAttack->setRange ( 1, 100 );
+    pSldEQDynAttack->setTickInterval ( 20 );
+    pSldEQDynAttack->setTickPosition ( QSlider::TicksBothSides );
 
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        pSldEQBands[iBand]      = apBandSliders[iBand];
-        pLblEQBandValues[iBand] = apBandValues[iBand];
+    pSldEQDynRelease->setRange ( 10, 500 );
+    pSldEQDynRelease->setTickInterval ( 100 );
+    pSldEQDynRelease->setTickPosition ( QSlider::TicksBothSides );
 
-        pSldEQBands[iBand]->setRange ( -12, 12 );
-        pSldEQBands[iBand]->setValue ( 0 );
-        pSldEQBands[iBand]->setTickInterval ( std::max ( 1, 24 / 5 ) );
-        pSldEQBands[iBand]->setTickPosition ( QSlider::TicksBothSides );
-        pSldEQBands[iBand]->setMinimumHeight ( 100 );
-        pSldEQBands[iBand]->setMinimumWidth ( 20 );
-        pSldEQBands[iBand]->setMaximumWidth ( 24 );
-        pSldEQBands[iBand]->setSizePolicy ( QSizePolicy::Fixed, QSizePolicy::Expanding );
+    QObject::connect ( pChbEQDynEnabled, &QCheckBox::toggled, this, &CEffectsDlg::OnEQDynEnabledChanged );
+    QObject::connect ( pSldEQDynThreshold, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynThresholdChanged );
+    QObject::connect ( pSldEQDynRatio, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynRatioChanged );
+    QObject::connect ( pSldEQDynAttack, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynAttackChanged );
+    QObject::connect ( pSldEQDynRelease, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynReleaseChanged );
 
-        apFreqLabels[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-        apFreqLabels[iBand]->setObjectName ( QString ( "eqBandFreq%1" ).arg ( iBand ) );
-        pLblEQBandValues[iBand]->setObjectName ( QString ( "eqBandValue%1" ).arg ( iBand ) );
-        apFreqLabels[iBand]->setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Preferred );
+    // Frequency input: starts read-only, click to edit, commit on Return or focus loss
+    pEdtEQDynFreq->setValidator ( new QIntValidator ( static_cast<int> ( CEQCurveWidget::kFreqMin ),
+                                                      static_cast<int> ( CEQCurveWidget::kFreqMax ),
+                                                      pEdtEQDynFreq ) );
+    pEdtEQDynFreq->installEventFilter ( this );
+    QObject::connect ( pEdtEQDynFreq, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQDynFreqEditFinished );
 
-        pLblEQBandValues[iBand]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-        pLblEQBandValues[iBand]->setMinimumWidth ( pSldEQBands[iBand]->minimumWidth() );
-        pLblEQBandValues[iBand]->setMaximumWidth ( pSldEQBands[iBand]->maximumWidth() );
-
-        QObject::connect ( pSldEQBands[iBand], &CCustomSlider::valueChanged, this, [this, iBand] ( int value ) {
-            pLblEQBandValues[iBand]->setText ( QString::number ( value ) );
-            emit EQBandGainChanged ( iBand, value );
-        } );
-    }
-
-    bEQBandWidgetsReady = true;
+    iSelectedBand = 0;
 
     setMinimumHeight ( 420 );
 
@@ -305,9 +257,22 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
 void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 {
-    if ( pOutputBandMeterSafe )
+    if ( pEQCurveWidget && pClient )
     {
-        pOutputBandMeterSafe->SetLevels ( vecOutLevels );
+        // 1. Pass Goertzel spectrum levels to in-graph background analyzer
+        QVector<float> vecLevels;
+        vecLevels.reserve ( vecOutLevels.Size() );
+        for ( int i = 0; i < vecOutLevels.Size(); ++i )
+        {
+            vecLevels.append ( vecOutLevels[i] );
+        }
+        pEQCurveWidget->SetSpectrumLevels ( vecLevels );
+
+        // 2. Pass real-time dynamic gain reductions to in-graph indicators
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            pEQCurveWidget->SetBandGainReduction ( iBand, pClient->GetEQBandGainReductionDb ( iBand ) );
+        }
     }
 }
 
@@ -350,6 +315,10 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         pSldCompressorAttack,
         pSldCompressorRelease,
         pSldCompressorMakeup,
+        pSldEQDynThreshold,
+        pSldEQDynRatio,
+        pSldEQDynAttack,
+        pSldEQDynRelease,
     };
 
     for ( CCustomSlider* pSlider : apThemeSliders )
@@ -360,47 +329,9 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         }
     }
 
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    if ( pEQCurveWidget )
     {
-        if ( pSldEQBands[iBand] )
-        {
-            pSldEQBands[iBand]->SetDarkTheme ( bDarkTheme );
-        }
-    }
-
-    if ( pOutputBandMeterSafe )
-    {
-        pOutputBandMeterSafe->SetDarkTheme ( bDarkTheme );
-    }
-}
-
-void CEffectsDlg::resizeEvent ( QResizeEvent* Event )
-{
-    CBaseDlg::resizeEvent ( Event );
-    UpdateOutputBandAlignment();
-}
-
-void CEffectsDlg::UpdateOutputBandAlignment()
-{
-    // Direct mapping: each meter bar is centered under its slider
-    if ( bEQBandWidgetsReady && pOutputBandMeterSafe )
-    {
-        QVector<int> bandCenters;
-        bandCenters.reserve ( CAudioEqualizer::NUM_BANDS );
-        for ( int i = 0; i < CAudioEqualizer::NUM_BANDS; ++i )
-        {
-            CCustomSlider* pSlider = pSldEQBands[i];
-            if ( !pSlider || !pSlider->isVisible() )
-            {
-                bandCenters.append ( -1 );
-                continue;
-            }
-            QPoint sliderCenter = pSlider->rect().center();
-            QPoint globalCenter = pSlider->mapToGlobal ( sliderCenter );
-            QPoint meterLocal   = pOutputBandMeterSafe->mapFromGlobal ( globalCenter );
-            bandCenters.append ( meterLocal.x() );
-        }
-        pOutputBandMeterSafe->SetBandCenters ( bandCenters );
+        pEQCurveWidget->SetDarkTheme ( bDarkTheme );
     }
 }
 
@@ -568,10 +499,7 @@ void CEffectsDlg::UpdateReverbControls()
 
 void CEffectsDlg::UpdateEQReadouts()
 {
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        pLblEQBandValues[iBand]->setText ( QString::number ( pSldEQBands[iBand]->value() ) );
-    }
+    // Obsolete with graphical EQ curve
 }
 
 void CEffectsDlg::UpdateEQControls()
@@ -580,14 +508,16 @@ void CEffectsDlg::UpdateEQControls()
     pChbEQBypass->setChecked ( pClient->GetEQBypass() );
     pChbEQBypass->blockSignals ( false );
 
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+    if ( pEQCurveWidget && pClient )
     {
-        pSldEQBands[iBand]->blockSignals ( true );
-        pSldEQBands[iBand]->setValue ( pClient->GetEQBandGainDb ( iBand ) );
-        pSldEQBands[iBand]->blockSignals ( false );
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            pEQCurveWidget->SetBandGain ( iBand, pClient->GetEQBandGainDb ( iBand ) );
+            pEQCurveWidget->SetBandFrequency ( iBand, pClient->GetEQBandFrequency ( iBand ) );
+        }
     }
 
-    UpdateEQReadouts();
+    UpdateEQDynControls ( iSelectedBand );
 }
 
 void CEffectsDlg::PopulateEffectsPresetCombo()
@@ -658,6 +588,12 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
         pClient->SetEQBandGainDb ( iBand, pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] );
+        pClient->SetEQBandFrequency ( iBand, pSettings->aiEffectsPresetEQBandFrequency[iPresetSlot][iBand] );
+        pClient->SetEQBandDynEnabled ( iBand, pSettings->abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand] );
+        pClient->SetEQBandDynThresholdDb ( iBand, pSettings->aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] );
+        pClient->SetEQBandDynRatio ( iBand, pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand] );
+        pClient->SetEQBandDynAttackMs ( iBand, pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand] );
+        pClient->SetEQBandDynReleaseMs ( iBand, pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand] );
     }
 
     UpdateReverbControls();
@@ -713,7 +649,13 @@ void CEffectsDlg::OnSaveEffectsPresetClicked()
     pSettings->bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEffectsPresetEQBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+        pSettings->abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+        pSettings->aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
     }
 
     pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = pClient->GetReverbLevel();
@@ -823,7 +765,13 @@ void CEffectsDlg::OnSaveAsEffectsPresetClicked()
     pSettings->bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEffectsPresetEQBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+        pSettings->abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+        pSettings->aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+        pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
     }
 
     pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = pClient->GetReverbLevel();
@@ -872,7 +820,12 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
     pSettings->bEffectsPresetEQBypass[iPresetSlot] = true;
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand] = 0;
+        pSettings->aiEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = 0;
+        pSettings->abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand]     = false;
+        pSettings->aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] = -20;
+        pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = 4;
+        pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = 5;
+        pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = 80;
     }
 
     pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = 0;
@@ -946,7 +899,7 @@ void CEffectsDlg::UpdateEQPresetSelection()
         {
             currentGains += ",";
         }
-        currentGains += QString::number ( pSldEQBands[iBand]->value() );
+        currentGains += QString::number ( pClient->GetEQBandGainDb ( iBand ) );
     }
 
     int matchedIndex = -1;
@@ -975,18 +928,24 @@ void CEffectsDlg::ApplyPresetFromComboIndex ( const int iPresetIndex )
         return;
     }
 
-    const QString     strGains = pCbxEQPresets->itemData ( iPresetIndex, Qt::UserRole ).toString();
-    const QStringList gains    = strGains.split ( "," );
-
-    if ( gains.size() != CAudioEqualizer::NUM_BANDS )
+    const int iPresetSlot = pCbxEQPresets->itemData ( iPresetIndex, Qt::UserRole + 1 ).toInt();
+    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EQ_USER_PRESETS )
     {
         return;
     }
 
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSldEQBands[iBand]->setValue ( gains[iBand].toInt() );
+        pClient->SetEQBandGainDb ( iBand, pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand] );
+        pClient->SetEQBandFrequency ( iBand, pSettings->aiEQPresetBandFrequency[iPresetSlot][iBand] );
+        pClient->SetEQBandDynEnabled ( iBand, pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand] );
+        pClient->SetEQBandDynThresholdDb ( iBand, pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] );
+        pClient->SetEQBandDynRatio ( iBand, pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand] );
+        pClient->SetEQBandDynAttackMs ( iBand, pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand] );
+        pClient->SetEQBandDynReleaseMs ( iBand, pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand] );
     }
+
+    UpdateEQControls();
 }
 
 int CEffectsDlg::FindPresetSlotByName ( const QString& strName ) const
@@ -1015,18 +974,6 @@ int CEffectsDlg::FindFreePresetSlot() const
     return INVALID_INDEX;
 }
 
-void CEffectsDlg::OnResetEQClicked()
-{
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        pSldEQBands[iBand]->setValue ( 0 );
-    }
-
-    emit EQResetRequested();
-    // Remove focus from the button to prevent blue outline
-    pTabs->setFocus();
-}
-
 void CEffectsDlg::OnSaveEQPresetClicked()
 {
     const int iComboIndex = pCbxEQPresets->currentIndex();
@@ -1052,7 +999,13 @@ void CEffectsDlg::OnSaveEQPresetClicked()
     pSettings->vstrEQPresetNames[iPresetSlot] = strName;
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand] = pSldEQBands[iBand]->value();
+        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEQPresetBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+        pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+        pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+        pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+        pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+        pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
     }
 
     PopulateEQPresetCombo();
@@ -1090,7 +1043,13 @@ void CEffectsDlg::OnSaveAsEQPresetClicked()
     pSettings->vstrEQPresetNames[iPresetSlot] = strName;
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand] = pSldEQBands[iBand]->value();
+        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+        pSettings->aiEQPresetBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+        pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+        pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+        pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+        pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+        pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
     }
 
     PopulateEQPresetCombo();
@@ -1112,8 +1071,247 @@ void CEffectsDlg::OnDeleteEQPresetClicked()
     pSettings->vstrEQPresetNames[iPresetSlot].clear();
     for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
     {
-        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand] = 0;
+        pSettings->aiEQPresetBandGainDb[iPresetSlot][iBand]         = 0;
+        pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand]     = false;
+        pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = -20;
+        pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand]       = 4;
+        pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = 5;
+        pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = 80;
     }
 
     PopulateEQPresetCombo();
+}
+
+void CEffectsDlg::OnEQBandGainChanged ( int iBand, int iGainDb )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandGainDb ( iBand, iGainDb );
+        UpdateEQPresetSelection();
+    }
+}
+
+void CEffectsDlg::OnEQBandFrequencyChanged ( int iBand, float fFreqHz )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandFrequency ( iBand, fFreqHz );
+        UpdateEQPresetSelection();
+        if ( iBand == iSelectedBand )
+        {
+            UpdateEQDynControls ( iBand );
+        }
+    }
+}
+
+void CEffectsDlg::OnEQBandSelected ( int iBand ) { UpdateEQDynControls ( iBand ); }
+
+void CEffectsDlg::OnEQBandGainReset ( int iBand )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandGainDb ( iBand, 0.0f );
+        UpdateEQPresetSelection();
+    }
+}
+
+void CEffectsDlg::OnEQDynEnabledChanged ( bool bEnabled )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandDynEnabled ( iSelectedBand, bEnabled );
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQDynThresholdChanged ( int iValue )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandDynThresholdDb ( iSelectedBand, static_cast<float> ( iValue ) );
+        pLblEQDynThresholdValue->setText ( QString ( "%1 dB" ).arg ( iValue ) );
+    }
+}
+
+void CEffectsDlg::OnEQDynRatioChanged ( int iValue )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandDynRatio ( iSelectedBand, static_cast<float> ( iValue ) );
+        pLblEQDynRatioValue->setText ( QString ( "%1:1" ).arg ( iValue ) );
+    }
+}
+
+void CEffectsDlg::OnEQDynAttackChanged ( int iValue )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandDynAttackMs ( iSelectedBand, static_cast<float> ( iValue ) );
+        pLblEQDynAttackValue->setText ( QString ( "%1 ms" ).arg ( iValue ) );
+    }
+}
+
+void CEffectsDlg::OnEQDynReleaseChanged ( int iValue )
+{
+    if ( pClient )
+    {
+        pClient->SetEQBandDynReleaseMs ( iSelectedBand, static_cast<float> ( iValue ) );
+        pLblEQDynReleaseValue->setText ( QString ( "%1 ms" ).arg ( iValue ) );
+    }
+}
+
+void CEffectsDlg::OnResetEQClicked()
+{
+    if ( pClient )
+    {
+        pClient->ResetEQ();
+    }
+    UpdateEQControls();
+    pTabs->setFocus();
+}
+
+void CEffectsDlg::UpdateEQDynControls ( const int iBand )
+{
+    if ( !pClient || iBand < 0 || iBand >= CAudioEqualizer::NUM_BANDS )
+    {
+        return;
+    }
+
+    iSelectedBand = iBand;
+
+    pChbEQDynEnabled->blockSignals ( true );
+    pSldEQDynThreshold->blockSignals ( true );
+    pSldEQDynRatio->blockSignals ( true );
+    pSldEQDynAttack->blockSignals ( true );
+    pSldEQDynRelease->blockSignals ( true );
+
+    const bool bEnabled = pClient->GetEQBandDynEnabled ( iBand );
+    pChbEQDynEnabled->setChecked ( bEnabled );
+
+    const float fFreq = pClient->GetEQBandFrequency ( iBand );
+    QString     strFreq;
+    if ( fFreq >= 1000.0f )
+    {
+        strFreq = QString ( "%1k Hz" ).arg ( fFreq / 1000.0f, 0, 'f', 1 );
+    }
+    else
+    {
+        strFreq = QString ( "%1 Hz" ).arg ( static_cast<int> ( fFreq ) );
+    }
+    pEdtEQDynFreq->blockSignals ( true );
+    pEdtEQDynFreq->setReadOnly ( true );
+    pEdtEQDynFreq->setFrame ( false );
+    pEdtEQDynFreq->setText ( strFreq );
+    pEdtEQDynFreq->blockSignals ( false );
+
+    const float fThreshold = pClient->GetEQBandDynThresholdDb ( iBand );
+    pSldEQDynThreshold->setValue ( static_cast<int> ( std::round ( fThreshold ) ) );
+    pLblEQDynThresholdValue->setText ( QString ( "%1 dB" ).arg ( static_cast<int> ( std::round ( fThreshold ) ) ) );
+
+    const float fRatio = pClient->GetEQBandDynRatio ( iBand );
+    pSldEQDynRatio->setValue ( static_cast<int> ( std::round ( fRatio ) ) );
+    pLblEQDynRatioValue->setText ( QString ( "%1:1" ).arg ( static_cast<int> ( std::round ( fRatio ) ) ) );
+
+    const float fAttack = pClient->GetEQBandDynAttackMs ( iBand );
+    pSldEQDynAttack->setValue ( static_cast<int> ( std::round ( fAttack ) ) );
+    pLblEQDynAttackValue->setText ( QString ( "%1 ms" ).arg ( static_cast<int> ( std::round ( fAttack ) ) ) );
+
+    const float fRelease = pClient->GetEQBandDynReleaseMs ( iBand );
+    pSldEQDynRelease->setValue ( static_cast<int> ( std::round ( fRelease ) ) );
+    pLblEQDynReleaseValue->setText ( QString ( "%1 ms" ).arg ( static_cast<int> ( std::round ( fRelease ) ) ) );
+
+    pChbEQDynEnabled->blockSignals ( false );
+    pSldEQDynThreshold->blockSignals ( false );
+    pSldEQDynRatio->blockSignals ( false );
+    pSldEQDynAttack->blockSignals ( false );
+    pSldEQDynRelease->blockSignals ( false );
+
+    pSldEQDynThreshold->setEnabled ( bEnabled );
+    pSldEQDynRatio->setEnabled ( bEnabled );
+    pSldEQDynAttack->setEnabled ( bEnabled );
+    pSldEQDynRelease->setEnabled ( bEnabled );
+    pLblEQDynThreshold->setEnabled ( bEnabled );
+    pLblEQDynThresholdValue->setEnabled ( bEnabled );
+    pLblEQDynRatio->setEnabled ( bEnabled );
+    pLblEQDynRatioValue->setEnabled ( bEnabled );
+    pLblEQDynAttack->setEnabled ( bEnabled );
+    pLblEQDynAttackValue->setEnabled ( bEnabled );
+    pLblEQDynRelease->setEnabled ( bEnabled );
+    pLblEQDynReleaseValue->setEnabled ( bEnabled );
+}
+
+bool CEffectsDlg::eventFilter ( QObject* pObj, QEvent* pEvent )
+{
+    if ( pObj == pEdtEQDynFreq )
+    {
+        if ( pEvent->type() == QEvent::MouseButtonPress || pEvent->type() == QEvent::MouseButtonDblClick )
+        {
+            if ( pEdtEQDynFreq->isReadOnly() )
+            {
+                // Enter edit mode: show raw Hz value so user can type precisely
+                const float fFreq = pClient ? pClient->GetEQBandFrequency ( iSelectedBand ) : 0.0f;
+                pEdtEQDynFreq->setReadOnly ( false );
+                pEdtEQDynFreq->setFrame ( true );
+                pEdtEQDynFreq->setText ( QString::number ( static_cast<int> ( fFreq ) ) );
+                pEdtEQDynFreq->selectAll();
+                pEdtEQDynFreq->setFocus();
+                return true;
+            }
+        }
+        else if ( pEvent->type() == QEvent::FocusOut )
+        {
+            if ( !pEdtEQDynFreq->isReadOnly() )
+            {
+                OnEQDynFreqEditFinished();
+                return true;
+            }
+        }
+    }
+
+    return CBaseDlg::eventFilter ( pObj, pEvent );
+}
+
+void CEffectsDlg::OnEQDynFreqEditFinished()
+{
+    if ( !pClient || iSelectedBand < 0 || iSelectedBand >= CAudioEqualizer::NUM_BANDS )
+    {
+        UpdateEQDynControls ( iSelectedBand );
+        return;
+    }
+
+    bool  bOk     = false;
+    float fFreqHz = pEdtEQDynFreq->text().toFloat ( &bOk );
+
+    if ( !bOk )
+    {
+        // Invalid input – revert display
+        UpdateEQDynControls ( iSelectedBand );
+        return;
+    }
+
+    // Clamp to valid range
+    fFreqHz = std::max ( CEQCurveWidget::kFreqMin, std::min ( CEQCurveWidget::kFreqMax, fFreqHz ) );
+
+    // Prevent band crossover: keep 10% margin from neighbours (same logic as mouse drag)
+    if ( iSelectedBand > 0 )
+    {
+        const float fMinFreq = pClient->GetEQBandFrequency ( iSelectedBand - 1 ) * 1.10f;
+        fFreqHz              = std::max ( fFreqHz, fMinFreq );
+    }
+
+    if ( iSelectedBand < CAudioEqualizer::NUM_BANDS - 1 )
+    {
+        const float fMaxFreq = pClient->GetEQBandFrequency ( iSelectedBand + 1 ) * 0.90f;
+        fFreqHz              = std::min ( fFreqHz, fMaxFreq );
+    }
+
+    pClient->SetEQBandFrequency ( iSelectedBand, fFreqHz );
+
+    if ( pEQCurveWidget )
+    {
+        pEQCurveWidget->SetBandFrequency ( iSelectedBand, fFreqHz );
+    }
+
+    UpdateEQDynControls ( iSelectedBand );
+    UpdateEQPresetSelection();
 }

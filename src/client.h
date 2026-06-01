@@ -216,9 +216,23 @@ public:
 
     void SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
     void SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
+    void SetEQBandFrequency ( const int iBandIndex, const float fFreqHz ) { AudioEqualizer.SetBandFrequency ( iBandIndex, fFreqHz ); }
     void ResetEQ() { AudioEqualizer.Reset(); }
     bool GetEQBypass() const { return AudioEqualizer.GetBypass(); }
     int  GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
+    float GetEQBandFrequency ( const int iBandIndex ) const { return AudioEqualizer.GetBandFrequency ( iBandIndex ); }
+
+    void  SetEQBandDynEnabled ( const int iBand, const bool bEnabled ) { AudioEqualizer.SetBandDynEnabled ( iBand, bEnabled ); }
+    bool  GetEQBandDynEnabled ( const int iBand ) const { return AudioEqualizer.GetBandDynEnabled ( iBand ); }
+    void  SetEQBandDynThresholdDb ( const int iBand, const float fDb ) { AudioEqualizer.SetBandDynThresholdDb ( iBand, fDb ); }
+    float GetEQBandDynThresholdDb ( const int iBand ) const { return AudioEqualizer.GetBandDynThresholdDb ( iBand ); }
+    void  SetEQBandDynRatio ( const int iBand, const float fRatio ) { AudioEqualizer.SetBandDynRatio ( iBand, fRatio ); }
+    float GetEQBandDynRatio ( const int iBand ) const { return AudioEqualizer.GetBandDynRatio ( iBand ); }
+    void  SetEQBandDynAttackMs ( const int iBand, const float fMs ) { AudioEqualizer.SetBandDynAttackMs ( iBand, fMs ); }
+    float GetEQBandDynAttackMs ( const int iBand ) const { return AudioEqualizer.GetBandDynAttackMs ( iBand ); }
+    void  SetEQBandDynReleaseMs ( const int iBand, const float fMs ) { AudioEqualizer.SetBandDynReleaseMs ( iBand, fMs ); }
+    float GetEQBandDynReleaseMs ( const int iBand ) const { return AudioEqualizer.GetBandDynReleaseMs ( iBand ); }
+    float GetEQBandGainReductionDb ( const int iBand ) const { return AudioEqualizer.GetBandGainReductionDb ( iBand ); }
 
     void  SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
     bool  GetCompressorBypass() const { return AudioCompressor.GetBypass(); }
@@ -491,7 +505,7 @@ protected:
     bool   bMuteMeInPersonalMix;
     QMutex MutexDriverReinit;
     QMutex MutexOutputBandLevels;
-    float  afOutputBandLevels[16];
+    float  afOutputBandLevels[8];
 
     // server settings
     int  iServerSockBufNumFrames;
@@ -542,7 +556,7 @@ protected slots:
     void OnMuteStateHasChangedReceived ( int iServerChanID, bool bIsMuted );
     void OnCLChannelLevelListReceived ( CHostAddress InetAddr, CVector<uint16_t> vecLevelList );
     void OnConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo );
-    
+
 signals:
     void ConClientListMesReceived ( CVector<CChannelInfo> vecChanInfo );
     void ChatTextReceived ( QString strChatText );

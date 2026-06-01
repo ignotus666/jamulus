@@ -427,9 +427,9 @@ HEADERS_GUI = src/serverdlg.h
         src/connectdlg.h \
         src/clientdlg.h \
         src/levelmeter.h \
-        src/outputbandmeter.h \
         src/analyzerconsole.h \
-        src/multicolorled.h
+        src/multicolorled.h \
+        src/eqcurvewidget.h
 }
 
 HEADERS_OPUS = libs/opus/celt/arch.h \
@@ -539,10 +539,10 @@ SOURCES_GUI = src/serverdlg.cpp
         src/clientdlg.cpp \
         src/multicolorled.cpp \
         src/levelmeter.cpp \
-        src/outputbandmeter.cpp \
         src/customslider.cpp \
         src/customknob.cpp \
-        src/analyzerconsole.cpp
+        src/analyzerconsole.cpp \
+        src/eqcurvewidget.cpp
 }
 
 SOURCES_OPUS = libs/opus/celt/bands.c \

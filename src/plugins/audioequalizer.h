@@ -1,5 +1,5 @@
 /******************************************************************************\
-* Audio Equalizer                                                             *
+* Audio Dynamic Equalizer                                                      *
 \******************************************************************************/
 
 #pragma once
@@ -9,7 +9,7 @@
 class CAudioEqualizer
 {
 public:
-    static constexpr int NUM_BANDS = 16;
+    static constexpr int NUM_BANDS = 8;
 
     CAudioEqualizer();
 
@@ -19,7 +19,9 @@ public:
         bBypass       = bNBypass;
         fWetMixTarget = bNBypass ? 0.0f : 1.0f;
     }
-    bool  GetBypass() const { return bBypass; }
+    bool GetBypass() const { return bBypass; }
+
+    // Static band gain (user-set node position on curve, ±12 dB)
     void  SetBandGainDb ( const int iBandIndex, const float fGainDb );
     float GetBandGainDb ( const int iBandIndex ) const
     {
@@ -30,6 +32,29 @@ public:
 
         return afBandTargetGainDb[iBandIndex];
     }
+
+    // Per-band dynamics setters
+    void SetBandDynEnabled ( const int iBand, const bool bEnabled );
+    void SetBandDynThresholdDb ( const int iBand, const float fDb );
+    void SetBandDynRatio ( const int iBand, const float fRatio );
+    void SetBandDynAttackMs ( const int iBand, const float fMs );
+    void SetBandDynReleaseMs ( const int iBand, const float fMs );
+
+    // Per-band dynamics getters
+    bool  GetBandDynEnabled ( const int iBand ) const;
+    float GetBandDynThresholdDb ( const int iBand ) const;
+    float GetBandDynRatio ( const int iBand ) const;
+    float GetBandDynAttackMs ( const int iBand ) const;
+    float GetBandDynReleaseMs ( const int iBand ) const;
+
+    // Real-time gain reduction readback for the GUI curve display
+    float GetBandGainReductionDb ( const int iBand ) const;
+
+    // Band frequency information (dynamic, for curve widget)
+    void  SetBandFrequency ( const int iBand, const float fFreqHz );
+    float GetBandFrequency ( const int iBand ) const;
+    static float GetDefaultBandFrequency ( const int iBand );
+
     void Reset();
     void Process ( CVector<int16_t>& vecsStereoInOut, const int iStereoBlockSizeSam );
 
@@ -51,17 +76,41 @@ private:
         float y2[2];
     };
 
-    static const float afBandFrequencies[NUM_BANDS];
+    struct SDynParams
+    {
+        bool  bEnabled;
+        float fThresholdDb;
+        float fRatio;
+        float fAttackMs;
+        float fReleaseMs;
+    };
+
+    float afBandFrequencies[NUM_BANDS];
 
     void UpdateBandCoeff ( const int iBandIndex, const float fGainDb );
+    void UpdateDetCoeff ( const int iBandIndex );
     void ClearFilterState();
 
-    bool   bBypass;
-    float  fWetMixCurrent;
-    float  fWetMixTarget;
-    int    iSampleRateHz;
-    float  afBandTargetGainDb[NUM_BANDS];
-    float  afBandCurrentGainDb[NUM_BANDS];
+    bool  bBypass;
+    float fWetMixCurrent;
+    float fWetMixTarget;
+    int   iSampleRateHz;
+
+    // Static gain (user-set)
+    float afBandTargetGainDb[NUM_BANDS];
+    float afBandSmoothedGainDb[NUM_BANDS];
+
+    // EQ peaking biquad
     SCoeff aBandCoeff[NUM_BANDS];
     SState aBandState[NUM_BANDS];
+
+    // Detector bandpass biquad (for frequency-selective envelope detection)
+    SCoeff aDetCoeff[NUM_BANDS];
+    SState aDetState[NUM_BANDS];
+
+    // Per-band dynamics
+    SDynParams aBandDynParams[NUM_BANDS];
+    float      afDetEnvelope[NUM_BANDS];
+    float      afBandGainReductionDb[NUM_BANDS];
+    float      afBandEffectiveGainDb[NUM_BANDS];
 };

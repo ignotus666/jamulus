@@ -673,15 +673,50 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     }
     pClient->SetEQBypass ( bEQBypass );
 
-    // equalizer per-band gains in dB
+    // equalizer per-band gains and dynamics in dB
     for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
     {
         if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), -12, 12, iValue ) )
         {
             aiEQBandGainDb[iIdx] = iValue;
         }
-
         pClient->SetEQBandGainDb ( iIdx, aiEQBandGainDb[iIdx] );
+
+        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "eqbanddynenabled%1" ).arg ( iIdx ), bValue ) )
+        {
+            abEQBandDynEnabled[iIdx] = bValue;
+        }
+        pClient->SetEQBandDynEnabled ( iIdx, abEQBandDynEnabled[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynthreshold%1" ).arg ( iIdx ), -60, 0, iValue ) )
+        {
+            aiEQBandDynThresholdDb[iIdx] = iValue;
+        }
+        pClient->SetEQBandDynThresholdDb ( iIdx, aiEQBandDynThresholdDb[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynratio%1" ).arg ( iIdx ), 1, 20, iValue ) )
+        {
+            aiEQBandDynRatio[iIdx] = iValue;
+        }
+        pClient->SetEQBandDynRatio ( iIdx, aiEQBandDynRatio[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynattack%1" ).arg ( iIdx ), 1, 200, iValue ) )
+        {
+            aiEQBandDynAttackMs[iIdx] = iValue;
+        }
+        pClient->SetEQBandDynAttackMs ( iIdx, aiEQBandDynAttackMs[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynrelease%1" ).arg ( iIdx ), 10, 500, iValue ) )
+        {
+            aiEQBandDynReleaseMs[iIdx] = iValue;
+        }
+        pClient->SetEQBandDynReleaseMs ( iIdx, aiEQBandDynReleaseMs[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandfrequency%1" ).arg ( iIdx ), 20, 20000, iValue ) )
+        {
+            aiEQBandFrequency[iIdx] = iValue;
+        }
+        pClient->SetEQBandFrequency ( iIdx, aiEQBandFrequency[iIdx] );
     }
 
     // UI theme
@@ -857,10 +892,45 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
             aiEQPresetBandGainDb[iIdx][iBand] = 0;
-
             if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
             {
                 aiEQPresetBandGainDb[iIdx][iBand] = iValue;
+            }
+
+            abEQPresetBandDynEnabled[iIdx][iBand] = false;
+            if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1banddynenabled%2" ).arg ( iIdx ).arg ( iBand ), bValue ) )
+            {
+                abEQPresetBandDynEnabled[iIdx][iBand] = bValue;
+            }
+
+            aiEQPresetBandDynThresholdDb[iIdx][iBand] = -20;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1banddynthreshold%2" ).arg ( iIdx ).arg ( iBand ), -60, 0, iValue ) )
+            {
+                aiEQPresetBandDynThresholdDb[iIdx][iBand] = iValue;
+            }
+
+            aiEQPresetBandDynRatio[iIdx][iBand] = 4;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1banddynratio%2" ).arg ( iIdx ).arg ( iBand ), 1, 20, iValue ) )
+            {
+                aiEQPresetBandDynRatio[iIdx][iBand] = iValue;
+            }
+
+            aiEQPresetBandDynAttackMs[iIdx][iBand] = 5;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1banddynattack%2" ).arg ( iIdx ).arg ( iBand ), 1, 200, iValue ) )
+            {
+                aiEQPresetBandDynAttackMs[iIdx][iBand] = iValue;
+            }
+
+            aiEQPresetBandDynReleaseMs[iIdx][iBand] = 80;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1banddynrelease%2" ).arg ( iIdx ).arg ( iBand ), 10, 500, iValue ) )
+            {
+                aiEQPresetBandDynReleaseMs[iIdx][iBand] = iValue;
+            }
+
+            aiEQPresetBandFrequency[iIdx][iBand] = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ), 20, 20000, iValue ) )
+            {
+                aiEQPresetBandFrequency[iIdx][iBand] = iValue;
             }
         }
     }
@@ -878,6 +948,42 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
             {
                 aiEffectsPresetEQBandGainDb[iIdx][iBand] = iValue;
+            }
+
+            abEffectsPresetEQBandDynEnabled[iIdx][iBand] = false;
+            if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbanddynenabled%2" ).arg ( iIdx ).arg ( iBand ), bValue ) )
+            {
+                abEffectsPresetEQBandDynEnabled[iIdx][iBand] = bValue;
+            }
+
+            aiEffectsPresetEQBandDynThresholdDb[iIdx][iBand] = -20;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbanddynthreshold%2" ).arg ( iIdx ).arg ( iBand ), -60, 0, iValue ) )
+            {
+                aiEffectsPresetEQBandDynThresholdDb[iIdx][iBand] = iValue;
+            }
+
+            aiEffectsPresetEQBandDynRatio[iIdx][iBand] = 4;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbanddynratio%2" ).arg ( iIdx ).arg ( iBand ), 1, 20, iValue ) )
+            {
+                aiEffectsPresetEQBandDynRatio[iIdx][iBand] = iValue;
+            }
+
+            aiEffectsPresetEQBandDynAttackMs[iIdx][iBand] = 5;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbanddynattack%2" ).arg ( iIdx ).arg ( iBand ), 1, 200, iValue ) )
+            {
+                aiEffectsPresetEQBandDynAttackMs[iIdx][iBand] = iValue;
+            }
+
+            aiEffectsPresetEQBandDynReleaseMs[iIdx][iBand] = 80;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbanddynrelease%2" ).arg ( iIdx ).arg ( iBand ), 10, 500, iValue ) )
+            {
+                aiEffectsPresetEQBandDynReleaseMs[iIdx][iBand] = iValue;
+            }
+
+            aiEffectsPresetEQBandFrequency[iIdx][iBand] = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbandfrequency%2" ).arg ( iIdx ).arg ( iBand ), 20, 20000, iValue ) )
+            {
+                aiEffectsPresetEQBandFrequency[iIdx][iBand] = iValue;
             }
         }
         if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bValue ) )
@@ -1285,11 +1391,29 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     bEQBypass = pClient->GetEQBypass();
     SetFlagIniSet ( IniXMLDocument, "client", "eqbypass", bEQBypass );
 
-    // equalizer per-band gains in dB
+    // equalizer per-band gains and dynamics in dB
     for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
     {
         aiEQBandGainDb[iIdx] = pClient->GetEQBandGainDb ( iIdx );
         SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), aiEQBandGainDb[iIdx] );
+
+        abEQBandDynEnabled[iIdx] = pClient->GetEQBandDynEnabled ( iIdx );
+        SetFlagIniSet ( IniXMLDocument, "client", QString ( "eqbanddynenabled%1" ).arg ( iIdx ), abEQBandDynEnabled[iIdx] );
+
+        aiEQBandDynThresholdDb[iIdx] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynthreshold%1" ).arg ( iIdx ), aiEQBandDynThresholdDb[iIdx] );
+
+        aiEQBandDynRatio[iIdx] = static_cast<int> ( pClient->GetEQBandDynRatio ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynratio%1" ).arg ( iIdx ), aiEQBandDynRatio[iIdx] );
+
+        aiEQBandDynAttackMs[iIdx] = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynattack%1" ).arg ( iIdx ), aiEQBandDynAttackMs[iIdx] );
+
+        aiEQBandDynReleaseMs[iIdx] = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbanddynrelease%1" ).arg ( iIdx ), aiEQBandDynReleaseMs[iIdx] );
+
+        aiEQBandFrequency[iIdx] = static_cast<int> ( pClient->GetEQBandFrequency ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandfrequency%1" ).arg ( iIdx ), aiEQBandFrequency[iIdx] );
     }
 
     // GUI design
@@ -1324,6 +1448,30 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                                "client",
                                QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ),
                                aiEQPresetBandGainDb[iIdx][iBand] );
+            SetFlagIniSet ( IniXMLDocument,
+                            "client",
+                            QString ( "eqpreset%1banddynenabled%2" ).arg ( iIdx ).arg ( iBand ),
+                            abEQPresetBandDynEnabled[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1banddynthreshold%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandDynThresholdDb[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1banddynratio%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandDynRatio[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1banddynattack%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandDynAttackMs[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1banddynrelease%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandDynReleaseMs[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandFrequency[iIdx][iBand] );
         }
     }
 
@@ -1339,6 +1487,30 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                                "client",
                                QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ),
                                aiEffectsPresetEQBandGainDb[iIdx][iBand] );
+            SetFlagIniSet ( IniXMLDocument,
+                            "client",
+                            QString ( "effectpreset%1_eqbanddynenabled%2" ).arg ( iIdx ).arg ( iBand ),
+                            abEffectsPresetEQBandDynEnabled[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbanddynthreshold%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandDynThresholdDb[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbanddynratio%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandDynRatio[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbanddynattack%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandDynAttackMs[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbanddynrelease%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandDynReleaseMs[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandFrequency[iIdx][iBand] );
         }
 
         SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revlev" ).arg ( iIdx ), iEffectsPresetReverbLevel[iIdx] );

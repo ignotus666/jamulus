@@ -216,7 +216,7 @@ CClient::CClient ( const quint16  iPortNumber,
 
 void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
 {
-    constexpr int kOutputBands = 16;
+    constexpr int kOutputBands = 8;
     vecOutLevels.Init ( kOutputBands );
 
     QMutexLocker locker ( &MutexOutputBandLevels );
@@ -1657,10 +1657,8 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 
 void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
 {
-    constexpr float fPi          = 3.14159265358979323846f;
-    constexpr int   kOutputBands = 16;
-    const float     afFreqs[kOutputBands] =
-        { 63.0f, 89.0f, 125.0f, 177.0f, 250.0f, 354.0f, 500.0f, 707.0f, 1000.0f, 1400.0f, 2000.0f, 2800.0f, 4000.0f, 5600.0f, 8000.0f, 11200.0f };
+    constexpr float fPi                   = 3.14159265358979323846f;
+    constexpr int   kOutputBands          = 8;
 
     if ( iMonoBlockSizeSam <= 0 )
     {
@@ -1671,7 +1669,8 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
 
     for ( int iBand = 0; iBand < kOutputBands; ++iBand )
     {
-        const float omega = 2.0f * fPi * afFreqs[iBand] / SYSTEM_SAMPLE_RATE_HZ;
+        const float fFreq = AudioEqualizer.GetBandFrequency ( iBand );
+        const float omega = 2.0f * fPi * fFreq / SYSTEM_SAMPLE_RATE_HZ;
         const float coeff = 2.0f * std::cos ( omega );
 
         float q0 = 0.0f;
