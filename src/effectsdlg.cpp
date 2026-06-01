@@ -278,6 +278,10 @@ void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
+    if ( pClient )
+    {
+        pClient->SetOutputBandLevelsEnabled ( true );
+    }
     ApplyThemeToCustomWidgets();
 
     // Restore last used tab if valid (do this first)
@@ -292,6 +296,15 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     UpdateEQControls();
     UpdateEQPresetSelection();
     CBaseDlg::showEvent ( Event );
+}
+
+void CEffectsDlg::hideEvent ( QHideEvent* Event )
+{
+    if ( pClient )
+    {
+        pClient->SetOutputBandLevelsEnabled ( false );
+    }
+    CBaseDlg::hideEvent ( Event );
 }
 
 void CEffectsDlg::OnUIThemeChanged() { ApplyThemeToCustomWidgets(); }
