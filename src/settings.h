@@ -188,11 +188,6 @@ public:
         fCompressorReleaseMs ( 120.0f ),
         fCompressorMakeupDb ( 3.0f ),
         bCompressorLimiterEnabled ( true ),
-        bFilterBypass ( true ),
-        bHighPassEnabled ( false ),
-        bLowPassEnabled ( false ),
-        iHighPassCutoffHz ( 80 ),
-        iLowPassCutoffHz ( 12000 ),
         eUITheme ( UIT_SYSTEM ),
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
@@ -271,11 +266,6 @@ public:
             iEffectsPresetCompressorMakeupDb[iPreset]       = 3;
             bEffectsPresetCompressorLimiterEnabled[iPreset] = true;
 
-            bEffectsPresetFilterBypass[iPreset]     = true;
-            bEffectsPresetHighPassEnabled[iPreset]  = false;
-            bEffectsPresetLowPassEnabled[iPreset]   = false;
-            iEffectsPresetHighPassCutoffHz[iPreset] = 80;
-            iEffectsPresetLowPassCutoffHz[iPreset]  = 12000;
         }
 
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
@@ -356,11 +346,6 @@ public:
     int              iEffectsPresetCompressorReleaseMs[MAX_NUM_EFFECT_PRESETS];
     int              iEffectsPresetCompressorMakeupDb[MAX_NUM_EFFECT_PRESETS];
     bool             bEffectsPresetCompressorLimiterEnabled[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetFilterBypass[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetHighPassEnabled[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetLowPassEnabled[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetHighPassCutoffHz[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetLowPassCutoffHz[MAX_NUM_EFFECT_PRESETS];
     EDirectoryType   eDirectoryType;
     int              iCustomDirectoryIndex; // index of selected custom directory
     bool             bEnableFeedbackDetection;
@@ -389,11 +374,6 @@ public:
     float            fCompressorReleaseMs;
     float            fCompressorMakeupDb;
     bool             bCompressorLimiterEnabled;
-    bool             bFilterBypass;
-    bool             bHighPassEnabled;
-    bool             bLowPassEnabled;
-    int              iHighPassCutoffHz;
-    int              iLowPassCutoffHz;
     EUITheme         eUITheme;
 
     // window position/state settings

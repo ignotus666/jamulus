@@ -6,6 +6,8 @@
 
 #include "util.h"
 
+#include <atomic>
+
 class CAudioCompressor
 {
 public:
@@ -28,6 +30,7 @@ public:
     float GetReleaseMs() const { return fReleaseMs; }
     float GetMakeupDb() const { return fMakeupDb; }
     bool  GetLimiterEnabled() const { return bLimiterEnabled; }
+    float GetGainReductionDb();
 
     void Process ( CVector<int16_t>& vecsStereoInOut, const int iStereoBlockSizeSam );
 
@@ -47,4 +50,5 @@ private:
     float fEnvelope;
     float fKneeDb;
     float fLimiterCeilDb;
+    std::atomic<float> fGainReductionDb;
 };

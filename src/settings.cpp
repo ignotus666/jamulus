@@ -566,31 +566,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         pClient->SetCompressorLimiterEnabled ( bValue );
     }
 
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "filterbypass", bValue ) )
-    {
-        pClient->SetFilterBypass ( bValue );
-    }
-
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "highpassenabled", bValue ) )
-    {
-        pClient->SetHighPassEnabled ( bValue );
-    }
-
-    if ( GetFlagIniSet ( IniXMLDocument, "client", "lowpassenabled", bValue ) )
-    {
-        pClient->SetLowPassEnabled ( bValue );
-    }
-
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "highpasscutoff", 20, 1000, iValue ) )
-    {
-        pClient->SetHighPassCutoffHz ( iValue );
-    }
-
-    if ( GetNumericIniSet ( IniXMLDocument, "client", "lowpasscutoff", 1000, 20000, iValue ) )
-    {
-        pClient->SetLowPassCutoffHz ( iValue );
-    }
-
     // sound card selection
     const QString strError = pClient->SetSndCrdDev ( FromBase64ToString ( GetIniSetting ( IniXMLDocument, "client", "auddev_base64", "" ) ) );
 
@@ -1095,32 +1070,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             bEffectsPresetCompressorLimiterEnabled[iIdx] = bValue;
         }
 
-        bEffectsPresetFilterBypass[iIdx]     = true;
-        bEffectsPresetHighPassEnabled[iIdx]  = false;
-        bEffectsPresetLowPassEnabled[iIdx]   = false;
-        iEffectsPresetHighPassCutoffHz[iIdx] = 80;
-        iEffectsPresetLowPassCutoffHz[iIdx]  = 12000;
-
-        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_filterbypass" ).arg ( iIdx ), bValue ) )
-        {
-            bEffectsPresetFilterBypass[iIdx] = bValue;
-        }
-        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpassenabled" ).arg ( iIdx ), bValue ) )
-        {
-            bEffectsPresetHighPassEnabled[iIdx] = bValue;
-        }
-        if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpassenabled" ).arg ( iIdx ), bValue ) )
-        {
-            bEffectsPresetLowPassEnabled[iIdx] = bValue;
-        }
-        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpasscutoff" ).arg ( iIdx ), 20, 1000, iValue ) )
-        {
-            iEffectsPresetHighPassCutoffHz[iIdx] = iValue;
-        }
-        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpasscutoff" ).arg ( iIdx ), 1000, 20000, iValue ) )
-        {
-            iEffectsPresetLowPassCutoffHz[iIdx] = iValue;
-        }
     }
 
     // directory type
@@ -1351,11 +1300,6 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     SetNumericIniSet ( IniXMLDocument, "client", "compmakeup", static_cast<int> ( pClient->GetCompressorMakeupDb() ) );
     SetFlagIniSet ( IniXMLDocument, "client", "complimiter", pClient->GetCompressorLimiterEnabled() );
 
-    SetFlagIniSet ( IniXMLDocument, "client", "filterbypass", pClient->GetFilterBypass() );
-    SetFlagIniSet ( IniXMLDocument, "client", "highpassenabled", pClient->GetHighPassEnabled() );
-    SetFlagIniSet ( IniXMLDocument, "client", "lowpassenabled", pClient->GetLowPassEnabled() );
-    SetNumericIniSet ( IniXMLDocument, "client", "highpasscutoff", pClient->GetHighPassCutoffHz() );
-    SetNumericIniSet ( IniXMLDocument, "client", "lowpasscutoff", pClient->GetLowPassCutoffHz() );
 
     // sound card selection
     PutIniSetting ( IniXMLDocument, "client", "auddev_base64", ToBase64 ( pClient->GetSndCrdDev() ) );
@@ -1539,11 +1483,6 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                         QString ( "effectpreset%1_complimiter" ).arg ( iIdx ),
                         bEffectsPresetCompressorLimiterEnabled[iIdx] );
 
-        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_filterbypass" ).arg ( iIdx ), bEffectsPresetFilterBypass[iIdx] );
-        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpassenabled" ).arg ( iIdx ), bEffectsPresetHighPassEnabled[iIdx] );
-        SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpassenabled" ).arg ( iIdx ), bEffectsPresetLowPassEnabled[iIdx] );
-        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_highpasscutoff" ).arg ( iIdx ), iEffectsPresetHighPassCutoffHz[iIdx] );
-        SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_lowpasscutoff" ).arg ( iIdx ), iEffectsPresetLowPassCutoffHz[iIdx] );
     }
 
     // directory type
