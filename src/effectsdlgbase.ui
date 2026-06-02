@@ -72,7 +72,7 @@
    <item>
     <widget class="QTabWidget" name="pTabs">
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pReverbTab">
       <attribute name="title">
@@ -655,9 +655,15 @@
           </item>
           <item row="1" column="2">
            <widget class="QLabel" name="pLblEQDynAttackValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>40</width>
+              <width>50</width>
               <height>0</height>
              </size>
             </property>
@@ -688,9 +694,15 @@
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="pLblEQDynThresholdValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>40</width>
+              <width>50</width>
               <height>0</height>
              </size>
             </property>
@@ -717,7 +729,7 @@
            <widget class="QLabel" name="pLblEQDynReleaseValue">
             <property name="minimumSize">
              <size>
-              <width>45</width>
+              <width>50</width>
               <height>0</height>
              </size>
             </property>
@@ -730,7 +742,7 @@
            <widget class="QLabel" name="pLblEQDynRatioValue">
             <property name="minimumSize">
              <size>
-              <width>30</width>
+              <width>50</width>
               <height>0</height>
              </size>
             </property>

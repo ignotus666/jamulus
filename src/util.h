@@ -536,23 +536,12 @@ enum EGUIDesign
 // UI theme enum ---------------------------------------------------------------
 enum EUITheme
 {
-    UIT_LIGHT  = 0,
-    UIT_DARK   = 1,
-    UIT_SYSTEM = 2
+    UIT_LIGHT = 0,
+    UIT_DARK  = 1
 };
 
 inline bool IsDarkUITheme ( const EUITheme eTheme )
 {
-    if ( eTheme == UIT_SYSTEM )
-    {
-#if QT_VERSION >= QT_VERSION_CHECK( 6, 5, 0 )
-        return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
-#else
-        const QPalette defaultPalette;
-        return defaultPalette.color ( QPalette::WindowText ).lightness() > defaultPalette.color ( QPalette::Window ).lightness();
-#endif
-    }
-
     return eTheme == UIT_DARK;
 }
 
@@ -1333,7 +1322,7 @@ public:
 protected:
     virtual void run();
 
-    bool     bRun;
+    bool bRun;
 
 #    if defined( __APPLE__ ) || defined( __MACOSX )
     uint64_t Delay;

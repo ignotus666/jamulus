@@ -790,12 +790,6 @@ void CClientDlg::ShowEffectsWindow()
 
 void CClientDlg::changeEvent ( QEvent* Event )
 {
-    if ( ( pSettings->eUITheme == UIT_SYSTEM ) && !bApplyingThemeChange &&
-         ( ( Event->type() == QEvent::ApplicationPaletteChange ) || ( Event->type() == QEvent::PaletteChange ) ) )
-    {
-        OnUIThemeChanged();
-    }
-
     CBaseDlg::changeEvent ( Event );
 }
 

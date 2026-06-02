@@ -697,7 +697,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // UI theme
     if ( GetNumericIniSet ( IniXMLDocument, "client", "uitheme", 0, 2 /* UIT_SYSTEM */, iValue ) )
     {
-        eUITheme = static_cast<EUITheme> ( iValue );
+        eUITheme = ( iValue == 1 ) ? UIT_DARK : UIT_LIGHT;
     }
 
     // GUI design
@@ -1628,7 +1628,7 @@ void CServerSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // UI theme
     if ( GetNumericIniSet ( IniXMLDocument, "server", "uitheme", 0, 2 /* UIT_DARK */, iValue ) )
     {
-        eUITheme = static_cast<EUITheme> ( iValue );
+        eUITheme = ( iValue == 1 ) ? UIT_DARK : UIT_LIGHT;
     }
 
     // base recording directory

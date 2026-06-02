@@ -508,10 +508,9 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
 
     // GUI theme combo box
     cbxTheme->clear();
-    cbxTheme->addItem ( tr ( "System" ) );
     cbxTheme->addItem ( tr ( "Light" ) );
     cbxTheme->addItem ( tr ( "Dark" ) );
-    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_SYSTEM ? 0 : ( pSettings->eUITheme == UIT_LIGHT ? 1 : 2 ) );
+    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_DARK ? 1 : 0 );
 
     // MeterStyle combo box
     cbxMeterStyle->clear();
@@ -1278,7 +1277,7 @@ void CClientSettingsDlg::OnGUIDesignActivated ( int iDesignIdx )
 
 void CClientSettingsDlg::OnUIThemeActivated ( int iThemeIdx )
 {
-    pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    pSettings->eUITheme = ( iThemeIdx == 1 ) ? UIT_DARK : UIT_LIGHT;
     ApplyThemeToCustomWidgets();
     emit UIThemeChanged();
     UpdateDisplay();

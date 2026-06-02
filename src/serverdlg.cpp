@@ -350,10 +350,9 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
 
     // UI theme combo box
     cbxTheme->clear();
-    cbxTheme->addItem ( tr ( "System" ) );
     cbxTheme->addItem ( tr ( "Light" ) );
     cbxTheme->addItem ( tr ( "Dark" ) );
-    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_SYSTEM ? 0 : ( pSettings->eUITheme == UIT_LIGHT ? 1 : 2 ) );
+    cbxTheme->setCurrentIndex ( pSettings->eUITheme == UIT_DARK ? 1 : 0 );
 
     // recorder options
     pbtRecordingDir->setAutoDefault ( false );
@@ -522,7 +521,7 @@ void CServerDlg::ApplyTheme()
 
 void CServerDlg::OnUIThemeActivated ( int iThemeIdx )
 {
-    pSettings->eUITheme = ( iThemeIdx == 0 ) ? UIT_SYSTEM : ( iThemeIdx == 1 ? UIT_LIGHT : UIT_DARK );
+    pSettings->eUITheme = ( iThemeIdx == 1 ) ? UIT_DARK : UIT_LIGHT;
     ApplyTheme();
 }
 

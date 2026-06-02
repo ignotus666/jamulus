@@ -168,6 +168,45 @@ void DrawTickMarks ( QPainter&                   painter,
         }
     }
 }
+
+SControlPalette GetCustomSliderPalette ( const bool bDarkTheme, const bool bEnabled )
+{
+    SControlPalette palette = GetControlPalette ( bDarkTheme );
+    if ( !bEnabled )
+    {
+        auto GetDisabledColor = [bDarkTheme] ( const QColor& color ) -> QColor {
+            int r = color.red();
+            int g = color.green();
+            int b = color.blue();
+            int alpha = color.alpha();
+            int gray = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
+            if ( bDarkTheme )
+            {
+                return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );
+            }
+            else
+            {
+                return QColor ( ( gray + 200 ) / 2, ( gray + 200 ) / 2, ( gray + 200 ) / 2, alpha );
+            }
+        };
+
+        palette.accent       = GetDisabledColor ( palette.accent );
+        palette.accentGlow   = GetDisabledColor ( palette.accentGlow );
+        palette.accentBright = GetDisabledColor ( palette.accentBright );
+        palette.accentMid    = GetDisabledColor ( palette.accentMid );
+        palette.accentDeep   = GetDisabledColor ( palette.accentDeep );
+
+        palette.trackBackground = GetDisabledColor ( palette.trackBackground );
+        palette.trackBorder     = GetDisabledColor ( palette.trackBorder );
+        palette.handleTop       = GetDisabledColor ( palette.handleTop );
+        palette.handleMid       = GetDisabledColor ( palette.handleMid );
+        palette.handleBottom    = GetDisabledColor ( palette.handleBottom );
+        palette.handleBorder    = GetDisabledColor ( palette.handleBorder );
+
+        palette.tick = GetDisabledColor ( palette.tick );
+    }
+    return palette;
+}
 } // namespace
 
 CCustomSlider::CCustomSlider ( QWidget* parent ) : CCustomSlider ( Qt::Vertical, parent ) {}
@@ -353,7 +392,7 @@ void CCustomSlider::paintEvent ( QPaintEvent* event )
     QPainter painter ( this );
     painter.setRenderHint ( QPainter::Antialiasing );
 
-    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          backgroundColor = palette.background;
 
     painter.fillRect ( rect(), backgroundColor );
@@ -372,7 +411,7 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     int                   trackLeft       = ( width - TRACK_WIDTH ) / 2;
     int                   trackTop        = MARGINS;
     int                   handlePos       = positionFromValue ( iCurrentValue );
-    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          trackBackground = palette.trackBackground;
     const QColor          trackBorder     = palette.trackBorder;
 
@@ -425,7 +464,7 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
     int                   trackSize       = width - 2 * MARGINS - HANDLE_WIDTH;
     int                   trackTop        = ( height - TRACK_WIDTH ) / 2;
     int                   handlePos       = positionFromValue ( iCurrentValue );
-    const SControlPalette palette         = GetControlPalette ( bDarkTheme );
+    const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          trackBackground = palette.trackBackground;
     const QColor          trackBorder     = palette.trackBorder;
 

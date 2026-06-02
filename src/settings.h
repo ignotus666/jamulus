@@ -188,7 +188,7 @@ public:
         fCompressorReleaseMs ( 120.0f ),
         fCompressorMakeupDb ( 3.0f ),
         bCompressorLimiterEnabled ( true ),
-        eUITheme ( UIT_SYSTEM ),
+        eUITheme ( UIT_LIGHT ),
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
         vecWindowPosEffects(),  // empty array
@@ -421,7 +421,7 @@ protected:
 class CServerSettings : public CSettings
 {
 public:
-    CServerSettings ( CServer* pNSerP, const QString& sNFiName ) : CSettings(), eUITheme ( UIT_SYSTEM ), pServer ( pNSerP )
+    CServerSettings ( CServer* pNSerP, const QString& sNFiName ) : CSettings(), eUITheme ( UIT_LIGHT ), pServer ( pNSerP )
     {
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME_SERVER );
     }
