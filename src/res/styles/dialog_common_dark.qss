@@ -84,7 +84,7 @@ QPushButton {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(54, 54, 58),
         stop:1 rgb(38, 38, 42));
-    padding: 3px 9px;
+    padding: 1px 5px;
     min-height: 16px;
     max-height: 16px;
 }
