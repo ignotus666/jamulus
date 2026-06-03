@@ -160,6 +160,7 @@ QDialog,
 QWidget {
     background-color: rgb(28, 28, 31);
     color: rgb(220, 232, 242);
+    font-size: 10pt;
 }
 
 QLabel {

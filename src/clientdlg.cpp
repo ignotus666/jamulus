@@ -296,7 +296,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // turn. Re-run the design pass once after construction so startup matches the
     // state reached after the first UI settings change.
     QTimer::singleShot ( 0, this, [this] {
-        SetGUIDesign ( pClient->GetGUIDesign() );
+        OnUIThemeChanged();
         SetMeterStyle ( pClient->GetMeterStyle() );
 
         if ( layout() != nullptr )
