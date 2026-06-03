@@ -89,7 +89,7 @@ public:
     void   Reset();
     void   SetRunningNewClientCnt ( const int iNRunningNewClientCnt ) { iRunningNewClientCnt = iNRunningNewClientCnt; }
     int    GetRunningNewClientCnt() { return iRunningNewClientCnt; }
-    void   SetChannelLevel ( const uint16_t iLevel );
+    void   SetChannelLevel ( const double dLevel );
     void   SetIsMyOwnFader() { bIsMyOwnFader = true; }
     bool   GetIsMyOwnFader() { return bIsMyOwnFader; }
     void   UpdateSoloState ( const bool bNewOtherSoloState );
@@ -276,6 +276,7 @@ protected:
     QGridLayout*            pMainLayout;
     bool                    bDisplayPans;
     bool                    bIsPanSupported;
+    bool                    bServerIsHighRes;
     bool                    bNoFaderVisible;
     int                     iMyChannelID;         // must use int (not size_t) so INVALID_INDEX can be stored
     int                     iRunningNewClientCnt; // integer type is sufficient, will never overrun for its purpose

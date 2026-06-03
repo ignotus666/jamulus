@@ -1,13 +1,13 @@
 
 # Simplified build workflow for custom packages
-# Builds only .deb package
-# Triggered manually only for my-build branch
+# Builds .deb, Windows, and macOS packages
+# Triggered only for my-build-effects branch
 
-name: Build .deb package
+name: Build packages
 on:
   push:
     branches:
-      - my-build
+      - my-build-effects
 permissions: {}
 jobs:
   build-deb-x86:
@@ -15,8 +15,17 @@ jobs:
     runs-on: ubuntu-22.04
     container: ubuntu:20.04
     steps:
+      - name: Install git
+        run: |
+          set -eu
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get -qq update
+          apt-get -qq -y install git tzdata
+
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Extract version from Jamulus.pro
         id: get-version
@@ -27,14 +36,14 @@ jobs:
       - name: Set up base dependencies
         run: |
           set -eu
+          export DEBIAN_FRONTEND=noninteractive
           apt-get -qq update
           apt-get install -y software-properties-common sudo curl
-          add-apt-repository ppa:git-core/ppa
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get -qq update
-          apt-get -qq -y install git-core gh
+          apt-get -qq -y install gh
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Set up build dependencies
@@ -58,5 +67,88 @@ jobs:
         with:
           name: jamulus-deb
           path: deploy/jamulus_*.deb
+          retention-days: 31
+          if-no-files-found: error
+
+  build-windows:
+    if: false
+    name: Build Windows
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract version from Jamulus.pro
+        id: get-version
+        shell: bash
+        run: |
+          VERSION=$(grep -oP 'VERSION = \K\S+' Jamulus.pro | head -n1)
+          echo "JAMULUS_BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up build dependencies
+        run: powershell .\.github\autobuild\windows.ps1 -Stage setup
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Build Windows app
+        run: powershell .\.github\autobuild\windows.ps1 -Stage build
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Get artifacts
+        id: get-artifacts
+        run: powershell .\.github\autobuild\windows.ps1 -Stage get-artifacts
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.get-artifacts.outputs.artifact_1 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
+          retention-days: 31
+          if-no-files-found: error
+
+  build-macos:
+    if: false
+    name: Build macOS
+    runs-on: macos-15
+    steps:
+      - name: Select Xcode version for Mac
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90
+        with:
+          xcode-version: 16.3.0
+          
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract version from Jamulus.pro
+        id: get-version
+        shell: bash
+        run: |
+          VERSION=$(grep -oE 'VERSION = [^[:space:]]+' Jamulus.pro | awk '{print $3}' | head -n1)
+          echo "JAMULUS_BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up build dependencies
+        run: QT_VERSION=6.10.2 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh setup
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Build macOS app
+        run: QT_VERSION=6.10.2 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh build
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Get artifacts
+        id: get-artifacts
+        run: QT_VERSION=6.10.2 SIGN_IF_POSSIBLE=1 TARGET_ARCHS="x86_64 arm64" ./.github/autobuild/mac.sh get-artifacts
+        env:
+          JAMULUS_BUILD_VERSION: ${{ env.JAMULUS_BUILD_VERSION }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.get-artifacts.outputs.artifact_1 }}
+          path: deploy/${{ steps.get-artifacts.outputs.artifact_1 }}
           retention-days: 31
           if-no-files-found: error

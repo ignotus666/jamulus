@@ -50,6 +50,7 @@ public:
     void SetSpectrumLevels ( const QVector<float>& vecLevels );
     void SetSampleRate ( const int iSampleRateHz );
     void SetDarkTheme ( const bool bEnable );
+    void SetBypassed ( const bool bBypassed );
 
     int   GetSelectedBand() const { return iSelectedBand; }
     float GetBandFrequency ( const int iBand ) const;
@@ -70,13 +71,14 @@ protected:
     void mouseReleaseEvent ( QMouseEvent* pEvent ) override;
     void mouseDoubleClickEvent ( QMouseEvent* pEvent ) override;
     void wheelEvent ( QWheelEvent* pEvent ) override;
+    void resizeEvent ( QResizeEvent* pEvent ) override;
 
 private:
     // Coordinate transforms (plot area ↔ data space)
-    float FreqToXf ( const float fHz ) const;
-    float DbToYf ( const float fDb ) const;
-    float XToFreq ( const float fX ) const;
-    float YToDb ( const float fY ) const;
+    float  FreqToXf ( const float fHz ) const;
+    float  DbToYf ( const float fDb ) const;
+    float  XToFreq ( const float fX ) const;
+    float  YToDb ( const float fY ) const;
     QRectF PlotRect() const;
 
     // Biquad transfer-function evaluation for curve rendering
@@ -94,6 +96,13 @@ private:
     int   iSelectedBand;
     bool  bDragging;
     bool  bDarkTheme;
+    bool  bEQBypassed;
+
+    // Cached curves
+    QVector<QPointF> vecStaticCurveCache;
+    QVector<QPointF> vecEffectiveCurveCache;
+    bool             bStaticCurveDirty;
+    bool             bEffectiveCurveDirty;
 
     // Layout constants
     static constexpr int kMarginLeft   = 42;

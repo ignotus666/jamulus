@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>559</width>
+    <width>580</width>
     <height>537</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="pLblEffectsPreset">
        <property name="text">
-        <string>Effects Preset:</string>
+        <string>Global Effects Preset:</string>
        </property>
       </widget>
      </item>
@@ -527,6 +527,13 @@
        </item>
        <item row="1" column="0" colspan="2">
         <layout class="QHBoxLayout" name="horizontalLayoutEQPresetRow">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>EQ Preset:</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QComboBox" name="pCbxEQPresets">
            <property name="sizePolicy">

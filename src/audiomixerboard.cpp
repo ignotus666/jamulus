@@ -836,7 +836,7 @@ void CChannelFader::UpdateSoloState ( const bool bNewOtherSoloState )
     }
 }
 
-void CChannelFader::SetChannelLevel ( const uint16_t iLevel ) { plbrChannelLevel->SetValue ( iLevel ); }
+void CChannelFader::SetChannelLevel ( const double dLevel ) { plbrChannelLevel->SetValue ( dLevel ); }
 
 void CChannelFader::SetChannelInfos ( const CChannelInfo& cChanInfo )
 {
@@ -1064,6 +1064,7 @@ CAudioMixerBoard::CAudioMixerBoard ( QWidget* parent ) :
     pSettings ( nullptr ),
     bDisplayPans ( false ),
     bIsPanSupported ( false ),
+    bServerIsHighRes ( false ),
     bNoFaderVisible ( true ),
     iMyChannelID ( INVALID_INDEX ),
     iRunningNewClientCnt ( 0 ),
@@ -1229,6 +1230,7 @@ void CAudioMixerBoard::HideAll()
 
     // initialize flags and other parameters
     bIsPanSupported      = false;
+    bServerIsHighRes     = false;
     bNoFaderVisible      = true;
     eRecorderState       = RS_UNDEFINED;
     iMyChannelID         = INVALID_INDEX;
@@ -2062,6 +2064,22 @@ void CAudioMixerBoard::SetChannelLevels ( const CVector<uint16_t>& vecChannelLev
     const size_t iNumChannelLevels = vecChannelLevel.size();
     size_t       i                 = 0;
 
+    // Detect if we are connected to a high-res server (values > 8)
+    if ( !bServerIsHighRes )
+    {
+        for ( size_t j = 0; j < iNumChannelLevels; ++j )
+        {
+            if ( vecChannelLevel[j] > 8 )
+            {
+                bServerIsHighRes = true;
+                break;
+            }
+        }
+    }
+
+    const double dScale = bServerIsHighRes ? ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 15.0 )
+                                           : ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 8.0 );
+
     for ( size_t iChId = 0; iChId < MAX_NUM_CHANNELS; iChId++ )
     {
         if ( vecpChanFader[iChId]->IsVisible() && ( i < iNumChannelLevels ) )
@@ -2069,7 +2087,8 @@ void CAudioMixerBoard::SetChannelLevels ( const CVector<uint16_t>& vecChannelLev
             // compute exponential moving average
             vecAvgLevels[iChId] = ( 1.0f - AUTO_FADER_ADJUST_ALPHA ) * vecAvgLevels[iChId] + AUTO_FADER_ADJUST_ALPHA * vecChannelLevel[i];
 
-            vecpChanFader[iChId]->SetChannelLevel ( vecChannelLevel[i++] );
+            const double dLevelScaled = static_cast<double> ( vecChannelLevel[i++] ) * dScale;
+            vecpChanFader[iChId]->SetChannelLevel ( dLevelScaled );
 
             // show level only if we successfully received levels from the
             // server (if server does not support levels, do not show levels)

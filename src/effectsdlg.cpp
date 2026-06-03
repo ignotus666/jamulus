@@ -81,8 +81,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pSldReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
     pSldReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
-
-
     pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblCompressorRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblCompressorAttackValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -115,6 +113,15 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandSelected, this, &CEffectsDlg::OnEQBandSelected );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainReset, this, &CEffectsDlg::OnEQBandGainReset );
 
+    pLblEQDynThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblEQDynRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblEQDynAttackValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblEQDynReleaseValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblEQDynThresholdValue->setMinimumWidth ( 60 );
+    pLblEQDynRatioValue->setMinimumWidth ( 60 );
+    pLblEQDynAttackValue->setMinimumWidth ( 60 );
+    pLblEQDynReleaseValue->setMinimumWidth ( 60 );
+
     pSldEQDynThreshold->setRange ( -60, 0 );
     pSldEQDynThreshold->setTickInterval ( 12 );
     pSldEQDynThreshold->setTickPosition ( QSlider::TicksBothSides );
@@ -138,9 +145,8 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pSldEQDynRelease, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynReleaseChanged );
 
     // Frequency input: starts read-only, click to edit, commit on Return or focus loss
-    pEdtEQDynFreq->setValidator ( new QIntValidator ( static_cast<int> ( CEQCurveWidget::kFreqMin ),
-                                                      static_cast<int> ( CEQCurveWidget::kFreqMax ),
-                                                      pEdtEQDynFreq ) );
+    pEdtEQDynFreq->setValidator (
+        new QIntValidator ( static_cast<int> ( CEQCurveWidget::kFreqMin ), static_cast<int> ( CEQCurveWidget::kFreqMax ), pEdtEQDynFreq ) );
     pEdtEQDynFreq->installEventFilter ( this );
     QObject::connect ( pEdtEQDynFreq, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQDynFreqEditFinished );
 
@@ -206,7 +212,13 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
         emit CompressorMakeupChanged ( value );
     } );
     QObject::connect ( pButCompressorReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetCompressorClicked );
-    QObject::connect ( pChbEQBypass, &QCheckBox::toggled, this, &CEffectsDlg::EQBypassChanged );
+    QObject::connect ( pChbEQBypass, &QCheckBox::toggled, this, [this] ( bool bBypassed ) {
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetBypassed ( bBypassed );
+        }
+        emit EQBypassChanged ( bBypassed );
+    } );
     QObject::connect ( pCbxEffectsPresets,
                        QOverload<int>::of ( &QComboBox::currentIndexChanged ),
                        this,
@@ -230,8 +242,13 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
 void CEffectsDlg::UpdateOutputBandLevels ( const CVector<float>& vecOutLevels )
 {
-    if ( pEQCurveWidget && pClient )
+    if ( pEQCurveWidget && pEQCurveWidget->isVisible() && pClient )
     {
+        if ( pClient->GetEQBypass() )
+        {
+            return;
+        }
+
         // 1. Pass Goertzel spectrum levels to in-graph background analyzer
         QVector<float> vecLevels;
         vecLevels.reserve ( vecOutLevels.Size() );
@@ -330,8 +347,6 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         pGRMeter->SetDarkTheme ( bDarkTheme );
     }
 }
-
-
 
 void CEffectsDlg::UpdateCompressorControls()
 {
@@ -469,12 +484,14 @@ void CEffectsDlg::UpdateEQReadouts()
 
 void CEffectsDlg::UpdateEQControls()
 {
+    const bool bBypassed = pClient->GetEQBypass();
     pChbEQBypass->blockSignals ( true );
-    pChbEQBypass->setChecked ( pClient->GetEQBypass() );
+    pChbEQBypass->setChecked ( bBypassed );
     pChbEQBypass->blockSignals ( false );
 
     if ( pEQCurveWidget && pClient )
     {
+        pEQCurveWidget->SetBypassed ( bBypassed );
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
             pEQCurveWidget->SetBandGain ( iBand, pClient->GetEQBandGainDb ( iBand ) );
@@ -780,7 +797,6 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
     pSettings->iEffectsPresetCompressorReleaseMs[iPresetSlot]      = 120;
     pSettings->iEffectsPresetCompressorMakeupDb[iPresetSlot]       = 3;
     pSettings->bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = true;
-
 
     PopulateEffectsPresetCombo();
 }

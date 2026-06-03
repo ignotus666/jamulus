@@ -34,11 +34,28 @@ public:
     CGradientLevelBar ( QWidget* parent = nullptr ) :
         QWidget ( parent ),
         iValue ( 0 ),
+        iTargetValue ( 0 ),
         iMaxValue ( 100 * NUM_STEPS_LED_BAR ),
         bClip ( false ),
         bDarkTheme ( true )
     {
         setMinimumSize ( QSize ( 1, 1 ) );
+
+        QObject::connect ( &TimerDecay, &QTimer::timeout, this, [this]() {
+            if ( iValue > iTargetValue )
+            {
+                iValue = static_cast<int> ( iValue * 0.82 + iTargetValue * 0.18 );
+                if ( iValue - iTargetValue < 10 )
+                {
+                    iValue = iTargetValue;
+                }
+                update();
+            }
+            if ( iValue <= iTargetValue )
+            {
+                TimerDecay.stop();
+            }
+        } );
     }
 
     void SetDarkTheme ( const bool bEnable )
@@ -59,10 +76,20 @@ public:
     void SetValue ( const int iNewValue )
     {
         const int iClamped = std::max ( 0, std::min ( iMaxValue, iNewValue ) );
-        if ( iClamped != iValue )
+        iTargetValue = iClamped;
+
+        if ( iTargetValue > iValue )
         {
-            iValue = iClamped;
+            iValue = iTargetValue;
             update();
+        }
+
+        if ( iValue > iTargetValue )
+        {
+            if ( !TimerDecay.isActive() )
+            {
+                TimerDecay.start ( 30 );
+            }
         }
     }
 
@@ -88,14 +115,6 @@ protected:
             return;
 
         painter.fillRect ( r, bDarkTheme ? QColor ( 18, 24, 31 ) : QColor ( 240, 242, 245 ) );
-
-        // Fixed full-height gradient: low section stays green, then transitions upward.
-        QLinearGradient fullGradient ( r.left(), r.bottom(), r.left(), r.top() );
-        fullGradient.setColorAt ( 0.00, QColor ( 48, 230, 75 ) );
-        fullGradient.setColorAt ( 0.50, QColor ( 48, 230, 75 ) );
-        fullGradient.setColorAt ( 0.68, QColor ( 245, 210, 50 ) );
-        fullGradient.setColorAt ( 0.84, QColor ( 245, 155, 40 ) );
-        fullGradient.setColorAt ( 1.00, QColor ( 235, 60, 55 ) );
 
         const auto ColorAt = [] ( const double dPos ) {
             struct TStop
@@ -170,7 +189,12 @@ protected:
             }
 
             const double dSegStart = static_cast<double> ( iSegment ) / iSegmentCount;
-            const bool   bActive   = dNormValue > dSegStart;
+            bool         bActive   = dNormValue > dSegStart;
+
+            if ( iSegment == iSegmentCount - 1 && bClip )
+            {
+                bActive = true;
+            }
 
             if ( bActive )
             {
@@ -193,19 +217,15 @@ protected:
                 iYCursor -= iGapPx;
             }
         }
-
-        if ( bClip )
-        {
-            painter.setPen ( QPen ( QColor ( 235, 60, 55 ), 1 ) );
-            painter.drawRect ( r.adjusted ( 0, 0, -1, -1 ) );
-        }
     }
 
 private:
-    int  iValue;
-    int  iMaxValue;
-    bool bClip;
-    bool bDarkTheme;
+    int    iValue;
+    int    iTargetValue;
+    int    iMaxValue;
+    bool   bClip;
+    bool   bDarkTheme;
+    QTimer TimerDecay;
 };
 
 /* Implementation *************************************************************/
@@ -285,7 +305,7 @@ void CLevelMeter::SetValue ( const double dValue )
     // value of int16 is -32768 but we normalize with 32767 -> therefore
     // we really only show the clipping indicator, if actually the largest
     // value of int16 is used)
-    if ( dValue > NUM_STEPS_LED_BAR )
+    if ( dValue >= NUM_STEPS_LED_BAR - 0.01 )
     {
         SetBarMeterStyleAndClipStatus ( eLevelMeterType, true );
 

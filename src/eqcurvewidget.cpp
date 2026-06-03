@@ -28,6 +28,7 @@
 #include <QPainterPath>
 #include <QMouseEvent>
 #include <QWheelEvent>
+#include <QResizeEvent>
 #include <cmath>
 
 // ---------------------------------------------------------------------------
@@ -38,7 +39,10 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     iSampleRateHz ( 48000 ),
     iSelectedBand ( 0 ),
     bDragging ( false ),
-    bDarkTheme ( true )
+    bDarkTheme ( true ),
+    bEQBypassed ( false ),
+    bStaticCurveDirty ( true ),
+    bEffectiveCurveDirty ( true )
 {
     for ( int i = 0; i < kNumBands; ++i )
     {
@@ -61,8 +65,13 @@ void CEQCurveWidget::SetBandGain ( const int iBand, const float fGainDb )
 {
     if ( iBand >= 0 && iBand < kNumBands )
     {
-        afBandGainDb[iBand] = fGainDb;
-        update();
+        if ( std::fabs ( afBandGainDb[iBand] - fGainDb ) > 0.01f )
+        {
+            afBandGainDb[iBand]  = fGainDb;
+            bStaticCurveDirty    = true;
+            bEffectiveCurveDirty = true;
+            update();
+        }
     }
 }
 
@@ -70,45 +79,90 @@ void CEQCurveWidget::SetBandFrequency ( const int iBand, const float fFreqHz )
 {
     if ( iBand >= 0 && iBand < kNumBands )
     {
-        afBandFrequencies[iBand] = fFreqHz;
-        update();
+        if ( std::fabs ( afBandFrequencies[iBand] - fFreqHz ) > 0.1f )
+        {
+            afBandFrequencies[iBand] = fFreqHz;
+            bStaticCurveDirty        = true;
+            bEffectiveCurveDirty     = true;
+            update();
+        }
     }
 }
 
-float CEQCurveWidget::GetBandFrequency ( const int iBand ) const
-{
-    return ( iBand >= 0 && iBand < kNumBands ) ? afBandFrequencies[iBand] : 0.0f;
-}
+float CEQCurveWidget::GetBandFrequency ( const int iBand ) const { return ( iBand >= 0 && iBand < kNumBands ) ? afBandFrequencies[iBand] : 0.0f; }
 
 void CEQCurveWidget::SetBandGainReduction ( const int iBand, const float fReductionDb )
 {
     if ( iBand >= 0 && iBand < kNumBands )
     {
-        afBandGainReductionDb[iBand] = fReductionDb;
-        update();
+        if ( std::fabs ( afBandGainReductionDb[iBand] - fReductionDb ) > 0.2f )
+        {
+            afBandGainReductionDb[iBand] = fReductionDb;
+            bEffectiveCurveDirty         = true;
+            update();
+        }
     }
 }
 
 void CEQCurveWidget::SetSpectrumLevels ( const QVector<float>& vecLevels )
 {
+    bool bChanged = false;
     for ( int iBand = 0; iBand < kNumBands; ++iBand )
     {
+        const float fOldVal = afSpectrumLevels[iBand];
+        float       fNewVal = 0.0f;
         if ( iBand < vecLevels.size() )
         {
-            afSpectrumLevels[iBand] = qBound ( 0.0f, vecLevels[iBand], 1.0f );
+            fNewVal = qBound ( 0.0f, vecLevels[iBand], 1.0f );
         }
-        else
+
+        if ( std::fabs ( fOldVal - fNewVal ) > 0.02f )
         {
-            afSpectrumLevels[iBand] = 0.0f;
+            afSpectrumLevels[iBand] = fNewVal;
+            bChanged                = true;
         }
     }
-    update();
+
+    if ( bChanged )
+    {
+        update();
+    }
 }
 
 void CEQCurveWidget::SetSampleRate ( const int iRate )
 {
-    iSampleRateHz = iRate;
-    update();
+    if ( iSampleRateHz != iRate )
+    {
+        iSampleRateHz        = iRate;
+        bStaticCurveDirty    = true;
+        bEffectiveCurveDirty = true;
+        update();
+    }
+}
+
+void CEQCurveWidget::SetBypassed ( const bool bBypassed )
+{
+    if ( bEQBypassed != bBypassed )
+    {
+        bEQBypassed = bBypassed;
+        if ( bEQBypassed )
+        {
+            // Clear real-time analyzer data when bypassed
+            for ( int i = 0; i < kNumBands; ++i )
+            {
+                afSpectrumLevels[i]      = 0.0f;
+                afBandGainReductionDb[i] = 0.0f;
+            }
+        }
+        update();
+    }
+}
+
+void CEQCurveWidget::resizeEvent ( QResizeEvent* pEvent )
+{
+    QWidget::resizeEvent ( pEvent );
+    bStaticCurveDirty    = true;
+    bEffectiveCurveDirty = true;
 }
 
 void CEQCurveWidget::SetDarkTheme ( const bool bEnable )
@@ -219,15 +273,16 @@ float CEQCurveWidget::EvalBandMagnitudeDb ( const int iBand, const float fGainDb
 
 void CEQCurveWidget::ComputeResponseCurve ( const float* afGains, QVector<QPointF>& vecPoints ) const
 {
-    const QRectF r        = PlotRect();
-    const int    iSteps   = std::max ( 1, static_cast<int> ( r.width() ) );
+    const QRectF  r         = PlotRect();
+    const int     iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
+    constexpr int kStepSize = 6;
 
     vecPoints.clear();
-    vecPoints.reserve ( iSteps + 1 );
+    vecPoints.reserve ( ( iWidth / kStepSize ) + 2 );
 
-    for ( int iStep = 0; iStep <= iSteps; ++iStep )
+    for ( int iX = 0; iX < iWidth; iX += kStepSize )
     {
-        const float fX       = r.left() + static_cast<float> ( iStep );
+        const float fX       = r.left() + static_cast<float> ( iX );
         const float fFreqHz  = XToFreq ( fX );
         float       fTotalDb = 0.0f;
 
@@ -239,6 +294,16 @@ void CEQCurveWidget::ComputeResponseCurve ( const float* afGains, QVector<QPoint
         const float fY = DbToYf ( fTotalDb );
         vecPoints.append ( QPointF ( fX, fY ) );
     }
+
+    // Always include the very last point to ensure the curve reaches the right margin
+    const float fX       = r.right();
+    const float fFreqHz  = XToFreq ( fX );
+    float       fTotalDb = 0.0f;
+    for ( int iBand = 0; iBand < kNumBands; ++iBand )
+    {
+        fTotalDb += EvalBandMagnitudeDb ( iBand, afGains[iBand], fFreqHz );
+    }
+    vecPoints.append ( QPointF ( fX, DbToYf ( fTotalDb ) ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -282,8 +347,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     QPainter painter ( this );
     painter.setRenderHint ( QPainter::Antialiasing, true );
 
-    const SControlPalette palette = GetControlPalette ( bDarkTheme );
-    const QRectF          r       = PlotRect();
+    const QRectF r = PlotRect();
 
     // --- Background ---
     const QColor colBg   = bDarkTheme ? QColor ( 22, 24, 28 ) : QColor ( 248, 249, 252 );
@@ -363,7 +427,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
     }
 
-    if ( bAnySpectrum )
+    if ( bAnySpectrum && !bEQBypassed )
     {
         QPainterPath spectrumPath;
         // Start at bottom-left corner of plot area (20 Hz)
@@ -385,10 +449,10 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         QLinearGradient spectrumGrad ( r.left(), r.bottom(), r.left(), r.top() );
         if ( bDarkTheme )
         {
-            spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );       // transparent at bottom
-            spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );      // glowing green
-            spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 60 ) );     // orange near top
-            spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 80 ) );      // red at top
+            spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );   // transparent at bottom
+            spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );  // glowing green
+            spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 60 ) ); // orange near top
+            spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 80 ) );  // red at top
         }
         else
         {
@@ -404,7 +468,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const QColor colSpectrumLine = bDarkTheme ? QColor ( 48, 230, 75, 120 ) : QColor ( 60, 220, 90, 100 );
         painter.setPen ( QPen ( colSpectrumLine, 1.0, Qt::SolidLine ) );
         painter.setBrush ( Qt::NoBrush );
-        
+
         QPainterPath linePath;
         linePath.moveTo ( FreqToXf ( kFreqMin ), r.bottom() );
         for ( int iBand = 0; iBand < kNumBands; ++iBand )
@@ -416,33 +480,48 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     }
 
     // --- Compute and draw response curves ---
-    // Static curve (user-set gains)
-    QVector<QPointF> vecStaticCurve;
-    ComputeResponseCurve ( afBandGainDb, vecStaticCurve );
-
-    // Effective curve (static - gain reduction)
-    float afEffectiveGains[kNumBands];
-
-    for ( int iBand = 0; iBand < kNumBands; ++iBand )
+    if ( bStaticCurveDirty )
     {
-        afEffectiveGains[iBand] = afBandGainDb[iBand] - afBandGainReductionDb[iBand];
+        ComputeResponseCurve ( afBandGainDb, vecStaticCurveCache );
+        bStaticCurveDirty = false;
     }
 
-    QVector<QPointF> vecEffectiveCurve;
-    ComputeResponseCurve ( afEffectiveGains, vecEffectiveCurve );
-
-    // Fill between the two curves to show gain reduction
     bool bAnyReduction = false;
-
-    for ( int iBand = 0; iBand < kNumBands; ++iBand )
+    if ( !bEQBypassed )
     {
-        if ( afBandGainReductionDb[iBand] > 0.05f )
+        for ( int iBand = 0; iBand < kNumBands; ++iBand )
         {
-            bAnyReduction = true;
-            break;
+            if ( afBandGainReductionDb[iBand] > 0.05f )
+            {
+                bAnyReduction = true;
+                break;
+            }
         }
     }
 
+    if ( bAnyReduction )
+    {
+        if ( bEffectiveCurveDirty )
+        {
+            float afEffectiveGains[kNumBands];
+            for ( int iBand = 0; iBand < kNumBands; ++iBand )
+            {
+                afEffectiveGains[iBand] = afBandGainDb[iBand] - afBandGainReductionDb[iBand];
+            }
+            ComputeResponseCurve ( afEffectiveGains, vecEffectiveCurveCache );
+            bEffectiveCurveDirty = false;
+        }
+    }
+    else
+    {
+        vecEffectiveCurveCache = vecStaticCurveCache;
+        bEffectiveCurveDirty   = false;
+    }
+
+    const QVector<QPointF>& vecStaticCurve    = vecStaticCurveCache;
+    const QVector<QPointF>& vecEffectiveCurve = vecEffectiveCurveCache;
+
+    // Fill between the two curves to show gain reduction
     if ( bAnyReduction && vecStaticCurve.size() == vecEffectiveCurve.size() && vecStaticCurve.size() > 1 )
     {
         QPainterPath fillPath;
@@ -486,6 +565,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     {
         // Gradient fill under the curve
         const float fZeroY = DbToYf ( 0.0f );
+        if ( !bEQBypassed )
         {
             QPainterPath areaPath;
             areaPath.moveTo ( vecEffectiveCurve.first().x(), fZeroY );
@@ -508,7 +588,15 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             effectivePath.lineTo ( vecEffectiveCurve[i] );
         }
 
-        const QColor colCurve = bDarkTheme ? QColor ( 54, 207, 255 ) : QColor ( 50, 150, 200 );
+        QColor colCurve;
+        if ( bEQBypassed )
+        {
+            colCurve = bDarkTheme ? QColor ( 100, 105, 115 ) : QColor ( 170, 175, 180 );
+        }
+        else
+        {
+            colCurve = bDarkTheme ? QColor ( 54, 207, 255 ) : QColor ( 50, 150, 200 );
+        }
         painter.setPen ( QPen ( colCurve, 2.0 ) );
         painter.setBrush ( Qt::NoBrush );
         painter.drawPath ( effectivePath );
@@ -521,10 +609,10 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const float fNy = DbToYf ( afBandGainDb[iBand] );
 
         const bool bSelected = ( iBand == iSelectedBand );
-        const int  iRad      = bSelected ? kNodeRadius + 2 : kNodeRadius;
+        const int  iRad      = ( bSelected && !bEQBypassed ) ? kNodeRadius + 2 : kNodeRadius;
 
         // Glow for selected node
-        if ( bSelected )
+        if ( bSelected && !bEQBypassed )
         {
             const QColor colGlow = bDarkTheme ? QColor ( 54, 207, 255, 60 ) : QColor ( 50, 150, 200, 50 );
             painter.setPen ( Qt::NoPen );
@@ -533,9 +621,9 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
 
         // Gain reduction indicator: vertical line from static to effective
-        if ( afBandGainReductionDb[iBand] > 0.05f )
+        if ( afBandGainReductionDb[iBand] > 0.05f && !bEQBypassed )
         {
-            const float fEy = DbToYf ( afBandGainDb[iBand] - afBandGainReductionDb[iBand] );
+            const float  fEy   = DbToYf ( afBandGainDb[iBand] - afBandGainReductionDb[iBand] );
             const QColor colGR = bDarkTheme ? QColor ( 255, 140, 40, 180 ) : QColor ( 220, 100, 20, 160 );
             painter.setPen ( QPen ( colGR, 2.5, Qt::SolidLine, Qt::RoundCap ) );
             painter.drawLine ( QPointF ( fNx, fNy ), QPointF ( fNx, fEy ) );
@@ -547,8 +635,16 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
 
         // Node circle
-        const QColor colNode = bDarkTheme ? ( bSelected ? QColor ( 118, 244, 255 ) : QColor ( 54, 207, 255 ) )
-                                          : ( bSelected ? QColor ( 30, 120, 180 ) : QColor ( 50, 150, 200 ) );
+        QColor colNode;
+        if ( bEQBypassed )
+        {
+            colNode = bDarkTheme ? QColor ( 80, 85, 95 ) : QColor ( 180, 185, 190 );
+        }
+        else
+        {
+            colNode = bDarkTheme ? ( bSelected ? QColor ( 118, 244, 255 ) : QColor ( 54, 207, 255 ) )
+                                 : ( bSelected ? QColor ( 30, 120, 180 ) : QColor ( 50, 150, 200 ) );
+        }
 
         const QColor colBorder = bDarkTheme ? QColor ( 20, 22, 26 ) : QColor ( 255, 255, 255 );
 
@@ -568,14 +664,19 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 // ---------------------------------------------------------------------------
 void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 {
+    if ( bEQBypassed )
+    {
+        return;
+    }
+
     if ( pEvent->button() != Qt::LeftButton )
     {
         QWidget::mousePressEvent ( pEvent );
         return;
     }
 
-    float fDist  = 0.0f;
-    const int iB = FindNearestBand ( pEvent->pos(), &fDist );
+    float     fDist = 0.0f;
+    const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
 
     if ( iB >= 0 && fDist <= kHitRadius )
     {
@@ -595,24 +696,32 @@ void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 {
+    if ( bEQBypassed )
+    {
+        return;
+    }
+
     if ( bDragging && iSelectedBand >= 0 )
     {
         bool bChanged = false;
 
         // --- 1. Handle Gain Dragging (Vertical) ---
-        const float fDb       = YToDb ( pEvent->pos().y() );
-        const int   iClampedDb = std::max ( static_cast<int> ( kGainMinDb ), std::min ( static_cast<int> ( kGainMaxDb ), static_cast<int> ( std::round ( fDb ) ) ) );
+        const float fDb = YToDb ( pEvent->pos().y() );
+        const int   iClampedDb =
+            std::max ( static_cast<int> ( kGainMinDb ), std::min ( static_cast<int> ( kGainMaxDb ), static_cast<int> ( std::round ( fDb ) ) ) );
 
         if ( static_cast<int> ( std::round ( afBandGainDb[iSelectedBand] ) ) != iClampedDb )
         {
             afBandGainDb[iSelectedBand] = static_cast<float> ( iClampedDb );
+            bStaticCurveDirty           = true;
+            bEffectiveCurveDirty        = true;
             emit bandGainChanged ( iSelectedBand, iClampedDb );
             bChanged = true;
         }
 
         // --- 2. Handle Frequency Dragging (Horizontal) ---
         const float fFreqHz = XToFreq ( pEvent->pos().x() );
-        
+
         // Prevent band crossover with a 10% dynamic safety margin:
         float fMinFreq = ( iSelectedBand > 0 ) ? afBandFrequencies[iSelectedBand - 1] * 1.10f : kFreqMin;
         float fMaxFreq = ( iSelectedBand < kNumBands - 1 ) ? afBandFrequencies[iSelectedBand + 1] * 0.90f : kFreqMax;
@@ -625,6 +734,8 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
         if ( std::fabs ( afBandFrequencies[iSelectedBand] - fClampedFreq ) > 0.1f )
         {
             afBandFrequencies[iSelectedBand] = fClampedFreq;
+            bStaticCurveDirty                = true;
+            bEffectiveCurveDirty             = true;
             emit bandFrequencyChanged ( iSelectedBand, fClampedFreq );
             bChanged = true;
         }
@@ -644,13 +755,20 @@ void CEQCurveWidget::mouseReleaseEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 {
+    if ( bEQBypassed )
+    {
+        return;
+    }
+
     float     fDist = 0.0f;
     const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
 
     if ( iB >= 0 && fDist <= kHitRadius )
     {
-        afBandGainDb[iB] = 0.0f;
-        iSelectedBand    = iB;
+        afBandGainDb[iB]     = 0.0f;
+        bStaticCurveDirty    = true;
+        bEffectiveCurveDirty = true;
+        iSelectedBand        = iB;
         emit bandGainReset ( iB );
         emit bandSelected ( iB );
         update();
@@ -659,6 +777,11 @@ void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 {
+    if ( bEQBypassed )
+    {
+        return;
+    }
+
     if ( iSelectedBand < 0 )
     {
         return;
@@ -673,12 +796,14 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
         return;
     }
 
-    const int iDelta  = ( pEvent->angleDelta().y() > 0 ) ? 1 : -1;
-    const int iNewDb  = std::max ( static_cast<int> ( kGainMinDb ),
-                                   std::min ( static_cast<int> ( kGainMaxDb ),
-                                              static_cast<int> ( std::round ( afBandGainDb[iSelectedBand] ) ) + iDelta ) );
+    const int iDelta = ( pEvent->angleDelta().y() > 0 ) ? 1 : -1;
+    const int iNewDb =
+        std::max ( static_cast<int> ( kGainMinDb ),
+                   std::min ( static_cast<int> ( kGainMaxDb ), static_cast<int> ( std::round ( afBandGainDb[iSelectedBand] ) ) + iDelta ) );
 
     afBandGainDb[iSelectedBand] = static_cast<float> ( iNewDb );
+    bStaticCurveDirty           = true;
+    bEffectiveCurveDirty        = true;
     emit bandGainChanged ( iSelectedBand, iNewDb );
     update();
 }
