@@ -789,7 +789,11 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 
     // Check if mouse is reasonably near the selected node
     float     fDist = 0.0f;
+#if QT_VERSION >= QT_VERSION_CHECK ( 6, 0, 0 )
     const int iB    = FindNearestBand ( pEvent->position(), &fDist );
+#else
+    const int iB    = FindNearestBand ( pEvent->posF(), &fDist );
+#endif
 
     if ( iB != iSelectedBand || fDist > kHitRadius * 3 )
     {
