@@ -216,14 +216,14 @@ QCheckBox::indicator:unchecked {
 QGroupBox::indicator:checked,
 QCheckBox::indicator:checked {
     background: rgb(50, 150, 200);
-    image: url(:/styles/checkmark_light.svg);
+    image: url(:/styles/checkmark_light.png);
 }
 
 QGroupBox::indicator:checked:disabled,
 QCheckBox::indicator:checked:disabled {
     background: rgb(151, 202, 241);
     border: 1px solid rgb(170, 180, 190);
-    image: url(:/styles/checkmark_light.svg);
+    image: url(:/styles/checkmark_light.png);
 }
 
 QGroupBox::indicator:checked:hover {
@@ -299,13 +299,13 @@ QSpinBox::down-button:disabled {
 }
 
 QSpinBox::up-arrow {
-    image: url(:/styles/up_arrow_light.svg);
+    image: url(:/styles/up_arrow_light.png);
     width: 10px;
     height: 6px;
 }
 
 QSpinBox::down-arrow {
-    image: url(:/styles/down_arrow_light.svg);
+    image: url(:/styles/down_arrow_light.png);
     width: 10px;
     height: 6px;
 }
@@ -337,7 +337,7 @@ QComboBox::item:selected {
 }
 
 QComboBox::down-arrow {
-    image: url(:/styles/down_arrow_light.svg);
+    image: url(:/styles/down_arrow_light.png);
     width: 10px;
     height: 6px;
 }
