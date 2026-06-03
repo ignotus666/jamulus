@@ -100,6 +100,7 @@ public:
 
 protected:
     void UpdateGroupIDDependencies();
+    void ApplyMeterStyle();
     void SetMute ( const bool bState );
     void SetupFaderTag ( const ESkillLevel eSkillLevel );
     void SendPanValueToServer ( const int iPan );

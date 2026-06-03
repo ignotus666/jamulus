@@ -117,6 +117,7 @@ static bool midiPickupTryApply ( int midiValue, int currentValue, int tolerance,
 \******************************************************************************/
 CChannelFader::CChannelFader ( QWidget* pNW ) :
     eDesign ( GD_STANDARD ),
+    eMeterStyle ( MT_BAR_WIDE ),
     BitmapMutedIcon ( QString::fromUtf8 ( ":/png/mixer/res/mutediconorange.png" ) ),
     bMIDICtrlUsed ( false ),
     bPanIsDragging ( false )
@@ -305,10 +306,36 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     QObject::connect ( pcbGroup, &QPushButton::toggled, this, &CChannelFader::OnGroupStateChanged );
 }
 
+void CChannelFader::ApplyMeterStyle()
+{
+    const EMeterStyle activeMeterStyle = ( eDesign == GD_SLIMFADER ) ? MT_BAR_NARROW : eMeterStyle;
+
+    // Mixer meters are bar-only: only MT_BAR_NARROW maps to narrow, everything else maps to wide.
+    if ( activeMeterStyle == MT_BAR_NARROW )
+    {
+        const int iControlHeight = 85;
+        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_NARROW );
+        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
+        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
+        plbrChannelLevel->setMinimumHeight ( iControlHeight );
+        pFader->setMinimumHeight ( iControlHeight );
+    }
+    else
+    {
+        const int iControlHeight = 120;
+        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
+        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
+        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
+        plbrChannelLevel->setMinimumHeight ( iControlHeight );
+        pFader->setMinimumHeight ( iControlHeight );
+    }
+}
+
 void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 {
     eDesign = eNewDesign;
     plbrChannelLevel->SetNormalModeStyle ( eNewDesign == GD_STANDARD );
+    ApplyMeterStyle();
 
     switch ( eNewDesign )
     {
@@ -330,11 +357,11 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
-        pLabelInstBox->setMinimumWidth ( 54 );
+        pLabelInstBox->setMinimumWidth ( 38 );
         pLabelInstBox->setMinimumHeight ( 88 ); // keep compact mode tight around flag+instrument+label
-        pLabelInstBox->setMaximumWidth ( 54 );
+        pLabelInstBox->setMaximumWidth ( 38 );
         pPan->setFixedSize ( 34, 34 );
-        pFader->setTickPosition ( QSlider::TicksBothSides );
+        pFader->setTickPosition ( QSlider::NoTicks );
         pFader->setStyleSheet ( "" );
         pFader->SetCompactMode ( true );
         pPanLabel->setText ( tr ( "Pan" ) );
@@ -375,26 +402,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 void CChannelFader::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {
     eMeterStyle = eNewMeterStyle;
-
-    // Mixer meters are bar-only: only MT_BAR_NARROW maps to narrow, everything else maps to wide.
-    if ( eNewMeterStyle == MT_BAR_NARROW )
-    {
-        const int iControlHeight = 85;
-        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_NARROW );
-        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
-        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
-        plbrChannelLevel->setMinimumHeight ( iControlHeight );
-        pFader->setMinimumHeight ( iControlHeight );
-    }
-    else
-    {
-        const int iControlHeight = 120;
-        plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
-        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
-        plbrChannelLevel->setMinimumHeight ( iControlHeight );
-        pFader->setMinimumHeight ( iControlHeight );
-    }
+    ApplyMeterStyle();
 }
 
 void CChannelFader::SetDisplayChannelLevel ( const bool eNDCL ) { plbrChannelLevel->setHidden ( !eNDCL ); }
@@ -721,16 +729,7 @@ void CChannelFader::UpdateGroupIDDependencies()
     }
 
     // Match GRP/MUTE/SOLO controls to the info-box width.
-    const int iInfoBoxWidth = qMax ( pLabelInstBox->width(), pLabelInstBox->sizeHint().width() );
-
-    int iButtonWidth = iInfoBoxWidth;
-    if ( eDesign != GD_SLIMFADER )
-    {
-        // Ensure translated text still fits in non-compact mode.
-        iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
-        iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
-        iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
-    }
+    const int iButtonWidth = GetMuteSoloButtonWidthHint();
 
     pcbGroup->setFixedWidth ( iButtonWidth );
     pcbMute->setFixedWidth ( iButtonWidth );
@@ -761,15 +760,17 @@ void CChannelFader::UpdateGroupIDDependencies()
 
 int CChannelFader::GetMuteSoloButtonWidthHint() const
 {
+    if ( eDesign == GD_SLIMFADER )
+    {
+        return pLabelInstBox->maximumWidth();
+    }
+
     const int iInfoBoxWidth = qMax ( pLabelInstBox->width(), pLabelInstBox->sizeHint().width() );
 
     int iButtonWidth = iInfoBoxWidth;
-    if ( eDesign != GD_SLIMFADER )
-    {
-        iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
-        iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
-        iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
-    }
+    iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
+    iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
+    iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
 
     return iButtonWidth;
 }
