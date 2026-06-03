@@ -27,6 +27,9 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QWheelEvent>
+#if QT_VERSION >= QT_VERSION_CHECK ( 6, 0, 0 )
+#include <QEnterEvent>
+#endif
 #include <cmath>
 #include <algorithm>
 
@@ -266,7 +269,11 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     painter.drawEllipse ( dotX, dotY, dotRadius * 2, dotRadius * 2 );
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK ( 6, 0, 0 )
+void CCustomKnob::enterEvent ( QEnterEvent* event )
+#else
 void CCustomKnob::enterEvent ( QEvent* event )
+#endif
 {
     QWidget::enterEvent ( event );
     bKnobHovered = true;
