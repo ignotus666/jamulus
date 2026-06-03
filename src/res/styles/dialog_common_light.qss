@@ -84,7 +84,8 @@ QPushButton {
         stop:0 rgb(250, 252, 255),
         stop:1 rgb(233, 238, 245));
     padding: 3px 9px;
-    min-height: 20px;
+    min-height: 16px;
+    max-height: 16px;
 }
 
 QPushButton:disabled {
@@ -137,8 +138,8 @@ QPushButton[learnActive="false"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(234, 236, 238),
         stop:1 rgb(237, 246, 252));
-    min-height: 20px;
-    max-height: 20px;
+    min-height: 16px;
+    max-height: 16px;
     text-align: center;
     margin: 0px;
 }
