@@ -3,7 +3,7 @@ name: Coding Style Check
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ my-build-effects ]
     paths:
       - '**.cpp'
       - '**.h'
