@@ -844,7 +844,7 @@ int main ( int argc, char** argv )
     bIsClient = true; // Client only - TODO: maybe a switch in interface to change to server?
 
     // bUseMultithreading = true;
-    QApplication* pApp = new QApplication ( argc, argv );
+    QApplication* pApp     = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
     if ( bUseGUI )
@@ -904,7 +904,7 @@ int main ( int argc, char** argv )
         qWarning() << "No JSON-RPC support in this build.";
     }
 #else
-    CRpcServer* pRpcServer = nullptr;
+    CRpcServer*   pRpcServer = nullptr;
 
     if ( iJsonRpcPortNumber != INVALID_PORT )
     {

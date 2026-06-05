@@ -562,10 +562,7 @@ enum EUITheme
     UIT_DARK  = 1
 };
 
-inline bool IsDarkUITheme ( const EUITheme eTheme )
-{
-    return eTheme == UIT_DARK;
-}
+inline bool IsDarkUITheme ( const EUITheme eTheme ) { return eTheme == UIT_DARK; }
 
 inline EUITheme ResolveUITheme ( const EUITheme eTheme ) { return IsDarkUITheme ( eTheme ) ? UIT_DARK : UIT_LIGHT; }
 
@@ -1344,7 +1341,7 @@ public:
 protected:
     virtual void run();
 
-    bool bRun;
+    bool     bRun;
 
 #    if defined( __APPLE__ ) || defined( __MACOSX )
     uint64_t Delay;

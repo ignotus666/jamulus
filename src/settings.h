@@ -244,13 +244,13 @@ public:
         {
             for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
             {
-                aiEQPresetBandGainDb[iPreset][iBand] = 0;
-                abEQPresetBandDynEnabled[iPreset][iBand] = false;
+                aiEQPresetBandGainDb[iPreset][iBand]         = 0;
+                abEQPresetBandDynEnabled[iPreset][iBand]     = false;
                 aiEQPresetBandDynThresholdDb[iPreset][iBand] = -20;
-                aiEQPresetBandDynRatio[iPreset][iBand] = 4;
-                aiEQPresetBandDynAttackMs[iPreset][iBand] = 5;
-                aiEQPresetBandDynReleaseMs[iPreset][iBand] = 80;
-                aiEQPresetBandFrequency[iPreset][iBand] = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+                aiEQPresetBandDynRatio[iPreset][iBand]       = 4;
+                aiEQPresetBandDynAttackMs[iPreset][iBand]    = 5;
+                aiEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
+                aiEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
             }
         }
 
@@ -259,13 +259,13 @@ public:
             bEffectsPresetEQBypass[iPreset] = true;
             for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
             {
-                aiEffectsPresetEQBandGainDb[iPreset][iBand] = 0;
-                abEffectsPresetEQBandDynEnabled[iPreset][iBand] = false;
+                aiEffectsPresetEQBandGainDb[iPreset][iBand]         = 0;
+                abEffectsPresetEQBandDynEnabled[iPreset][iBand]     = false;
                 aiEffectsPresetEQBandDynThresholdDb[iPreset][iBand] = -20;
-                aiEffectsPresetEQBandDynRatio[iPreset][iBand] = 4;
-                aiEffectsPresetEQBandDynAttackMs[iPreset][iBand] = 5;
-                aiEffectsPresetEQBandDynReleaseMs[iPreset][iBand] = 80;
-                aiEffectsPresetEQBandFrequency[iPreset][iBand] = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+                aiEffectsPresetEQBandDynRatio[iPreset][iBand]       = 4;
+                aiEffectsPresetEQBandDynAttackMs[iPreset][iBand]    = 5;
+                aiEffectsPresetEQBandDynReleaseMs[iPreset][iBand]   = 80;
+                aiEffectsPresetEQBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
             }
 
             iEffectsPresetReverbLevel[iPreset]        = 0;
@@ -287,7 +287,6 @@ public:
             iEffectsPresetCompressorReleaseMs[iPreset]      = 120;
             iEffectsPresetCompressorMakeupDb[iPreset]       = 3;
             bEffectsPresetCompressorLimiterEnabled[iPreset] = true;
-
         }
 
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );

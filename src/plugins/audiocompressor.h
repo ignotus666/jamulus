@@ -39,16 +39,16 @@ private:
     float LinearToDb ( const float fValue ) const;
     float ComputeGainDb ( const float fInputDb ) const;
 
-    bool  bBypass;
-    bool  bLimiterEnabled;
-    int   iSampleRateHz;
-    float fThresholdDb;
-    float fRatio;
-    float fAttackMs;
-    float fReleaseMs;
-    float fMakeupDb;
-    float fEnvelope;
-    float fKneeDb;
-    float fLimiterCeilDb;
+    bool               bBypass;
+    bool               bLimiterEnabled;
+    int                iSampleRateHz;
+    float              fThresholdDb;
+    float              fRatio;
+    float              fAttackMs;
+    float              fReleaseMs;
+    float              fMakeupDb;
+    float              fEnvelope;
+    float              fKneeDb;
+    float              fLimiterCeilDb;
     std::atomic<float> fGainReductionDb;
 };

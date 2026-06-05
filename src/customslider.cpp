@@ -175,11 +175,11 @@ SControlPalette GetCustomSliderPalette ( const bool bDarkTheme, const bool bEnab
     if ( !bEnabled )
     {
         auto GetDisabledColor = [bDarkTheme] ( const QColor& color ) -> QColor {
-            int r = color.red();
-            int g = color.green();
-            int b = color.blue();
+            int r     = color.red();
+            int g     = color.green();
+            int b     = color.blue();
             int alpha = color.alpha();
-            int gray = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
+            int gray  = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
             if ( bDarkTheme )
             {
                 return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );

@@ -20,10 +20,7 @@ CAudioCompressor::CAudioCompressor() :
     fGainReductionDb ( 0.0f )
 {}
 
-float CAudioCompressor::GetGainReductionDb()
-{
-    return fGainReductionDb.exchange ( 0.0f );
-}
+float CAudioCompressor::GetGainReductionDb() { return fGainReductionDb.exchange ( 0.0f ); }
 
 void CAudioCompressor::Init ( const int iNSampleRateHz )
 {

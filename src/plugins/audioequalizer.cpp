@@ -110,10 +110,7 @@ float CAudioEqualizer::GetBandDynThresholdDb ( const int iBand ) const
     return ( iBand >= 0 && iBand < NUM_BANDS ) ? aBandDynParams[iBand].fThresholdDb : -20.0f;
 }
 
-float CAudioEqualizer::GetBandDynRatio ( const int iBand ) const
-{
-    return ( iBand >= 0 && iBand < NUM_BANDS ) ? aBandDynParams[iBand].fRatio : 4.0f;
-}
+float CAudioEqualizer::GetBandDynRatio ( const int iBand ) const { return ( iBand >= 0 && iBand < NUM_BANDS ) ? aBandDynParams[iBand].fRatio : 4.0f; }
 
 float CAudioEqualizer::GetBandDynAttackMs ( const int iBand ) const
 {
@@ -130,10 +127,7 @@ float CAudioEqualizer::GetBandGainReductionDb ( const int iBand ) const
     return ( iBand >= 0 && iBand < NUM_BANDS ) ? afBandGainReductionDb[iBand] : 0.0f;
 }
 
-float CAudioEqualizer::GetBandFrequency ( const int iBand ) const
-{
-    return ( iBand >= 0 && iBand < NUM_BANDS ) ? afBandFrequencies[iBand] : 0.0f;
-}
+float CAudioEqualizer::GetBandFrequency ( const int iBand ) const { return ( iBand >= 0 && iBand < NUM_BANDS ) ? afBandFrequencies[iBand] : 0.0f; }
 
 float CAudioEqualizer::GetDefaultBandFrequency ( const int iBand )
 {
@@ -187,7 +181,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
 
             if ( fInputDb > aBandDynParams[iBand].fThresholdDb )
             {
-                const float fOverDb = fInputDb - aBandDynParams[iBand].fThresholdDb;
+                const float fOverDb          = fInputDb - aBandDynParams[iBand].fThresholdDb;
                 afBandGainReductionDb[iBand] = fOverDb * ( 1.0f - 1.0f / aBandDynParams[iBand].fRatio );
             }
             else
@@ -260,11 +254,11 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
                 // --- Detector path: bandpass filter on dry (pre-EQ) input ---
                 if ( aBandDynParams[iBand].bEnabled )
                 {
-                    const SCoeff& d = aDetCoeff[iBand];
+                    const SCoeff& d  = aDetCoeff[iBand];
                     SState&       ds = aDetState[iBand];
 
-                    const float fDetOut = d.b0 * fDry + d.b1 * ds.x1[iChannel] + d.b2 * ds.x2[iChannel] -
-                                          d.a1 * ds.y1[iChannel] - d.a2 * ds.y2[iChannel];
+                    const float fDetOut =
+                        d.b0 * fDry + d.b1 * ds.x1[iChannel] + d.b2 * ds.x2[iChannel] - d.a1 * ds.y1[iChannel] - d.a2 * ds.y2[iChannel];
 
                     ds.x2[iChannel] = ds.x1[iChannel];
                     ds.x1[iChannel] = fDry;
@@ -284,8 +278,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
                 const SCoeff& c = aBandCoeff[iBand];
                 SState&       s = aBandState[iBand];
 
-                const float fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] -
-                                   c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
+                const float fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
 
                 s.x2[iChannel] = s.x1[iChannel];
                 s.x1[iChannel] = fSample;
@@ -306,13 +299,11 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
             {
                 if ( afDetPeak[iBand] > afDetEnvelope[iBand] )
                 {
-                    afDetEnvelope[iBand] =
-                        afAttackCoeff[iBand] * afDetEnvelope[iBand] + ( 1.0f - afAttackCoeff[iBand] ) * afDetPeak[iBand];
+                    afDetEnvelope[iBand] = afAttackCoeff[iBand] * afDetEnvelope[iBand] + ( 1.0f - afAttackCoeff[iBand] ) * afDetPeak[iBand];
                 }
                 else
                 {
-                    afDetEnvelope[iBand] =
-                        afReleaseCoeff[iBand] * afDetEnvelope[iBand] + ( 1.0f - afReleaseCoeff[iBand] ) * afDetPeak[iBand];
+                    afDetEnvelope[iBand] = afReleaseCoeff[iBand] * afDetEnvelope[iBand] + ( 1.0f - afReleaseCoeff[iBand] ) * afDetPeak[iBand];
                 }
             }
         }

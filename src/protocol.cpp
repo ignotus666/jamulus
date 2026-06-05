@@ -832,7 +832,7 @@ void CProtocol::ParseMessageBody ( const CVector<uint8_t>& vecbyMesBodyData, con
                 case PROTMESSID_REQ_SPLIT_MESS_SUPPORT:
                     EvaluateReqSplitMessSupportMes();
                     break;
-                
+
                 case PROTMESSID_RAWAUDIO_SUPPORTED:
                     EvaluateRawAudioSupportedMes();
                     break;

@@ -1612,7 +1612,7 @@ bool CServer::CreateLevelsForAllConChannels ( const int                       iN
 
             // map value to integer for transmission via the protocol (4 bit available)
             const double dScaled = dCurSigLevelForMeterdB * 15.0 / NUM_STEPS_LED_BAR;
-            vecLevelsOut[j] = static_cast<uint16_t> ( std::min ( 15.0, std::ceil ( dScaled ) ) );
+            vecLevelsOut[j]      = static_cast<uint16_t> ( std::min ( 15.0, std::ceil ( dScaled ) ) );
         }
     }
 

@@ -51,8 +51,8 @@ public:
     float GetBandGainReductionDb ( const int iBand ) const;
 
     // Band frequency information (dynamic, for curve widget)
-    void  SetBandFrequency ( const int iBand, const float fFreqHz );
-    float GetBandFrequency ( const int iBand ) const;
+    void         SetBandFrequency ( const int iBand, const float fFreqHz );
+    float        GetBandFrequency ( const int iBand ) const;
     static float GetDefaultBandFrequency ( const int iBand );
 
     void Reset();

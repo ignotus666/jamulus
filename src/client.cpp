@@ -49,9 +49,9 @@
 #include "util.h"
 #include <cmath>
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
-#include <xmmintrin.h>
-#include <pmmintrin.h>
+#if defined( __i386__ ) || defined( __x86_64__ ) || defined( _M_IX86 ) || defined( _M_X64 )
+#    include <xmmintrin.h>
+#    include <pmmintrin.h>
 #endif
 
 /* Implementation *************************************************************/
@@ -1414,7 +1414,7 @@ void CClient::Init()
 
 void CClient::AudioCallback ( CVector<int16_t>& psData, void* arg )
 {
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#if defined( __i386__ ) || defined( __x86_64__ ) || defined( _M_IX86 ) || defined( _M_X64 )
     // Enable Flush-to-Zero (bit 15) and Denormals-are-Zero (bit 6) in the MXCSR register.
     // This prevents denormal floating-point values in feedback loops (reverb, EQ filters, compressor)
     // from dropping into CPU microcode handling, which otherwise spikes CPU usage and causes audio glitches over time.
@@ -1697,8 +1697,8 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
         return;
     }
 
-    constexpr float fPi                   = 3.14159265358979323846f;
-    constexpr int   kOutputBands          = 8;
+    constexpr float fPi          = 3.14159265358979323846f;
+    constexpr int   kOutputBands = 8;
 
     if ( iMonoBlockSizeSam <= 0 )
     {

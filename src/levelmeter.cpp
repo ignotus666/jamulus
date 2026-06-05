@@ -98,7 +98,7 @@ public:
     void SetValue ( const int iNewValue )
     {
         const int iClamped = std::max ( 0, std::min ( iMaxValue, iNewValue ) );
-        iTargetValue = iClamped;
+        iTargetValue       = iClamped;
 
         if ( iTargetValue > iValue )
         {

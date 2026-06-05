@@ -231,8 +231,6 @@ public slots:
     void OnCompressorMakeupChanged ( int value );
     void OnCompressorLimiterChanged ( bool enabled );
 
-
-
     void OnReverbSelLClicked() { pClient->SetReverbOnLeftChan ( true ); }
 
     void OnReverbSelRClicked() { pClient->SetReverbOnLeftChan ( false ); }

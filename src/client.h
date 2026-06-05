@@ -236,12 +236,12 @@ public:
     void SetDoAutoSockBufSize ( const bool bValue );
     bool GetDoAutoSockBufSize() const { return Channel.GetDoAutoSockBufSize(); }
 
-    void SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
-    void SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
-    void SetEQBandFrequency ( const int iBandIndex, const float fFreqHz ) { AudioEqualizer.SetBandFrequency ( iBandIndex, fFreqHz ); }
-    void ResetEQ() { AudioEqualizer.Reset(); }
-    bool GetEQBypass() const { return AudioEqualizer.GetBypass(); }
-    int  GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
+    void  SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
+    void  SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
+    void  SetEQBandFrequency ( const int iBandIndex, const float fFreqHz ) { AudioEqualizer.SetBandFrequency ( iBandIndex, fFreqHz ); }
+    void  ResetEQ() { AudioEqualizer.Reset(); }
+    bool  GetEQBypass() const { return AudioEqualizer.GetBypass(); }
+    int   GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
     float GetEQBandFrequency ( const int iBandIndex ) const { return AudioEqualizer.GetBandFrequency ( iBandIndex ); }
 
     void  SetEQBandDynEnabled ( const int iBand, const bool bEnabled ) { AudioEqualizer.SetBandDynEnabled ( iBand, bEnabled ); }
@@ -271,8 +271,6 @@ public:
     void  SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
     bool  GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
     float GetCompressorGainReductionDb() { return AudioCompressor.GetGainReductionDb(); }
-
-
 
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }
@@ -516,12 +514,12 @@ protected:
     bool        bEnableAudioAlerts;
     bool        bEnableOPUS64;
 
-    bool   bJitterBufferOK;
-    bool   bEnableIPv6;
-    bool   bMuteMeInPersonalMix;
-    QMutex MutexDriverReinit;
-    QMutex MutexOutputBandLevels;
-    float  afOutputBandLevels[8];
+    bool              bJitterBufferOK;
+    bool              bEnableIPv6;
+    bool              bMuteMeInPersonalMix;
+    QMutex            MutexDriverReinit;
+    QMutex            MutexOutputBandLevels;
+    float             afOutputBandLevels[8];
     std::atomic<bool> bOutputBandLevelsEnabled;
 
     // server settings

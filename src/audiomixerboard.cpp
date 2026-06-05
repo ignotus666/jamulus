@@ -790,9 +790,9 @@ int CChannelFader::GetMuteSoloButtonWidthHint() const
     const int iInfoBoxWidth = qMax ( pLabelInstBox->width(), pLabelInstBox->sizeHint().width() );
 
     int iButtonWidth = iInfoBoxWidth;
-    iButtonWidth = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
-    iButtonWidth = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
-    iButtonWidth = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
+    iButtonWidth     = qMax ( iButtonWidth, pcbGroup->sizeHint().width() );
+    iButtonWidth     = qMax ( iButtonWidth, pcbMute->sizeHint().width() );
+    iButtonWidth     = qMax ( iButtonWidth, pcbSolo->sizeHint().width() );
 
     return iButtonWidth;
 }
@@ -2100,8 +2100,8 @@ void CAudioMixerBoard::SetChannelLevels ( const CVector<uint16_t>& vecChannelLev
         }
     }
 
-    const double dScale = bServerIsHighRes ? ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 15.0 )
-                                           : ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 8.0 );
+    const double dScale =
+        bServerIsHighRes ? ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 15.0 ) : ( static_cast<double> ( NUM_STEPS_LED_BAR ) / 8.0 );
 
     for ( size_t iChId = 0; iChId < MAX_NUM_CHANNELS; iChId++ )
     {

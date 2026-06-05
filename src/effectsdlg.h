@@ -53,11 +53,7 @@ class CGRMeter : public QWidget
 {
     Q_OBJECT
 public:
-    CGRMeter ( QWidget* parent = nullptr ) :
-        QWidget ( parent ),
-        fGainReductionDb ( 0.0f ),
-        fVisualGRDb ( 0.0f ),
-        bDarkTheme ( true )
+    CGRMeter ( QWidget* parent = nullptr ) : QWidget ( parent ), fGainReductionDb ( 0.0f ), fVisualGRDb ( 0.0f ), bDarkTheme ( true )
     {
         setFixedWidth ( 40 );
         setMinimumHeight ( 120 );
@@ -112,17 +108,17 @@ protected:
         const int iBarL = 6;
         const int iBarT = 20;
         const int iBarH = r.height() - 30;
-        QRect barRect ( iBarL, iBarT, iBarW, iBarH );
+        QRect     barRect ( iBarL, iBarT, iBarW, iBarH );
 
         painter.fillRect ( barRect, bDarkTheme ? QColor ( 28, 35, 45 ) : QColor ( 214, 220, 228 ) );
 
         const float fMaxGRDb = -20.0f;
-        const float fNormGR = std::max ( 0.0f, std::min ( 1.0f, fVisualGRDb / fMaxGRDb ) );
-        const int iActiveH = static_cast<int> ( fNormGR * iBarH );
+        const float fNormGR  = std::max ( 0.0f, std::min ( 1.0f, fVisualGRDb / fMaxGRDb ) );
+        const int   iActiveH = static_cast<int> ( fNormGR * iBarH );
 
         if ( iActiveH > 0 )
         {
-            QRect activeRect ( iBarL, iBarT, iBarW, iActiveH );
+            QRect           activeRect ( iBarL, iBarT, iBarW, iActiveH );
             QLinearGradient grad ( activeRect.left(), activeRect.top(), activeRect.left(), activeRect.bottom() );
             grad.setColorAt ( 0.0, QColor ( 255, 140, 0 ) );
             grad.setColorAt ( 1.0, QColor ( 255, 69, 0 ) );
@@ -143,14 +139,14 @@ protected:
         painter.setFont ( font );
         painter.setPen ( bDarkTheme ? QColor ( 100, 115, 130 ) : QColor ( 140, 150, 160 ) );
 
-        const int iTickX = iBarL + iBarW + 4;
+        const int iTickX  = iBarL + iBarW + 4;
         const int iLabelX = iTickX + 5;
 
         const float adBValues[] = { 0.0f, -3.0f, -6.0f, -9.0f, -12.0f, -18.0f, -20.0f };
         for ( float fDb : adBValues )
         {
             const float fNorm = fDb / fMaxGRDb;
-            const int iY = iBarT + static_cast<int> ( fNorm * iBarH );
+            const int   iY    = iBarT + static_cast<int> ( fNorm * iBarH );
 
             painter.drawLine ( iTickX, iY, iTickX + 3, iY );
 
@@ -215,7 +211,7 @@ private:
     CClient*         pClient;
     CClientSettings* pSettings;
     int              iSelectedBand = 0;
-    CGRMeter*        pGRMeter = nullptr;
+    CGRMeter*        pGRMeter      = nullptr;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );

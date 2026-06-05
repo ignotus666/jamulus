@@ -810,10 +810,7 @@ void CClientDlg::ShowEffectsWindow()
     EffectsDlg.activateWindow();
 }
 
-void CClientDlg::changeEvent ( QEvent* Event )
-{
-    CBaseDlg::changeEvent ( Event );
-}
+void CClientDlg::changeEvent ( QEvent* Event ) { CBaseDlg::changeEvent ( Event ); }
 
 void CClientDlg::ManageDragNDrop ( QDropEvent* Event, const bool bCheckAccept )
 {
