@@ -931,10 +931,11 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
             aiEQPresetBandFrequency[iIdx][iBand] = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
             if ( GetNumericIniSet ( IniXMLDocument,
-                "client",
-                QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
-                20, 20000,
-                iValue ) )
+                                    "client",
+                                    QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
+                                    20,
+                                    20000,
+                                    iValue ) )
             {
                 aiEQPresetBandFrequency[iIdx][iBand] = iValue;
             }

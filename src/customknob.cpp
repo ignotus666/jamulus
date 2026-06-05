@@ -28,7 +28,7 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #if QT_VERSION >= QT_VERSION_CHECK( 6, 0, 0 )
-#include <QEnterEvent>
+#    include <QEnterEvent>
 #endif
 #include <cmath>
 #include <algorithm>

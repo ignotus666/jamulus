@@ -792,7 +792,7 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 #if QT_VERSION >= QT_VERSION_CHECK( 6, 0, 0 )
     const int iB = FindNearestBand ( pEvent->position(), &fDist );
 #else
-    const int iB    = FindNearestBand ( pEvent->posF(), &fDist );
+    const int iB = FindNearestBand ( pEvent->posF(), &fDist );
 #endif
 
     if ( iB != iSelectedBand || fDist > kHitRadius * 3 )
