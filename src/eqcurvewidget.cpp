@@ -27,9 +27,24 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QMouseEvent>
+#include <QLabel>
+#include <QScreen>
 #include <QWheelEvent>
 #include <QResizeEvent>
 #include <cmath>
+
+namespace
+{
+QString MakeBandTooltipText ( const int iBand, const float fFreqHz, const float fGainDb )
+{
+    const QString strFreq = ( fFreqHz >= 1000.0f ) ? QString::number ( fFreqHz / 1000.0f, 'f', 2 ) + QObject::tr ( " kHz" )
+                                                   : QString::number ( fFreqHz, 'f', 1 ) + QObject::tr ( " Hz" );
+    const QString strGain = ( fGainDb >= 0.0f ) ? QString ( "+%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) )
+                                                : QString ( "%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) );
+    return QObject::tr ( "Band %1 | %2 | %3" ).arg ( iBand + 1 ).arg ( strFreq ).arg ( strGain );
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Construction
@@ -42,7 +57,8 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     bDarkTheme ( true ),
     bEQBypassed ( false ),
     bStaticCurveDirty ( true ),
-    bEffectiveCurveDirty ( true )
+    bEffectiveCurveDirty ( true ),
+    pBandTooltip ( nullptr )
 {
     for ( int i = 0; i < kNumBands; ++i )
     {
@@ -52,10 +68,76 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
         afSpectrumLevels[i]      = 0.0f;
     }
 
-    setMinimumSize ( 300, 160 );
+    setMinimumSize ( 300, 120 );
     setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
     setMouseTracking ( true );
     setFocusPolicy ( Qt::ClickFocus );
+
+    pBandTooltip = new QLabel ( this );
+    pBandTooltip->setWindowFlags ( Qt::ToolTip | Qt::FramelessWindowHint );
+    pBandTooltip->setAttribute ( Qt::WA_ShowWithoutActivating, true );
+    pBandTooltip->setAttribute ( Qt::WA_TransparentForMouseEvents, true );
+    pBandTooltip->setAttribute ( Qt::WA_StyledBackground, true );
+    pBandTooltip->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    pBandTooltip->setWordWrap ( false );
+
+    UpdateBandTooltipStyle();
+}
+
+void CEQCurveWidget::UpdateBandTooltipStyle()
+{
+    if ( !pBandTooltip )
+    {
+        return;
+    }
+
+    if ( bDarkTheme )
+    {
+        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid #4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
+    }
+    else
+    {
+        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #1c1e22; background-color: #fafafa; border: 1px solid #b8bec8; border-radius: 3px; padding: 2px 4px; }" ) );
+    }
+}
+
+void CEQCurveWidget::UpdateBandTooltip ( const int iBand, const bool bVisible )
+{
+    if ( !pBandTooltip )
+    {
+        return;
+    }
+
+    if ( !bVisible || iBand < 0 || iBand >= kNumBands )
+    {
+        pBandTooltip->hide();
+        return;
+    }
+
+    pBandTooltip->setText ( MakeBandTooltipText ( iBand, afBandFrequencies[iBand], afBandGainDb[iBand] ) );
+    pBandTooltip->adjustSize();
+
+    const int iNodeX = static_cast<int> ( std::round ( FreqToXf ( afBandFrequencies[iBand] ) ) );
+    const int iNodeY = static_cast<int> ( std::round ( DbToYf ( afBandGainDb[iBand] ) ) );
+    QPoint    pos    = mapToGlobal ( QPoint ( iNodeX + 16, iNodeY - pBandTooltip->height() - 10 ) );
+
+    const QRect screenRect = QApplication::primaryScreen() ? QApplication::primaryScreen()->availableGeometry() : QRect ( 0, 0, width(), height() );
+    if ( pos.x() + pBandTooltip->width() > screenRect.right() )
+    {
+        pos.setX ( screenRect.right() - pBandTooltip->width() - 8 );
+    }
+    if ( pos.y() < screenRect.top() )
+    {
+        pos.setY ( mapToGlobal ( QPoint ( iNodeX + 16, iNodeY + 18 ) ).y() );
+    }
+    if ( pos.x() < screenRect.left() )
+    {
+        pos.setX ( screenRect.left() + 8 );
+    }
+
+    pBandTooltip->move ( pos );
+    pBandTooltip->show();
+    pBandTooltip->raise();
 }
 
 // ---------------------------------------------------------------------------
@@ -170,6 +252,7 @@ void CEQCurveWidget::SetDarkTheme ( const bool bEnable )
     if ( bDarkTheme != bEnable )
     {
         bDarkTheme = bEnable;
+        UpdateBandTooltipStyle();
         update();
     }
 }
@@ -683,6 +766,7 @@ void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
         iSelectedBand = iB;
         bDragging     = true;
         emit bandSelected ( iB );
+        UpdateBandTooltip ( iB );
         update();
     }
     else if ( iB >= 0 )
@@ -690,6 +774,7 @@ void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
         // Click in plot area but not on a node – still select nearest
         iSelectedBand = iB;
         emit bandSelected ( iB );
+        UpdateBandTooltip ( iB );
         update();
     }
 }
@@ -698,6 +783,30 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 {
     if ( bEQBypassed )
     {
+        return;
+    }
+
+    if ( !bDragging )
+    {
+        float     fDist = 0.0f;
+        const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
+
+        if ( iB >= 0 && fDist <= kHitRadius && iB != iSelectedBand )
+        {
+            iSelectedBand = iB;
+            emit bandSelected ( iB );
+            update();
+        }
+
+        if ( iB >= 0 && fDist <= kHitRadius )
+        {
+            UpdateBandTooltip ( iB );
+        }
+        else
+        {
+            UpdateBandTooltip ( -1, false );
+        }
+
         return;
     }
 
@@ -740,6 +849,8 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
             bChanged = true;
         }
 
+        UpdateBandTooltip ( iSelectedBand );
+
         if ( bChanged )
         {
             update();
@@ -751,6 +862,13 @@ void CEQCurveWidget::mouseReleaseEvent ( QMouseEvent* pEvent )
 {
     Q_UNUSED ( pEvent )
     bDragging = false;
+}
+
+void CEQCurveWidget::leaveEvent ( QEvent* pEvent )
+{
+    Q_UNUSED ( pEvent )
+    UpdateBandTooltip ( -1, false );
+    QWidget::leaveEvent ( pEvent );
 }
 
 void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
@@ -809,5 +927,6 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
     bStaticCurveDirty           = true;
     bEffectiveCurveDirty        = true;
     emit bandGainChanged ( iSelectedBand, iNewDb );
+    UpdateBandTooltip ( iSelectedBand );
     update();
 }

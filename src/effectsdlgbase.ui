@@ -515,16 +515,6 @@
        <string>Equalizer</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="pChbEQBypass">
-         <property name="text">
-          <string>Bypass Equalizer</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="CEQCurveWidget" name="pEQCurveWidget" native="true"/>
-       </item>
        <item row="1" column="0" colspan="2">
         <layout class="QHBoxLayout" name="horizontalLayoutEQPresetRow">
          <item>
@@ -579,6 +569,13 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="pChbEQBypass">
+         <property name="text">
+          <string>Bypass Equalizer</string>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0">
         <layout class="QHBoxLayout" name="horizontalLayoutEQReset">
@@ -783,8 +780,8 @@
           <widget class="QLabel" name="pLblEQDynFreqPrefix">
            <property name="font">
             <font>
-             <weight>75</weight>
-             <bold>true</bold>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="text">
@@ -860,6 +857,9 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="CEQCurveWidget" name="pEQCurveWidget" native="true"/>
        </item>
       </layout>
      </widget>

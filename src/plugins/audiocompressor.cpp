@@ -98,8 +98,7 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
             fMinGRDb = fGRDb;
         }
 
-        const float fGainDb  = fGRDb + fMakeupDb;
-        float       fGainLin = DbToLinear ( fGainDb );
+        float fGainLin = DbToLinear ( fGRDb ) * fMakeupLin;
 
         float fOutL = fL * fGainLin;
         float fOutR = fR * fGainLin;

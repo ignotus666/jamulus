@@ -72,6 +72,7 @@ protected:
     void mouseDoubleClickEvent ( QMouseEvent* pEvent ) override;
     void wheelEvent ( QWheelEvent* pEvent ) override;
     void resizeEvent ( QResizeEvent* pEvent ) override;
+    void leaveEvent ( QEvent* pEvent ) override;
 
 private:
     // Coordinate transforms (plot area ↔ data space)
@@ -86,6 +87,8 @@ private:
     void  ComputeResponseCurve ( const float* afGains, QVector<QPointF>& vecPoints ) const;
 
     int FindNearestBand ( const QPointF& pos, float* pfDistOut = nullptr ) const;
+    void UpdateBandTooltip ( const int iBand, const bool bVisible = true );
+    void UpdateBandTooltipStyle();
 
     // State
     float afBandGainDb[kNumBands];
@@ -103,6 +106,7 @@ private:
     QVector<QPointF> vecEffectiveCurveCache;
     bool             bStaticCurveDirty;
     bool             bEffectiveCurveDirty;
+    class QLabel*    pBandTooltip;
 
     // Layout constants
     static constexpr int kMarginLeft   = 42;
