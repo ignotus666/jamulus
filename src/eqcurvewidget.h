@@ -86,7 +86,7 @@ private:
     float EvalBandMagnitudeDb ( const int iBand, const float fGainDb, const float fFreqHz ) const;
     void  ComputeResponseCurve ( const float* afGains, QVector<QPointF>& vecPoints ) const;
 
-    int FindNearestBand ( const QPointF& pos, float* pfDistOut = nullptr ) const;
+    int  FindNearestBand ( const QPointF& pos, float* pfDistOut = nullptr ) const;
     void UpdateBandTooltip ( const int iBand, const bool bVisible = true );
     void UpdateBandTooltipStyle();
 

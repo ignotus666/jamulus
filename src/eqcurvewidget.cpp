@@ -93,11 +93,13 @@ void CEQCurveWidget::UpdateBandTooltipStyle()
 
     if ( bDarkTheme )
     {
-        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid #4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
+        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid "
+                                                                                                                                  "#4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
     }
     else
     {
-        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #1c1e22; background-color: #fafafa; border: 1px solid #b8bec8; border-radius: 3px; padding: 2px 4px; }" ) );
+        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #1c1e22; background-color: #fafafa; border: 1px solid "
+                                                                                                                                  "#b8bec8; border-radius: 3px; padding: 2px 4px; }" ) );
     }
 }
 
