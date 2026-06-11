@@ -76,6 +76,7 @@
 #include <QElapsedTimer>
 #include <QTextBoundaryFinder>
 #include <QTimer>
+
 #ifndef DISABLE_SRV_DNS
 #    include <QDnsLookup>
 #endif
@@ -98,6 +99,7 @@
 #    include <QDesktopServices>
 #    include <QKeyEvent>
 #    include <QStackedLayout>
+#    include <QSoundEffect>
 #    include "ui_aboutdlgbase.h"
 #endif
 
@@ -496,6 +498,8 @@ public:
     CMinimumStackedLayout ( QWidget* parent = nullptr ) : QStackedLayout ( parent ) {}
     virtual QSize sizeHint() const override;
 };
+
+void PlayAudioAlert ( QUrl soundUrl );
 #endif
 
 /******************************************************************************\

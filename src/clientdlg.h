@@ -59,7 +59,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QActionGroup>
-#include <QSoundEffect>
 #include <QEvent>
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
 #    include <QVersionNumber>
