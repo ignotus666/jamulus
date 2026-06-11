@@ -549,10 +549,7 @@ void CEffectsDlg::ApplyEffectsPresetFromComboIndex ( const int iPresetIndex )
     ApplyEffectsPresetFromSlot ( iPresetSlot );
 }
 
-void CEffectsDlg::ApplyEffectsPreset ( const int iPresetSlot )
-{
-    ApplyEffectsPresetFromSlot ( iPresetSlot );
-}
+void CEffectsDlg::ApplyEffectsPreset ( const int iPresetSlot ) { ApplyEffectsPresetFromSlot ( iPresetSlot ); }
 
 void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
 {
