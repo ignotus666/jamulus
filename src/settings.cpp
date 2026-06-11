@@ -1128,6 +1128,24 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         }
     }
 
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "selectedeffectspreset", -1, MAX_NUM_EFFECT_PRESETS, iValue ) )
+    {
+        iSelectedEffectsPreset = iValue;
+    }
+    else
+    {
+        iSelectedEffectsPreset = INVALID_INDEX;
+    }
+
+    if ( GetNumericIniSet ( IniXMLDocument, "client", "selectedeqpreset", -1, MAX_NUM_EQ_USER_PRESETS, iValue ) )
+    {
+        iSelectedEQPreset = iValue;
+    }
+    else
+    {
+        iSelectedEQPreset = INVALID_INDEX;
+    }
+
     // directory type
 
     //### TODO: BEGIN ###//
@@ -1539,6 +1557,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                         bEffectsPresetCompressorLimiterEnabled[iIdx] );
     }
 
+    // selected preset indices
+    SetNumericIniSet ( IniXMLDocument, "client", "selectedeffectspreset", iSelectedEffectsPreset );
+    SetNumericIniSet ( IniXMLDocument, "client", "selectedeqpreset", iSelectedEQPreset );
+
     // directory type
     SetNumericIniSet ( IniXMLDocument, "client", "directorytype", static_cast<int> ( eDirectoryType ) );
 
@@ -1848,5 +1870,60 @@ void CServerSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     if ( isAboutToQuit )
     {
         pServer->SetDirectoryType ( AT_NONE );
+    }
+}
+
+void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot )
+{
+    if ( iPresetSlot >= 0 && iPresetSlot < MAX_NUM_EFFECT_PRESETS )
+    {
+        iEffectsPresetReverbLevel[iPresetSlot]        = pClient->GetReverbLevel();
+        bEffectsPresetReverbOnLeftChan[iPresetSlot]   = pClient->IsReverbOnLeftChan();
+        iEffectsPresetReverbPreDelayMs[iPresetSlot]   = pClient->GetReverbPreDelayMs();
+        iEffectsPresetReverbRoomSize[iPresetSlot]     = pClient->GetReverbRoomSize();
+        iEffectsPresetReverbDamping[iPresetSlot]      = pClient->GetReverbDamping();
+        iEffectsPresetReverbWetMix[iPresetSlot]       = pClient->GetReverbWetMix();
+        iEffectsPresetReverbEarlyLevel[iPresetSlot]   = pClient->GetReverbEarlyLevel();
+        iEffectsPresetReverbWidth[iPresetSlot]        = pClient->GetReverbWidth();
+        bEffectsPresetReverbEarlyEnabled[iPresetSlot] = pClient->GetReverbEarlyEnabled();
+        bEffectsPresetReverbFreeze[iPresetSlot]       = pClient->GetReverbFreeze();
+        bEffectsPresetReverbBypass[iPresetSlot]       = pClient->GetReverbBypass();
+
+        bEffectsPresetCompressorBypass[iPresetSlot]         = pClient->GetCompressorBypass();
+        iEffectsPresetCompressorThresholdDb[iPresetSlot]    = static_cast<int> ( pClient->GetCompressorThresholdDb() );
+        iEffectsPresetCompressorRatio[iPresetSlot]          = static_cast<int> ( pClient->GetCompressorRatio() );
+        iEffectsPresetCompressorAttackMs[iPresetSlot]       = static_cast<int> ( pClient->GetCompressorAttackMs() );
+        iEffectsPresetCompressorReleaseMs[iPresetSlot]      = static_cast<int> ( pClient->GetCompressorReleaseMs() );
+        iEffectsPresetCompressorMakeupDb[iPresetSlot]       = static_cast<int> ( pClient->GetCompressorMakeupDb() );
+        bEffectsPresetCompressorLimiterEnabled[iPresetSlot] = pClient->GetCompressorLimiterEnabled();
+
+        bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            aiEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+            aiEffectsPresetEQBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+            abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+            aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+            aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+            aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+            aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
+        }
+    }
+}
+
+void CClientSettings::SaveEQPresetFromClient ( int iPresetSlot )
+{
+    if ( iPresetSlot >= 0 && iPresetSlot < MAX_NUM_EQ_USER_PRESETS )
+    {
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            aiEQPresetBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+            aiEQPresetBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
+            abEQPresetBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
+            aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
+            aiEQPresetBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
+            aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
+            aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
+        }
     }
 }

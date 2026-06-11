@@ -47,6 +47,7 @@
 #include "clientdlg.h"
 #include <QBoxLayout>
 #include <QFile>
+#include <QMenu>
 #include "util.h"
 
 /* Implementation *************************************************************/
@@ -170,7 +171,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
     butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
-                               tr ( "Opens the effects window. Reverb and future effects are configured there." ) );
+                               tr ( "Opens the effects window: Reverb, compression and EQ." ) );
     butEffects->setAccessibleName ( tr ( "Open effects window" ) );
 
     // delay LED
@@ -307,6 +308,46 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     chbChat->setMinimumWidth ( iMainPillWidth );
     butEffects->setMinimumWidth ( iMainPillWidth );
     butEffects->setCheckable ( true );
+    butEffects->setContextMenuPolicy ( Qt::CustomContextMenu );
+    QObject::connect ( butEffects, &QWidget::customContextMenuRequested, this, [this] ( const QPoint& pos ) {
+        QMenu presetMenu ( this );
+
+        QAction* pWhatsThisAction = presetMenu.addAction ( tr ( "What's this?" ) );
+        QObject::connect ( pWhatsThisAction, &QAction::triggered, this, [this] {
+            QWhatsThis::showText ( butEffects->mapToGlobal ( QPoint ( 0, butEffects->height() ) ), butEffects->whatsThis(), butEffects );
+        } );
+
+        presetMenu.addSeparator();
+        QAction* pPresetsHeaderAction = presetMenu.addAction ( tr ( "Presets:" ) );
+        QFont    headerFont           = pPresetsHeaderAction->font();
+        headerFont.setBold ( true );
+        pPresetsHeaderAction->setFont ( headerFont );
+        pPresetsHeaderAction->setEnabled ( false );
+        presetMenu.addSeparator();
+
+        bool  bHasPreset = false;
+
+        for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
+        {
+            const QString strName = pSettings->vstrEffectsPresetNames[iPreset];
+            if ( strName.isEmpty() )
+            {
+                continue;
+            }
+
+            bHasPreset = true;
+            QAction* pAction = presetMenu.addAction ( strName );
+            QObject::connect ( pAction, &QAction::triggered, this, [this, iPreset] { EffectsDlg.ApplyEffectsPreset ( iPreset ); } );
+        }
+
+        if ( !bHasPreset )
+        {
+            QAction* pAction = presetMenu.addAction ( tr ( "No saved global effects presets" ) );
+            pAction->setEnabled ( false );
+        }
+
+        presetMenu.exec ( butEffects->mapToGlobal ( pos ) );
+    } );
 
     const int iMeterLabelWidth = qMax ( lbrInputLevelL->minimumWidth(), lbrInputLevelL->sizeHint().width() );
     lblLevelMeterLeft->setFixedWidth ( iMeterLabelWidth );

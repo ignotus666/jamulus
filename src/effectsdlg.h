@@ -177,6 +177,7 @@ public:
     void UpdateOutputBandLevels ( const CVector<float>& vecOutLevels );
     void UpdateCompressorGainReduction ( const float fGRDb );
     void OnUIThemeChanged();
+    void ApplyEffectsPreset ( const int iPresetSlot );
 
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;

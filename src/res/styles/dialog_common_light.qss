@@ -84,8 +84,8 @@ QPushButton {
         stop:0 rgb(250, 252, 255),
         stop:1 rgb(233, 238, 245));
     padding: 1px 5px;
-    min-height: 16px;
-    max-height: 16px;
+    min-height: 18px;
+    max-height: 18px;
 }
 
 QPushButton:disabled {
@@ -124,34 +124,6 @@ QPushButton[learnActive="true"]:hover {
 }
 
 QPushButton[learnActive="true"]:disabled {
-    color: rgb(142, 148, 156);
-    border: 1px solid rgb(190, 196, 204);
-    background: rgb(238, 240, 244);
-}
-
-QPushButton[learnActive="false"] {
-    color: rgb(37, 37, 40);
-    spacing: 0px;
-    padding: 4px 7px;
-    border: 1px solid rgb(88, 88, 92);
-    border-radius: 6px;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgb(234, 236, 238),
-        stop:1 rgb(237, 246, 252));
-    min-height: 16px;
-    max-height: 16px;
-    text-align: center;
-    margin: 0px;
-}
-
-QPushButton[learnActive="false"]:hover {
-    border: 2px solid rgb(59, 164, 245);
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgb(241, 247, 255),
-        stop:1 rgb(225, 237, 251));
-}
-
-QPushButton[learnActive="false"]:disabled {
     color: rgb(142, 148, 156);
     border: 1px solid rgb(190, 196, 204);
     background: rgb(238, 240, 244);

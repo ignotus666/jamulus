@@ -211,6 +211,8 @@ public:
         fCompressorMakeupDb ( 3.0f ),
         bCompressorLimiterEnabled ( true ),
         eUITheme ( UIT_LIGHT ),
+        iSelectedEffectsPreset ( INVALID_INDEX ),
+        iSelectedEQPreset ( INVALID_INDEX ),
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
         vecWindowPosEffects(),  // empty array
@@ -294,6 +296,9 @@ public:
 
     void LoadFaderSettings ( const QString& strCurFileName );
     void SaveFaderSettings ( const QString& strCurFileName );
+
+    void SaveEffectsPresetFromClient ( int iPresetSlot );
+    void SaveEQPresetFromClient ( int iPresetSlot );
 
     // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
     static void ParseCtrlMidiCh ( const QString& strMidiMap,
@@ -396,6 +401,8 @@ public:
     float            fCompressorMakeupDb;
     bool             bCompressorLimiterEnabled;
     EUITheme         eUITheme;
+    int              iSelectedEffectsPreset;
+    int              iSelectedEQPreset;
 
     // window position/state settings
     QByteArray vecWindowPosSettings;
