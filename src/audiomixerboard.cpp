@@ -153,6 +153,7 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     plbrChannelLevel = new CLevelMeter ( pLevelsBox );
     pFader           = new CCustomSlider ( Qt::Vertical, pLevelsBox );
     pPan             = new CCustomKnob ( pLevelsBox );
+    pPan->SetCenterArc ( true );
     pPanLabel        = new QLabel ( tr ( "Pan" ), pLevelsBox );
     pInfoLabel       = new QLabel ( "", pLevelsBox );
 

@@ -37,32 +37,50 @@ const double PI = 3.14159265359;
 
 namespace
 {
-void DrawKnobCap ( QPainter&     painter,
-                   const QRect&  knobRect,
-                   const QRect&  innerRect,
-                   const QColor& knobTop,
-                   const QColor& knobMid,
-                   const QColor& knobBottom,
-                   const QColor& outlineColor,
-                   const QColor& bevelColor )
-{
-    QLinearGradient gradient ( knobRect.topLeft(), knobRect.bottomLeft() );
-    gradient.setColorAt ( 0.0, knobTop );
-    gradient.setColorAt ( 0.5, knobMid );
-    gradient.setColorAt ( 1.0, knobBottom );
-    painter.setBrush ( gradient );
-    painter.setPen ( QPen ( outlineColor, 1.2 ) );
-    painter.drawEllipse ( knobRect );
-
-    painter.setPen ( QPen ( bevelColor, 1 ) );
-    painter.setBrush ( Qt::NoBrush );
-    painter.drawEllipse ( innerRect );
-}
-
 QPoint PointOnCircle ( const int centerX, const int centerY, const double radius, const double angleRadians )
 {
     return QPoint ( centerX + static_cast<int> ( radius * std::cos ( angleRadians ) ),
                     centerY + static_cast<int> ( radius * std::sin ( angleRadians ) ) );
+}
+
+SControlPalette GetCustomKnobPalette ( const bool bDarkTheme, const bool bEnabled )
+{
+    SControlPalette palette = GetControlPalette ( bDarkTheme );
+    if ( !bEnabled )
+    {
+        auto GetDisabledColor = [bDarkTheme] ( const QColor& color ) -> QColor {
+            int r     = color.red();
+            int g     = color.green();
+            int b     = color.blue();
+            int alpha = color.alpha();
+            int gray  = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
+            if ( bDarkTheme )
+            {
+                return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );
+            }
+            else
+            {
+                return QColor ( ( gray + 200 ) / 2, ( gray + 200 ) / 2, ( gray + 200 ) / 2, alpha );
+            }
+        };
+
+        palette.accent           = GetDisabledColor ( palette.accent );
+        palette.accentGlow       = GetDisabledColor ( palette.accentGlow );
+        palette.accentBright     = GetDisabledColor ( palette.accentBright );
+        palette.accentMid        = GetDisabledColor ( palette.accentMid );
+        palette.accentDeep       = GetDisabledColor ( palette.accentDeep );
+
+        palette.knobNormalTop    = GetDisabledColor ( palette.knobNormalTop );
+        palette.knobNormalMid    = GetDisabledColor ( palette.knobNormalMid );
+        palette.knobNormalBottom = GetDisabledColor ( palette.knobNormalBottom );
+        palette.knobHoverTop     = GetDisabledColor ( palette.knobHoverTop );
+        palette.knobHoverMid     = GetDisabledColor ( palette.knobHoverMid );
+        palette.knobHoverBottom  = GetDisabledColor ( palette.knobHoverBottom );
+        palette.knobOutline      = GetDisabledColor ( palette.knobOutline );
+        palette.markerNormal     = GetDisabledColor ( palette.markerNormal );
+        palette.markerHover      = GetDisabledColor ( palette.markerHover );
+    }
+    return palette;
 }
 } // namespace
 
@@ -76,7 +94,8 @@ CCustomKnob::CCustomKnob ( QWidget* parent ) :
     iDragStartY ( 0 ),
     bMousePressed ( false ),
     bKnobHovered ( false ),
-    bDarkTheme ( true )
+    bDarkTheme ( true ),
+    bCenterArc ( false )
 {
     setFocusPolicy ( Qt::StrongFocus );
     setAttribute ( Qt::WA_OpaquePaintEvent );
@@ -169,13 +188,10 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     int       centerX    = w / 2;
     int       centerY    = h / 2;
     const int dialRadius = std::max ( 8, ( std::min ( w, h ) / 2 ) - 2 );
-    const int knobRadius = std::max ( 5, dialRadius - 6 );
+    const int knobRadius = std::max ( 5, dialRadius - 5 );
 
-    const SControlPalette palette             = GetControlPalette ( bDarkTheme );
+    const SControlPalette palette             = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
     const QColor          bgColor             = palette.background;
-    const QColor          dialColor           = palette.dial;
-    const QColor          dialOutlineColor    = palette.dialOutline;
-    const QColor          ringColor           = palette.ring;
     const QColor          arcColor            = palette.accent;
     const QColor          glowColor           = palette.accentGlow;
     const QColor          knobNormalTop       = palette.knobNormalTop;
@@ -187,86 +203,85 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     const QColor          knobOutlineColor    = palette.knobOutline;
     const QColor          markerNormalColor   = palette.markerNormal;
     const QColor          markerHoverColor    = palette.markerHover;
-    const QColor          markerDotColor      = palette.markerDot;
-    const QColor          markerDotHoverColor = palette.markerDotHover;
-    const QColor          innerBevelColor     = palette.innerBevel;
 
     // Fill background
     painter.fillRect ( rect(), bgColor );
 
-    // Draw outer dial plate
-    painter.setPen ( QPen ( dialOutlineColor, 1 ) );
-    painter.setBrush ( dialColor );
-    painter.drawEllipse ( centerX - dialRadius, centerY - dialRadius, dialRadius * 2, dialRadius * 2 );
-
-    // Subtle ring base, always visible
-    painter.setPen ( QPen ( ringColor, 1.2 ) );
+    // Draw track background arc
+    const QColor trackBg = bDarkTheme ? QColor ( 45, 52, 60 ) : QColor ( 210, 215, 222 );
+    painter.setPen ( QPen ( trackBg, 3.0, Qt::SolidLine, Qt::RoundCap ) );
     painter.setBrush ( Qt::NoBrush );
-    painter.drawEllipse ( centerX - ( dialRadius - 2 ), centerY - ( dialRadius - 2 ), ( dialRadius - 2 ) * 2, ( dialRadius - 2 ) * 2 );
+    
+    const int arcRadius = dialRadius - 2;
+    QRect arcRect ( centerX - arcRadius, centerY - arcRadius, arcRadius * 2, arcRadius * 2 );
+    
+    auto toQtArcAngle16 = [] ( double mathDeg ) { return static_cast<int> ( -16.0 * mathDeg ); };
+    painter.drawArc ( arcRect, toQtArcAngle16 ( 135.0 ), toQtArcAngle16 ( 270.0 ) );
 
-    // No notch marks for this control.
-
-    // Draw center-out pan arc: hidden at center, grows to left or right
-    const int arcRadius = std::max ( 6, dialRadius - 3 );
-    QRect     arcRect ( centerX - arcRadius, centerY - arcRadius, arcRadius * 2, arcRadius * 2 );
+    // Draw active value arc (with glow underlay)
     const int range       = std::max ( 1, iMaxValue - iMinValue );
     const int centerValue = iMinValue + range / 2;
 
-    auto toQtArcAngle16 = [] ( double mathDeg ) { return static_cast<int> ( -16.0 * mathDeg ); };
-
-    if ( iCurrentValue != centerValue )
+    if ( bCenterArc )
     {
-        const double centerAngle = angleFromValue ( centerValue );
-        const double valueAngle  = angleFromValue ( iCurrentValue );
-        const double sweepDeg    = valueAngle - centerAngle;
+        if ( iCurrentValue != centerValue )
+        {
+            const double centerAngle = angleFromValue ( centerValue );
+            const double valueAngle  = angleFromValue ( iCurrentValue );
+            const double sweepDeg    = valueAngle - centerAngle;
 
-        painter.setPen ( QPen ( arcColor, 2.4 ) );
-        painter.setBrush ( Qt::NoBrush );
-        painter.drawArc ( arcRect, toQtArcAngle16 ( centerAngle ), toQtArcAngle16 ( sweepDeg ) );
+            painter.setPen ( QPen ( glowColor, 5.0, Qt::SolidLine, Qt::RoundCap ) );
+            painter.drawArc ( arcRect, toQtArcAngle16 ( centerAngle ), toQtArcAngle16 ( sweepDeg ) );
+
+            painter.setPen ( QPen ( arcColor, 3.0, Qt::SolidLine, Qt::RoundCap ) );
+            painter.drawArc ( arcRect, toQtArcAngle16 ( centerAngle ), toQtArcAngle16 ( sweepDeg ) );
+        }
+    }
+    else
+    {
+        if ( iCurrentValue != iMinValue )
+        {
+            const double minAngle   = angleFromValue ( iMinValue );
+            const double valueAngle = angleFromValue ( iCurrentValue );
+            const double sweepDeg   = valueAngle - minAngle;
+
+            painter.setPen ( QPen ( glowColor, 5.0, Qt::SolidLine, Qt::RoundCap ) );
+            painter.drawArc ( arcRect, toQtArcAngle16 ( minAngle ), toQtArcAngle16 ( sweepDeg ) );
+
+            painter.setPen ( QPen ( arcColor, 3.0, Qt::SolidLine, Qt::RoundCap ) );
+            painter.drawArc ( arcRect, toQtArcAngle16 ( minAngle ), toQtArcAngle16 ( sweepDeg ) );
+        }
     }
 
-    // Draw indicator line from center
-    double       angle     = angleFromValue ( iCurrentValue );
-    double       radians   = angle * PI / 180.0;
-    const QPoint linePoint = PointOnCircle ( centerX, centerY, knobRadius - 2, radians );
-
-    // Cyan indicator glow
-    painter.setPen ( QPen ( glowColor, 4 ) );
-    painter.drawLine ( centerX, centerY, linePoint.x(), linePoint.y() );
-
-    // Indicator line (cyan)
-    painter.setPen ( QPen ( arcColor, 2 ) );
-    painter.drawLine ( centerX, centerY, linePoint.x(), linePoint.y() );
-
-    // Draw center knob (dark cap)
+    // Draw center knob cap
     QRect knobRect ( centerX - knobRadius, centerY - knobRadius, knobRadius * 2, knobRadius * 2 );
+    const bool bHighlight = bKnobHovered || bMousePressed;
+    const QColor capTop = bHighlight ? knobHoverTop : knobNormalTop;
+    const QColor capMid = bHighlight ? knobHoverMid : knobNormalMid;
+    const QColor capBottom = bHighlight ? knobHoverBottom : knobNormalBottom;
 
-    const bool   bHighlight  = bKnobHovered || bMousePressed;
-    const QColor capTop      = bHighlight ? knobHoverTop : knobNormalTop;
-    const QColor capMid      = bHighlight ? knobHoverMid : knobNormalMid;
-    const QColor capBottom   = bHighlight ? knobHoverBottom : knobNormalBottom;
-    const QColor capOutline  = bHighlight ? arcColor : knobOutlineColor;
-    const int    innerRadius = std::max ( 2, knobRadius - 4 );
-    QRect        innerRect ( centerX - innerRadius, centerY - innerRadius, innerRadius * 2, innerRadius * 2 );
-    DrawKnobCap ( painter, knobRect, innerRect, capTop, capMid, capBottom, capOutline, innerBevelColor );
+    QLinearGradient capGrad ( knobRect.topLeft(), knobRect.bottomRight() );
+    capGrad.setColorAt ( 0.0, capTop );
+    capGrad.setColorAt ( 0.5, capMid );
+    capGrad.setColorAt ( 1.0, capBottom );
 
-    // Rotating cap marker so the knob body itself appears to rotate
-    const int    markerOuterRadius = std::max ( 3, knobRadius - 2 );
-    const int    markerInnerRadius = std::max ( 2, knobRadius - 8 );
-    const QPoint markerInnerPoint  = PointOnCircle ( centerX, centerY, markerInnerRadius, radians );
-    const QPoint markerOuterPoint  = PointOnCircle ( centerX, centerY, markerOuterRadius, radians );
+    painter.setBrush ( capGrad );
+    painter.setPen ( QPen ( bHighlight ? arcColor : knobOutlineColor, 1.2 ) );
+    painter.drawEllipse ( knobRect );
 
-    painter.setPen ( QPen ( ( bKnobHovered || bMousePressed ) ? markerHoverColor : markerNormalColor, 2 ) );
-    painter.drawLine ( markerInnerPoint, markerOuterPoint );
+    // Draw inner subtle highlight ring on the knob cap
+    painter.setPen ( QPen ( QColor ( 255, 255, 255, bHighlight ? 30 : 15 ), 1.0 ) );
+    painter.setBrush ( Qt::NoBrush );
+    painter.drawEllipse ( knobRect.adjusted ( 1, 1, -1, -1 ) );
 
-    // Marker tip dot
-    const int    dotRadius = std::max ( 2, knobRadius / 7 );
-    const QPoint dotPoint  = PointOnCircle ( centerX, centerY, knobRadius - 1, radians );
-    const int    dotX      = dotPoint.x() - dotRadius;
-    const int    dotY      = dotPoint.y() - dotRadius;
-    painter.setPen ( Qt::NoPen );
-    painter.setBrush ( ( bKnobHovered || bMousePressed ) ? markerDotHoverColor : markerDotColor );
-    painter.drawEllipse ( dotX, dotY, dotRadius * 2, dotRadius * 2 );
+    // Draw notch pointer on the knob cap itself
+    double angle = angleFromValue ( iCurrentValue );
+    double radians = angle * PI / 180.0;
+    const QPoint p1 = PointOnCircle ( centerX, centerY, knobRadius - 5, radians );
+    const QPoint p2 = PointOnCircle ( centerX, centerY, knobRadius - 1, radians );
+
+    painter.setPen ( QPen ( bHighlight ? markerHoverColor : markerNormalColor, 2.0, Qt::SolidLine, Qt::RoundCap ) );
+    painter.drawLine ( p1, p2 );
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK( 6, 0, 0 )

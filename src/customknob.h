@@ -25,6 +25,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QSlider>
 
 /**
  * @brief Modern custom pan knob with circular dial design.
@@ -56,6 +57,22 @@ public:
             update();
         }
     }
+    void SetCenterArc ( bool bEnable )
+    {
+        if ( bCenterArc != bEnable )
+        {
+            bCenterArc = bEnable;
+            update();
+        }
+    }
+
+    // Slider-compatibility stubs for drop-in replacement
+    void setTickInterval ( int ) {}
+    void setTickPosition ( QSlider::TickPosition ) {}
+    void setOrientation ( Qt::Orientation ) {}
+    void SetCompactMode ( bool ) {}
+    void setMinimum ( int min ) { setRange ( min, iMaxValue ); }
+    void setMaximum ( int max ) { setRange ( iMinValue, max ); }
 
     // Sizing
     QSize sizeHint() const override { return QSize ( 50, 50 ); }
@@ -94,4 +111,5 @@ private:
     bool bMousePressed;
     bool bKnobHovered;
     bool bDarkTheme;
+    bool bCenterArc;
 };

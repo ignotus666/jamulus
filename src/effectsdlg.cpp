@@ -23,6 +23,7 @@
 \******************************************************************************/
 
 #include "effectsdlg.h"
+#include "customknob.h"
 #include "eqcurvewidget.h"
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -39,15 +40,15 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     setupUi ( this );
 
     pGRMeter = new CGRMeter ( this );
-    gridLayoutCompressorRows->addWidget ( pGRMeter, 0, 3, 5, 1 );
+    gridLayoutCompressorRows->addWidget ( pGRMeter, 0, 7, 3, 1 );
 
     // Save tab index on change
     connect ( pTabs, &QTabWidget::currentChanged, this, [this] ( int idx ) { pSettings->iEffectsTab = idx; } );
 
     setWindowTitle ( tr ( "Effects" ) );
-    pSldReverb->setRange ( 0, AUD_REVERB_MAX );
-    pSldReverb->setTickInterval ( AUD_REVERB_MAX / 5 );
-    pSldReverb->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverb->setRange ( 0, AUD_REVERB_MAX );
+    pKnobReverb->setTickInterval ( AUD_REVERB_MAX / 5 );
+    pKnobReverb->setTickPosition ( QSlider::TicksBothSides );
 
     pLblReverbPreDelayValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblReverbRoomValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -62,24 +63,24 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblReverbEarlyValue->setMinimumWidth ( 32 );
     pLblReverbWidthValue->setMinimumWidth ( 32 );
 
-    pSldReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
-    pSldReverbPreDelay->setTickInterval ( std::max ( 1, REVERB_PRE_DELAY_MAX_MS / 5 ) );
-    pSldReverbPreDelay->setTickPosition ( QSlider::TicksBothSides );
-    pSldReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
-    pSldReverbRoom->setTickInterval ( std::max ( 1, REVERB_ROOM_SIZE_MAX / 5 ) );
-    pSldReverbRoom->setTickPosition ( QSlider::TicksBothSides );
-    pSldReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
-    pSldReverbDamping->setTickInterval ( std::max ( 1, REVERB_DAMPING_MAX / 5 ) );
-    pSldReverbDamping->setTickPosition ( QSlider::TicksBothSides );
-    pSldReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
-    pSldReverbWet->setTickInterval ( std::max ( 1, REVERB_WET_MIX_MAX / 5 ) );
-    pSldReverbWet->setTickPosition ( QSlider::TicksBothSides );
-    pSldReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
-    pSldReverbEarly->setTickInterval ( std::max ( 1, REVERB_EARLY_LEVEL_MAX / 5 ) );
-    pSldReverbEarly->setTickPosition ( QSlider::TicksBothSides );
-    pSldReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
-    pSldReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
-    pSldReverbWidth->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
+    pKnobReverbPreDelay->setTickInterval ( std::max ( 1, REVERB_PRE_DELAY_MAX_MS / 5 ) );
+    pKnobReverbPreDelay->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
+    pKnobReverbRoom->setTickInterval ( std::max ( 1, REVERB_ROOM_SIZE_MAX / 5 ) );
+    pKnobReverbRoom->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
+    pKnobReverbDamping->setTickInterval ( std::max ( 1, REVERB_DAMPING_MAX / 5 ) );
+    pKnobReverbDamping->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
+    pKnobReverbWet->setTickInterval ( std::max ( 1, REVERB_WET_MIX_MAX / 5 ) );
+    pKnobReverbWet->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
+    pKnobReverbEarly->setTickInterval ( std::max ( 1, REVERB_EARLY_LEVEL_MAX / 5 ) );
+    pKnobReverbEarly->setTickPosition ( QSlider::TicksBothSides );
+    pKnobReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
+    pKnobReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
+    pKnobReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
     pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblCompressorRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -91,21 +92,21 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblCompressorAttackValue->setMinimumWidth ( 36 );
     pLblCompressorReleaseValue->setMinimumWidth ( 36 );
     pLblCompressorMakeupValue->setMinimumWidth ( 36 );
-    pSldCompressorThreshold->setRange ( -60, 0 );
-    pSldCompressorThreshold->setTickInterval ( std::max ( 1, 60 / 5 ) );
-    pSldCompressorThreshold->setTickPosition ( QSlider::TicksBothSides );
-    pSldCompressorRatio->setRange ( 1, 20 );
-    pSldCompressorRatio->setTickInterval ( std::max ( 1, ( 20 - 1 ) / 5 ) );
-    pSldCompressorRatio->setTickPosition ( QSlider::TicksBothSides );
-    pSldCompressorAttack->setRange ( 1, 50 );
-    pSldCompressorAttack->setTickInterval ( std::max ( 1, ( 50 - 1 ) / 5 ) );
-    pSldCompressorAttack->setTickPosition ( QSlider::TicksBothSides );
-    pSldCompressorRelease->setRange ( 10, 400 );
-    pSldCompressorRelease->setTickInterval ( std::max ( 1, ( 400 - 10 ) / 5 ) );
-    pSldCompressorRelease->setTickPosition ( QSlider::TicksBothSides );
-    pSldCompressorMakeup->setRange ( 0, 24 );
-    pSldCompressorMakeup->setTickInterval ( std::max ( 1, 24 / 5 ) );
-    pSldCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
+    pKnobCompressorThreshold->setRange ( -60, 0 );
+    pKnobCompressorThreshold->setTickInterval ( std::max ( 1, 60 / 5 ) );
+    pKnobCompressorThreshold->setTickPosition ( QSlider::TicksBothSides );
+    pKnobCompressorRatio->setRange ( 1, 20 );
+    pKnobCompressorRatio->setTickInterval ( std::max ( 1, ( 20 - 1 ) / 5 ) );
+    pKnobCompressorRatio->setTickPosition ( QSlider::TicksBothSides );
+    pKnobCompressorAttack->setRange ( 1, 50 );
+    pKnobCompressorAttack->setTickInterval ( std::max ( 1, ( 50 - 1 ) / 5 ) );
+    pKnobCompressorAttack->setTickPosition ( QSlider::TicksBothSides );
+    pKnobCompressorRelease->setRange ( 10, 400 );
+    pKnobCompressorRelease->setTickInterval ( std::max ( 1, ( 400 - 10 ) / 5 ) );
+    pKnobCompressorRelease->setTickPosition ( QSlider::TicksBothSides );
+    pKnobCompressorMakeup->setRange ( 0, 24 );
+    pKnobCompressorMakeup->setTickInterval ( std::max ( 1, 24 / 5 ) );
+    pKnobCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
 
     pEQCurveWidget->SetSampleRate ( SYSTEM_SAMPLE_RATE_HZ );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainChanged, this, &CEffectsDlg::OnEQBandGainChanged );
@@ -122,27 +123,27 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblEQDynAttackValue->setMinimumWidth ( 60 );
     pLblEQDynReleaseValue->setMinimumWidth ( 60 );
 
-    pSldEQDynThreshold->setRange ( -60, 0 );
-    pSldEQDynThreshold->setTickInterval ( 12 );
-    pSldEQDynThreshold->setTickPosition ( QSlider::TicksBothSides );
+    pKnobEQDynThreshold->setRange ( -60, 0 );
+    pKnobEQDynThreshold->setTickInterval ( 12 );
+    pKnobEQDynThreshold->setTickPosition ( QSlider::TicksBothSides );
 
-    pSldEQDynRatio->setRange ( 1, 20 );
-    pSldEQDynRatio->setTickInterval ( 4 );
-    pSldEQDynRatio->setTickPosition ( QSlider::TicksBothSides );
+    pKnobEQDynRatio->setRange ( 1, 20 );
+    pKnobEQDynRatio->setTickInterval ( 4 );
+    pKnobEQDynRatio->setTickPosition ( QSlider::TicksBothSides );
 
-    pSldEQDynAttack->setRange ( 1, 100 );
-    pSldEQDynAttack->setTickInterval ( 20 );
-    pSldEQDynAttack->setTickPosition ( QSlider::TicksBothSides );
+    pKnobEQDynAttack->setRange ( 1, 100 );
+    pKnobEQDynAttack->setTickInterval ( 20 );
+    pKnobEQDynAttack->setTickPosition ( QSlider::TicksBothSides );
 
-    pSldEQDynRelease->setRange ( 10, 500 );
-    pSldEQDynRelease->setTickInterval ( 100 );
-    pSldEQDynRelease->setTickPosition ( QSlider::TicksBothSides );
+    pKnobEQDynRelease->setRange ( 10, 500 );
+    pKnobEQDynRelease->setTickInterval ( 100 );
+    pKnobEQDynRelease->setTickPosition ( QSlider::TicksBothSides );
 
     QObject::connect ( pChbEQDynEnabled, &QCheckBox::toggled, this, &CEffectsDlg::OnEQDynEnabledChanged );
-    QObject::connect ( pSldEQDynThreshold, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynThresholdChanged );
-    QObject::connect ( pSldEQDynRatio, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynRatioChanged );
-    QObject::connect ( pSldEQDynAttack, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynAttackChanged );
-    QObject::connect ( pSldEQDynRelease, &CCustomSlider::valueChanged, this, &CEffectsDlg::OnEQDynReleaseChanged );
+    QObject::connect ( pKnobEQDynThreshold, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynThresholdChanged );
+    QObject::connect ( pKnobEQDynRatio, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynRatioChanged );
+    QObject::connect ( pKnobEQDynAttack, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynAttackChanged );
+    QObject::connect ( pKnobEQDynRelease, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynReleaseChanged );
 
     // Frequency input: starts read-only, click to edit, commit on Return or focus loss
     pEdtEQDynFreq->setValidator (
@@ -154,36 +155,39 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     setMinimumHeight ( 420 );
 
-    QObject::connect ( pSldReverb, &CCustomSlider::valueChanged, this, &CEffectsDlg::ReverbValueChanged );
+    QObject::connect ( pKnobReverb, &CCustomKnob::valueChanged, this, [this] ( int value ) {
+        pLblReverbValue->setText ( QString::number ( value ) + tr ( " %" ) );
+        emit ReverbValueChanged ( value );
+    } );
     QObject::connect ( pChbReverbBypass, &QCheckBox::toggled, this, &CEffectsDlg::ReverbBypassChanged );
-    QObject::connect ( pSldReverbPreDelay, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbPreDelay, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbPreDelayValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit ReverbPreDelayChanged ( value );
     } );
-    QObject::connect ( pSldReverbRoom, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbRoom, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbRoomValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbRoomSizeChanged ( value );
     } );
-    QObject::connect ( pSldReverbDamping, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbDamping, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbDampingValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbDampingChanged ( value );
     } );
-    QObject::connect ( pSldReverbWet, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbWet, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbWetValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbWetMixChanged ( value );
     } );
-    QObject::connect ( pSldReverbEarly, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbEarly, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbEarlyValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbEarlyLevelChanged ( value );
     } );
-    QObject::connect ( pSldReverbWidth, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobReverbWidth, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbWidthValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbWidthChanged ( value );
     } );
     QObject::connect ( pRbtReverbSelL, &QRadioButton::clicked, this, &CEffectsDlg::ReverbLeftSelected );
     QObject::connect ( pRbtReverbSelR, &QRadioButton::clicked, this, &CEffectsDlg::ReverbRightSelected );
     QObject::connect ( pChbReverbEarly, &QCheckBox::toggled, this, [this] ( bool enabled ) {
-        pSldReverbEarly->setEnabled ( enabled );
+        pKnobReverbEarly->setEnabled ( enabled );
         emit ReverbEarlyEnabledChanged ( enabled );
     } );
     QObject::connect ( pChbReverbFreeze, &QCheckBox::toggled, this, &CEffectsDlg::ReverbFreezeChanged );
@@ -191,23 +195,23 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     QObject::connect ( pChbCompressorBypass, &QCheckBox::toggled, this, &CEffectsDlg::CompressorBypassChanged );
     QObject::connect ( pChbCompressorLimiter, &QCheckBox::toggled, this, &CEffectsDlg::CompressorLimiterChanged );
-    QObject::connect ( pSldCompressorThreshold, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobCompressorThreshold, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblCompressorThresholdValue->setText ( QString::number ( value ) + tr ( " dB" ) );
         emit CompressorThresholdChanged ( value );
     } );
-    QObject::connect ( pSldCompressorRatio, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobCompressorRatio, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblCompressorRatioValue->setText ( QString::number ( value ) + tr ( ":1" ) );
         emit CompressorRatioChanged ( value );
     } );
-    QObject::connect ( pSldCompressorAttack, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobCompressorAttack, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblCompressorAttackValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit CompressorAttackChanged ( value );
     } );
-    QObject::connect ( pSldCompressorRelease, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobCompressorRelease, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblCompressorReleaseValue->setText ( QString::number ( value ) + tr ( " ms" ) );
         emit CompressorReleaseChanged ( value );
     } );
-    QObject::connect ( pSldCompressorMakeup, &CCustomSlider::valueChanged, this, [this] ( int value ) {
+    QObject::connect ( pKnobCompressorMakeup, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblCompressorMakeupValue->setText ( QString::number ( value ) + tr ( " dB" ) );
         emit CompressorMakeupChanged ( value );
     } );
@@ -310,30 +314,33 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
 {
     const bool bDarkTheme = ( ResolveUITheme ( pSettings->eUITheme ) == UIT_DARK );
 
-    CCustomSlider* apThemeSliders[] = {
-        pSldReverb,
-        pSldReverbPreDelay,
-        pSldReverbRoom,
-        pSldReverbDamping,
-        pSldReverbWet,
-        pSldReverbEarly,
-        pSldReverbWidth,
-        pSldCompressorThreshold,
-        pSldCompressorRatio,
-        pSldCompressorAttack,
-        pSldCompressorRelease,
-        pSldCompressorMakeup,
-        pSldEQDynThreshold,
-        pSldEQDynRatio,
-        pSldEQDynAttack,
-        pSldEQDynRelease,
+    QWidget* apThemeWidgets[] = {
+        pKnobReverb,
+        pKnobReverbPreDelay,
+        pKnobReverbRoom,
+        pKnobReverbDamping,
+        pKnobReverbWet,
+        pKnobReverbEarly,
+        pKnobReverbWidth,
+        pKnobCompressorThreshold,
+        pKnobCompressorRatio,
+        pKnobCompressorAttack,
+        pKnobCompressorRelease,
+        pKnobCompressorMakeup,
+        pKnobEQDynThreshold,
+        pKnobEQDynRatio,
+        pKnobEQDynAttack,
+        pKnobEQDynRelease,
     };
 
-    for ( CCustomSlider* pSlider : apThemeSliders )
+    for ( QWidget* pWidget : apThemeWidgets )
     {
-        if ( pSlider )
+        if ( pWidget )
         {
-            pSlider->SetDarkTheme ( bDarkTheme );
+            if ( auto* pKnob = qobject_cast<CCustomKnob*> ( pWidget ) )
+            {
+                pKnob->SetDarkTheme ( bDarkTheme );
+            }
         }
     }
 
@@ -358,71 +365,71 @@ void CEffectsDlg::UpdateCompressorControls()
     pChbCompressorLimiter->setChecked ( pClient->GetCompressorLimiterEnabled() );
     pChbCompressorLimiter->blockSignals ( false );
 
-    pSldCompressorThreshold->blockSignals ( true );
-    pSldCompressorThreshold->setValue ( static_cast<int> ( pClient->GetCompressorThresholdDb() ) );
-    pSldCompressorThreshold->blockSignals ( false );
+    pKnobCompressorThreshold->blockSignals ( true );
+    pKnobCompressorThreshold->setValue ( static_cast<int> ( pClient->GetCompressorThresholdDb() ) );
+    pKnobCompressorThreshold->blockSignals ( false );
 
-    pSldCompressorRatio->blockSignals ( true );
-    pSldCompressorRatio->setValue ( static_cast<int> ( pClient->GetCompressorRatio() ) );
-    pSldCompressorRatio->blockSignals ( false );
+    pKnobCompressorRatio->blockSignals ( true );
+    pKnobCompressorRatio->setValue ( static_cast<int> ( pClient->GetCompressorRatio() ) );
+    pKnobCompressorRatio->blockSignals ( false );
 
-    pSldCompressorAttack->blockSignals ( true );
-    pSldCompressorAttack->setValue ( static_cast<int> ( pClient->GetCompressorAttackMs() ) );
-    pSldCompressorAttack->blockSignals ( false );
+    pKnobCompressorAttack->blockSignals ( true );
+    pKnobCompressorAttack->setValue ( static_cast<int> ( pClient->GetCompressorAttackMs() ) );
+    pKnobCompressorAttack->blockSignals ( false );
 
-    pSldCompressorRelease->blockSignals ( true );
-    pSldCompressorRelease->setValue ( static_cast<int> ( pClient->GetCompressorReleaseMs() ) );
-    pSldCompressorRelease->blockSignals ( false );
+    pKnobCompressorRelease->blockSignals ( true );
+    pKnobCompressorRelease->setValue ( static_cast<int> ( pClient->GetCompressorReleaseMs() ) );
+    pKnobCompressorRelease->blockSignals ( false );
 
-    pSldCompressorMakeup->blockSignals ( true );
-    pSldCompressorMakeup->setValue ( static_cast<int> ( pClient->GetCompressorMakeupDb() ) );
-    pSldCompressorMakeup->blockSignals ( false );
+    pKnobCompressorMakeup->blockSignals ( true );
+    pKnobCompressorMakeup->setValue ( static_cast<int> ( pClient->GetCompressorMakeupDb() ) );
+    pKnobCompressorMakeup->blockSignals ( false );
 
     const bool bBypass = pClient->GetCompressorBypass();
     (void) bBypass;
-    pSldCompressorThreshold->setEnabled ( true );
-    pSldCompressorRatio->setEnabled ( true );
-    pSldCompressorAttack->setEnabled ( true );
-    pSldCompressorRelease->setEnabled ( true );
-    pSldCompressorMakeup->setEnabled ( true );
+    pKnobCompressorThreshold->setEnabled ( true );
+    pKnobCompressorRatio->setEnabled ( true );
+    pKnobCompressorAttack->setEnabled ( true );
+    pKnobCompressorRelease->setEnabled ( true );
+    pKnobCompressorMakeup->setEnabled ( true );
     pChbCompressorLimiter->setEnabled ( true );
 
-    pLblCompressorThresholdValue->setText ( QString::number ( pSldCompressorThreshold->value() ) + tr ( " dB" ) );
-    pLblCompressorRatioValue->setText ( QString::number ( pSldCompressorRatio->value() ) + tr ( ":1" ) );
-    pLblCompressorAttackValue->setText ( QString::number ( pSldCompressorAttack->value() ) + tr ( " ms" ) );
-    pLblCompressorReleaseValue->setText ( QString::number ( pSldCompressorRelease->value() ) + tr ( " ms" ) );
-    pLblCompressorMakeupValue->setText ( QString::number ( pSldCompressorMakeup->value() ) + tr ( " dB" ) );
+    pLblCompressorThresholdValue->setText ( QString::number ( pKnobCompressorThreshold->value() ) + tr ( " dB" ) );
+    pLblCompressorRatioValue->setText ( QString::number ( pKnobCompressorRatio->value() ) + tr ( ":1" ) );
+    pLblCompressorAttackValue->setText ( QString::number ( pKnobCompressorAttack->value() ) + tr ( " ms" ) );
+    pLblCompressorReleaseValue->setText ( QString::number ( pKnobCompressorRelease->value() ) + tr ( " ms" ) );
+    pLblCompressorMakeupValue->setText ( QString::number ( pKnobCompressorMakeup->value() ) + tr ( " dB" ) );
 }
 
 void CEffectsDlg::UpdateReverbControls()
 {
-    pSldReverb->blockSignals ( true );
-    pSldReverb->setValue ( pClient->GetReverbLevel() );
-    pSldReverb->blockSignals ( false );
+    pKnobReverb->blockSignals ( true );
+    pKnobReverb->setValue ( pClient->GetReverbLevel() );
+    pKnobReverb->blockSignals ( false );
 
-    pSldReverbPreDelay->blockSignals ( true );
-    pSldReverbPreDelay->setValue ( pClient->GetReverbPreDelayMs() );
-    pSldReverbPreDelay->blockSignals ( false );
+    pKnobReverbPreDelay->blockSignals ( true );
+    pKnobReverbPreDelay->setValue ( pClient->GetReverbPreDelayMs() );
+    pKnobReverbPreDelay->blockSignals ( false );
 
-    pSldReverbRoom->blockSignals ( true );
-    pSldReverbRoom->setValue ( pClient->GetReverbRoomSize() );
-    pSldReverbRoom->blockSignals ( false );
+    pKnobReverbRoom->blockSignals ( true );
+    pKnobReverbRoom->setValue ( pClient->GetReverbRoomSize() );
+    pKnobReverbRoom->blockSignals ( false );
 
-    pSldReverbDamping->blockSignals ( true );
-    pSldReverbDamping->setValue ( pClient->GetReverbDamping() );
-    pSldReverbDamping->blockSignals ( false );
+    pKnobReverbDamping->blockSignals ( true );
+    pKnobReverbDamping->setValue ( pClient->GetReverbDamping() );
+    pKnobReverbDamping->blockSignals ( false );
 
-    pSldReverbWet->blockSignals ( true );
-    pSldReverbWet->setValue ( pClient->GetReverbWetMix() );
-    pSldReverbWet->blockSignals ( false );
+    pKnobReverbWet->blockSignals ( true );
+    pKnobReverbWet->setValue ( pClient->GetReverbWetMix() );
+    pKnobReverbWet->blockSignals ( false );
 
-    pSldReverbEarly->blockSignals ( true );
-    pSldReverbEarly->setValue ( pClient->GetReverbEarlyLevel() );
-    pSldReverbEarly->blockSignals ( false );
+    pKnobReverbEarly->blockSignals ( true );
+    pKnobReverbEarly->setValue ( pClient->GetReverbEarlyLevel() );
+    pKnobReverbEarly->blockSignals ( false );
 
-    pSldReverbWidth->blockSignals ( true );
-    pSldReverbWidth->setValue ( pClient->GetReverbWidth() );
-    pSldReverbWidth->blockSignals ( false );
+    pKnobReverbWidth->blockSignals ( true );
+    pKnobReverbWidth->setValue ( pClient->GetReverbWidth() );
+    pKnobReverbWidth->blockSignals ( false );
 
     pChbReverbBypass->blockSignals ( true );
     pChbReverbBypass->setChecked ( pClient->GetReverbBypass() );
@@ -431,7 +438,7 @@ void CEffectsDlg::UpdateReverbControls()
     pChbReverbEarly->blockSignals ( true );
     pChbReverbEarly->setChecked ( pClient->GetReverbEarlyEnabled() );
     pChbReverbEarly->blockSignals ( false );
-    pSldReverbEarly->setEnabled ( pClient->GetReverbEarlyEnabled() );
+    pKnobReverbEarly->setEnabled ( pClient->GetReverbEarlyEnabled() );
 
     pChbReverbFreeze->blockSignals ( true );
     pChbReverbFreeze->setChecked ( pClient->GetReverbFreeze() );
@@ -439,24 +446,25 @@ void CEffectsDlg::UpdateReverbControls()
 
     const bool bBypass = pClient->GetReverbBypass();
     (void) bBypass;
-    pSldReverb->setEnabled ( true );
-    pSldReverbPreDelay->setEnabled ( true );
-    pSldReverbRoom->setEnabled ( true );
-    pSldReverbDamping->setEnabled ( true );
-    pSldReverbWet->setEnabled ( true );
-    pSldReverbEarly->setEnabled ( pClient->GetReverbEarlyEnabled() );
-    pSldReverbWidth->setEnabled ( true );
+    pKnobReverb->setEnabled ( true );
+    pKnobReverbPreDelay->setEnabled ( true );
+    pKnobReverbRoom->setEnabled ( true );
+    pKnobReverbDamping->setEnabled ( true );
+    pKnobReverbWet->setEnabled ( true );
+    pKnobReverbEarly->setEnabled ( pClient->GetReverbEarlyEnabled() );
+    pKnobReverbWidth->setEnabled ( true );
     pChbReverbEarly->setEnabled ( true );
     pChbReverbFreeze->setEnabled ( true );
     pRbtReverbSelL->setEnabled ( true );
     pRbtReverbSelR->setEnabled ( true );
 
-    pLblReverbPreDelayValue->setText ( QString::number ( pSldReverbPreDelay->value() ) + tr ( " ms" ) );
-    pLblReverbRoomValue->setText ( QString::number ( pSldReverbRoom->value() ) + tr ( " %" ) );
-    pLblReverbDampingValue->setText ( QString::number ( pSldReverbDamping->value() ) + tr ( " %" ) );
-    pLblReverbWetValue->setText ( QString::number ( pSldReverbWet->value() ) + tr ( " %" ) );
-    pLblReverbEarlyValue->setText ( QString::number ( pSldReverbEarly->value() ) + tr ( " %" ) );
-    pLblReverbWidthValue->setText ( QString::number ( pSldReverbWidth->value() ) + tr ( " %" ) );
+    pLblReverbValue->setText ( QString::number ( pKnobReverb->value() ) + tr ( " %" ) );
+    pLblReverbPreDelayValue->setText ( QString::number ( pKnobReverbPreDelay->value() ) + tr ( " ms" ) );
+    pLblReverbRoomValue->setText ( QString::number ( pKnobReverbRoom->value() ) + tr ( " %" ) );
+    pLblReverbDampingValue->setText ( QString::number ( pKnobReverbDamping->value() ) + tr ( " %" ) );
+    pLblReverbWetValue->setText ( QString::number ( pKnobReverbWet->value() ) + tr ( " %" ) );
+    pLblReverbEarlyValue->setText ( QString::number ( pKnobReverbEarly->value() ) + tr ( " %" ) );
+    pLblReverbWidthValue->setText ( QString::number ( pKnobReverbWidth->value() ) + tr ( " %" ) );
 
     const bool bShowChannelSelection = pClient->GetAudioChannels() != CC_STEREO;
 
@@ -1121,10 +1129,10 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     iSelectedBand = iBand;
 
     pChbEQDynEnabled->blockSignals ( true );
-    pSldEQDynThreshold->blockSignals ( true );
-    pSldEQDynRatio->blockSignals ( true );
-    pSldEQDynAttack->blockSignals ( true );
-    pSldEQDynRelease->blockSignals ( true );
+    pKnobEQDynThreshold->blockSignals ( true );
+    pKnobEQDynRatio->blockSignals ( true );
+    pKnobEQDynAttack->blockSignals ( true );
+    pKnobEQDynRelease->blockSignals ( true );
 
     const bool bEnabled = pClient->GetEQBandDynEnabled ( iBand );
     pChbEQDynEnabled->setChecked ( bEnabled );
@@ -1146,31 +1154,31 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pEdtEQDynFreq->blockSignals ( false );
 
     const float fThreshold = pClient->GetEQBandDynThresholdDb ( iBand );
-    pSldEQDynThreshold->setValue ( static_cast<int> ( std::round ( fThreshold ) ) );
+    pKnobEQDynThreshold->setValue ( static_cast<int> ( std::round ( fThreshold ) ) );
     pLblEQDynThresholdValue->setText ( QString ( "%1 dB" ).arg ( static_cast<int> ( std::round ( fThreshold ) ) ) );
 
     const float fRatio = pClient->GetEQBandDynRatio ( iBand );
-    pSldEQDynRatio->setValue ( static_cast<int> ( std::round ( fRatio ) ) );
+    pKnobEQDynRatio->setValue ( static_cast<int> ( std::round ( fRatio ) ) );
     pLblEQDynRatioValue->setText ( QString ( "%1:1" ).arg ( static_cast<int> ( std::round ( fRatio ) ) ) );
 
     const float fAttack = pClient->GetEQBandDynAttackMs ( iBand );
-    pSldEQDynAttack->setValue ( static_cast<int> ( std::round ( fAttack ) ) );
+    pKnobEQDynAttack->setValue ( static_cast<int> ( std::round ( fAttack ) ) );
     pLblEQDynAttackValue->setText ( QString ( "%1 ms" ).arg ( static_cast<int> ( std::round ( fAttack ) ) ) );
 
     const float fRelease = pClient->GetEQBandDynReleaseMs ( iBand );
-    pSldEQDynRelease->setValue ( static_cast<int> ( std::round ( fRelease ) ) );
+    pKnobEQDynRelease->setValue ( static_cast<int> ( std::round ( fRelease ) ) );
     pLblEQDynReleaseValue->setText ( QString ( "%1 ms" ).arg ( static_cast<int> ( std::round ( fRelease ) ) ) );
 
     pChbEQDynEnabled->blockSignals ( false );
-    pSldEQDynThreshold->blockSignals ( false );
-    pSldEQDynRatio->blockSignals ( false );
-    pSldEQDynAttack->blockSignals ( false );
-    pSldEQDynRelease->blockSignals ( false );
+    pKnobEQDynThreshold->blockSignals ( false );
+    pKnobEQDynRatio->blockSignals ( false );
+    pKnobEQDynAttack->blockSignals ( false );
+    pKnobEQDynRelease->blockSignals ( false );
 
-    pSldEQDynThreshold->setEnabled ( bEnabled );
-    pSldEQDynRatio->setEnabled ( bEnabled );
-    pSldEQDynAttack->setEnabled ( bEnabled );
-    pSldEQDynRelease->setEnabled ( bEnabled );
+    pKnobEQDynThreshold->setEnabled ( bEnabled );
+    pKnobEQDynRatio->setEnabled ( bEnabled );
+    pKnobEQDynAttack->setEnabled ( bEnabled );
+    pKnobEQDynRelease->setEnabled ( bEnabled );
     pLblEQDynThreshold->setEnabled ( bEnabled );
     pLblEQDynThresholdValue->setEnabled ( bEnabled );
     pLblEQDynRatio->setEnabled ( bEnabled );

@@ -30,7 +30,6 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QRadioButton>
-#include "customslider.h"
 #include <QTabWidget>
 #include <QPointer>
 #include <QShowEvent>

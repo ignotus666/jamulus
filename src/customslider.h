@@ -67,6 +67,15 @@ public:
     }
     void SetDarkTheme ( bool bEnable );
     void SetCompactMode ( bool bEnable );
+    void SetCenterSweep ( bool bEnable )
+    {
+        if ( bCenterSweep != bEnable )
+        {
+            bCenterSweep = bEnable;
+            update();
+        }
+    }
+    bool GetCenterSweep() const { return bCenterSweep; }
 
     // Sizing
     QSize sizeHint() const override;
@@ -101,12 +110,10 @@ private:
     bool                  bHandleHovered;
     bool                  bDarkTheme;
     bool                  bCompact;
+    bool                  bCenterSweep;
     Qt::Orientation       eOrientation;
     QSlider::TickPosition eTickPosition;
 
     // Constants
-    static const int HANDLE_WIDTH  = 16;
-    static const int HANDLE_HEIGHT = 20;
-    static const int TRACK_WIDTH   = 6;
     static const int MARGINS       = 10;
 };

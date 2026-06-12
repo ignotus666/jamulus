@@ -64,22 +64,59 @@ void FillAccentStripe ( QPainter& painter, const QRect& rect, const bool bVertic
 
 void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, const bool bHighlighted, const SControlPalette& palette )
 {
+    // 1. Draw outer soft glow if hovered or pressed
+    if ( bHighlighted )
+    {
+        QPainterPath glowPath;
+        glowPath.addRoundedRect ( rect.adjusted ( -2, -2, 1, 1 ), 4.0, 4.0 );
+        painter.fillPath ( glowPath, palette.accentGlow );
+    }
+
+    // 2. Set up lighting gradient (vertical fader has top-to-bottom shading; horizontal has left-to-right)
     QLinearGradient gradient ( rect.topLeft(), bVertical ? rect.bottomLeft() : rect.topRight() );
-    gradient.setColorAt ( 0, palette.handleTop );
-    gradient.setColorAt ( 0.55, palette.handleMid );
-    gradient.setColorAt ( 1, palette.handleBottom );
+    gradient.setColorAt ( 0.0, palette.handleTop );
+    gradient.setColorAt ( 0.5, palette.handleMid );
+    gradient.setColorAt ( 1.0, palette.handleBottom );
 
     QPainterPath handlePath;
-    handlePath.addRoundedRect ( rect.adjusted ( 0, 0, -1, -1 ), 8, 8 );
+    handlePath.addRoundedRect ( rect.adjusted ( 0, 0, -1, -1 ), 3.0, 3.0 );
     painter.setPen ( Qt::NoPen );
     painter.setBrush ( gradient );
     painter.drawPath ( handlePath );
 
+    // 3. Draw outer bevel / border
     const QColor borderColor = bHighlighted ? palette.accent : palette.handleBorder;
-    const qreal  borderWidth = bHighlighted ? 1.6 : 1.2;
+    const qreal  borderWidth = bHighlighted ? 1.5 : 1.0;
     painter.setPen ( QPen ( borderColor, borderWidth ) );
     painter.setBrush ( Qt::NoBrush );
     painter.drawPath ( handlePath );
+
+    // 4. Draw inner subtle highlight line for 3D look
+    QPainterPath innerPath;
+    innerPath.addRoundedRect ( rect.adjusted ( 1, 1, -2, -2 ), 2.0, 2.0 );
+    painter.setPen ( QPen ( QColor ( 255, 255, 255, 25 ), 1.0 ) );
+    painter.drawPath ( innerPath );
+
+    // 5. Draw center value indicator line across the fader cap
+    const QColor indicatorColor = bHighlighted ? palette.accentBright : palette.accent;
+    painter.setPen ( QPen ( indicatorColor, 1.8 ) );
+    
+    if ( bVertical )
+    {
+        // Horizontal indicator line on a vertical fader
+        const int lineY  = rect.top() + rect.height() / 2;
+        const int lineX1 = rect.left() + 2;
+        const int lineX2 = rect.right() - 3;
+        painter.drawLine ( lineX1, lineY, lineX2, lineY );
+    }
+    else
+    {
+        // Vertical indicator line on a horizontal fader
+        const int lineX  = rect.left() + rect.width() / 2;
+        const int lineY1 = rect.top() + 2;
+        const int lineY2 = rect.bottom() - 3;
+        painter.drawLine ( lineX, lineY1, lineX, lineY2 );
+    }
 }
 
 void DrawTickMarks ( QPainter&                   painter,
@@ -222,6 +259,7 @@ CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     bHandleHovered ( false ),
     bDarkTheme ( true ),
     bCompact ( false ),
+    bCenterSweep ( false ),
     eOrientation ( orientation ),
     eTickPosition ( QSlider::TicksAbove )
 {
@@ -237,14 +275,6 @@ CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     setFocusPolicy ( Qt::StrongFocus );
     setAttribute ( Qt::WA_OpaquePaintEvent );
     setMouseTracking ( true );
-    if ( eOrientation == Qt::Vertical )
-    {
-        setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Expanding );
-    }
-    else
-    {
-        setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Preferred );
-    }
     updateGeometry();
     update();
 }
@@ -256,7 +286,7 @@ void CCustomSlider::SetDarkTheme ( bool bEnable )
     if ( bDarkTheme != bEnable )
     {
         bDarkTheme = bEnable;
-        repaint();
+        update();
     }
 }
 
@@ -316,6 +346,8 @@ int CCustomSlider::valueFromPosition ( int pos ) const
         return iMinValue;
 
     int trackSize = 0;
+    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+
     if ( eOrientation == Qt::Vertical )
     {
         // Keep vertical track insets symmetric and aligned with the meter widget.
@@ -324,8 +356,8 @@ int CCustomSlider::valueFromPosition ( int pos ) const
     }
     else
     {
-        trackSize = width() - 2 * MARGINS - HANDLE_WIDTH;
-        pos       = pos - MARGINS - HANDLE_WIDTH / 2;
+        trackSize = width() - 2 * MARGINS - hWidth;
+        pos       = pos - MARGINS - hWidth / 2;
     }
 
     if ( trackSize <= 0 )
@@ -343,6 +375,7 @@ int CCustomSlider::positionFromValue ( int val ) const
 
     int trackSize = 0;
     int basePos   = 0;
+    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
 
     if ( eOrientation == Qt::Vertical )
     {
@@ -353,8 +386,8 @@ int CCustomSlider::positionFromValue ( int val ) const
     }
     else
     {
-        trackSize = width() - 2 * MARGINS - HANDLE_WIDTH;
-        basePos   = MARGINS + HANDLE_WIDTH / 2;
+        trackSize = width() - 2 * MARGINS - hWidth;
+        basePos   = MARGINS + hWidth / 2;
         int pos   = basePos + ( ( val - iMinValue ) * trackSize ) / range;
         return pos;
     }
@@ -363,15 +396,19 @@ int CCustomSlider::positionFromValue ( int val ) const
 QRect CCustomSlider::currentHandleRect() const
 {
     const int handlePos = positionFromValue ( iCurrentValue );
+    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    const int hHeight = ( eOrientation == Qt::Vertical ) ? 12 : 22;
 
     if ( eOrientation == Qt::Vertical )
     {
-        const int handleLeft = ( width() - HANDLE_WIDTH ) / 2;
-        return QRect ( handleLeft, handlePos - HANDLE_HEIGHT / 2, HANDLE_WIDTH, HANDLE_HEIGHT );
+        const int handleLeft = ( width() - hWidth ) / 2;
+        return QRect ( handleLeft, handlePos - hHeight / 2, hWidth, hHeight );
     }
-
-    const int handleTop = ( height() - HANDLE_HEIGHT ) / 2;
-    return QRect ( handlePos - HANDLE_WIDTH / 2, handleTop, HANDLE_WIDTH, HANDLE_HEIGHT );
+    else
+    {
+        const int handleTop = ( height() - hHeight ) / 2;
+        return QRect ( handlePos - hWidth / 2, handleTop, hWidth, hHeight );
+    }
 }
 
 void CCustomSlider::updateValue ( int pos )
@@ -408,33 +445,47 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     int                   width           = this->width();
     int                   height          = this->height();
     int                   trackSize       = height - 2 * MARGINS;
-    int                   trackLeft       = ( width - TRACK_WIDTH ) / 2;
+    int                   trackLeft       = ( width - 4 ) / 2;
     int                   trackTop        = MARGINS;
     int                   handlePos       = positionFromValue ( iCurrentValue );
     const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          trackBackground = palette.trackBackground;
     const QColor          trackBorder     = palette.trackBorder;
 
-    // Draw track background
-    painter.fillRect ( trackLeft, trackTop, TRACK_WIDTH, trackSize, trackBackground );
+    // Draw track background (rounded rect, 4px wide)
+    QRect trackRect ( trackLeft, trackTop, 4, trackSize );
+    QPainterPath trackPath;
+    trackPath.addRoundedRect ( trackRect, 2.0, 2.0 );
+    painter.setPen ( QPen ( trackBorder, 1.0 ) );
+    painter.setBrush ( trackBackground );
+    painter.drawPath ( trackPath );
 
     // Draw filled portion with a brighter cyan-to-blue gradient
-    int filledHeight = height - MARGINS - handlePos;
-    if ( filledHeight > 0 )
+    int fillY = 0;
+    int fillH = 0;
+    if ( bCenterSweep )
     {
-        const QRect filledRect ( trackLeft, handlePos, TRACK_WIDTH, filledHeight );
-        FillAccentGradient ( painter, filledRect, true, palette );
-
-        // Thin bright center accent to mirror the reverb slider's lighter active stripe
-        const int   accentWidth = 2;
-        const int   accentLeft  = trackLeft + ( TRACK_WIDTH - accentWidth ) / 2;
-        const QRect accentRect ( accentLeft, handlePos, accentWidth, filledHeight );
-        FillAccentStripe ( painter, accentRect, true, palette );
+        const int centerPos = trackTop + trackSize / 2;
+        fillY = std::min ( handlePos, centerPos );
+        fillH = std::abs ( handlePos - centerPos );
+    }
+    else
+    {
+        fillY = handlePos;
+        fillH = height - MARGINS - handlePos;
     }
 
-    // Draw track border
-    painter.setPen ( QPen ( trackBorder, 1 ) );
-    painter.drawRect ( trackLeft, trackTop, TRACK_WIDTH, trackSize );
+    if ( fillH > 0 )
+    {
+        const QRect filledRect ( trackLeft, fillY, 4, fillH );
+        FillAccentGradient ( painter, filledRect, true, palette );
+
+        // Thin bright center accent to mirror the reverb slider's active stripe
+        const int   accentWidth = 2;
+        const int   accentLeft  = trackLeft + ( 4 - accentWidth ) / 2;
+        const QRect accentRect ( accentLeft, fillY, accentWidth, fillH );
+        FillAccentStripe ( painter, accentRect, true, palette );
+    }
 
     // Draw tick marks with a consistent pixel spacing across all sliders.
     if ( iTickInterval > 0 && eTickPosition != QSlider::NoTicks )
@@ -445,7 +496,7 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
                         true,
                         trackLeft,
                         trackTop,
-                        TRACK_WIDTH,
+                        4,
                         trackSize,
                         eTickPosition,
                         palette.tick,
@@ -461,33 +512,49 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
 {
     int                   width           = this->width();
     int                   height          = this->height();
-    int                   trackSize       = width - 2 * MARGINS - HANDLE_WIDTH;
-    int                   trackTop        = ( height - TRACK_WIDTH ) / 2;
+    const int             hWidth          = 12;
+    int                   trackSize       = width - 2 * MARGINS - hWidth;
+    int                   trackTop        = ( height - 4 ) / 2;
+    int                   trackLeft       = MARGINS + hWidth / 2;
     int                   handlePos       = positionFromValue ( iCurrentValue );
     const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          trackBackground = palette.trackBackground;
     const QColor          trackBorder     = palette.trackBorder;
 
-    // Draw track background
-    painter.fillRect ( MARGINS + HANDLE_WIDTH / 2, trackTop, trackSize, TRACK_WIDTH, trackBackground );
+    // Draw track background (rounded rect, 4px high)
+    QRect trackRect ( trackLeft, trackTop, trackSize, 4 );
+    QPainterPath trackPath;
+    trackPath.addRoundedRect ( trackRect, 2.0, 2.0 );
+    painter.setPen ( QPen ( trackBorder, 1.0 ) );
+    painter.setBrush ( trackBackground );
+    painter.drawPath ( trackPath );
 
     // Draw filled portion with a brighter cyan-to-blue gradient
-    int filledWidth = handlePos - MARGINS - HANDLE_WIDTH / 2;
-    if ( filledWidth > 0 )
+    int fillX = 0;
+    int fillW = 0;
+    if ( bCenterSweep )
     {
-        const QRect filledRect ( MARGINS + HANDLE_WIDTH / 2, trackTop, filledWidth, TRACK_WIDTH );
-        FillAccentGradient ( painter, filledRect, false, palette );
-
-        // Thin bright center accent to mirror the reverb slider's lighter active stripe
-        const int   accentHeight = 2;
-        const int   accentTop    = trackTop + ( TRACK_WIDTH - accentHeight ) / 2;
-        const QRect accentRect ( MARGINS + HANDLE_WIDTH / 2, accentTop, filledWidth, accentHeight );
-        FillAccentStripe ( painter, accentRect, false, palette );
+        const int centerPos = trackLeft + trackSize / 2;
+        fillX = std::min ( handlePos, centerPos );
+        fillW = std::abs ( handlePos - centerPos );
+    }
+    else
+    {
+        fillX = trackLeft;
+        fillW = handlePos - trackLeft;
     }
 
-    // Draw track border
-    painter.setPen ( QPen ( trackBorder, 1 ) );
-    painter.drawRect ( MARGINS + HANDLE_WIDTH / 2, trackTop, trackSize, TRACK_WIDTH );
+    if ( fillW > 0 )
+    {
+        const QRect filledRect ( fillX, trackTop, fillW, 4 );
+        FillAccentGradient ( painter, filledRect, false, palette );
+
+        // Thin bright center accent to mirror the reverb slider's active stripe
+        const int   accentHeight = 2;
+        const int   accentTop    = trackTop + ( 4 - accentHeight ) / 2;
+        const QRect accentRect ( fillX, accentTop, fillW, accentHeight );
+        FillAccentStripe ( painter, accentRect, false, palette );
+    }
 
     // Draw tick marks with a consistent pixel spacing across all sliders.
     if ( iTickInterval > 0 && eTickPosition != QSlider::NoTicks )
@@ -496,10 +563,10 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
                         positionFromValue ( iMinValue ),
                         positionFromValue ( iMaxValue ),
                         false,
-                        MARGINS + HANDLE_WIDTH / 2,
+                        trackLeft,
                         trackTop,
-                        TRACK_WIDTH,
-                        TRACK_WIDTH,
+                        4,
+                        4,
                         eTickPosition,
                         palette.tick,
                         ( iTickInterval == 1 ),

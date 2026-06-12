@@ -486,6 +486,7 @@ CClientSettingsDlg::CClientSettingsDlg ( CClient* pNCliP, CClientSettings* pNSet
     // init audio in fader
     sldAudioPan->setRange ( AUD_FADER_IN_MIN, AUD_FADER_IN_MAX );
     sldAudioPan->setTickInterval ( AUD_FADER_IN_MAX / 5 );
+    sldAudioPan->SetCenterSweep ( true );
     UpdateAudioFaderSlider();
 
     // init delay and other information controls

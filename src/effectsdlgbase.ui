@@ -72,7 +72,7 @@
    <item>
     <widget class="QTabWidget" name="pTabs">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pReverbTab">
       <attribute name="title">
@@ -100,21 +100,67 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="pLblReverb">
-         <property name="text">
-          <string>Reverb Level</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="CCustomSlider" name="pSldReverb">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayoutReverbLevel">
+         <item>
+          <widget class="QLabel" name="pLblReverb">
+           <property name="text">
+            <string>Reverb Level</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="CCustomKnob" name="pKnobReverb" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>50</width>
+             <height>50</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="pLblReverbValue">
+           <property name="text">
+            <string>0 %</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacerReverbLevel">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayoutReverbRows">
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_reverb_mid">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="pLblReverbPreDelay">
            <property name="text">
@@ -123,16 +169,29 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="CCustomSlider" name="pSldReverbPreDelay">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobReverbPreDelay" native="true"/>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="pLblReverbPreDelayValue">
            <property name="text">
             <string>0 ms</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="pLblReverbWet">
+           <property name="text">
+            <string>Wet Mix</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="CCustomKnob" name="pKnobReverbWet" native="true"/>
+         </item>
+         <item row="0" column="6">
+          <widget class="QLabel" name="pLblReverbWetValue">
+           <property name="text">
+            <string>0 %</string>
            </property>
           </widget>
          </item>
@@ -144,14 +203,27 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="CCustomSlider" name="pSldReverbRoom">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobReverbRoom" native="true"/>
          </item>
          <item row="1" column="2">
           <widget class="QLabel" name="pLblReverbRoomValue">
+           <property name="text">
+            <string>0 %</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="pLblReverbEarly">
+           <property name="text">
+            <string>Early Level</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="5">
+          <widget class="CCustomKnob" name="pKnobReverbEarly" native="true"/>
+         </item>
+         <item row="1" column="6">
+          <widget class="QLabel" name="pLblReverbEarlyValue">
            <property name="text">
             <string>0 %</string>
            </property>
@@ -165,11 +237,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="CCustomSlider" name="pSldReverbDamping">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobReverbDamping" native="true"/>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="pLblReverbDampingValue">
@@ -178,63 +246,17 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="pLblReverbWet">
-           <property name="text">
-            <string>Wet Mix</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="CCustomSlider" name="pSldReverbWet">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QLabel" name="pLblReverbWetValue">
-           <property name="text">
-            <string>0 %</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="pLblReverbEarly">
-           <property name="text">
-            <string>Early Level</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="CCustomSlider" name="pSldReverbEarly">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QLabel" name="pLblReverbEarlyValue">
-           <property name="text">
-            <string>0 %</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
+         <item row="2" column="4">
           <widget class="QLabel" name="pLblReverbWidth">
            <property name="text">
             <string>Width</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <widget class="CCustomSlider" name="pSldReverbWidth">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+         <item row="2" column="5">
+          <widget class="CCustomKnob" name="pKnobReverbWidth" native="true"/>
          </item>
-         <item row="5" column="2">
+         <item row="2" column="6">
           <widget class="QLabel" name="pLblReverbWidthValue">
            <property name="text">
             <string>0 %</string>
@@ -315,19 +337,6 @@
          </item>
         </layout>
        </item>
-       <item>
-        <spacer name="verticalSpacerReverb">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pCompressorTab">
@@ -357,6 +366,19 @@
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayoutCompressorRows">
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_comp_mid">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="pLblCompressorThreshold">
            <property name="text">
@@ -365,16 +387,29 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="CCustomSlider" name="pSldCompressorThreshold">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobCompressorThreshold" native="true"/>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="pLblCompressorThresholdValue">
            <property name="text">
             <string>0 dB</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="pLblCompressorRelease">
+           <property name="text">
+            <string>Release</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="CCustomKnob" name="pKnobCompressorRelease" native="true"/>
+         </item>
+         <item row="0" column="6">
+          <widget class="QLabel" name="pLblCompressorReleaseValue">
+           <property name="text">
+            <string>0 ms</string>
            </property>
           </widget>
          </item>
@@ -386,16 +421,29 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="CCustomSlider" name="pSldCompressorRatio">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobCompressorRatio" native="true"/>
          </item>
          <item row="1" column="2">
           <widget class="QLabel" name="pLblCompressorRatioValue">
            <property name="text">
             <string>0:1</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="pLblCompressorMakeup">
+           <property name="text">
+            <string>Makeup</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="5">
+          <widget class="CCustomKnob" name="pKnobCompressorMakeup" native="true"/>
+         </item>
+         <item row="1" column="6">
+          <widget class="QLabel" name="pLblCompressorMakeupValue">
+           <property name="text">
+            <string>0 dB</string>
            </property>
           </widget>
          </item>
@@ -407,58 +455,12 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="CCustomSlider" name="pSldCompressorAttack">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
+          <widget class="CCustomKnob" name="pKnobCompressorAttack" native="true"/>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="pLblCompressorAttackValue">
            <property name="text">
             <string>0 ms</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="pLblCompressorRelease">
-           <property name="text">
-            <string>Release</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="CCustomSlider" name="pSldCompressorRelease">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QLabel" name="pLblCompressorReleaseValue">
-           <property name="text">
-            <string>0 ms</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="pLblCompressorMakeup">
-           <property name="text">
-            <string>Makeup</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="CCustomSlider" name="pSldCompressorMakeup">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QLabel" name="pLblCompressorMakeupValue">
-           <property name="text">
-            <string>0 dB</string>
            </property>
           </widget>
          </item>
@@ -622,12 +624,8 @@
           <property name="verticalSpacing">
            <number>6</number>
           </property>
-          <item row="1" column="3">
-           <widget class="CCustomSlider" name="pSldEQDynAttack">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
+          <item row="1" column="2">
+           <widget class="CCustomKnob" name="pKnobEQDynAttack" native="true"/>
           </item>
           <item row="1" column="6">
            <widget class="QLabel" name="pLblEQDynRelease">
@@ -636,19 +634,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="8">
-           <widget class="CCustomSlider" name="pSldEQDynRelease">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
+          <item row="1" column="7">
+           <widget class="CCustomKnob" name="pKnobEQDynRelease" native="true"/>
           </item>
-          <item row="0" column="3">
-           <widget class="CCustomSlider" name="pSldEQDynThreshold">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
+          <item row="0" column="2">
+           <widget class="CCustomKnob" name="pKnobEQDynThreshold" native="true"/>
           </item>
           <item row="1" column="1">
            <widget class="QLabel" name="pLblEQDynAttack">
@@ -657,7 +647,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
+          <item row="1" column="3">
            <widget class="QLabel" name="pLblEQDynAttackValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -696,7 +686,7 @@
             </property>
            </spacer>
           </item>
-          <item row="0" column="2">
+          <item row="0" column="3">
            <widget class="QLabel" name="pLblEQDynThresholdValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -715,12 +705,8 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="8">
-           <widget class="CCustomSlider" name="pSldEQDynRatio">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
+          <item row="0" column="7">
+           <widget class="CCustomKnob" name="pKnobEQDynRatio" native="true"/>
           </item>
           <item row="0" column="1">
            <widget class="QLabel" name="pLblEQDynThreshold">
@@ -729,7 +715,7 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="7">
+          <item row="1" column="8">
            <widget class="QLabel" name="pLblEQDynReleaseValue">
             <property name="minimumSize">
              <size>
@@ -742,7 +728,7 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="7">
+          <item row="0" column="8">
            <widget class="QLabel" name="pLblEQDynRatioValue">
             <property name="minimumSize">
              <size>
@@ -869,9 +855,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CCustomSlider</class>
-   <extends>QSlider</extends>
-   <header>customslider.h</header>
+   <class>CCustomKnob</class>
+   <extends>QWidget</extends>
+   <header>customknob.h</header>
   </customwidget>
   <customwidget>
    <class>CEQCurveWidget</class>
