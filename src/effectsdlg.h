@@ -101,7 +101,7 @@ protected:
         if ( !r.isValid() )
             return;
 
-        painter.fillRect ( r, bDarkTheme ? QColor ( 18, 24, 31 ) : QColor ( 240, 242, 245 ) );
+        painter.fillRect ( r, bDarkTheme ? QColor ( 28, 28, 31 ) : QColor ( 247, 248, 250 ) );
 
         const int iBarW = 8;
         const int iBarL = 6;

@@ -113,13 +113,13 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
         QColor ( 118, 244, 255 ),     // accent bright
         QColor ( 80, 220, 255 ),      // accent mid
         QColor ( 40, 160, 220 ),      // accent deep
-        QColor ( 200, 210, 220 ),     // knob normal top
-        QColor ( 180, 190, 200 ),     // knob normal mid
-        QColor ( 160, 170, 180 ),     // knob normal bottom
-        QColor ( 190, 200, 210 ),     // knob hover top
-        QColor ( 170, 180, 190 ),     // knob hover mid
-        QColor ( 150, 160, 170 ),     // knob hover bottom
-        QColor ( 150, 160, 170 ),     // knob outline
+        QColor ( 255, 255, 255 ),     // knob normal top
+        QColor ( 232, 237, 242 ),     // knob normal mid
+        QColor ( 214, 221, 228 ),     // knob normal bottom
+        QColor ( 245, 250, 255 ),     // knob hover top
+        QColor ( 235, 242, 252 ),     // knob hover mid
+        QColor ( 225, 235, 248 ),     // knob hover bottom
+        QColor ( 145, 155, 165 ),     // knob outline
         QColor ( 80, 100, 150 ),      // marker normal
         QColor ( 50, 140, 200 ),      // marker hover
         QColor ( 80, 140, 200 ),      // marker dot

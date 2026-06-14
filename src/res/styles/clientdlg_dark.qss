@@ -50,8 +50,8 @@ QPushButton#butEffects {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(54, 54, 58),
         stop:1 rgb(38, 38, 42));
-    min-height: 18px;
-    max-height: 18px;
+    min-height: 20px;
+    max-height: 20px;
     text-align: center;
     margin: 0px;
 }
