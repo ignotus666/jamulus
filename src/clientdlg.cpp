@@ -170,8 +170,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     butConnect->setAccessibleName ( tr ( "Connect and disconnect toggle button" ) );
     // (Reverted: object names are set in the UI file, no need to set or polish in code)
 
-    butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " +
-                               tr ( "Opens the effects window: Reverb, compression and EQ." ) );
+    butEffects->setWhatsThis ( "<b>" + tr ( "Effects" ) + ":</b> " + tr ( "Opens the effects window: Reverb, compression and EQ." ) );
     butEffects->setAccessibleName ( tr ( "Open effects window" ) );
 
     // delay LED
@@ -325,7 +324,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         pPresetsHeaderAction->setEnabled ( false );
         presetMenu.addSeparator();
 
-        bool  bHasPreset = false;
+        bool bHasPreset = false;
 
         for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
         {
@@ -335,7 +334,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
                 continue;
             }
 
-            bHasPreset = true;
+            bHasPreset       = true;
             QAction* pAction = presetMenu.addAction ( strName );
             QObject::connect ( pAction, &QAction::triggered, this, [this, iPreset] { EffectsDlg.ApplyEffectsPreset ( iPreset ); } );
         }

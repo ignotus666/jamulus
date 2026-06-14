@@ -115,5 +115,5 @@ private:
     QSlider::TickPosition eTickPosition;
 
     // Constants
-    static const int MARGINS       = 10;
+    static const int MARGINS = 10;
 };

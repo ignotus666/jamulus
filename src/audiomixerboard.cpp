@@ -154,8 +154,8 @@ CChannelFader::CChannelFader ( QWidget* pNW ) :
     pFader           = new CCustomSlider ( Qt::Vertical, pLevelsBox );
     pPan             = new CCustomKnob ( pLevelsBox );
     pPan->SetCenterArc ( true );
-    pPanLabel        = new QLabel ( tr ( "Pan" ), pLevelsBox );
-    pInfoLabel       = new QLabel ( "", pLevelsBox );
+    pPanLabel  = new QLabel ( tr ( "Pan" ), pLevelsBox );
+    pInfoLabel = new QLabel ( "", pLevelsBox );
 
     pMuteSoloBox = new QWidget ( pFrame );
     pcbMute      = new QPushButton ( tr ( "Mute" ), pMuteSoloBox );

@@ -64,11 +64,11 @@ SControlPalette GetCustomKnobPalette ( const bool bDarkTheme, const bool bEnable
             }
         };
 
-        palette.accent           = GetDisabledColor ( palette.accent );
-        palette.accentGlow       = GetDisabledColor ( palette.accentGlow );
-        palette.accentBright     = GetDisabledColor ( palette.accentBright );
-        palette.accentMid        = GetDisabledColor ( palette.accentMid );
-        palette.accentDeep       = GetDisabledColor ( palette.accentDeep );
+        palette.accent       = GetDisabledColor ( palette.accent );
+        palette.accentGlow   = GetDisabledColor ( palette.accentGlow );
+        palette.accentBright = GetDisabledColor ( palette.accentBright );
+        palette.accentMid    = GetDisabledColor ( palette.accentMid );
+        palette.accentDeep   = GetDisabledColor ( palette.accentDeep );
 
         palette.knobNormalTop    = GetDisabledColor ( palette.knobNormalTop );
         palette.knobNormalMid    = GetDisabledColor ( palette.knobNormalMid );
@@ -190,19 +190,19 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     const int dialRadius = std::max ( 8, ( std::min ( w, h ) / 2 ) - 2 );
     const int knobRadius = std::max ( 5, dialRadius - 5 );
 
-    const SControlPalette palette             = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
-    const QColor          bgColor             = palette.background;
-    const QColor          arcColor            = palette.accent;
-    const QColor          glowColor           = palette.accentGlow;
-    const QColor          knobNormalTop       = palette.knobNormalTop;
-    const QColor          knobNormalMid       = palette.knobNormalMid;
-    const QColor          knobNormalBottom    = palette.knobNormalBottom;
-    const QColor          knobHoverTop        = palette.knobHoverTop;
-    const QColor          knobHoverMid        = palette.knobHoverMid;
-    const QColor          knobHoverBottom     = palette.knobHoverBottom;
-    const QColor          knobOutlineColor    = palette.knobOutline;
-    const QColor          markerNormalColor   = palette.markerNormal;
-    const QColor          markerHoverColor    = palette.markerHover;
+    const SControlPalette palette           = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
+    const QColor          bgColor           = palette.background;
+    const QColor          arcColor          = palette.accent;
+    const QColor          glowColor         = palette.accentGlow;
+    const QColor          knobNormalTop     = palette.knobNormalTop;
+    const QColor          knobNormalMid     = palette.knobNormalMid;
+    const QColor          knobNormalBottom  = palette.knobNormalBottom;
+    const QColor          knobHoverTop      = palette.knobHoverTop;
+    const QColor          knobHoverMid      = palette.knobHoverMid;
+    const QColor          knobHoverBottom   = palette.knobHoverBottom;
+    const QColor          knobOutlineColor  = palette.knobOutline;
+    const QColor          markerNormalColor = palette.markerNormal;
+    const QColor          markerHoverColor  = palette.markerHover;
 
     // Fill background
     painter.fillRect ( rect(), bgColor );
@@ -211,10 +211,10 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     const QColor trackBg = bDarkTheme ? QColor ( 45, 52, 60 ) : QColor ( 210, 215, 222 );
     painter.setPen ( QPen ( trackBg, 3.0, Qt::SolidLine, Qt::RoundCap ) );
     painter.setBrush ( Qt::NoBrush );
-    
+
     const int arcRadius = dialRadius - 2;
-    QRect arcRect ( centerX - arcRadius, centerY - arcRadius, arcRadius * 2, arcRadius * 2 );
-    
+    QRect     arcRect ( centerX - arcRadius, centerY - arcRadius, arcRadius * 2, arcRadius * 2 );
+
     auto toQtArcAngle16 = [] ( double mathDeg ) { return static_cast<int> ( -16.0 * mathDeg ); };
     painter.drawArc ( arcRect, toQtArcAngle16 ( 135.0 ), toQtArcAngle16 ( 270.0 ) );
 
@@ -254,11 +254,11 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     }
 
     // Draw center knob cap
-    QRect knobRect ( centerX - knobRadius, centerY - knobRadius, knobRadius * 2, knobRadius * 2 );
-    const bool bHighlight = bKnobHovered || bMousePressed;
-    const QColor capTop = bHighlight ? knobHoverTop : knobNormalTop;
-    const QColor capMid = bHighlight ? knobHoverMid : knobNormalMid;
-    const QColor capBottom = bHighlight ? knobHoverBottom : knobNormalBottom;
+    QRect        knobRect ( centerX - knobRadius, centerY - knobRadius, knobRadius * 2, knobRadius * 2 );
+    const bool   bHighlight = bKnobHovered || bMousePressed;
+    const QColor capTop     = bHighlight ? knobHoverTop : knobNormalTop;
+    const QColor capMid     = bHighlight ? knobHoverMid : knobNormalMid;
+    const QColor capBottom  = bHighlight ? knobHoverBottom : knobNormalBottom;
 
     QLinearGradient capGrad ( knobRect.topLeft(), knobRect.bottomRight() );
     capGrad.setColorAt ( 0.0, capTop );
@@ -275,10 +275,10 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     painter.drawEllipse ( knobRect.adjusted ( 1, 1, -1, -1 ) );
 
     // Draw notch pointer on the knob cap itself
-    double angle = angleFromValue ( iCurrentValue );
-    double radians = angle * PI / 180.0;
-    const QPoint p1 = PointOnCircle ( centerX, centerY, knobRadius - 5, radians );
-    const QPoint p2 = PointOnCircle ( centerX, centerY, knobRadius - 1, radians );
+    double       angle   = angleFromValue ( iCurrentValue );
+    double       radians = angle * PI / 180.0;
+    const QPoint p1      = PointOnCircle ( centerX, centerY, knobRadius - 5, radians );
+    const QPoint p2      = PointOnCircle ( centerX, centerY, knobRadius - 1, radians );
 
     painter.setPen ( QPen ( bHighlight ? markerHoverColor : markerNormalColor, 2.0, Qt::SolidLine, Qt::RoundCap ) );
     painter.drawLine ( p1, p2 );

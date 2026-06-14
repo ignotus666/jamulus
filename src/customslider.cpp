@@ -100,7 +100,7 @@ void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, co
     // 5. Draw center value indicator line across the fader cap
     const QColor indicatorColor = bHighlighted ? palette.accentBright : palette.accent;
     painter.setPen ( QPen ( indicatorColor, 1.8 ) );
-    
+
     if ( bVertical )
     {
         // Horizontal indicator line on a vertical fader
@@ -146,8 +146,8 @@ void DrawTickMarks ( QPainter&                   painter,
 
             if ( bVertical )
             {
-                const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) ||
-                                      ( eTickPosition == QSlider::TicksAbove );
+                const bool drawLeft  = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) ||
+                                       ( eTickPosition == QSlider::TicksAbove );
                 const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksRight ) ||
                                        ( eTickPosition == QSlider::TicksBelow );
 
@@ -345,8 +345,8 @@ int CCustomSlider::valueFromPosition ( int pos ) const
     if ( range == 0 )
         return iMinValue;
 
-    int trackSize = 0;
-    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    int       trackSize = 0;
+    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
 
     if ( eOrientation == Qt::Vertical )
     {
@@ -373,9 +373,9 @@ int CCustomSlider::positionFromValue ( int val ) const
     if ( range == 0 )
         range = 1;
 
-    int trackSize = 0;
-    int basePos   = 0;
-    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    int       trackSize = 0;
+    int       basePos   = 0;
+    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
 
     if ( eOrientation == Qt::Vertical )
     {
@@ -396,8 +396,8 @@ int CCustomSlider::positionFromValue ( int val ) const
 QRect CCustomSlider::currentHandleRect() const
 {
     const int handlePos = positionFromValue ( iCurrentValue );
-    const int hWidth  = ( eOrientation == Qt::Vertical ) ? 22 : 12;
-    const int hHeight = ( eOrientation == Qt::Vertical ) ? 12 : 22;
+    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    const int hHeight   = ( eOrientation == Qt::Vertical ) ? 12 : 22;
 
     if ( eOrientation == Qt::Vertical )
     {
@@ -453,7 +453,7 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     const QColor          trackBorder     = palette.trackBorder;
 
     // Draw track background (rounded rect, 4px wide)
-    QRect trackRect ( trackLeft, trackTop, 4, trackSize );
+    QRect        trackRect ( trackLeft, trackTop, 4, trackSize );
     QPainterPath trackPath;
     trackPath.addRoundedRect ( trackRect, 2.0, 2.0 );
     painter.setPen ( QPen ( trackBorder, 1.0 ) );
@@ -466,8 +466,8 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     if ( bCenterSweep )
     {
         const int centerPos = trackTop + trackSize / 2;
-        fillY = std::min ( handlePos, centerPos );
-        fillH = std::abs ( handlePos - centerPos );
+        fillY               = std::min ( handlePos, centerPos );
+        fillH               = std::abs ( handlePos - centerPos );
     }
     else
     {
@@ -522,7 +522,7 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
     const QColor          trackBorder     = palette.trackBorder;
 
     // Draw track background (rounded rect, 4px high)
-    QRect trackRect ( trackLeft, trackTop, trackSize, 4 );
+    QRect        trackRect ( trackLeft, trackTop, trackSize, 4 );
     QPainterPath trackPath;
     trackPath.addRoundedRect ( trackRect, 2.0, 2.0 );
     painter.setPen ( QPen ( trackBorder, 1.0 ) );
@@ -535,8 +535,8 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
     if ( bCenterSweep )
     {
         const int centerPos = trackLeft + trackSize / 2;
-        fillX = std::min ( handlePos, centerPos );
-        fillW = std::abs ( handlePos - centerPos );
+        fillX               = std::min ( handlePos, centerPos );
+        fillW               = std::abs ( handlePos - centerPos );
     }
     else
     {
