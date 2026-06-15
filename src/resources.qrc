@@ -21,6 +21,8 @@
         <file alias="clientdlg_light.qss">../src/res/styles/clientdlg_light.qss</file>
         <file alias="dialog_common_dark.qss">../src/res/styles/dialog_common_dark.qss</file>
         <file alias="dialog_common_light.qss">../src/res/styles/dialog_common_light.qss</file>
+        <file alias="colors_dark.ini">../src/res/styles/colors_dark.ini</file>
+        <file alias="colors_light.ini">../src/res/styles/colors_light.ini</file>
         <file alias="checkmark_light.png">../src/res/styles/checkmark_light.png</file>
         <file alias="down_arrow_light.png">../src/res/styles/down_arrow_light.png</file>
         <file alias="down_arrow_dark.png">../src/res/styles/down_arrow_dark.png</file>

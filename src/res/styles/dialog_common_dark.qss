@@ -112,14 +112,14 @@ QToolButton:hover {
 
 QPushButton[learnActive="true"] {
     color: rgb(75, 213, 248);
-    border: 2px solid rgb(75, 213, 248);
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(54, 54, 58),
         stop:1 rgb(38, 38, 42));
 }
 
 QPushButton[learnActive="true"]:hover {
-    border: 2px solid rgb(75, 213, 248);
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(62, 62, 66),
         stop:1 rgb(44, 44, 48));

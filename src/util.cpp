@@ -49,6 +49,7 @@
 #ifndef HEADLESS
 #    include <QApplication>
 #    include <QFile>
+#    include <QTextStream>
 
 void SetAppPaletteForTheme ( EUITheme eTheme )
 {
@@ -90,6 +91,69 @@ void SetAppStyleSheetFromResources ( const QStringList& resourcePaths )
 
         combinedStyleSheet += QString::fromUtf8 ( styleFile.readAll() );
         combinedStyleSheet += '\n';
+    }
+
+    // Determine theme ini path based on resource paths
+    QString colorsIniPath;
+    for ( const QString& path : resourcePaths )
+    {
+        if ( path.contains ( "_dark" ) )
+        {
+            colorsIniPath = ":/styles/colors_dark.ini";
+            break;
+        }
+        else if ( path.contains ( "_light" ) )
+        {
+            colorsIniPath = ":/styles/colors_light.ini";
+            break;
+        }
+    }
+
+    if ( !colorsIniPath.isEmpty() )
+    {
+        QFile colorsFile ( colorsIniPath );
+        if ( colorsFile.open ( QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::Text ) )
+        {
+            QList<QPair<QString, QString>> replacements;
+            QTextStream stream ( &colorsFile );
+            while ( !stream.atEnd() )
+            {
+                QString line = stream.readLine().trimmed();
+                if ( line.isEmpty() || line.startsWith ( ";" ) || line.startsWith ( "#" ) || line.startsWith ( "[" ) )
+                {
+                    continue;
+                }
+                int eqIdx = line.indexOf ( '=' );
+                if ( eqIdx > 0 )
+                {
+                    QString key   = line.left ( eqIdx ).trimmed();
+                    QString value = line.mid ( eqIdx + 1 ).trimmed();
+                    if ( value.startsWith ( '"' ) && value.endsWith ( '"' ) )
+                    {
+                        value = value.mid ( 1, value.length() - 2 );
+                    }
+                    else if ( value.startsWith ( '\'' ) && value.endsWith ( '\'' ) )
+                    {
+                        value = value.mid ( 1, value.length() - 2 );
+                    }
+                    replacements.append ( { key, value } );
+                }
+            }
+
+            // Sort replacements by key length in descending order to avoid prefix replacement bugs
+            std::sort ( replacements.begin(), replacements.end(), []( const QPair<QString, QString>& a, const QPair<QString, QString>& b ) {
+                return a.first.length() > b.first.length();
+            } );
+
+            for ( const auto& replacement : replacements )
+            {
+                combinedStyleSheet.replace ( "@" + replacement.first, replacement.second );
+            }
+        }
+        else
+        {
+            qWarning() << "Unable to open colors definition resource:" << colorsIniPath;
+        }
     }
 
     if ( QApplication* pApp = qobject_cast<QApplication*> ( QCoreApplication::instance() ) )
