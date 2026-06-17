@@ -34,6 +34,12 @@ namespace
 {
 constexpr int TICK_SPACING_PX = 20;
 
+// Option A: Classic Console Fader dimensions
+constexpr int VERT_KNOB_WIDTH   = 20;
+constexpr int VERT_KNOB_HEIGHT  = 30;
+constexpr int HORIZ_KNOB_WIDTH  = 30;
+constexpr int HORIZ_KNOB_HEIGHT = 20;
+
 void FillAccentGradient ( QPainter& painter, const QRect& rect, const bool bVertical, const SControlPalette& palette )
 {
     if ( rect.width() <= 0 || rect.height() <= 0 )
@@ -64,11 +70,13 @@ void FillAccentStripe ( QPainter& painter, const QRect& rect, const bool bVertic
 
 void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, const bool bHighlighted, const SControlPalette& palette )
 {
+    const qreal radius = 2.5;
+
     // 1. Draw outer soft glow if hovered or pressed
     if ( bHighlighted )
     {
         QPainterPath glowPath;
-        glowPath.addRoundedRect ( rect.adjusted ( -2, -2, 1, 1 ), 4.0, 4.0 );
+        glowPath.addRoundedRect ( rect.adjusted ( -2, -2, 1, 1 ), radius + 2.0, radius + 2.0 );
         painter.fillPath ( glowPath, palette.accentGlow );
     }
 
@@ -79,7 +87,7 @@ void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, co
     gradient.setColorAt ( 1.0, palette.handleBottom );
 
     QPainterPath handlePath;
-    handlePath.addRoundedRect ( rect.adjusted ( 0, 0, -1, -1 ), 3.0, 3.0 );
+    handlePath.addRoundedRect ( rect.adjusted ( 0, 0, -1, -1 ), radius, radius );
     painter.setPen ( Qt::NoPen );
     painter.setBrush ( gradient );
     painter.drawPath ( handlePath );
@@ -93,7 +101,7 @@ void DrawHandle ( QPainter& painter, const QRect& rect, const bool bVertical, co
 
     // 4. Draw inner subtle highlight line for 3D look
     QPainterPath innerPath;
-    innerPath.addRoundedRect ( rect.adjusted ( 1, 1, -2, -2 ), 2.0, 2.0 );
+    innerPath.addRoundedRect ( rect.adjusted ( 1, 1, -2, -2 ), radius - 1.0, radius - 1.0 );
     painter.setPen ( QPen ( QColor ( 255, 255, 255, 25 ), 1.0 ) );
     painter.drawPath ( innerPath );
 
@@ -345,19 +353,18 @@ int CCustomSlider::valueFromPosition ( int pos ) const
     if ( range == 0 )
         return iMinValue;
 
-    int       trackSize = 0;
-    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    int trackSize = 0;
 
     if ( eOrientation == Qt::Vertical )
     {
-        // Keep vertical track insets symmetric and aligned with the meter widget.
-        trackSize = height() - 2 * MARGINS;
-        pos       = height() - MARGINS - pos; // inverted for vertical
+        constexpr int VERT_TRAVEL_PADDING = 1;
+        trackSize = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
+        pos       = height() - VERT_KNOB_HEIGHT / 2 - VERT_TRAVEL_PADDING - pos; // inverted for vertical
     }
     else
     {
-        trackSize = width() - 2 * MARGINS - hWidth;
-        pos       = pos - MARGINS - hWidth / 2;
+        trackSize = width() - 2 * MARGINS - HORIZ_KNOB_WIDTH;
+        pos       = pos - MARGINS - HORIZ_KNOB_WIDTH / 2;
     }
 
     if ( trackSize <= 0 )
@@ -373,21 +380,21 @@ int CCustomSlider::positionFromValue ( int val ) const
     if ( range == 0 )
         range = 1;
 
-    int       trackSize = 0;
-    int       basePos   = 0;
-    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
+    int trackSize = 0;
+    int basePos   = 0;
 
     if ( eOrientation == Qt::Vertical )
     {
-        trackSize = height() - 2 * MARGINS;
-        basePos   = MARGINS;
+        constexpr int VERT_TRAVEL_PADDING = 1;
+        trackSize = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
+        basePos   = VERT_KNOB_HEIGHT / 2 + VERT_TRAVEL_PADDING;
         int pos   = basePos + ( ( iMaxValue - val ) * trackSize ) / range;
         return pos;
     }
     else
     {
-        trackSize = width() - 2 * MARGINS - hWidth;
-        basePos   = MARGINS + hWidth / 2;
+        trackSize = width() - 2 * MARGINS - HORIZ_KNOB_WIDTH;
+        basePos   = MARGINS + HORIZ_KNOB_WIDTH / 2;
         int pos   = basePos + ( ( val - iMinValue ) * trackSize ) / range;
         return pos;
     }
@@ -396,18 +403,16 @@ int CCustomSlider::positionFromValue ( int val ) const
 QRect CCustomSlider::currentHandleRect() const
 {
     const int handlePos = positionFromValue ( iCurrentValue );
-    const int hWidth    = ( eOrientation == Qt::Vertical ) ? 22 : 12;
-    const int hHeight   = ( eOrientation == Qt::Vertical ) ? 12 : 22;
 
     if ( eOrientation == Qt::Vertical )
     {
-        const int handleLeft = ( width() - hWidth ) / 2;
-        return QRect ( handleLeft, handlePos - hHeight / 2, hWidth, hHeight );
+        const int handleLeft = ( width() - VERT_KNOB_WIDTH ) / 2;
+        return QRect ( handleLeft, handlePos - VERT_KNOB_HEIGHT / 2, VERT_KNOB_WIDTH, VERT_KNOB_HEIGHT );
     }
     else
     {
-        const int handleTop = ( height() - hHeight ) / 2;
-        return QRect ( handlePos - hWidth / 2, handleTop, hWidth, hHeight );
+        const int handleTop = ( height() - HORIZ_KNOB_HEIGHT ) / 2;
+        return QRect ( handlePos - HORIZ_KNOB_WIDTH / 2, handleTop, HORIZ_KNOB_WIDTH, HORIZ_KNOB_HEIGHT );
     }
 }
 
@@ -472,7 +477,7 @@ void CCustomSlider::drawVerticalSlider ( QPainter& painter )
     else
     {
         fillY = handlePos;
-        fillH = height - MARGINS - handlePos;
+        fillH = positionFromValue ( iMinValue ) - handlePos;
     }
 
     if ( fillH > 0 )
@@ -512,10 +517,9 @@ void CCustomSlider::drawHorizontalSlider ( QPainter& painter )
 {
     int                   width           = this->width();
     int                   height          = this->height();
-    const int             hWidth          = 12;
-    int                   trackSize       = width - 2 * MARGINS - hWidth;
+    int                   trackSize       = width - 2 * MARGINS - HORIZ_KNOB_WIDTH;
     int                   trackTop        = ( height - 4 ) / 2;
-    int                   trackLeft       = MARGINS + hWidth / 2;
+    int                   trackLeft       = MARGINS + HORIZ_KNOB_WIDTH / 2;
     int                   handlePos       = positionFromValue ( iCurrentValue );
     const SControlPalette palette         = GetCustomSliderPalette ( bDarkTheme, isEnabled() );
     const QColor          trackBackground = palette.trackBackground;

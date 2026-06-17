@@ -1060,6 +1060,10 @@ void CEffectsDlg::OnEQBandGainChanged ( int iBand, int iGainDb )
     {
         pClient->SetEQBandGainDb ( iBand, iGainDb );
         UpdateEQPresetSelection();
+        if ( iBand == iSelectedBand )
+        {
+            UpdateEQDynControls ( iBand );
+        }
     }
 }
 
@@ -1084,6 +1088,10 @@ void CEffectsDlg::OnEQBandGainReset ( int iBand )
     {
         pClient->SetEQBandGainDb ( iBand, 0.0f );
         UpdateEQPresetSelection();
+        if ( iBand == iSelectedBand )
+        {
+            UpdateEQDynControls ( iBand );
+        }
     }
 }
 
