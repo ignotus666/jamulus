@@ -10,6 +10,7 @@ CAudioEqualizer::CAudioEqualizer() : bBypass ( true ), fWetMixCurrent ( 0.0f ), 
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         afBandFrequencies[iBand]     = GetDefaultBandFrequency ( iBand );
+        afBandQ[iBand]               = 1.0f;
         afBandTargetGainDb[iBand]    = 0.0f;
         afBandSmoothedGainDb[iBand]  = 0.0f;
         afBandEffectiveGainDb[iBand] = 0.0f;
@@ -37,8 +38,8 @@ void CAudioEqualizer::Init ( const int iNsampleRateHz )
 
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
-        UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand] );
-        UpdateDetCoeff ( iBand );
+        UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand], afBandQ[iBand] );
+        UpdateDetCoeff ( iBand, afBandQ[iBand] );
     }
 
     ClearFilterState();
@@ -140,21 +141,34 @@ void CAudioEqualizer::SetBandFrequency ( const int iBand, const float fFreqHz )
     if ( ( iBand >= 0 ) && ( iBand < NUM_BANDS ) )
     {
         afBandFrequencies[iBand] = std::max ( 20.0f, std::min ( 20000.0f, fFreqHz ) );
-        UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand] );
-        UpdateDetCoeff ( iBand );
+        UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand], afBandQ[iBand] );
+        UpdateDetCoeff ( iBand, afBandQ[iBand] );
     }
 }
+
+void CAudioEqualizer::SetBandQ ( const int iBand, const float fQ )
+{
+    if ( ( iBand >= 0 ) && ( iBand < NUM_BANDS ) )
+    {
+        afBandQ[iBand] = std::max ( 0.3f, std::min ( 10.0f, fQ ) );
+        UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand], afBandQ[iBand] );
+        UpdateDetCoeff ( iBand, afBandQ[iBand] );
+    }
+}
+
+float CAudioEqualizer::GetBandQ ( const int iBand ) const { return ( iBand >= 0 && iBand < NUM_BANDS ) ? afBandQ[iBand] : 1.0f; }
 
 void CAudioEqualizer::Reset()
 {
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         afBandFrequencies[iBand]     = GetDefaultBandFrequency ( iBand );
+        afBandQ[iBand]               = 1.0f;
         afBandTargetGainDb[iBand]    = 0.0f;
         afBandSmoothedGainDb[iBand]  = 0.0f;
         afBandEffectiveGainDb[iBand] = 0.0f;
-        UpdateBandCoeff ( iBand, 0.0f );
-        UpdateDetCoeff ( iBand );
+        UpdateBandCoeff ( iBand, 0.0f, afBandQ[iBand] );
+        UpdateDetCoeff ( iBand, afBandQ[iBand] );
 
         aBandDynParams[iBand].bEnabled     = false;
         aBandDynParams[iBand].fThresholdDb = -20.0f;
@@ -218,7 +232,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
         if ( std::fabs ( fEffective - afBandEffectiveGainDb[iBand] ) > 0.001f )
         {
             afBandEffectiveGainDb[iBand] = fEffective;
-            UpdateBandCoeff ( iBand, fEffective );
+            UpdateBandCoeff ( iBand, fEffective, afBandQ[iBand] );
         }
     }
 
@@ -317,11 +331,10 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
     }
 }
 
-void CAudioEqualizer::UpdateBandCoeff ( const int iBandIndex, const float fGainDb )
+void CAudioEqualizer::UpdateBandCoeff ( const int iBandIndex, const float fGainDb, const float fQ )
 {
     // RBJ peaking EQ biquad
     constexpr float fPi = 3.14159265358979323846f;
-    constexpr float fQ  = 1.0f;
 
     const float fA     = std::pow ( 10.0f, fGainDb / 40.0f );
     const float fW0    = 2.0f * fPi * afBandFrequencies[iBandIndex] / iSampleRateHz;
@@ -342,12 +355,11 @@ void CAudioEqualizer::UpdateBandCoeff ( const int iBandIndex, const float fGainD
     aBandCoeff[iBandIndex].a2 = a2 / a0;
 }
 
-void CAudioEqualizer::UpdateDetCoeff ( const int iBandIndex )
+void CAudioEqualizer::UpdateDetCoeff ( const int iBandIndex, const float fQ )
 {
     // RBJ bandpass filter (constant 0 dB peak gain) for frequency-selective envelope detection.
     // This isolates the frequency content around the band center for the dynamics sidechain.
     constexpr float fPi = 3.14159265358979323846f;
-    constexpr float fQ  = 1.0f;
 
     const float fW0    = 2.0f * fPi * afBandFrequencies[iBandIndex] / iSampleRateHz;
     const float fAlpha = std::sin ( fW0 ) / ( 2.0f * fQ );

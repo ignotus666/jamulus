@@ -370,6 +370,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pLabelInstBox->setMinimumWidth ( 0 );
         pLabelInstBox->setMinimumHeight ( 52 ); // maximum height of the instrument+flag pictures
         pLabelInstBox->setMaximumWidth ( 86 );
+        plblInstrument->setFixedWidth ( 35 );
+        plblInstrument->setAlignment ( Qt::AlignCenter );
+        plblCountryFlag->setFixedWidth ( 35 );
+        plblCountryFlag->setAlignment ( Qt::AlignCenter );
         pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "Mute" ) );
@@ -377,12 +381,16 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         strGroupBaseText  = tr ( "Grp" );
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
         break;
-
+ 
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
         pLabelInstBox->setMinimumWidth ( 38 );
         pLabelInstBox->setMinimumHeight ( 88 ); // keep compact mode tight around flag+instrument+label
         pLabelInstBox->setMaximumWidth ( 38 );
+        plblInstrument->setFixedWidth ( 23 );
+        plblInstrument->setAlignment ( Qt::AlignCenter );
+        plblCountryFlag->setFixedWidth ( 23 );
+        plblCountryFlag->setAlignment ( Qt::AlignCenter );
         pPan->setFixedSize ( 34, 34 );
         pFader->setTickPosition ( QSlider::NoTicks );
         pFader->setStyleSheet ( "" );
@@ -393,7 +401,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         strGroupBaseText  = tr ( "G" );
         iInstrPicMaxWidth = 23; // scale instrument picture to avoid enlarging the width by the picture
         break;
-
+ 
     default:
         // reset style sheet and set original parameters
         pFader->setTickPosition ( QSlider::TicksBothSides );
@@ -403,6 +411,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         pLabelInstBox->setMinimumWidth ( 0 );
         pLabelInstBox->setMinimumHeight ( 52 ); // maximum height of the instrument+flag pictures
         pLabelInstBox->setMaximumWidth ( 86 );
+        plblInstrument->setFixedWidth ( 35 );
+        plblInstrument->setAlignment ( Qt::AlignCenter );
+        plblCountryFlag->setFixedWidth ( 35 );
+        plblCountryFlag->setAlignment ( Qt::AlignCenter );
         pPan->setFixedSize ( 45, 45 );
         pPanLabel->setText ( tr ( "Pan" ) );
         pcbMute->setText ( tr ( "Mute" ) );
@@ -807,6 +819,7 @@ void CChannelFader::SetMuteSoloButtonWidth ( const int iButtonWidth )
     pcbMute->setFixedHeight ( 25 );
     pcbSolo->setFixedHeight ( 25 );
     pMuteSoloBox->setFixedWidth ( iButtonWidth );
+    pLabelInstBox->setFixedWidth ( iButtonWidth );
 }
 
 void CChannelFader::OnGroupStateChanged ( bool )

@@ -50,6 +50,10 @@ public:
     // Real-time gain reduction readback for the GUI curve display
     float GetBandGainReductionDb ( const int iBand ) const;
 
+    // Per-band Q (quality factor / bandwidth)
+    void  SetBandQ ( const int iBand, const float fQ );
+    float GetBandQ ( const int iBand ) const;
+
     // Band frequency information (dynamic, for curve widget)
     void         SetBandFrequency ( const int iBand, const float fFreqHz );
     float        GetBandFrequency ( const int iBand ) const;
@@ -86,9 +90,10 @@ private:
     };
 
     float afBandFrequencies[NUM_BANDS];
+    float afBandQ[NUM_BANDS];
 
-    void UpdateBandCoeff ( const int iBandIndex, const float fGainDb );
-    void UpdateDetCoeff ( const int iBandIndex );
+    void UpdateBandCoeff ( const int iBandIndex, const float fGainDb, const float fQ );
+    void UpdateDetCoeff ( const int iBandIndex, const float fQ );
     void ClearFilterState();
 
     bool  bBypass;

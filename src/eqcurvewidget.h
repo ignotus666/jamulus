@@ -51,6 +51,7 @@ public:
     void SetSampleRate ( const int iSampleRateHz );
     void SetDarkTheme ( const bool bEnable );
     void SetBypassed ( const bool bBypassed );
+    void SetBandQ ( const int iBand, const float fQ );
 
     int   GetSelectedBand() const { return iSelectedBand; }
     float GetBandFrequency ( const int iBand ) const;
@@ -94,6 +95,7 @@ private:
     float afBandGainDb[kNumBands];
     float afBandFrequencies[kNumBands];
     float afBandGainReductionDb[kNumBands];
+    float afBandQ[kNumBands];
     float afSpectrumLevels[kNumBands];
     int   iSampleRateHz;
     int   iSelectedBand;

@@ -57,7 +57,6 @@
 /* Implementation *************************************************************/
 CClient::CClient ( const quint16  iPortNumber,
                    const quint16  iQosNumber,
-                   const QString& strConnOnStartupAddress,
                    const bool     bNoAutoJackConnect,
                    const QString& strNClientName,
                    const bool     bNDisableIPv6,
@@ -228,13 +227,6 @@ CClient::CClient ( const quint16  iPortNumber,
     // start the socket (it is important to start the socket after all
     // initializations and connections)
     Socket.Start();
-
-    // do an immediate start if a server address is given
-    if ( !strConnOnStartupAddress.isEmpty() )
-    {
-        SetServerAddr ( strConnOnStartupAddress );
-        Start();
-    }
 
     for ( float& fLevel : afOutputBandLevels )
     {

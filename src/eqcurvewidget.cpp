@@ -65,6 +65,7 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
         afBandGainDb[i]          = 0.0f;
         afBandGainReductionDb[i] = 0.0f;
         afBandFrequencies[i]     = CAudioEqualizer::GetDefaultBandFrequency ( i );
+        afBandQ[i]               = 1.0f;
         afSpectrumLevels[i]      = 0.0f;
     }
 
@@ -168,6 +169,20 @@ void CEQCurveWidget::SetBandFrequency ( const int iBand, const float fFreqHz )
             afBandFrequencies[iBand] = fFreqHz;
             bStaticCurveDirty        = true;
             bEffectiveCurveDirty     = true;
+            update();
+        }
+    }
+}
+
+void CEQCurveWidget::SetBandQ ( const int iBand, const float fQ )
+{
+    if ( iBand >= 0 && iBand < kNumBands )
+    {
+        if ( std::fabs ( afBandQ[iBand] - fQ ) > 0.01f )
+        {
+            afBandQ[iBand]       = fQ;
+            bStaticCurveDirty    = true;
+            bEffectiveCurveDirty = true;
             update();
         }
     }
@@ -305,7 +320,7 @@ float CEQCurveWidget::EvalBandMagnitudeDb ( const int iBand, const float fGainDb
     // Evaluate |H(e^{jω})| for a peaking EQ biquad at the given frequency.
     // We recompute coefficients here to be independent of the DSP engine's state.
     constexpr float fPi = 3.14159265358979323846f;
-    constexpr float fQ  = 1.0f;
+    const float     fQ  = afBandQ[iBand];
 
     const float fBandFreq = afBandFrequencies[iBand];
 
@@ -435,7 +450,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     const QRectF r = PlotRect();
 
     // --- Background ---
-    const QColor colBg   = bDarkTheme ? QColor ( 22, 24, 28 ) : QColor ( 248, 249, 252 );
+    const QColor colBg   = GetControlPalette ( bDarkTheme ).background;
     const QColor colGrid = bDarkTheme ? QColor ( 48, 52, 58 ) : QColor ( 215, 218, 224 );
     const QColor colZero = bDarkTheme ? QColor ( 72, 78, 86 ) : QColor ( 180, 185, 195 );
     const QColor colText = bDarkTheme ? QColor ( 150, 158, 168 ) : QColor ( 100, 110, 120 );

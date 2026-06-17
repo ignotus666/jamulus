@@ -248,5 +248,7 @@ private slots:
     void OnEQDynRatioChanged ( int iValue );
     void OnEQDynAttackChanged ( int iValue );
     void OnEQDynReleaseChanged ( int iValue );
+    void OnEQBandQChanged ( int iValue );
     void OnEQDynFreqEditFinished();
+    void OnEQDynGainEditFinished();
 };

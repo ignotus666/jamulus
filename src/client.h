@@ -247,6 +247,9 @@ public:
     int   GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
     float GetEQBandFrequency ( const int iBandIndex ) const { return AudioEqualizer.GetBandFrequency ( iBandIndex ); }
 
+    void  SetEQBandQ ( const int iBand, const float fQ ) { AudioEqualizer.SetBandQ ( iBand, fQ ); }
+    float GetEQBandQ ( const int iBand ) const { return AudioEqualizer.GetBandQ ( iBand ); }
+
     void  SetEQBandDynEnabled ( const int iBand, const bool bEnabled ) { AudioEqualizer.SetBandDynEnabled ( iBand, bEnabled ); }
     bool  GetEQBandDynEnabled ( const int iBand ) const { return AudioEqualizer.GetBandDynEnabled ( iBand ); }
     void  SetEQBandDynThresholdDb ( const int iBand, const float fDb ) { AudioEqualizer.SetBandDynThresholdDb ( iBand, fDb ); }

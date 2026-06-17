@@ -45,6 +45,7 @@
 \******************************************************************************/
 
 #include "settings.h"
+#include <cmath>
 
 /* Implementation *************************************************************/
 void CSettings::Load ( const QList<QString>& CommandLineOptions )
@@ -714,6 +715,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             aiEQBandFrequency[iIdx] = iValue;
         }
         pClient->SetEQBandFrequency ( iIdx, aiEQBandFrequency[iIdx] );
+
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandq%1" ).arg ( iIdx ), 3, 100, iValue ) )
+        {
+            aiEQBandQ[iIdx] = iValue;
+        }
+        pClient->SetEQBandQ ( iIdx, static_cast<float> ( aiEQBandQ[iIdx] ) / 10.0f );
     }
 
     // UI theme
@@ -939,6 +946,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
             {
                 aiEQPresetBandFrequency[iIdx][iBand] = iValue;
             }
+
+            aiEQPresetBandQ[iIdx][iBand] = 10;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1bandq%2" ).arg ( iIdx ).arg ( iBand ), 3, 100, iValue ) )
+            {
+                aiEQPresetBandQ[iIdx][iBand] = iValue;
+            }
         }
     }
 
@@ -1016,6 +1029,12 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
                                     iValue ) )
             {
                 aiEffectsPresetEQBandFrequency[iIdx][iBand] = iValue;
+            }
+
+            aiEffectsPresetEQBandQ[iIdx][iBand] = 10;
+            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbandq%2" ).arg ( iIdx ).arg ( iBand ), 3, 100, iValue ) )
+            {
+                aiEffectsPresetEQBandQ[iIdx][iBand] = iValue;
             }
         }
         if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bValue ) )
@@ -1431,6 +1450,9 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
         aiEQBandFrequency[iIdx] = static_cast<int> ( pClient->GetEQBandFrequency ( iIdx ) );
         SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandfrequency%1" ).arg ( iIdx ), aiEQBandFrequency[iIdx] );
+
+        aiEQBandQ[iIdx] = static_cast<int> ( std::round ( pClient->GetEQBandQ ( iIdx ) * 10.0f ) );
+        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandq%1" ).arg ( iIdx ), aiEQBandQ[iIdx] );
     }
 
     // GUI design
@@ -1489,6 +1511,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                                "client",
                                QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
                                aiEQPresetBandFrequency[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "eqpreset%1bandq%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEQPresetBandQ[iIdx][iBand] );
         }
     }
 
@@ -1528,6 +1554,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                                "client",
                                QString ( "effectpreset%1_eqbandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
                                aiEffectsPresetEQBandFrequency[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument,
+                               "client",
+                               QString ( "effectpreset%1_eqbandq%2" ).arg ( iIdx ).arg ( iBand ),
+                               aiEffectsPresetEQBandQ[iIdx][iBand] );
         }
 
         SetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_revlev" ).arg ( iIdx ), iEffectsPresetReverbLevel[iIdx] );
@@ -1907,6 +1937,7 @@ void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot )
             aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
             aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
             aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
+            aiEffectsPresetEQBandQ[iPresetSlot][iBand]              = static_cast<int> ( std::round ( pClient->GetEQBandQ ( iBand ) * 10.0f ) );
         }
     }
 }
@@ -1924,6 +1955,7 @@ void CClientSettings::SaveEQPresetFromClient ( int iPresetSlot )
             aiEQPresetBandDynRatio[iPresetSlot][iBand]       = static_cast<int> ( pClient->GetEQBandDynRatio ( iBand ) );
             aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = static_cast<int> ( pClient->GetEQBandDynAttackMs ( iBand ) );
             aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = static_cast<int> ( pClient->GetEQBandDynReleaseMs ( iBand ) );
+            aiEQPresetBandQ[iPresetSlot][iBand]              = static_cast<int> ( std::round ( pClient->GetEQBandQ ( iBand ) * 10.0f ) );
         }
     }
 }

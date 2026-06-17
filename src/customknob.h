@@ -76,7 +76,7 @@ public:
 
     // Sizing
     QSize sizeHint() const override { return QSize ( 50, 50 ); }
-    QSize minimumSizeHint() const override { return QSize ( 20, 20 ); }
+    QSize minimumSizeHint() const override { return QSize ( 36, 36 ); }
 
 signals:
     void valueChanged ( int value );

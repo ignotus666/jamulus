@@ -145,15 +145,35 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pKnobEQDynAttack, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynAttackChanged );
     QObject::connect ( pKnobEQDynRelease, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynReleaseChanged );
 
+    // Q (quality factor / bandwidth) knob — range 3..100 maps to Q 0.3..10.0
+    pLblEQBandQValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    pLblEQBandQValue->setMinimumWidth ( 30 );
+    pKnobEQBandQ->setRange ( 3, 100 );
+    pKnobEQBandQ->setTickInterval ( 20 );
+    pKnobEQBandQ->setTickPosition ( QSlider::TicksBothSides );
+    QObject::connect ( pKnobEQBandQ, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQBandQChanged );
+
+    pKnobEQDynThreshold->setMaximumSize ( 40, 40 );
+    pKnobEQDynRatio->setMaximumSize ( 40, 40 );
+    pKnobEQDynAttack->setMaximumSize ( 40, 40 );
+    pKnobEQDynRelease->setMaximumSize ( 40, 40 );
+    pKnobEQBandQ->setMaximumSize ( 40, 40 );
+
     // Frequency input: starts read-only, click to edit, commit on Return or focus loss
     pEdtEQDynFreq->setValidator (
         new QIntValidator ( static_cast<int> ( CEQCurveWidget::kFreqMin ), static_cast<int> ( CEQCurveWidget::kFreqMax ), pEdtEQDynFreq ) );
     pEdtEQDynFreq->installEventFilter ( this );
     QObject::connect ( pEdtEQDynFreq, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQDynFreqEditFinished );
 
+    // Gain input: starts read-only, click to edit, commit on Return or focus loss
+    pEdtEQDynGain->setValidator (
+        new QIntValidator ( static_cast<int> ( CEQCurveWidget::kGainMinDb ), static_cast<int> ( CEQCurveWidget::kGainMaxDb ), pEdtEQDynGain ) );
+    pEdtEQDynGain->installEventFilter ( this );
+    QObject::connect ( pEdtEQDynGain, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQDynGainEditFinished );
+
     iSelectedBand = 0;
 
-    setMinimumHeight ( 420 );
+    setMinimumHeight ( 443 );
 
     QObject::connect ( pKnobReverb, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbValue->setText ( QString::number ( value ) + tr ( " %" ) );
@@ -331,6 +351,7 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         pKnobEQDynRatio,
         pKnobEQDynAttack,
         pKnobEQDynRelease,
+        pKnobEQBandQ,
     };
 
     for ( QWidget* pWidget : apThemeWidgets )
@@ -504,6 +525,7 @@ void CEffectsDlg::UpdateEQControls()
         {
             pEQCurveWidget->SetBandGain ( iBand, pClient->GetEQBandGainDb ( iBand ) );
             pEQCurveWidget->SetBandFrequency ( iBand, pClient->GetEQBandFrequency ( iBand ) );
+            pEQCurveWidget->SetBandQ ( iBand, pClient->GetEQBandQ ( iBand ) );
         }
     }
 
@@ -615,6 +637,7 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
         pClient->SetEQBandDynRatio ( iBand, pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand] );
         pClient->SetEQBandDynAttackMs ( iBand, pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand] );
         pClient->SetEQBandDynReleaseMs ( iBand, pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand] );
+        pClient->SetEQBandQ ( iBand, static_cast<float> ( pSettings->aiEffectsPresetEQBandQ[iPresetSlot][iBand] ) / 10.0f );
     }
 
     UpdateReverbControls();
@@ -762,6 +785,7 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
         pSettings->aiEffectsPresetEQBandDynRatio[iPresetSlot][iBand]       = 4;
         pSettings->aiEffectsPresetEQBandDynAttackMs[iPresetSlot][iBand]    = 5;
         pSettings->aiEffectsPresetEQBandDynReleaseMs[iPresetSlot][iBand]   = 80;
+        pSettings->aiEffectsPresetEQBandQ[iPresetSlot][iBand]              = 10;
     }
 
     pSettings->iEffectsPresetReverbLevel[iPresetSlot]        = 0;
@@ -900,6 +924,7 @@ void CEffectsDlg::ApplyPresetFromComboIndex ( const int iPresetIndex )
         pClient->SetEQBandDynRatio ( iBand, pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand] );
         pClient->SetEQBandDynAttackMs ( iBand, pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand] );
         pClient->SetEQBandDynReleaseMs ( iBand, pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand] );
+        pClient->SetEQBandQ ( iBand, static_cast<float> ( pSettings->aiEQPresetBandQ[iPresetSlot][iBand] ) / 10.0f );
     }
 
     UpdateEQControls();
@@ -1018,6 +1043,7 @@ void CEffectsDlg::OnDeleteEQPresetClicked()
         pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand]       = 4;
         pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = 5;
         pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = 80;
+        pSettings->aiEQPresetBandQ[iPresetSlot][iBand]              = 10;
     }
 
     if ( iPresetSlot == pSettings->iSelectedEQPreset )
@@ -1106,6 +1132,20 @@ void CEffectsDlg::OnEQDynReleaseChanged ( int iValue )
     }
 }
 
+void CEffectsDlg::OnEQBandQChanged ( int iValue )
+{
+    if ( pClient )
+    {
+        const float fQ = static_cast<float> ( iValue ) / 10.0f;
+        pClient->SetEQBandQ ( iSelectedBand, fQ );
+        pLblEQBandQValue->setText ( QString::number ( fQ, 'f', 1 ) );
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetBandQ ( iSelectedBand, fQ );
+        }
+    }
+}
+
 void CEffectsDlg::OnResetEQClicked()
 {
     if ( pClient )
@@ -1130,6 +1170,7 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQDynRatio->blockSignals ( true );
     pKnobEQDynAttack->blockSignals ( true );
     pKnobEQDynRelease->blockSignals ( true );
+    pKnobEQBandQ->blockSignals ( true );
 
     const bool bEnabled = pClient->GetEQBandDynEnabled ( iBand );
     pChbEQDynEnabled->setChecked ( bEnabled );
@@ -1150,6 +1191,14 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pEdtEQDynFreq->setText ( strFreq );
     pEdtEQDynFreq->blockSignals ( false );
 
+    const int iGainDb = pClient->GetEQBandGainDb ( iBand );
+    QString   strGain = ( iGainDb > 0 ) ? QString ( "+%1 dB" ).arg ( iGainDb ) : QString ( "%1 dB" ).arg ( iGainDb );
+    pEdtEQDynGain->blockSignals ( true );
+    pEdtEQDynGain->setReadOnly ( true );
+    pEdtEQDynGain->setFrame ( false );
+    pEdtEQDynGain->setText ( strGain );
+    pEdtEQDynGain->blockSignals ( false );
+
     const float fThreshold = pClient->GetEQBandDynThresholdDb ( iBand );
     pKnobEQDynThreshold->setValue ( static_cast<int> ( std::round ( fThreshold ) ) );
     pLblEQDynThresholdValue->setText ( QString ( "%1 dB" ).arg ( static_cast<int> ( std::round ( fThreshold ) ) ) );
@@ -1166,11 +1215,17 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQDynRelease->setValue ( static_cast<int> ( std::round ( fRelease ) ) );
     pLblEQDynReleaseValue->setText ( QString ( "%1 ms" ).arg ( static_cast<int> ( std::round ( fRelease ) ) ) );
 
+    const float fQ    = pClient->GetEQBandQ ( iBand );
+    const int   iQInt = static_cast<int> ( std::round ( fQ * 10.0f ) );
+    pKnobEQBandQ->setValue ( iQInt );
+    pLblEQBandQValue->setText ( QString::number ( fQ, 'f', 1 ) );
+
     pChbEQDynEnabled->blockSignals ( false );
     pKnobEQDynThreshold->blockSignals ( false );
     pKnobEQDynRatio->blockSignals ( false );
     pKnobEQDynAttack->blockSignals ( false );
     pKnobEQDynRelease->blockSignals ( false );
+    pKnobEQBandQ->blockSignals ( false );
 
     pKnobEQDynThreshold->setEnabled ( bEnabled );
     pKnobEQDynRatio->setEnabled ( bEnabled );
@@ -1209,6 +1264,31 @@ bool CEffectsDlg::eventFilter ( QObject* pObj, QEvent* pEvent )
             if ( !pEdtEQDynFreq->isReadOnly() )
             {
                 OnEQDynFreqEditFinished();
+                return true;
+            }
+        }
+    }
+    else if ( pObj == pEdtEQDynGain )
+    {
+        if ( pEvent->type() == QEvent::MouseButtonPress || pEvent->type() == QEvent::MouseButtonDblClick )
+        {
+            if ( pEdtEQDynGain->isReadOnly() )
+            {
+                // Enter edit mode: show raw dB value so user can type precisely
+                const int iGain = pClient ? pClient->GetEQBandGainDb ( iSelectedBand ) : 0;
+                pEdtEQDynGain->setReadOnly ( false );
+                pEdtEQDynGain->setFrame ( true );
+                pEdtEQDynGain->setText ( QString::number ( iGain ) );
+                pEdtEQDynGain->selectAll();
+                pEdtEQDynGain->setFocus();
+                return true;
+            }
+        }
+        else if ( pEvent->type() == QEvent::FocusOut )
+        {
+            if ( !pEdtEQDynGain->isReadOnly() )
+            {
+                OnEQDynGainEditFinished();
                 return true;
             }
         }
@@ -1256,6 +1336,39 @@ void CEffectsDlg::OnEQDynFreqEditFinished()
     if ( pEQCurveWidget )
     {
         pEQCurveWidget->SetBandFrequency ( iSelectedBand, fFreqHz );
+    }
+
+    UpdateEQDynControls ( iSelectedBand );
+    UpdateEQPresetSelection();
+}
+
+void CEffectsDlg::OnEQDynGainEditFinished()
+{
+    if ( !pClient || iSelectedBand < 0 || iSelectedBand >= CAudioEqualizer::NUM_BANDS )
+    {
+        UpdateEQDynControls ( iSelectedBand );
+        return;
+    }
+
+    bool bOk     = false;
+    int  iGainDb = pEdtEQDynGain->text().toInt ( &bOk );
+
+    if ( !bOk )
+    {
+        // Invalid input – revert display
+        UpdateEQDynControls ( iSelectedBand );
+        return;
+    }
+
+    // Clamp to valid range (kGainMinDb to kGainMaxDb)
+    iGainDb = std::max ( static_cast<int> ( CEQCurveWidget::kGainMinDb ),
+                         std::min ( static_cast<int> ( CEQCurveWidget::kGainMaxDb ), iGainDb ) );
+
+    pClient->SetEQBandGainDb ( iSelectedBand, iGainDb );
+
+    if ( pEQCurveWidget )
+    {
+        pEQCurveWidget->SetBandGain ( iSelectedBand, static_cast<float> ( iGainDb ) );
     }
 
     UpdateEQDynControls ( iSelectedBand );

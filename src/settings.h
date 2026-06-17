@@ -194,6 +194,7 @@ public:
         aiEQBandDynAttackMs{ 5, 5, 5, 5, 5, 5, 5, 5 },
         aiEQBandDynReleaseMs{ 80, 80, 80, 80, 80, 80, 80, 80 },
         aiEQBandFrequency{ 63, 125, 250, 500, 1000, 2000, 4000, 8000 },
+        aiEQBandQ{ 10, 10, 10, 10, 10, 10, 10, 10 },
         iReverbPreDelayMs ( 0 ),
         iReverbRoomSize ( 60 ),
         iReverbDamping ( 30 ),
@@ -253,6 +254,7 @@ public:
                 aiEQPresetBandDynAttackMs[iPreset][iBand]    = 5;
                 aiEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
                 aiEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+                aiEQPresetBandQ[iPreset][iBand]              = 10;
             }
         }
 
@@ -268,6 +270,7 @@ public:
                 aiEffectsPresetEQBandDynAttackMs[iPreset][iBand]    = 5;
                 aiEffectsPresetEQBandDynReleaseMs[iPreset][iBand]   = 80;
                 aiEffectsPresetEQBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+                aiEffectsPresetEQBandQ[iPreset][iBand]              = 10;
             }
 
             iEffectsPresetReverbLevel[iPreset]        = 0;
@@ -345,6 +348,7 @@ public:
     int              aiEQPresetBandDynAttackMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEQPresetBandDynReleaseMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEQPresetBandFrequency[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiEQPresetBandQ[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     CVector<QString> vstrEffectsPresetNames;
     bool             bEffectsPresetEQBypass[MAX_NUM_EFFECT_PRESETS];
     int              aiEffectsPresetEQBandGainDb[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
@@ -354,6 +358,7 @@ public:
     int              aiEffectsPresetEQBandDynAttackMs[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEffectsPresetEQBandDynReleaseMs[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEffectsPresetEQBandFrequency[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiEffectsPresetEQBandQ[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              iEffectsPresetReverbLevel[MAX_NUM_EFFECT_PRESETS];
     int              iEffectsPresetReverbPreDelayMs[MAX_NUM_EFFECT_PRESETS];
     int              iEffectsPresetReverbRoomSize[MAX_NUM_EFFECT_PRESETS];
@@ -384,6 +389,7 @@ public:
     int              aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS];
     int              aiEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS];
     int              aiEQBandFrequency[CAudioEqualizer::NUM_BANDS];
+    int              aiEQBandQ[CAudioEqualizer::NUM_BANDS];
     int              iReverbPreDelayMs;
     int              iReverbRoomSize;
     int              iReverbDamping;
