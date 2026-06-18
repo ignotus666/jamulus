@@ -115,7 +115,7 @@ void SetAppStyleSheetFromResources ( const QStringList& resourcePaths )
         if ( colorsFile.open ( QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::Text ) )
         {
             QList<QPair<QString, QString>> replacements;
-            QTextStream stream ( &colorsFile );
+            QTextStream                    stream ( &colorsFile );
             while ( !stream.atEnd() )
             {
                 QString line = stream.readLine().trimmed();
@@ -141,7 +141,7 @@ void SetAppStyleSheetFromResources ( const QStringList& resourcePaths )
             }
 
             // Sort replacements by key length in descending order to avoid prefix replacement bugs
-            std::sort ( replacements.begin(), replacements.end(), []( const QPair<QString, QString>& a, const QPair<QString, QString>& b ) {
+            std::sort ( replacements.begin(), replacements.end(), [] ( const QPair<QString, QString>& a, const QPair<QString, QString>& b ) {
                 return a.first.length() > b.first.length();
             } );
 

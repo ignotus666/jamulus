@@ -1511,10 +1511,7 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
                                "client",
                                QString ( "eqpreset%1bandfrequency%2" ).arg ( iIdx ).arg ( iBand ),
                                aiEQPresetBandFrequency[iIdx][iBand] );
-            SetNumericIniSet ( IniXMLDocument,
-                               "client",
-                               QString ( "eqpreset%1bandq%2" ).arg ( iIdx ).arg ( iBand ),
-                               aiEQPresetBandQ[iIdx][iBand] );
+            SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1bandq%2" ).arg ( iIdx ).arg ( iBand ), aiEQPresetBandQ[iIdx][iBand] );
         }
     }
 

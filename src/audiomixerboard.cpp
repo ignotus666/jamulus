@@ -381,7 +381,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         strGroupBaseText  = tr ( "Grp" );
         iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
         break;
- 
+
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
         pLabelInstBox->setMinimumWidth ( 38 );
@@ -401,7 +401,7 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         strGroupBaseText  = tr ( "G" );
         iInstrPicMaxWidth = 23; // scale instrument picture to avoid enlarging the width by the picture
         break;
- 
+
     default:
         // reset style sheet and set original parameters
         pFader->setTickPosition ( QSlider::TicksBothSides );
