@@ -154,8 +154,8 @@ void DrawTickMarks ( QPainter&                   painter,
 
             if ( bVertical )
             {
-                const bool drawLeft  = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) ||
-                                       ( eTickPosition == QSlider::TicksAbove );
+                const bool drawLeft = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksLeft ) ||
+                                      ( eTickPosition == QSlider::TicksAbove );
                 const bool drawRight = ( eTickPosition == QSlider::TicksBothSides ) || ( eTickPosition == QSlider::TicksRight ) ||
                                        ( eTickPosition == QSlider::TicksBelow );
 
@@ -358,8 +358,8 @@ int CCustomSlider::valueFromPosition ( int pos ) const
     if ( eOrientation == Qt::Vertical )
     {
         constexpr int VERT_TRAVEL_PADDING = 1;
-        trackSize = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
-        pos       = height() - VERT_KNOB_HEIGHT / 2 - VERT_TRAVEL_PADDING - pos; // inverted for vertical
+        trackSize                         = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
+        pos                               = height() - VERT_KNOB_HEIGHT / 2 - VERT_TRAVEL_PADDING - pos; // inverted for vertical
     }
     else
     {
@@ -386,9 +386,9 @@ int CCustomSlider::positionFromValue ( int val ) const
     if ( eOrientation == Qt::Vertical )
     {
         constexpr int VERT_TRAVEL_PADDING = 1;
-        trackSize = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
-        basePos   = VERT_KNOB_HEIGHT / 2 + VERT_TRAVEL_PADDING;
-        int pos   = basePos + ( ( iMaxValue - val ) * trackSize ) / range;
+        trackSize                         = height() - VERT_KNOB_HEIGHT - 2 * VERT_TRAVEL_PADDING;
+        basePos                           = VERT_KNOB_HEIGHT / 2 + VERT_TRAVEL_PADDING;
+        int pos                           = basePos + ( ( iMaxValue - val ) * trackSize ) / range;
         return pos;
     }
     else
