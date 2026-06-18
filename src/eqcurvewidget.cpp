@@ -58,7 +58,8 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     bEQBypassed ( false ),
     bStaticCurveDirty ( true ),
     bEffectiveCurveDirty ( true ),
-    pBandTooltip ( nullptr )
+    pBandTooltip ( nullptr ),
+    iTooltipBand ( -1 )
 {
     for ( int i = 0; i < kNumBands; ++i )
     {
@@ -66,6 +67,9 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
         afBandGainReductionDb[i] = 0.0f;
         afBandFrequencies[i]     = CAudioEqualizer::GetDefaultBandFrequency ( i );
         afBandQ[i]               = 1.0f;
+    }
+    for ( int i = 0; i < kNumSpectrumBands; ++i )
+    {
         afSpectrumLevels[i]      = 0.0f;
     }
 
@@ -74,13 +78,7 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     setMouseTracking ( true );
     setFocusPolicy ( Qt::ClickFocus );
 
-    pBandTooltip = new QLabel ( this );
-    pBandTooltip->setWindowFlags ( Qt::ToolTip | Qt::FramelessWindowHint );
-    pBandTooltip->setAttribute ( Qt::WA_ShowWithoutActivating, true );
-    pBandTooltip->setAttribute ( Qt::WA_TransparentForMouseEvents, true );
-    pBandTooltip->setAttribute ( Qt::WA_StyledBackground, true );
-    pBandTooltip->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pBandTooltip->setWordWrap ( false );
+    pBandTooltip = nullptr;
 
     UpdateBandTooltipStyle();
 }
@@ -106,41 +104,12 @@ void CEQCurveWidget::UpdateBandTooltipStyle()
 
 void CEQCurveWidget::UpdateBandTooltip ( const int iBand, const bool bVisible )
 {
-    if ( !pBandTooltip )
+    const int iNewBand = ( bVisible && iBand >= 0 && iBand < kNumBands ) ? iBand : -1;
+    if ( iTooltipBand != iNewBand )
     {
-        return;
+        iTooltipBand = iNewBand;
+        update();
     }
-
-    if ( !bVisible || iBand < 0 || iBand >= kNumBands )
-    {
-        pBandTooltip->hide();
-        return;
-    }
-
-    pBandTooltip->setText ( MakeBandTooltipText ( iBand, afBandFrequencies[iBand], afBandGainDb[iBand] ) );
-    pBandTooltip->adjustSize();
-
-    const int iNodeX = static_cast<int> ( std::round ( FreqToXf ( afBandFrequencies[iBand] ) ) );
-    const int iNodeY = static_cast<int> ( std::round ( DbToYf ( afBandGainDb[iBand] ) ) );
-    QPoint    pos    = mapToGlobal ( QPoint ( iNodeX + 16, iNodeY - pBandTooltip->height() - 10 ) );
-
-    const QRect screenRect = QApplication::primaryScreen() ? QApplication::primaryScreen()->availableGeometry() : QRect ( 0, 0, width(), height() );
-    if ( pos.x() + pBandTooltip->width() > screenRect.right() )
-    {
-        pos.setX ( screenRect.right() - pBandTooltip->width() - 8 );
-    }
-    if ( pos.y() < screenRect.top() )
-    {
-        pos.setY ( mapToGlobal ( QPoint ( iNodeX + 16, iNodeY + 18 ) ).y() );
-    }
-    if ( pos.x() < screenRect.left() )
-    {
-        pos.setX ( screenRect.left() + 8 );
-    }
-
-    pBandTooltip->move ( pos );
-    pBandTooltip->show();
-    pBandTooltip->raise();
 }
 
 // ---------------------------------------------------------------------------
@@ -206,7 +175,7 @@ void CEQCurveWidget::SetBandGainReduction ( const int iBand, const float fReduct
 void CEQCurveWidget::SetSpectrumLevels ( const QVector<float>& vecLevels )
 {
     bool bChanged = false;
-    for ( int iBand = 0; iBand < kNumBands; ++iBand )
+    for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
     {
         const float fOldVal = afSpectrumLevels[iBand];
         float       fNewVal = 0.0f;
@@ -247,9 +216,12 @@ void CEQCurveWidget::SetBypassed ( const bool bBypassed )
         if ( bEQBypassed )
         {
             // Clear real-time analyzer data when bypassed
-            for ( int i = 0; i < kNumBands; ++i )
+            for ( int i = 0; i < kNumSpectrumBands; ++i )
             {
                 afSpectrumLevels[i]      = 0.0f;
+            }
+            for ( int i = 0; i < kNumBands; ++i )
+            {
                 afBandGainReductionDb[i] = 0.0f;
             }
         }
@@ -458,7 +430,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     painter.fillRect ( rect(), colBg );
 
     // --- Plot area background ---
-    const QColor colPlotBg = bDarkTheme ? QColor ( 28, 31, 36 ) : QColor ( 255, 255, 255 );
+    const QColor colPlotBg = bDarkTheme ? QColor ( 20, 20, 22 ) : QColor ( 225, 230, 235 );
     painter.fillRect ( r.toRect(), colPlotBg );
 
     // --- Grid: horizontal dB lines ---
@@ -518,7 +490,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     // --- Draw spectrum overlay in the background ---
     bool bAnySpectrum = false;
-    for ( int i = 0; i < kNumBands; ++i )
+    for ( int i = 0; i < kNumSpectrumBands; ++i )
     {
         if ( afSpectrumLevels[i] > 0.001f )
         {
@@ -534,9 +506,10 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         spectrumPath.moveTo ( FreqToXf ( kFreqMin ), r.bottom() );
 
         // Add each band level point
-        for ( int iBand = 0; iBand < kNumBands; ++iBand )
+        for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
         {
-            const float fNx = FreqToXf ( afBandFrequencies[iBand] );
+            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumSpectrumBands - 1 ) );
+            const float fNx = FreqToXf ( fFreq );
             const float fNy = r.bottom() - afSpectrumLevels[iBand] * r.height();
             spectrumPath.lineTo ( fNx, fNy );
         }
@@ -571,9 +544,10 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
         QPainterPath linePath;
         linePath.moveTo ( FreqToXf ( kFreqMin ), r.bottom() );
-        for ( int iBand = 0; iBand < kNumBands; ++iBand )
+        for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
         {
-            linePath.lineTo ( FreqToXf ( afBandFrequencies[iBand] ), r.bottom() - afSpectrumLevels[iBand] * r.height() );
+            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumSpectrumBands - 1 ) );
+            linePath.lineTo ( FreqToXf ( fFreq ), r.bottom() - afSpectrumLevels[iBand] * r.height() );
         }
         linePath.lineTo ( FreqToXf ( kFreqMax ), r.bottom() );
         painter.drawPath ( linePath );
@@ -697,7 +671,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         {
             colCurve = bDarkTheme ? QColor ( 54, 207, 255 ) : QColor ( 50, 150, 200 );
         }
-        painter.setPen ( QPen ( colCurve, 2.0 ) );
+        painter.setPen ( QPen ( colCurve, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
         painter.setBrush ( Qt::NoBrush );
         painter.drawPath ( effectivePath );
     }
@@ -714,10 +688,26 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         // Glow for selected node
         if ( bSelected && !bEQBypassed )
         {
-            const QColor colGlow = bDarkTheme ? QColor ( 54, 207, 255, 60 ) : QColor ( 50, 150, 200, 50 );
+            const QColor colGlow = QColor ( 255, 69, 0, 80 );
             painter.setPen ( Qt::NoPen );
             painter.setBrush ( colGlow );
-            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad + 6, iRad + 6 );
+            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad + 3, iRad + 3 );
+
+            // Bandwidth (Q) visual capsule
+            const float fQ = afBandQ[iBand];
+            if ( fQ > 0.0f )
+            {
+                const float fFreq = afBandFrequencies[iBand];
+                const float fFreqL = std::max ( kFreqMin, fFreq * std::pow ( 2.0f, -0.5f / fQ ) );
+                const float fFreqR = std::min ( kFreqMax, fFreq * std::pow ( 2.0f, 0.5f / fQ ) );
+                const float fX1 = FreqToXf ( fFreqL );
+                const float fX2 = FreqToXf ( fFreqR );
+                
+                const QColor colBandwidth = QColor ( 255, 140, 0, 30 );
+                painter.setPen ( QPen ( QColor ( 255, 140, 0, 150 ), 1.0, Qt::DashLine ) );
+                painter.setBrush ( colBandwidth );
+                painter.drawRoundedRect ( QRectF ( fX1, fNy - 5, fX2 - fX1, 10 ), 5, 5 );
+            }
         }
 
         // Gain reduction indicator: vertical line from static to effective
@@ -742,21 +732,78 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
         else
         {
-            colNode = bDarkTheme ? ( bSelected ? QColor ( 118, 244, 255 ) : QColor ( 54, 207, 255 ) )
-                                 : ( bSelected ? QColor ( 30, 120, 180 ) : QColor ( 50, 150, 200 ) );
+            colNode = QColor ( 255, 140, 0 );
         }
 
-        const QColor colBorder = bDarkTheme ? QColor ( 20, 22, 26 ) : QColor ( 255, 255, 255 );
-
-        painter.setPen ( QPen ( colBorder, 2 ) );
-        painter.setBrush ( colNode );
-        painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
+        if ( bEQBypassed )
+        {
+            const QColor colBorder = bDarkTheme ? QColor ( 20, 22, 26 ) : QColor ( 255, 255, 255 );
+            painter.setPen ( QPen ( colBorder, 1 ) );
+            painter.setBrush ( colNode );
+            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
+        }
+        else
+        {
+            painter.setPen ( Qt::NoPen );
+            painter.setBrush ( colNode );
+            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
+        }
     }
 
     // --- Plot area border ---
     painter.setPen ( QPen ( colGrid, 1 ) );
     painter.setBrush ( Qt::NoBrush );
     painter.drawRect ( r );
+
+    // --- Draw custom canvas tooltip ---
+    if ( iTooltipBand >= 0 && iTooltipBand < kNumBands && !bEQBypassed )
+    {
+        const float fNx = FreqToXf ( afBandFrequencies[iTooltipBand] );
+        const float fNy = DbToYf ( afBandGainDb[iTooltipBand] );
+
+        const QString strText = MakeBandTooltipText ( iTooltipBand, afBandFrequencies[iTooltipBand], afBandGainDb[iTooltipBand] );
+        
+        painter.setFont ( QFont ( "Inter", 8 ) );
+        const QFontMetrics fm = painter.fontMetrics();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+        const int iTextW = fm.horizontalAdvance ( strText );
+#else
+        const int iTextW = fm.width ( strText );
+#endif
+        const int iTextH = fm.height();
+        
+        const int iPaddingX = 6;
+        const int iPaddingY = 3;
+        const int iBoxW = iTextW + 2 * iPaddingX;
+        const int iBoxH = iTextH + 2 * iPaddingY;
+        
+        // Position box above the node by default
+        int iBoxX = static_cast<int> ( fNx - iBoxW / 2 );
+        int iBoxY = static_cast<int> ( fNy - iBoxH - 12 );
+        
+        // Clamp horizontal position to plot margins
+        iBoxX = std::max ( kMarginLeft + 4, std::min ( static_cast<int> ( r.right() - iBoxW - 4 ), iBoxX ) );
+        
+        // If too close to the top margin, position below the node
+        if ( iBoxY < r.top() + 4 )
+        {
+            iBoxY = static_cast<int> ( fNy + 12 );
+        }
+        
+        const QRect rectBox ( iBoxX, iBoxY, iBoxW, iBoxH );
+        
+        // Render box background and border based on theme
+        const QColor colBg = bDarkTheme ? QColor ( 32, 35, 40 ) : QColor ( 250, 250, 250 );
+        const QColor colBorder = bDarkTheme ? QColor ( 74, 79, 87 ) : QColor ( 184, 190, 200 );
+        const QColor colText = bDarkTheme ? QColor ( 238, 241, 245 ) : QColor ( 28, 30, 34 );
+        
+        painter.setPen ( QPen ( colBorder, 1 ) );
+        painter.setBrush ( colBg );
+        painter.drawRoundedRect ( rectBox, 3.0, 3.0 );
+        
+        painter.setPen ( colText );
+        painter.drawText ( rectBox, Qt::AlignCenter, strText );
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -31,6 +31,7 @@ public:
     float GetMakeupDb() const { return fMakeupDb; }
     bool  GetLimiterEnabled() const { return bLimiterEnabled; }
     float GetGainReductionDb();
+    float GetInputLevelDb();
 
     void Process ( CVector<int16_t>& vecsStereoInOut, const int iStereoBlockSizeSam );
 
@@ -51,4 +52,5 @@ private:
     float              fKneeDb;
     float              fLimiterCeilDb;
     std::atomic<float> fGainReductionDb;
+    std::atomic<float> fInputLevelDb;
 };

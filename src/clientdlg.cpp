@@ -1279,7 +1279,8 @@ void CClientDlg::OnTimerSigMet()
         CVector<float> vecOutLevels;
         pClient->GetOutputBandLevels ( vecOutLevels );
         EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
-        EffectsDlg.UpdateCompressorGainReduction ( pClient->GetCompressorGainReductionDb() );
+        EffectsDlg.UpdateCompressorGainReduction ( pClient->GetCompressorGainReductionDb(), pClient->GetCompressorInputLevelDb() );
+        EffectsDlg.UpdateReverbOutputLevel ( pClient->GetReverbOutputLevelDb() );
     }
 
     if ( bDetectFeedback &&

@@ -236,11 +236,10 @@ CClient::CClient ( const quint16  iPortNumber,
 
 void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
 {
-    constexpr int kOutputBands = 8;
-    vecOutLevels.Init ( kOutputBands );
+    vecOutLevels.Init ( NUM_SPECTRUM_BANDS );
 
     QMutexLocker locker ( &MutexOutputBandLevels );
-    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
         vecOutLevels[iBand] = afOutputBandLevels[iBand];
     }
@@ -1682,6 +1681,23 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     Q_UNUSED ( iUnused )
 }
 
+static float GetSpectrumBandFrequency ( const int iBand )
+{
+    static float afFreqs[CClient::NUM_SPECTRUM_BANDS];
+    static bool bInit = false;
+    if ( !bInit )
+    {
+        constexpr float fMin = 30.0f;
+        constexpr float fMax = 16000.0f;
+        for ( int i = 0; i < CClient::NUM_SPECTRUM_BANDS; ++i )
+        {
+            afFreqs[i] = fMin * std::pow ( fMax / fMin, static_cast<float> ( i ) / ( CClient::NUM_SPECTRUM_BANDS - 1 ) );
+        }
+        bInit = true;
+    }
+    return afFreqs[iBand];
+}
+
 void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
 {
     if ( !bOutputBandLevelsEnabled )
@@ -1690,18 +1706,17 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
     }
 
     constexpr float fPi          = 3.14159265358979323846f;
-    constexpr int   kOutputBands = 8;
 
     if ( iMonoBlockSizeSam <= 0 )
     {
         return;
     }
 
-    float afNewLevels[kOutputBands] = { 0.0f };
+    float afNewLevels[NUM_SPECTRUM_BANDS] = { 0.0f };
 
-    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
-        const float fFreq = AudioEqualizer.GetBandFrequency ( iBand );
+        const float fFreq = GetSpectrumBandFrequency ( iBand );
         const float omega = 2.0f * fPi * fFreq / SYSTEM_SAMPLE_RATE_HZ;
         const float coeff = 2.0f * std::cos ( omega );
 
@@ -1723,7 +1738,7 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
     }
 
     QMutexLocker locker ( &MutexOutputBandLevels );
-    for ( int iBand = 0; iBand < kOutputBands; ++iBand )
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
         afOutputBandLevels[iBand] = 0.85f * afOutputBandLevels[iBand] + 0.15f * afNewLevels[iBand];
     }

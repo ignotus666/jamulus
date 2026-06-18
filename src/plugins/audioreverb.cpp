@@ -268,6 +268,8 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
     fWidth        = fWidthLocal;
     bEarlyEnabled = sParams.bEarlyEnabled;
 
+    float fMaxWet = 0.0f;
+
     for ( int i = 0; i < iStereoBlockSizeSam; i += 2 )
     {
         // we sum up the stereo input channels (in case mono input is used, a zero
@@ -354,14 +356,38 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         // reverberation effect on both channels)
         if ( ( eAudioChannelConf == CC_STEREO ) || bReverbOnLeftChan )
         {
-            const float fOutL  = fDry * fInL + fWet * 0.5f * fWetL + fEarlyLevel * fEarly;
+            const float fWetComponent = fWet * 0.5f * fWetL + fEarlyLevel * fEarly;
+            const float fOutL  = fDry * fInL + fWetComponent;
             vecsStereoInOut[i] = Float2Short ( fOutL );
+            const float fAbsWet = std::abs ( fWetComponent );
+            if ( fAbsWet > fMaxWet )
+            {
+                fMaxWet = fAbsWet;
+            }
         }
 
         if ( ( eAudioChannelConf == CC_STEREO ) || !bReverbOnLeftChan )
         {
-            const float fOutR      = fDry * fInR + fWet * 0.5f * fWetR + fEarlyLevel * fEarly;
+            const float fWetComponent = fWet * 0.5f * fWetR + fEarlyLevel * fEarly;
+            const float fOutR      = fDry * fInR + fWetComponent;
             vecsStereoInOut[i + 1] = Float2Short ( fOutR );
+            const float fAbsWet = std::abs ( fWetComponent );
+            if ( fAbsWet > fMaxWet )
+            {
+                fMaxWet = fAbsWet;
+            }
         }
     }
+
+    const float fWetDb = LinearToDb ( fMaxWet / 32768.0f );
+    float fCurrentLevel = fReverbOutputLevelDb.load();
+    if ( fWetDb > fCurrentLevel )
+    {
+        fReverbOutputLevelDb.store ( fWetDb );
+    }
+}
+
+float CAudioReverb::GetReverbOutputLevelDb()
+{
+    return fReverbOutputLevelDb.exchange ( -120.0f );
 }

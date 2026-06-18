@@ -17,10 +17,12 @@ CAudioCompressor::CAudioCompressor() :
     fEnvelope ( 0.0f ),
     fKneeDb ( 6.0f ),
     fLimiterCeilDb ( -1.0f ),
-    fGainReductionDb ( 0.0f )
+    fGainReductionDb ( 0.0f ),
+    fInputLevelDb ( -120.0f )
 {}
 
 float CAudioCompressor::GetGainReductionDb() { return fGainReductionDb.exchange ( 0.0f ); }
+float CAudioCompressor::GetInputLevelDb() { return fInputLevelDb.exchange ( -120.0f ); }
 
 void CAudioCompressor::Init ( const int iNSampleRateHz )
 {
@@ -75,6 +77,7 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
     const float fLimiterCeilLin = DbToLinear ( fLimiterCeilDb );
 
     float fMinGRDb = 0.0f;
+    float fMaxInputDb = -120.0f;
 
     for ( int iSample = 0; iSample < iStereoBlockSizeSam; iSample += 2 )
     {
@@ -92,6 +95,10 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
         }
 
         const float fInputDb = LinearToDb ( fEnvelope / 32768.0f );
+        if ( fInputDb > fMaxInputDb )
+        {
+            fMaxInputDb = fInputDb;
+        }
         const float fGRDb    = ComputeGainDb ( fInputDb );
         if ( fGRDb < fMinGRDb )
         {
@@ -118,5 +125,12 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
     if ( fMinGRDb < fCurrentGR )
     {
         fGainReductionDb.store ( fMinGRDb );
+    }
+
+    // Accumulate the peak input level until the GUI reads it
+    float fCurrentInput = fInputLevelDb.load();
+    if ( fMaxInputDb > fCurrentInput )
+    {
+        fInputLevelDb.store ( fMaxInputDb );
     }
 }

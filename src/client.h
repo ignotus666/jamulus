@@ -157,6 +157,8 @@ class CClient : public QObject
     Q_OBJECT
 
 public:
+    static constexpr int NUM_SPECTRUM_BANDS = 24;
+
     CClient ( const quint16  iPortNumber,
               const quint16  iQosNumber,
               const bool     bNoAutoJackConnect,
@@ -234,6 +236,7 @@ public:
         bReverbOnLeftChan = bIL;
         AudioReverb.Clear();
     }
+    float GetReverbOutputLevelDb() { return AudioReverb.GetReverbOutputLevelDb(); }
 
     void SetDoAutoSockBufSize ( const bool bValue );
     bool GetDoAutoSockBufSize() const { return Channel.GetDoAutoSockBufSize(); }
@@ -276,6 +279,7 @@ public:
     void  SetCompressorLimiterEnabled ( const bool bEnabled ) { AudioCompressor.SetLimiterEnabled ( bEnabled ); }
     bool  GetCompressorLimiterEnabled() const { return AudioCompressor.GetLimiterEnabled(); }
     float GetCompressorGainReductionDb() { return AudioCompressor.GetGainReductionDb(); }
+    float GetCompressorInputLevelDb() { return AudioCompressor.GetInputLevelDb(); }
 
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }
@@ -525,7 +529,7 @@ protected:
     bool              bMuteMeInPersonalMix;
     QMutex            MutexDriverReinit;
     QMutex            MutexOutputBandLevels;
-    float             afOutputBandLevels[8];
+    float             afOutputBandLevels[NUM_SPECTRUM_BANDS];
     std::atomic<bool> bOutputBandLevelsEnabled;
 
     // server settings

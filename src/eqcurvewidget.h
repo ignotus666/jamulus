@@ -34,6 +34,7 @@ class CEQCurveWidget : public QWidget
 
 public:
     static constexpr int   kNumBands   = CAudioEqualizer::NUM_BANDS;
+    static constexpr int   kNumSpectrumBands = 24;
     static constexpr float kGainMinDb  = -12.0f;
     static constexpr float kGainMaxDb  = 12.0f;
     static constexpr float kDisplayMin = -15.0f; // Extra range for gain-reduction visualisation
@@ -96,7 +97,7 @@ private:
     float afBandFrequencies[kNumBands];
     float afBandGainReductionDb[kNumBands];
     float afBandQ[kNumBands];
-    float afSpectrumLevels[kNumBands];
+    float afSpectrumLevels[kNumSpectrumBands];
     int   iSampleRateHz;
     int   iSelectedBand;
     bool  bDragging;
@@ -109,12 +110,13 @@ private:
     bool             bStaticCurveDirty;
     bool             bEffectiveCurveDirty;
     class QLabel*    pBandTooltip;
+    int              iTooltipBand;
 
     // Layout constants
     static constexpr int kMarginLeft   = 42;
     static constexpr int kMarginRight  = 16;
     static constexpr int kMarginTop    = 12;
     static constexpr int kMarginBottom = 28;
-    static constexpr int kNodeRadius   = 6;
+    static constexpr int kNodeRadius   = 3;
     static constexpr int kHitRadius    = 16;
 };

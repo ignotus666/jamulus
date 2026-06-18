@@ -16,6 +16,8 @@
 
 #pragma once
 #include "util.h"
+#include <atomic>
+#include <cmath>
 
 struct SReverbParams
 {
@@ -33,7 +35,10 @@ struct SReverbParams
 class CAudioReverb
 {
 public:
-    CAudioReverb() {}
+    CAudioReverb() : fReverbOutputLevelDb ( -120.0f ) {}
+
+    float GetReverbOutputLevelDb();
+    float LinearToDb ( const float fValue ) const { if ( fValue < 0.0000000001f ) return -200.0f; return 20.0f * log10f ( fValue ); }
 
     void Init ( const EAudChanConf eNAudioChannelConf, const int iNStereoBlockSizeSam, const int iNSampleRate, const float fT60 = 1.1f );
 
@@ -85,4 +90,5 @@ protected:
     int            aiEarlyTapSamples[4];
     float          afEarlyTapGains[4];
     int            iEarlyTapCount;
+    std::atomic<float> fReverbOutputLevelDb;
 };
