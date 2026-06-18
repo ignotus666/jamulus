@@ -1369,8 +1369,7 @@ void CEffectsDlg::OnEQDynGainEditFinished()
     }
 
     // Clamp to valid range (kGainMinDb to kGainMaxDb)
-    iGainDb = std::max ( static_cast<int> ( CEQCurveWidget::kGainMinDb ),
-                         std::min ( static_cast<int> ( CEQCurveWidget::kGainMaxDb ), iGainDb ) );
+    iGainDb = std::max ( static_cast<int> ( CEQCurveWidget::kGainMinDb ), std::min ( static_cast<int> ( CEQCurveWidget::kGainMaxDb ), iGainDb ) );
 
     pClient->SetEQBandGainDb ( iSelectedBand, iGainDb );
 
