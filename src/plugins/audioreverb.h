@@ -38,7 +38,12 @@ public:
     CAudioReverb() : fReverbOutputLevelDb ( -120.0f ) {}
 
     float GetReverbOutputLevelDb();
-    float LinearToDb ( const float fValue ) const { if ( fValue < 0.0000000001f ) return -200.0f; return 20.0f * log10f ( fValue ); }
+    float LinearToDb ( const float fValue ) const
+    {
+        if ( fValue < 0.0000000001f )
+            return -200.0f;
+        return 20.0f * log10f ( fValue );
+    }
 
     void Init ( const EAudChanConf eNAudioChannelConf, const int iNStereoBlockSizeSam, const int iNSampleRate, const float fT60 = 1.1f );
 
@@ -66,29 +71,29 @@ protected:
         float fLastSample;
     };
 
-    EAudChanConf   eAudioChannelConf;
-    int            iStereoBlockSizeSam;
-    int            iSampleRate;
-    CFIFO<float>   allpassDelays[3];
-    CFIFO<float>   combDelays[4];
-    COnePole       combFilters[4];
-    CFIFO<float>   outLeftDelay;
-    CFIFO<float>   outRightDelay;
-    float          allpassCoefficient;
-    float          combCoefficient[4];
-    CVector<float> vecPreDelayBuffer;
-    int            iPreDelaySamples;
-    int            iPreDelayWriteIndex;
-    float          fLastT60;
-    float          fLastDamping;
-    float          fWet;
-    float          fDry;
-    float          fEarlyLevel;
-    float          fWidth;
-    bool           bEarlyEnabled;
-    bool           bFreeze;
-    int            aiEarlyTapSamples[4];
-    float          afEarlyTapGains[4];
-    int            iEarlyTapCount;
+    EAudChanConf       eAudioChannelConf;
+    int                iStereoBlockSizeSam;
+    int                iSampleRate;
+    CFIFO<float>       allpassDelays[3];
+    CFIFO<float>       combDelays[4];
+    COnePole           combFilters[4];
+    CFIFO<float>       outLeftDelay;
+    CFIFO<float>       outRightDelay;
+    float              allpassCoefficient;
+    float              combCoefficient[4];
+    CVector<float>     vecPreDelayBuffer;
+    int                iPreDelaySamples;
+    int                iPreDelayWriteIndex;
+    float              fLastT60;
+    float              fLastDamping;
+    float              fWet;
+    float              fDry;
+    float              fEarlyLevel;
+    float              fWidth;
+    bool               bEarlyEnabled;
+    bool               bFreeze;
+    int                aiEarlyTapSamples[4];
+    float              afEarlyTapGains[4];
+    int                iEarlyTapCount;
     std::atomic<float> fReverbOutputLevelDb;
 };

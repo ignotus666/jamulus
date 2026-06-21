@@ -588,9 +588,9 @@ protected:
             fillPath.closeSubpath();
 
             // Pulsate decay curve fill opacity with wet level
-            int alpha0 = 10 + static_cast<int> ( normLevel * 60 );  // 10 to 70
-            int alpha1 = 5 + static_cast<int> ( normLevel * 30 );   // 5 to 35
-            int alpha2 = 2 + static_cast<int> ( normLevel * 3 );    // 2 to 5
+            int alpha0 = 10 + static_cast<int> ( normLevel * 60 ); // 10 to 70
+            int alpha1 = 5 + static_cast<int> ( normLevel * 30 );  // 5 to 35
+            int alpha2 = 2 + static_cast<int> ( normLevel * 3 );   // 2 to 5
 
             QLinearGradient decayGrad ( xLate, top, left + plotW, top );
             decayGrad.setColorAt ( 0.0, QColor ( 0, 191, 255, alpha0 ) );
@@ -602,7 +602,7 @@ protected:
             painter.drawPath ( fillPath );
 
             // Pulsate curve outline opacity with wet level
-            int curveAlpha = 80 + static_cast<int> ( normLevel * 175 ); // 80 to 255
+            int  curveAlpha = 80 + static_cast<int> ( normLevel * 175 ); // 80 to 255
             QPen curvePen ( QColor ( 0, 191, 255, curveAlpha ), 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
             painter.setPen ( curvePen );
             painter.setBrush ( Qt::NoBrush );
@@ -610,8 +610,8 @@ protected:
         }
 
         // Draw dynamic VU-meter bar on the right side of the plot area
-        const int meterW = 6;
-        const int meterX = left + plotW - meterW - 4;
+        const int   meterW = 6;
+        const int   meterX = left + plotW - meterW - 4;
         const QRect meterRect ( meterX, top + 4, meterW, plotH - 8 );
 
         painter.fillRect ( meterRect, bDarkTheme ? QColor ( 15, 15, 17 ) : QColor ( 240, 240, 245 ) );
@@ -620,7 +620,7 @@ protected:
 
         if ( normLevel > 0.0f )
         {
-            int fillH = static_cast<int> ( normLevel * ( meterRect.height() - 2 ) );
+            int   fillH = static_cast<int> ( normLevel * ( meterRect.height() - 2 ) );
             QRect fillRect ( meterRect.left() + 1, meterRect.bottom() - fillH, meterRect.width() - 2, fillH );
 
             QLinearGradient meterGrad ( fillRect.left(), fillRect.top(), fillRect.left(), fillRect.bottom() );
@@ -644,35 +644,35 @@ private:
 
 struct SEffectsState
 {
-    int   iReverbLevel = 0;
-    bool  bReverbOnLeftChan = false;
-    int   iReverbPreDelayMs = 0;
-    int   iReverbRoomSize = 0;
-    int   iReverbDamping = 0;
-    int   iReverbWetMix = 0;
-    int   iReverbEarlyLevel = 0;
-    int   iReverbWidth = 0;
-    bool  bReverbEarlyEnabled = false;
-    bool  bReverbFreeze = false;
-    bool  bReverbBypass = true;
+    int  iReverbLevel        = 0;
+    bool bReverbOnLeftChan   = false;
+    int  iReverbPreDelayMs   = 0;
+    int  iReverbRoomSize     = 0;
+    int  iReverbDamping      = 0;
+    int  iReverbWetMix       = 0;
+    int  iReverbEarlyLevel   = 0;
+    int  iReverbWidth        = 0;
+    bool bReverbEarlyEnabled = false;
+    bool bReverbFreeze       = false;
+    bool bReverbBypass       = true;
 
-    bool  bCompressorBypass = true;
-    float fCompressorThresholdDb = 0.0f;
-    float fCompressorRatio = 1.0f;
-    float fCompressorAttackMs = 1.0f;
-    float fCompressorReleaseMs = 10.0f;
-    float fCompressorMakeupDb = 0.0f;
+    bool  bCompressorBypass         = true;
+    float fCompressorThresholdDb    = 0.0f;
+    float fCompressorRatio          = 1.0f;
+    float fCompressorAttackMs       = 1.0f;
+    float fCompressorReleaseMs      = 10.0f;
+    float fCompressorMakeupDb       = 0.0f;
     bool  bCompressorLimiterEnabled = true;
 
-    bool  bEQBypass = true;
-    int   aiEQBandGainDb[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandFrequency[CAudioEqualizer::NUM_BANDS] = {};
-    bool  abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS] = {};
+    bool  bEQBypass                                          = true;
+    int   aiEQBandGainDb[CAudioEqualizer::NUM_BANDS]         = {};
+    float afEQBandFrequency[CAudioEqualizer::NUM_BANDS]      = {};
+    bool  abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS]     = {};
     float afEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandDynRatio[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandQ[CAudioEqualizer::NUM_BANDS] = {};
+    float afEQBandDynRatio[CAudioEqualizer::NUM_BANDS]       = {};
+    float afEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS]    = {};
+    float afEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS]   = {};
+    float afEQBandQ[CAudioEqualizer::NUM_BANDS]              = {};
 };
 
 class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
@@ -725,16 +725,16 @@ signals:
     void EQResetRequested();
 
 private:
-    CClient*         pClient;
-    CClientSettings* pSettings;
-    int              iSelectedBand = 0;
-    CGRMeter*         pGRMeter         = nullptr;
-    CCompCurveWidget* pCompCurveWidget = nullptr;
+    CClient*            pClient;
+    CClientSettings*    pSettings;
+    int                 iSelectedBand      = 0;
+    CGRMeter*           pGRMeter           = nullptr;
+    CCompCurveWidget*   pCompCurveWidget   = nullptr;
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
-    SEffectsState    stateA;
-    SEffectsState    stateB;
-    bool             bHasStateB = false;
-    QPushButton*     pButEffectsCompare = nullptr;
+    SEffectsState       stateA;
+    SEffectsState       stateB;
+    bool                bHasStateB         = false;
+    QPushButton*        pButEffectsCompare = nullptr;
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
