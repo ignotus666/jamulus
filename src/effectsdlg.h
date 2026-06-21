@@ -549,25 +549,27 @@ protected:
         }
 
         float normLevel = ( fDisplayLevelDb + 60.0f ) / 60.0f;
-        if ( normLevel < 0.0f ) normLevel = 0.0f;
-        if ( normLevel > 1.0f ) normLevel = 1.0f;
+        if ( normLevel < 0.0f )
+            normLevel = 0.0f;
+        if ( normLevel > 1.0f )
+            normLevel = 1.0f;
 
         float xLate = xPreDelay + ( 40.0f / 1000.0f ) * plotW;
         if ( xLate < left + plotW )
         {
             QPainterPath curvePath;
-            bool first = true;
+            bool         first = true;
 
             float tau = 0.08f + ( fRoomSize * 0.65f ) * ( 1.0f - fDamping * 0.45f );
 
             int steps = static_cast<int> ( left + plotW - xLate );
             for ( int px = 0; px <= steps; ++px )
             {
-                float curX = xLate + px;
-                float t = ( static_cast<float> ( px ) / plotW ) * 1.2f;
+                float curX  = xLate + px;
+                float t     = ( static_cast<float> ( px ) / plotW ) * 1.2f;
                 float decay = std::exp ( -t / tau );
-                float amp = fWetMix * decay;
-                float curY = ( top + plotH ) - amp * plotH * 0.8f;
+                float amp   = fWetMix * decay;
+                float curY  = ( top + plotH ) - amp * plotH * 0.8f;
 
                 if ( first )
                 {

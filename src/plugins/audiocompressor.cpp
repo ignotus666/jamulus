@@ -76,7 +76,7 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
     const float fMakeupLin      = DbToLinear ( fMakeupDb );
     const float fLimiterCeilLin = DbToLinear ( fLimiterCeilDb );
 
-    float fMinGRDb = 0.0f;
+    float fMinGRDb    = 0.0f;
     float fMaxInputDb = -120.0f;
 
     for ( int iSample = 0; iSample < iStereoBlockSizeSam; iSample += 2 )
@@ -99,7 +99,7 @@ void CAudioCompressor::Process ( CVector<int16_t>& vecsStereoInOut, const int iS
         {
             fMaxInputDb = fInputDb;
         }
-        const float fGRDb    = ComputeGainDb ( fInputDb );
+        const float fGRDb = ComputeGainDb ( fInputDb );
         if ( fGRDb < fMinGRDb )
         {
             fMinGRDb = fGRDb;
