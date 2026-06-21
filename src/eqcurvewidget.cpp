@@ -70,7 +70,7 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     }
     for ( int i = 0; i < kNumSpectrumBands; ++i )
     {
-        afSpectrumLevels[i]      = 0.0f;
+        afSpectrumLevels[i] = 0.0f;
     }
 
     setMinimumSize ( 300, 120 );
@@ -218,7 +218,7 @@ void CEQCurveWidget::SetBypassed ( const bool bBypassed )
             // Clear real-time analyzer data when bypassed
             for ( int i = 0; i < kNumSpectrumBands; ++i )
             {
-                afSpectrumLevels[i]      = 0.0f;
+                afSpectrumLevels[i] = 0.0f;
             }
             for ( int i = 0; i < kNumBands; ++i )
             {
@@ -509,8 +509,8 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
         {
             const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumSpectrumBands - 1 ) );
-            const float fNx = FreqToXf ( fFreq );
-            const float fNy = r.bottom() - afSpectrumLevels[iBand] * r.height();
+            const float fNx   = FreqToXf ( fFreq );
+            const float fNy   = r.bottom() - afSpectrumLevels[iBand] * r.height();
             spectrumPath.lineTo ( fNx, fNy );
         }
 
@@ -697,12 +697,12 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             const float fQ = afBandQ[iBand];
             if ( fQ > 0.0f )
             {
-                const float fFreq = afBandFrequencies[iBand];
+                const float fFreq  = afBandFrequencies[iBand];
                 const float fFreqL = std::max ( kFreqMin, fFreq * std::pow ( 2.0f, -0.5f / fQ ) );
                 const float fFreqR = std::min ( kFreqMax, fFreq * std::pow ( 2.0f, 0.5f / fQ ) );
-                const float fX1 = FreqToXf ( fFreqL );
-                const float fX2 = FreqToXf ( fFreqR );
-                
+                const float fX1    = FreqToXf ( fFreqL );
+                const float fX2    = FreqToXf ( fFreqR );
+
                 const QColor colBandwidth = QColor ( 255, 140, 0, 30 );
                 painter.setPen ( QPen ( QColor ( 255, 140, 0, 150 ), 1.0, Qt::DashLine ) );
                 painter.setBrush ( colBandwidth );
@@ -762,45 +762,45 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const float fNy = DbToYf ( afBandGainDb[iTooltipBand] );
 
         const QString strText = MakeBandTooltipText ( iTooltipBand, afBandFrequencies[iTooltipBand], afBandGainDb[iTooltipBand] );
-        
+
         painter.setFont ( QFont ( "Inter", 8 ) );
         const QFontMetrics fm = painter.fontMetrics();
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 )
         const int iTextW = fm.horizontalAdvance ( strText );
 #else
         const int iTextW = fm.width ( strText );
 #endif
         const int iTextH = fm.height();
-        
+
         const int iPaddingX = 6;
         const int iPaddingY = 3;
-        const int iBoxW = iTextW + 2 * iPaddingX;
-        const int iBoxH = iTextH + 2 * iPaddingY;
-        
+        const int iBoxW     = iTextW + 2 * iPaddingX;
+        const int iBoxH     = iTextH + 2 * iPaddingY;
+
         // Position box above the node by default
         int iBoxX = static_cast<int> ( fNx - iBoxW / 2 );
         int iBoxY = static_cast<int> ( fNy - iBoxH - 12 );
-        
+
         // Clamp horizontal position to plot margins
         iBoxX = std::max ( kMarginLeft + 4, std::min ( static_cast<int> ( r.right() - iBoxW - 4 ), iBoxX ) );
-        
+
         // If too close to the top margin, position below the node
         if ( iBoxY < r.top() + 4 )
         {
             iBoxY = static_cast<int> ( fNy + 12 );
         }
-        
+
         const QRect rectBox ( iBoxX, iBoxY, iBoxW, iBoxH );
-        
+
         // Render box background and border based on theme
-        const QColor colBg = bDarkTheme ? QColor ( 32, 35, 40 ) : QColor ( 250, 250, 250 );
+        const QColor colBg     = bDarkTheme ? QColor ( 32, 35, 40 ) : QColor ( 250, 250, 250 );
         const QColor colBorder = bDarkTheme ? QColor ( 74, 79, 87 ) : QColor ( 184, 190, 200 );
-        const QColor colText = bDarkTheme ? QColor ( 238, 241, 245 ) : QColor ( 28, 30, 34 );
-        
+        const QColor colText   = bDarkTheme ? QColor ( 238, 241, 245 ) : QColor ( 28, 30, 34 );
+
         painter.setPen ( QPen ( colBorder, 1 ) );
         painter.setBrush ( colBg );
         painter.drawRoundedRect ( rectBox, 3.0, 3.0 );
-        
+
         painter.setPen ( colText );
         painter.drawText ( rectBox, Qt::AlignCenter, strText );
     }

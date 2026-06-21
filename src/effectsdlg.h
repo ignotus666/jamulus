@@ -182,13 +182,41 @@ public:
         setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Preferred );
     }
 
-    void SetThreshold ( const float f ) { fThresholdDb = f; update(); }
-    void SetRatio ( const float f ) { fRatio = f; update(); }
-    void SetMakeup ( const float f ) { fMakeupDb = f; update(); }
-    void SetCurrentInputDb ( const float f ) { fCurrentInputDb = f; update(); }
-    void SetBypass ( const bool b ) { bBypass = b; update(); }
-    void SetLimiterEnabled ( const bool b ) { bLimiterEnabled = b; update(); }
-    void SetDarkTheme ( const bool b ) { bDarkTheme = b; update(); }
+    void SetThreshold ( const float f )
+    {
+        fThresholdDb = f;
+        update();
+    }
+    void SetRatio ( const float f )
+    {
+        fRatio = f;
+        update();
+    }
+    void SetMakeup ( const float f )
+    {
+        fMakeupDb = f;
+        update();
+    }
+    void SetCurrentInputDb ( const float f )
+    {
+        fCurrentInputDb = f;
+        update();
+    }
+    void SetBypass ( const bool b )
+    {
+        bBypass = b;
+        update();
+    }
+    void SetLimiterEnabled ( const bool b )
+    {
+        bLimiterEnabled = b;
+        update();
+    }
+    void SetDarkTheme ( const bool b )
+    {
+        bDarkTheme = b;
+        update();
+    }
 
 protected:
     void paintEvent ( QPaintEvent* event ) override
@@ -203,9 +231,9 @@ protected:
 
         painter.fillRect ( r, bDarkTheme ? QColor ( 28, 28, 31 ) : QColor ( 247, 248, 250 ) );
 
-        const int left = 30;
-        const int right = 10;
-        const int top = 10;
+        const int left   = 30;
+        const int right  = 10;
+        const int top    = 10;
         const int bottom = 20;
 
         const int plotW = r.width() - left - right;
@@ -220,14 +248,14 @@ protected:
         painter.drawRect ( plotRect );
 
         auto mapX = [=] ( float dB ) -> float {
-            float norm = ( dB - (-60.0f) ) / 60.0f;
-            norm = std::max ( 0.0f, std::min ( 1.0f, norm ) );
+            float norm = ( dB - ( -60.0f ) ) / 60.0f;
+            norm       = std::max ( 0.0f, std::min ( 1.0f, norm ) );
             return left + norm * plotW;
         };
 
         auto mapY = [=] ( float dB ) -> float {
-            float norm = ( dB - (-60.0f) ) / 60.0f;
-            norm = std::max ( 0.0f, std::min ( 1.0f, norm ) );
+            float norm = ( dB - ( -60.0f ) ) / 60.0f;
+            norm       = std::max ( 0.0f, std::min ( 1.0f, norm ) );
             return top + ( 1.0f - norm ) * plotH;
         };
 
@@ -259,7 +287,7 @@ protected:
         painter.drawLine ( mapX ( -60.0f ), mapY ( -60.0f ), mapX ( 0.0f ), mapY ( 0.0f ) );
 
         auto computeGainDb = [this] ( float inputDb ) -> float {
-            float fKneeDb = 6.0f;
+            float fKneeDb   = 6.0f;
             float fKneeHalf = fKneeDb * 0.5f;
 
             if ( inputDb <= ( fThresholdDb - fKneeHalf ) )
@@ -284,13 +312,13 @@ protected:
         };
 
         QPainterPath curvePath;
-        const int steps = plotW;
-        bool first = true;
+        const int    steps = plotW;
+        bool         first = true;
 
         for ( int px = 0; px <= steps; ++px )
         {
-            float inputDb = -60.0f + ( static_cast<float> ( px ) / steps ) * 60.0f;
-            float fGR = bBypass ? 0.0f : computeGainDb ( inputDb );
+            float inputDb  = -60.0f + ( static_cast<float> ( px ) / steps ) * 60.0f;
+            float fGR      = bBypass ? 0.0f : computeGainDb ( inputDb );
             float outputDb = inputDb + fGR + ( bBypass ? 0.0f : fMakeupDb );
 
             if ( bLimiterEnabled && !bBypass )
@@ -352,8 +380,8 @@ protected:
 
         if ( !bBypass && fCurrentInputDb > -60.0f )
         {
-            float inputDb = std::max ( -60.0f, std::min ( 0.0f, fCurrentInputDb ) );
-            float fGR = computeGainDb ( inputDb );
+            float inputDb  = std::max ( -60.0f, std::min ( 0.0f, fCurrentInputDb ) );
+            float fGR      = computeGainDb ( inputDb );
             float outputDb = inputDb + fGR + fMakeupDb;
             if ( bLimiterEnabled )
             {
@@ -400,13 +428,41 @@ public:
         setSizePolicy ( QSizePolicy::Preferred, QSizePolicy::Preferred );
     }
 
-    void SetPreDelayMs ( const float f ) { fPreDelayMs = f; update(); }
-    void SetRoomSize ( const float f ) { fRoomSize = f; update(); }
-    void SetDamping ( const float f ) { fDamping = f; update(); }
-    void SetWetMix ( const float f ) { fWetMix = f; update(); }
-    void SetEarlyLevel ( const float f ) { fEarlyLevel = f; update(); }
-    void SetBypass ( const bool b ) { bBypass = b; update(); }
-    void SetDarkTheme ( const bool b ) { bDarkTheme = b; update(); }
+    void SetPreDelayMs ( const float f )
+    {
+        fPreDelayMs = f;
+        update();
+    }
+    void SetRoomSize ( const float f )
+    {
+        fRoomSize = f;
+        update();
+    }
+    void SetDamping ( const float f )
+    {
+        fDamping = f;
+        update();
+    }
+    void SetWetMix ( const float f )
+    {
+        fWetMix = f;
+        update();
+    }
+    void SetEarlyLevel ( const float f )
+    {
+        fEarlyLevel = f;
+        update();
+    }
+    void SetBypass ( const bool b )
+    {
+        bBypass = b;
+        update();
+    }
+    void SetDarkTheme ( const bool b )
+    {
+        bDarkTheme = b;
+        update();
+    }
 
     void SetOutputLevelDb ( const float f )
     {
@@ -435,9 +491,9 @@ protected:
 
         painter.fillRect ( r, bDarkTheme ? QColor ( 28, 28, 31 ) : QColor ( 247, 248, 250 ) );
 
-        const int left = 15;
-        const int right = 15;
-        const int top = 15;
+        const int left   = 15;
+        const int right  = 15;
+        const int top    = 15;
         const int bottom = 20;
 
         const int plotW = r.width() - left - right;
@@ -477,7 +533,7 @@ protected:
         painter.drawLine ( left, top + plotH - 1, xPreDelay, top + plotH - 1 );
 
         float spikeOffsetsMs[] = { 15.0f, 35.0f, 55.0f, 75.0f, 95.0f };
-        float spikeScales[] = { 0.8f, 0.6f, 0.45f, 0.3f, 0.15f };
+        float spikeScales[]    = { 0.8f, 0.6f, 0.45f, 0.3f, 0.15f };
 
         QPen spikePen ( QColor ( 255, 140, 0 ), 1.5, Qt::SolidLine, Qt::RoundCap );
         painter.setPen ( spikePen );

@@ -1684,7 +1684,7 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
 static float GetSpectrumBandFrequency ( const int iBand )
 {
     static float afFreqs[CClient::NUM_SPECTRUM_BANDS];
-    static bool bInit = false;
+    static bool  bInit = false;
     if ( !bInit )
     {
         constexpr float fMin = 30.0f;
@@ -1705,7 +1705,7 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
         return;
     }
 
-    constexpr float fPi          = 3.14159265358979323846f;
+    constexpr float fPi = 3.14159265358979323846f;
 
     if ( iMonoBlockSizeSam <= 0 )
     {

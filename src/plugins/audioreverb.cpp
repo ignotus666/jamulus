@@ -357,9 +357,9 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         if ( ( eAudioChannelConf == CC_STEREO ) || bReverbOnLeftChan )
         {
             const float fWetComponent = fWet * 0.5f * fWetL + fEarlyLevel * fEarly;
-            const float fOutL  = fDry * fInL + fWetComponent;
-            vecsStereoInOut[i] = Float2Short ( fOutL );
-            const float fAbsWet = std::abs ( fWetComponent );
+            const float fOutL         = fDry * fInL + fWetComponent;
+            vecsStereoInOut[i]        = Float2Short ( fOutL );
+            const float fAbsWet       = std::abs ( fWetComponent );
             if ( fAbsWet > fMaxWet )
             {
                 fMaxWet = fAbsWet;
@@ -369,9 +369,9 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         if ( ( eAudioChannelConf == CC_STEREO ) || !bReverbOnLeftChan )
         {
             const float fWetComponent = fWet * 0.5f * fWetR + fEarlyLevel * fEarly;
-            const float fOutR      = fDry * fInR + fWetComponent;
-            vecsStereoInOut[i + 1] = Float2Short ( fOutR );
-            const float fAbsWet = std::abs ( fWetComponent );
+            const float fOutR         = fDry * fInR + fWetComponent;
+            vecsStereoInOut[i + 1]    = Float2Short ( fOutR );
+            const float fAbsWet       = std::abs ( fWetComponent );
             if ( fAbsWet > fMaxWet )
             {
                 fMaxWet = fAbsWet;
@@ -379,15 +379,12 @@ void CAudioReverb::Process ( CVector<int16_t>& vecsStereoInOut, const bool bReve
         }
     }
 
-    const float fWetDb = LinearToDb ( fMaxWet / 32768.0f );
-    float fCurrentLevel = fReverbOutputLevelDb.load();
+    const float fWetDb        = LinearToDb ( fMaxWet / 32768.0f );
+    float       fCurrentLevel = fReverbOutputLevelDb.load();
     if ( fWetDb > fCurrentLevel )
     {
         fReverbOutputLevelDb.store ( fWetDb );
     }
 }
 
-float CAudioReverb::GetReverbOutputLevelDb()
-{
-    return fReverbOutputLevelDb.exchange ( -120.0f );
-}
+float CAudioReverb::GetReverbOutputLevelDb() { return fReverbOutputLevelDb.exchange ( -120.0f ); }

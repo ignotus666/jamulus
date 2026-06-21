@@ -33,14 +33,14 @@ class CEQCurveWidget : public QWidget
     Q_OBJECT
 
 public:
-    static constexpr int   kNumBands   = CAudioEqualizer::NUM_BANDS;
+    static constexpr int   kNumBands         = CAudioEqualizer::NUM_BANDS;
     static constexpr int   kNumSpectrumBands = 24;
-    static constexpr float kGainMinDb  = -12.0f;
-    static constexpr float kGainMaxDb  = 12.0f;
-    static constexpr float kDisplayMin = -15.0f; // Extra range for gain-reduction visualisation
-    static constexpr float kDisplayMax = 15.0f;
-    static constexpr float kFreqMin    = 20.0f;
-    static constexpr float kFreqMax    = 20000.0f;
+    static constexpr float kGainMinDb        = -12.0f;
+    static constexpr float kGainMaxDb        = 12.0f;
+    static constexpr float kDisplayMin       = -15.0f; // Extra range for gain-reduction visualisation
+    static constexpr float kDisplayMax       = 15.0f;
+    static constexpr float kFreqMin          = 20.0f;
+    static constexpr float kFreqMax          = 20000.0f;
 
     explicit CEQCurveWidget ( QWidget* parent = nullptr );
 

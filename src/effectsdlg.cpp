@@ -377,7 +377,6 @@ void CEffectsDlg::UpdateReverbOutputLevel ( const float fLevelDb )
     }
 }
 
-
 void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
     if ( pClient )
@@ -1355,7 +1354,7 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQDynRelease->blockSignals ( false );
     pKnobEQBandQ->blockSignals ( false );
 
-    const bool bBypassed = pClient->GetEQBypass();
+    const bool bBypassed   = pClient->GetEQBypass();
     const bool bDynEnabled = bEnabled && !bBypassed;
 
     pChbEQDynEnabled->setEnabled ( !bBypassed );
@@ -1540,17 +1539,17 @@ void CEffectsDlg::OnEffectsCompareToggled ( bool bChecked )
 SEffectsState CEffectsDlg::GetCurrentEffectsState() const
 {
     SEffectsState s;
-    s.iReverbLevel            = pClient->GetReverbLevel();
-    s.bReverbOnLeftChan       = pClient->IsReverbOnLeftChan();
-    s.iReverbPreDelayMs       = pClient->GetReverbPreDelayMs();
-    s.iReverbRoomSize         = pClient->GetReverbRoomSize();
-    s.iReverbDamping          = pClient->GetReverbDamping();
-    s.iReverbWetMix           = pClient->GetReverbWetMix();
-    s.iReverbEarlyLevel       = pClient->GetReverbEarlyLevel();
-    s.iReverbWidth            = pClient->GetReverbWidth();
-    s.bReverbEarlyEnabled     = pClient->GetReverbEarlyEnabled();
-    s.bReverbFreeze           = pClient->GetReverbFreeze();
-    s.bReverbBypass           = pClient->GetReverbBypass();
+    s.iReverbLevel        = pClient->GetReverbLevel();
+    s.bReverbOnLeftChan   = pClient->IsReverbOnLeftChan();
+    s.iReverbPreDelayMs   = pClient->GetReverbPreDelayMs();
+    s.iReverbRoomSize     = pClient->GetReverbRoomSize();
+    s.iReverbDamping      = pClient->GetReverbDamping();
+    s.iReverbWetMix       = pClient->GetReverbWetMix();
+    s.iReverbEarlyLevel   = pClient->GetReverbEarlyLevel();
+    s.iReverbWidth        = pClient->GetReverbWidth();
+    s.bReverbEarlyEnabled = pClient->GetReverbEarlyEnabled();
+    s.bReverbFreeze       = pClient->GetReverbFreeze();
+    s.bReverbBypass       = pClient->GetReverbBypass();
 
     s.bCompressorBypass         = pClient->GetCompressorBypass();
     s.fCompressorThresholdDb    = pClient->GetCompressorThresholdDb();
