@@ -667,12 +667,6 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
 
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBandGainChanged, this, [this] ( int iBandIndex, float fGainDb ) {
-        pClient->SetEQBandGainDb ( iBandIndex, fGainDb );
-    } );
-
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQResetRequested, this, [this] { pClient->ResetEQ(); } );
-
     // other
     QObject::connect ( pClient, &CClient::ConClientListMesReceived, this, &CClientDlg::OnConClientListMesReceived );
 

@@ -48,37 +48,21 @@ SControlPalette GetCustomKnobPalette ( const bool bDarkTheme, const bool bEnable
     SControlPalette palette = GetControlPalette ( bDarkTheme );
     if ( !bEnabled )
     {
-        auto GetDisabledColor = [bDarkTheme] ( const QColor& color ) -> QColor {
-            int r     = color.red();
-            int g     = color.green();
-            int b     = color.blue();
-            int alpha = color.alpha();
-            int gray  = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
-            if ( bDarkTheme )
-            {
-                return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );
-            }
-            else
-            {
-                return QColor ( ( gray + 200 ) / 2, ( gray + 200 ) / 2, ( gray + 200 ) / 2, alpha );
-            }
-        };
+        palette.accent       = GetDisabledColor ( palette.accent, bDarkTheme );
+        palette.accentGlow   = GetDisabledColor ( palette.accentGlow, bDarkTheme );
+        palette.accentBright = GetDisabledColor ( palette.accentBright, bDarkTheme );
+        palette.accentMid    = GetDisabledColor ( palette.accentMid, bDarkTheme );
+        palette.accentDeep   = GetDisabledColor ( palette.accentDeep, bDarkTheme );
 
-        palette.accent       = GetDisabledColor ( palette.accent );
-        palette.accentGlow   = GetDisabledColor ( palette.accentGlow );
-        palette.accentBright = GetDisabledColor ( palette.accentBright );
-        palette.accentMid    = GetDisabledColor ( palette.accentMid );
-        palette.accentDeep   = GetDisabledColor ( palette.accentDeep );
-
-        palette.knobNormalTop    = GetDisabledColor ( palette.knobNormalTop );
-        palette.knobNormalMid    = GetDisabledColor ( palette.knobNormalMid );
-        palette.knobNormalBottom = GetDisabledColor ( palette.knobNormalBottom );
-        palette.knobHoverTop     = GetDisabledColor ( palette.knobHoverTop );
-        palette.knobHoverMid     = GetDisabledColor ( palette.knobHoverMid );
-        palette.knobHoverBottom  = GetDisabledColor ( palette.knobHoverBottom );
-        palette.knobOutline      = GetDisabledColor ( palette.knobOutline );
-        palette.markerNormal     = GetDisabledColor ( palette.markerNormal );
-        palette.markerHover      = GetDisabledColor ( palette.markerHover );
+        palette.knobNormalTop    = GetDisabledColor ( palette.knobNormalTop, bDarkTheme );
+        palette.knobNormalMid    = GetDisabledColor ( palette.knobNormalMid, bDarkTheme );
+        palette.knobNormalBottom = GetDisabledColor ( palette.knobNormalBottom, bDarkTheme );
+        palette.knobHoverTop     = GetDisabledColor ( palette.knobHoverTop, bDarkTheme );
+        palette.knobHoverMid     = GetDisabledColor ( palette.knobHoverMid, bDarkTheme );
+        palette.knobHoverBottom  = GetDisabledColor ( palette.knobHoverBottom, bDarkTheme );
+        palette.knobOutline      = GetDisabledColor ( palette.knobOutline, bDarkTheme );
+        palette.markerNormal     = GetDisabledColor ( palette.markerNormal, bDarkTheme );
+        palette.markerHover      = GetDisabledColor ( palette.markerHover, bDarkTheme );
     }
     return palette;
 }
@@ -101,8 +85,6 @@ CCustomKnob::CCustomKnob ( QWidget* parent ) :
     setAttribute ( Qt::WA_OpaquePaintEvent );
     setMouseTracking ( true );
 }
-
-CCustomKnob::~CCustomKnob() {}
 
 void CCustomKnob::setValue ( int val )
 {
@@ -136,46 +118,6 @@ double CCustomKnob::angleFromValue ( int val ) const
     return angle;
 }
 
-int CCustomKnob::valueFromAngle ( double angle ) const
-{
-    // Normalize angle to 0-360 range
-    while ( angle < 0 )
-        angle += 360;
-    while ( angle >= 360 )
-        angle -= 360;
-
-    // Map angle 135-405 to value range
-    // Treat angles that wrap around (e.g., 350+ as coming from 135 direction)
-    if ( angle < 135 )
-        angle += 360;
-
-    double ratio = ( angle - 135.0 ) / 270.0;
-    ratio        = std::max ( 0.0, std::min ( 1.0, ratio ) );
-
-    int range = iMaxValue - iMinValue;
-    return iMinValue + static_cast<int> ( ratio * range );
-}
-
-void CCustomKnob::updateValue ( QMouseEvent* event )
-{
-    int centerX = width() / 2;
-    int centerY = height() / 2;
-
-    int dx = event->x() - centerX;
-    int dy = event->y() - centerY;
-
-    double angle = std::atan2 ( dy, dx ) * 180.0 / PI;
-    angle += 90; // Offset so 0 degrees points up
-
-    int newVal = valueFromAngle ( angle );
-    if ( newVal != iCurrentValue )
-    {
-        iCurrentValue = newVal;
-        update();
-        emit valueChanged ( iCurrentValue );
-    }
-}
-
 void CCustomKnob::paintEvent ( QPaintEvent* event )
 {
     Q_UNUSED ( event );
@@ -198,8 +140,13 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     // Apply per-band accent color override if set
     if ( colAccentOverride.isValid() )
     {
-        arcColor  = colAccentOverride;
-        glowColor = QColor ( colAccentOverride.red(), colAccentOverride.green(), colAccentOverride.blue(), 120 );
+        QColor overrideColor = colAccentOverride;
+        if ( !isEnabled() )
+        {
+            overrideColor = GetDisabledColor ( overrideColor, bDarkTheme );
+        }
+        arcColor  = overrideColor;
+        glowColor = QColor ( overrideColor.red(), overrideColor.green(), overrideColor.blue(), 120 );
     }
 
     const QColor knobNormalTop     = palette.knobNormalTop;

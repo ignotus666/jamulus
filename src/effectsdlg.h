@@ -31,12 +31,9 @@
 #include <QLabel>
 #include <QRadioButton>
 #include <QTabWidget>
-#include <QPointer>
 #include <QShowEvent>
 #include <QHideEvent>
-#include <QResizeEvent>
 #include <QEvent>
-#include <QVBoxLayout>
 #include "client.h"
 #include "plugins/audioequalizer.h"
 #include "settings.h"
@@ -654,7 +651,6 @@ public:
     void UpdateReverbControls();
     void UpdateCompressorControls();
     void UpdateEQControls();
-    void UpdateEQReadouts();
     void UpdateOutputBandLevels ( const CVector<float>& vecOutLevels );
     void UpdateCompressorGainReduction ( const float fGRDb, const float fInputDb );
     void UpdateReverbOutputLevel ( const float fLevelDb );
@@ -688,8 +684,6 @@ signals:
     void CompressorMakeupChanged ( int value );
     void CompressorLimiterChanged ( bool enabled );
     void EQBypassChanged ( bool bypassed );
-    void EQBandGainChanged ( int bandIndex, float fGainDb );
-    void EQResetRequested();
 
 private:
     CClient*            pClient;

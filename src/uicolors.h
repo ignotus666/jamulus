@@ -48,13 +48,27 @@ inline QColor GetBandColor ( const int iBand )
     return QColor ( 255, 140, 0 ); // fallback orange
 }
 
+inline QColor GetDisabledColor ( const QColor& color, const bool bDarkTheme )
+{
+    int r     = color.red();
+    int g     = color.green();
+    int b     = color.blue();
+    int alpha = color.alpha();
+    int gray  = static_cast<int> ( 0.299 * r + 0.587 * g + 0.114 * b + 0.5 );
+    if ( bDarkTheme )
+    {
+        return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );
+    }
+    else
+    {
+        return QColor ( ( gray + 200 ) / 2, ( gray + 200 ) / 2, ( gray + 200 ) / 2, alpha );
+    }
+}
+
 struct SControlPalette
 {
     // Base
     QColor background;
-    QColor dial;
-    QColor dialOutline;
-    QColor ring;
 
     // Accents
     QColor accent;
@@ -73,9 +87,6 @@ struct SControlPalette
     QColor knobOutline;
     QColor markerNormal;
     QColor markerHover;
-    QColor markerDot;
-    QColor markerDotHover;
-    QColor innerBevel;
 
     // Slider
     QColor trackBackground;
@@ -95,9 +106,6 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
     {
         return {
             QColor ( 28, 28, 31 ),        // background
-            QColor ( 34, 34, 38 ),        // dial
-            QColor ( 62, 62, 66 ),        // dial outline
-            QColor ( 82, 82, 88 ),        // ring
             QColor ( 54, 207, 255 ),      // accent
             QColor ( 54, 207, 255, 120 ), // accent glow
             QColor ( 118, 244, 255 ),     // accent bright
@@ -112,9 +120,6 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
             QColor ( 92, 106, 122 ),      // knob outline
             QColor ( 168, 216, 244 ),     // marker normal
             QColor ( 118, 238, 255 ),     // marker hover
-            QColor ( 160, 200, 230 ),     // marker dot
-            QColor ( 176, 228, 255 ),     // marker dot hover
-            QColor ( 84, 96, 112 ),       // inner bevel
             QColor ( 44, 44, 48 ),        // track background
             QColor ( 72, 82, 94 ),        // track border
             QColor ( 82, 96, 112 ),       // handle top
@@ -127,9 +132,6 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
 
     return {
         QColor ( 247, 248, 250 ),     // background
-        QColor ( 230, 232, 236 ),     // dial
-        QColor ( 180, 190, 200 ),     // dial outline
-        QColor ( 200, 210, 220 ),     // ring
         QColor ( 50, 150, 200 ),      // accent
         QColor ( 50, 150, 200, 120 ), // accent glow
         QColor ( 118, 244, 255 ),     // accent bright
@@ -144,9 +146,6 @@ inline SControlPalette GetControlPalette ( const bool bDarkTheme )
         QColor ( 145, 155, 165 ),     // knob outline
         QColor ( 80, 100, 150 ),      // marker normal
         QColor ( 50, 140, 200 ),      // marker hover
-        QColor ( 80, 140, 200 ),      // marker dot
-        QColor ( 100, 160, 220 ),     // marker dot hover
-        QColor ( 180, 190, 200 ),     // inner bevel
         QColor ( 225, 228, 234 ),     // track background
         QColor ( 165, 175, 185 ),     // track border
         QColor ( 255, 255, 255 ),     // handle top

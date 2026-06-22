@@ -35,13 +35,13 @@
 
 namespace
 {
-QString MakeBandTooltipText ( const int iBand, const float fFreqHz, const float fGainDb )
+QString MakeBandTooltipText ( const float fFreqHz, const float fGainDb, const float fQ )
 {
     const QString strFreq = ( fFreqHz >= 1000.0f ) ? QString::number ( fFreqHz / 1000.0f, 'f', 2 ) + QObject::tr ( " kHz" )
                                                    : QString::number ( fFreqHz, 'f', 1 ) + QObject::tr ( " Hz" );
     const QString strGain = ( fGainDb >= 0.0f ) ? QString ( "+%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) )
                                                 : QString ( "%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) );
-    return QObject::tr ( "Band %1 | %2 | %3" ).arg ( iBand + 1 ).arg ( strFreq ).arg ( strGain );
+    return QObject::tr ( "%1 | %2 | Q: %3" ).arg ( strFreq ).arg ( strGain ).arg ( QString::number ( fQ, 'f', 1 ) );
 }
 
 } // namespace
@@ -814,7 +814,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const float fNx = FreqToXf ( afBandFrequencies[iTooltipBand] );
         const float fNy = DbToYf ( afBandGainDb[iTooltipBand] );
 
-        const QString strText = MakeBandTooltipText ( iTooltipBand, afBandFrequencies[iTooltipBand], afBandGainDb[iTooltipBand] );
+        const QString strText = MakeBandTooltipText ( afBandFrequencies[iTooltipBand], afBandGainDb[iTooltipBand], afBandQ[iTooltipBand] );
 
         painter.setFont ( QFont ( "Inter", 8 ) );
         const QFontMetrics fm = painter.fontMetrics();

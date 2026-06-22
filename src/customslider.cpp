@@ -219,36 +219,20 @@ SControlPalette GetCustomSliderPalette ( const bool bDarkTheme, const bool bEnab
     SControlPalette palette = GetControlPalette ( bDarkTheme );
     if ( !bEnabled )
     {
-        auto GetDisabledColor = [bDarkTheme] ( const QColor& color ) -> QColor {
-            int r     = color.red();
-            int g     = color.green();
-            int b     = color.blue();
-            int alpha = color.alpha();
-            int gray  = qRound ( 0.299 * r + 0.587 * g + 0.114 * b );
-            if ( bDarkTheme )
-            {
-                return QColor ( ( gray + 60 ) / 2, ( gray + 60 ) / 2, ( gray + 60 ) / 2, alpha );
-            }
-            else
-            {
-                return QColor ( ( gray + 200 ) / 2, ( gray + 200 ) / 2, ( gray + 200 ) / 2, alpha );
-            }
-        };
+        palette.accent       = GetDisabledColor ( palette.accent, bDarkTheme );
+        palette.accentGlow   = GetDisabledColor ( palette.accentGlow, bDarkTheme );
+        palette.accentBright = GetDisabledColor ( palette.accentBright, bDarkTheme );
+        palette.accentMid    = GetDisabledColor ( palette.accentMid, bDarkTheme );
+        palette.accentDeep   = GetDisabledColor ( palette.accentDeep, bDarkTheme );
 
-        palette.accent       = GetDisabledColor ( palette.accent );
-        palette.accentGlow   = GetDisabledColor ( palette.accentGlow );
-        palette.accentBright = GetDisabledColor ( palette.accentBright );
-        palette.accentMid    = GetDisabledColor ( palette.accentMid );
-        palette.accentDeep   = GetDisabledColor ( palette.accentDeep );
+        palette.trackBackground = GetDisabledColor ( palette.trackBackground, bDarkTheme );
+        palette.trackBorder     = GetDisabledColor ( palette.trackBorder, bDarkTheme );
+        palette.handleTop       = GetDisabledColor ( palette.handleTop, bDarkTheme );
+        palette.handleMid       = GetDisabledColor ( palette.handleMid, bDarkTheme );
+        palette.handleBottom    = GetDisabledColor ( palette.handleBottom, bDarkTheme );
+        palette.handleBorder    = GetDisabledColor ( palette.handleBorder, bDarkTheme );
 
-        palette.trackBackground = GetDisabledColor ( palette.trackBackground );
-        palette.trackBorder     = GetDisabledColor ( palette.trackBorder );
-        palette.handleTop       = GetDisabledColor ( palette.handleTop );
-        palette.handleMid       = GetDisabledColor ( palette.handleMid );
-        palette.handleBottom    = GetDisabledColor ( palette.handleBottom );
-        palette.handleBorder    = GetDisabledColor ( palette.handleBorder );
-
-        palette.tick = GetDisabledColor ( palette.tick );
+        palette.tick = GetDisabledColor ( palette.tick, bDarkTheme );
     }
     return palette;
 }
@@ -286,8 +270,6 @@ CCustomSlider::CCustomSlider ( Qt::Orientation orientation, QWidget* parent ) :
     updateGeometry();
     update();
 }
-
-CCustomSlider::~CCustomSlider() {}
 
 void CCustomSlider::SetDarkTheme ( bool bEnable )
 {

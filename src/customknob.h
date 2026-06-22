@@ -25,7 +25,6 @@
 #pragma once
 
 #include <QWidget>
-#include <QSlider>
 
 /**
  * @brief Modern custom pan knob with circular dial design.
@@ -40,7 +39,7 @@ class CCustomKnob : public QWidget
 
 public:
     explicit CCustomKnob ( QWidget* parent = nullptr );
-    virtual ~CCustomKnob();
+    virtual ~CCustomKnob() = default;
 
     // Value management (QDial compatible)
     int  value() const { return iCurrentValue; }
@@ -82,11 +81,6 @@ public:
         }
     }
 
-    // Slider-compatibility stubs for drop-in replacement
-    void setTickInterval ( int ) {}
-    void setTickPosition ( QSlider::TickPosition ) {}
-    void setOrientation ( Qt::Orientation ) {}
-    void SetCompactMode ( bool ) {}
     void setMinimum ( int min ) { setRange ( min, iMaxValue ); }
     void setMaximum ( int max ) { setRange ( iMinValue, max ); }
 
@@ -113,9 +107,7 @@ protected:
     void wheelEvent ( QWheelEvent* event ) override;
 
 private:
-    int    valueFromAngle ( double angle ) const;
     double angleFromValue ( int val ) const;
-    void   updateValue ( QMouseEvent* event );
 
     // State
     int    iMinValue;

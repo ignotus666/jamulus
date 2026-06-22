@@ -55,8 +55,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     setWindowTitle ( tr ( "Effects" ) );
     pKnobReverb->setRange ( 0, AUD_REVERB_MAX );
-    pKnobReverb->setTickInterval ( AUD_REVERB_MAX / 5 );
-    pKnobReverb->setTickPosition ( QSlider::TicksBothSides );
 
     pLblReverbPreDelayValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblReverbRoomValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -72,23 +70,11 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblReverbWidthValue->setMinimumWidth ( 32 );
 
     pKnobReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
-    pKnobReverbPreDelay->setTickInterval ( std::max ( 1, REVERB_PRE_DELAY_MAX_MS / 5 ) );
-    pKnobReverbPreDelay->setTickPosition ( QSlider::TicksBothSides );
     pKnobReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
-    pKnobReverbRoom->setTickInterval ( std::max ( 1, REVERB_ROOM_SIZE_MAX / 5 ) );
-    pKnobReverbRoom->setTickPosition ( QSlider::TicksBothSides );
     pKnobReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
-    pKnobReverbDamping->setTickInterval ( std::max ( 1, REVERB_DAMPING_MAX / 5 ) );
-    pKnobReverbDamping->setTickPosition ( QSlider::TicksBothSides );
     pKnobReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
-    pKnobReverbWet->setTickInterval ( std::max ( 1, REVERB_WET_MIX_MAX / 5 ) );
-    pKnobReverbWet->setTickPosition ( QSlider::TicksBothSides );
     pKnobReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
-    pKnobReverbEarly->setTickInterval ( std::max ( 1, REVERB_EARLY_LEVEL_MAX / 5 ) );
-    pKnobReverbEarly->setTickPosition ( QSlider::TicksBothSides );
     pKnobReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
-    pKnobReverbWidth->setTickInterval ( std::max ( 1, REVERB_WIDTH_MAX / 5 ) );
-    pKnobReverbWidth->setTickPosition ( QSlider::TicksBothSides );
 
     pLblCompressorThresholdValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
     pLblCompressorRatioValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
@@ -101,20 +87,10 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblCompressorReleaseValue->setMinimumWidth ( 55 );
     pLblCompressorMakeupValue->setMinimumWidth ( 48 );
     pKnobCompressorThreshold->setRange ( -60, 0 );
-    pKnobCompressorThreshold->setTickInterval ( std::max ( 1, 60 / 5 ) );
-    pKnobCompressorThreshold->setTickPosition ( QSlider::TicksBothSides );
     pKnobCompressorRatio->setRange ( 1, 20 );
-    pKnobCompressorRatio->setTickInterval ( std::max ( 1, ( 20 - 1 ) / 5 ) );
-    pKnobCompressorRatio->setTickPosition ( QSlider::TicksBothSides );
     pKnobCompressorAttack->setRange ( 1, 50 );
-    pKnobCompressorAttack->setTickInterval ( std::max ( 1, ( 50 - 1 ) / 5 ) );
-    pKnobCompressorAttack->setTickPosition ( QSlider::TicksBothSides );
     pKnobCompressorRelease->setRange ( 10, 400 );
-    pKnobCompressorRelease->setTickInterval ( std::max ( 1, ( 400 - 10 ) / 5 ) );
-    pKnobCompressorRelease->setTickPosition ( QSlider::TicksBothSides );
     pKnobCompressorMakeup->setRange ( 0, 24 );
-    pKnobCompressorMakeup->setTickInterval ( std::max ( 1, 24 / 5 ) );
-    pKnobCompressorMakeup->setTickPosition ( QSlider::TicksBothSides );
 
     pEQCurveWidget->SetSampleRate ( SYSTEM_SAMPLE_RATE_HZ );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainChanged, this, &CEffectsDlg::OnEQBandGainChanged );
@@ -148,20 +124,9 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pEdtEQDynRelease, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQDynReleaseEditFinished );
 
     pKnobEQDynThreshold->setRange ( -60, 0 );
-    pKnobEQDynThreshold->setTickInterval ( 12 );
-    pKnobEQDynThreshold->setTickPosition ( QSlider::TicksBothSides );
-
     pKnobEQDynRatio->setRange ( 1, 20 );
-    pKnobEQDynRatio->setTickInterval ( 4 );
-    pKnobEQDynRatio->setTickPosition ( QSlider::TicksBothSides );
-
     pKnobEQDynAttack->setRange ( 1, 100 );
-    pKnobEQDynAttack->setTickInterval ( 20 );
-    pKnobEQDynAttack->setTickPosition ( QSlider::TicksBothSides );
-
     pKnobEQDynRelease->setRange ( 10, 500 );
-    pKnobEQDynRelease->setTickInterval ( 100 );
-    pKnobEQDynRelease->setTickPosition ( QSlider::TicksBothSides );
 
     QObject::connect ( pChbEQDynEnabled, &QCheckBox::toggled, this, &CEffectsDlg::OnEQDynEnabledChanged );
     QObject::connect ( pKnobEQDynThreshold, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynThresholdChanged );
@@ -177,14 +142,10 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pEdtEQBandQ, &QLineEdit::returnPressed, this, &CEffectsDlg::OnEQBandQEditFinished );
 
     pKnobEQBandQ->setRange ( 3, 100 );
-    pKnobEQBandQ->setTickInterval ( 20 );
-    pKnobEQBandQ->setTickPosition ( QSlider::TicksBothSides );
     QObject::connect ( pKnobEQBandQ, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQBandQChanged );
 
     // Gain knob — range -120..120 maps to Gain -12.0..+12.0 dB
     pKnobEQBandGain->setRange ( -120, 120 );
-    pKnobEQBandGain->setTickInterval ( 40 );
-    pKnobEQBandGain->setTickPosition ( QSlider::TicksBothSides );
     QObject::connect ( pKnobEQBandGain, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQBandGainKnobChanged );
 
     pKnobEQDynThreshold->setMaximumSize ( 40, 40 );
@@ -346,7 +307,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     UpdateReverbControls();
     UpdateCompressorControls();
-    UpdateEQReadouts();
     PopulateEffectsPresetCombo();
     PopulateEQPresetCombo();
     UpdateEQPresetSelection();
@@ -660,11 +620,6 @@ void CEffectsDlg::UpdateReverbControls()
         pReverbDecayWidget->SetEarlyLevel ( static_cast<float> ( pKnobReverbEarly->value() ) / REVERB_EARLY_LEVEL_MAX );
         pReverbDecayWidget->SetBypass ( pClient->GetReverbBypass() );
     }
-}
-
-void CEffectsDlg::UpdateEQReadouts()
-{
-    // Obsolete with graphical EQ curve
 }
 
 void CEffectsDlg::UpdateEQControls()

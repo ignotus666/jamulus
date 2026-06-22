@@ -38,7 +38,7 @@ class CCustomSlider : public QWidget
 public:
     explicit CCustomSlider ( QWidget* parent = nullptr );
     explicit CCustomSlider ( Qt::Orientation orientation, QWidget* parent = nullptr );
-    virtual ~CCustomSlider();
+    virtual ~CCustomSlider() = default;
 
     // Value management (QSlider compatible)
     int  value() const { return iCurrentValue; }
