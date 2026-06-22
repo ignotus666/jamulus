@@ -50,8 +50,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pReverbDecayWidget = new CReverbDecayWidget ( this );
     gridLayoutReverbRows->addWidget ( pReverbDecayWidget, 0, 7, 3, 1 );
 
-
-
     // Save tab index on change
     connect ( pTabs, &QTabWidget::currentChanged, this, [this] ( int idx ) { pSettings->iEffectsTab = idx; } );
 
@@ -612,6 +610,7 @@ void CEffectsDlg::UpdateReverbControls()
     pRbtReverbSelR->setEnabled ( !bBypass );
     pButReverbReset->setEnabled ( !bBypass );
 
+    pLblReverb->setEnabled ( !bBypass );
     pLblReverbValue->setEnabled ( !bBypass );
     pLblReverbPreDelay->setEnabled ( !bBypass );
     pLblReverbPreDelayValue->setEnabled ( !bBypass );
@@ -802,8 +801,6 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
     UpdateCompressorControls();
     UpdateEQControls();
     UpdateEQPresetSelection();
-
-
 }
 
 int CEffectsDlg::FindEffectsPresetSlotByName ( const QString& strName ) const
@@ -1918,5 +1915,3 @@ void CEffectsDlg::OnEQDynReleaseEditFinished()
 
     UpdateEQDynControls ( iSelectedBand );
 }
-
-

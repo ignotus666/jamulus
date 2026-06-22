@@ -699,7 +699,6 @@ private:
     CCompCurveWidget*   pCompCurveWidget   = nullptr;
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
 
-
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
     void ApplyEffectsPresetFromSlot ( const int iPresetSlot );

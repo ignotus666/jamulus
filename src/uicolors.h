@@ -26,24 +26,18 @@
 
 #include <QColor>
 
-/**
- * @brief Returns a distinct color for each EQ band (0..7).
- *
- * The palette is inspired by professional parametric EQ interfaces where
- * each frequency band has a unique, vibrant color to aid identification.
- */
 inline QColor GetBandColor ( const int iBand )
 {
-    // 8 distinct, vibrant colors for the 8 EQ bands
+    // 8 colors for the 8 EQ bands
     static const QColor aBandColors[8] = {
-        QColor ( 102, 217,  73 ),  // Band 0: green
-        QColor ( 100, 180, 255 ),  // Band 1: light blue
-        QColor ( 255, 210,  60 ),  // Band 2: yellow
-        QColor ( 230,  80, 180 ),  // Band 3: magenta / pink
-        QColor ( 255, 130,  80 ),  // Band 4: coral / orange
-        QColor ( 140, 120, 255 ),  // Band 5: purple / indigo
-        QColor ( 190, 230,  60 ),  // Band 6: lime / yellow-green
-        QColor (  80, 210, 220 ),  // Band 7: cyan / teal
+        QColor ( 102, 217, 73 ),  // Band 0: green
+        QColor ( 100, 180, 255 ), // Band 1: light blue
+        QColor ( 255, 210, 60 ),  // Band 2: yellow
+        QColor ( 230, 80, 180 ),  // Band 3: magenta / pink
+        QColor ( 255, 130, 80 ),  // Band 4: coral / orange
+        QColor ( 140, 120, 255 ), // Band 5: purple / indigo
+        QColor ( 190, 230, 60 ),  // Band 6: lime / yellow-green
+        QColor ( 80, 210, 220 ),  // Band 7: cyan / teal
     };
 
     if ( iBand >= 0 && iBand < 8 )

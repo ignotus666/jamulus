@@ -901,7 +901,7 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
             afEQPresetBandGainDb[iIdx][iBand] = 0.0f;
-            QString strVal = GetIniSetting ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ) );
+            QString strVal                    = GetIniSetting ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ) );
             if ( !strVal.isEmpty() )
             {
                 float fVal = strVal.toFloat();

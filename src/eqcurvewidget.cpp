@@ -577,9 +577,9 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     // --- Individual band curves ---
     if ( !bEQBypassed )
     {
-        const int   iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
+        const int     iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
         constexpr int kStepSize = 6;
-        const float fZeroY    = DbToYf ( 0.0f );
+        const float   fZeroY    = DbToYf ( 0.0f );
 
         for ( int iBand = 0; iBand < kNumBands; ++iBand )
         {
@@ -596,7 +596,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
             // Build stroke outline path
             QPainterPath strokePath;
-            const float fStartDb = EvalBandMagnitudeDb ( iBand, afBandGainDb[iBand], XToFreq ( r.left() ) );
+            const float  fStartDb = EvalBandMagnitudeDb ( iBand, afBandGainDb[iBand], XToFreq ( r.left() ) );
             strokePath.moveTo ( r.left(), DbToYf ( fStartDb ) );
 
             for ( int iX = 0; iX < iWidth; iX += kStepSize )
@@ -925,9 +925,8 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
         bool bChanged = false;
 
         // --- 1. Handle Gain Dragging (Vertical) ---
-        const float fDb = YToDb ( pEvent->pos().y() );
-        const float fClampedDb =
-            std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
+        const float fDb        = YToDb ( pEvent->pos().y() );
+        const float fClampedDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
 
         if ( std::abs ( afBandGainDb[iSelectedBand] - fClampedDb ) > 0.001f )
         {
@@ -1029,9 +1028,7 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
     }
 
     const float fDelta = ( pEvent->angleDelta().y() > 0 ) ? 0.1f : -0.1f;
-    const float fNewDb =
-        std::max ( kGainMinDb,
-                   std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
+    const float fNewDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
 
     afBandGainDb[iSelectedBand] = fNewDb;
     bStaticCurveDirty           = true;

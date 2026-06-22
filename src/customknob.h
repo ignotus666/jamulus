@@ -118,14 +118,14 @@ private:
     void   updateValue ( QMouseEvent* event );
 
     // State
-    int  iMinValue;
-    int  iMaxValue;
-    int  iCurrentValue;
-    int  iPageStep;
-    int  iDragStartValue;
-    int  iDragStartY;
-    bool bMousePressed;
-    bool bKnobHovered;
+    int    iMinValue;
+    int    iMaxValue;
+    int    iCurrentValue;
+    int    iPageStep;
+    int    iDragStartValue;
+    int    iDragStartY;
+    bool   bMousePressed;
+    bool   bKnobHovered;
     bool   bDarkTheme;
     bool   bCenterArc;
     QColor colAccentOverride; // If valid, overrides the palette accent for arc/glow

@@ -190,10 +190,10 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
     const int dialRadius = std::max ( 8, ( std::min ( w, h ) / 2 ) - 2 );
     const int knobRadius = std::max ( 5, dialRadius - 5 );
 
-    const SControlPalette palette           = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
-    const QColor          bgColor           = palette.background;
-    QColor                arcColor          = palette.accent;
-    QColor                glowColor         = palette.accentGlow;
+    const SControlPalette palette   = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
+    const QColor          bgColor   = palette.background;
+    QColor                arcColor  = palette.accent;
+    QColor                glowColor = palette.accentGlow;
 
     // Apply per-band accent color override if set
     if ( colAccentOverride.isValid() )
@@ -202,15 +202,15 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
         glowColor = QColor ( colAccentOverride.red(), colAccentOverride.green(), colAccentOverride.blue(), 120 );
     }
 
-    const QColor          knobNormalTop     = palette.knobNormalTop;
-    const QColor          knobNormalMid     = palette.knobNormalMid;
-    const QColor          knobNormalBottom  = palette.knobNormalBottom;
-    const QColor          knobHoverTop      = palette.knobHoverTop;
-    const QColor          knobHoverMid      = palette.knobHoverMid;
-    const QColor          knobHoverBottom   = palette.knobHoverBottom;
-    const QColor          knobOutlineColor  = palette.knobOutline;
-    const QColor          markerNormalColor = palette.markerNormal;
-    const QColor          markerHoverColor  = palette.markerHover;
+    const QColor knobNormalTop     = palette.knobNormalTop;
+    const QColor knobNormalMid     = palette.knobNormalMid;
+    const QColor knobNormalBottom  = palette.knobNormalBottom;
+    const QColor knobHoverTop      = palette.knobHoverTop;
+    const QColor knobHoverMid      = palette.knobHoverMid;
+    const QColor knobHoverBottom   = palette.knobHoverBottom;
+    const QColor knobOutlineColor  = palette.knobOutline;
+    const QColor markerNormalColor = palette.markerNormal;
+    const QColor markerHoverColor  = palette.markerHover;
 
     // Fill background
     painter.fillRect ( rect(), bgColor );
