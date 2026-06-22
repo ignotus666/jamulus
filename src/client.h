@@ -242,11 +242,11 @@ public:
     bool GetDoAutoSockBufSize() const { return Channel.GetDoAutoSockBufSize(); }
 
     void  SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
-    void  SetEQBandGainDb ( const int iBandIndex, const int iGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, iGainDb ); }
+    void  SetEQBandGainDb ( const int iBandIndex, const float fGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, fGainDb ); }
     void  SetEQBandFrequency ( const int iBandIndex, const float fFreqHz ) { AudioEqualizer.SetBandFrequency ( iBandIndex, fFreqHz ); }
     void  ResetEQ() { AudioEqualizer.Reset(); }
     bool  GetEQBypass() const { return AudioEqualizer.GetBypass(); }
-    int   GetEQBandGainDb ( const int iBandIndex ) const { return static_cast<int> ( AudioEqualizer.GetBandGainDb ( iBandIndex ) ); }
+    float GetEQBandGainDb ( const int iBandIndex ) const { return AudioEqualizer.GetBandGainDb ( iBandIndex ); }
     float GetEQBandFrequency ( const int iBandIndex ) const { return AudioEqualizer.GetBandFrequency ( iBandIndex ); }
 
     void  SetEQBandQ ( const int iBand, const float fQ ) { AudioEqualizer.SetBandQ ( iBand, fQ ); }

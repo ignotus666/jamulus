@@ -65,6 +65,22 @@ public:
             update();
         }
     }
+    void SetAccentColor ( const QColor& color )
+    {
+        if ( colAccentOverride != color )
+        {
+            colAccentOverride = color;
+            update();
+        }
+    }
+    void ClearAccentColor()
+    {
+        if ( colAccentOverride.isValid() )
+        {
+            colAccentOverride = QColor(); // invalid = use default
+            update();
+        }
+    }
 
     // Slider-compatibility stubs for drop-in replacement
     void setTickInterval ( int ) {}
@@ -110,6 +126,7 @@ private:
     int  iDragStartY;
     bool bMousePressed;
     bool bKnobHovered;
-    bool bDarkTheme;
-    bool bCenterArc;
+    bool   bDarkTheme;
+    bool   bCenterArc;
+    QColor colAccentOverride; // If valid, overrides the palette accent for arc/glow
 };

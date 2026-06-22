@@ -61,7 +61,7 @@ public:
     int FreqToX ( const float fHz ) const;
 
 signals:
-    void bandGainChanged ( int iBand, int iGainDb );
+    void bandGainChanged ( int iBand, float fGainDb );
     void bandFrequencyChanged ( int iBand, float fFreqHz );
     void bandSelected ( int iBand );
     void bandGainReset ( int iBand );

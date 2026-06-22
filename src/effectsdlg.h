@@ -50,6 +50,8 @@
 #include <QVector>
 #include <algorithm>
 
+class QMouseEvent;
+
 class CGRMeter : public QWidget
 {
     Q_OBJECT
@@ -243,8 +245,8 @@ protected:
             return;
 
         QRect plotRect ( left, top, plotW, plotH );
-        painter.fillRect ( plotRect, bDarkTheme ? QColor ( 20, 20, 22 ) : QColor ( 225, 230, 235 ) );
-        painter.setPen ( bDarkTheme ? QColor ( 45, 45, 50 ) : QColor ( 190, 195, 200 ) );
+        painter.fillRect ( plotRect, QColor ( 20, 20, 22 ) );
+        painter.setPen ( QColor ( 45, 45, 50 ) );
         painter.drawRect ( plotRect );
 
         auto mapX = [=] ( float dB ) -> float {
@@ -265,7 +267,7 @@ protected:
         for ( float val : gridValues )
         {
             float y = mapY ( val );
-            painter.setPen ( bDarkTheme ? QColor ( 40, 45, 50, 120 ) : QColor ( 210, 215, 220, 180 ) );
+            painter.setPen ( QColor ( 40, 45, 50, 120 ) );
             if ( val != -60.0f && val != 0.0f )
             {
                 painter.drawLine ( left + 1, y, left + plotW - 1, y );
@@ -274,7 +276,7 @@ protected:
             painter.drawText ( QRect ( 2, y - 6, left - 6, 12 ), Qt::AlignRight | Qt::AlignVCenter, QString::number ( static_cast<int> ( val ) ) );
 
             float x = mapX ( val );
-            painter.setPen ( bDarkTheme ? QColor ( 40, 45, 50, 120 ) : QColor ( 210, 215, 220, 180 ) );
+            painter.setPen ( QColor ( 40, 45, 50, 120 ) );
             if ( val != -60.0f && val != 0.0f )
             {
                 painter.drawLine ( x, top + 1, x, top + plotH - 1 );
@@ -283,7 +285,7 @@ protected:
             painter.drawText ( QRect ( x - 15, top + plotH + 2, 30, 12 ), Qt::AlignCenter, QString::number ( static_cast<int> ( val ) ) );
         }
 
-        painter.setPen ( QPen ( bDarkTheme ? QColor ( 80, 90, 100, 100 ) : QColor ( 160, 170, 180, 150 ), 1, Qt::DashLine ) );
+        painter.setPen ( QPen ( QColor ( 80, 90, 100, 100 ), 1, Qt::DashLine ) );
         painter.drawLine ( mapX ( -60.0f ), mapY ( -60.0f ), mapX ( 0.0f ), mapY ( 0.0f ) );
 
         auto computeGainDb = [this] ( float inputDb ) -> float {
@@ -503,11 +505,11 @@ protected:
             return;
 
         QRect plotRect ( left, top, plotW, plotH );
-        painter.fillRect ( plotRect, bDarkTheme ? QColor ( 20, 20, 22 ) : QColor ( 225, 230, 235 ) );
-        painter.setPen ( bDarkTheme ? QColor ( 45, 45, 50 ) : QColor ( 190, 195, 200 ) );
+        painter.fillRect ( plotRect, QColor ( 20, 20, 22 ) );
+        painter.setPen ( QColor ( 45, 45, 50 ) );
         painter.drawRect ( plotRect );
 
-        painter.setPen ( bDarkTheme ? QColor ( 40, 45, 50, 120 ) : QColor ( 210, 215, 220, 180 ) );
+        painter.setPen ( QColor ( 40, 45, 50, 120 ) );
         for ( int i = 1; i <= 3; ++i )
         {
             float gridX = left + ( static_cast<float> ( i ) / 4.0f ) * plotW;
@@ -529,7 +531,7 @@ protected:
             return;
         }
 
-        painter.setPen ( QPen ( bDarkTheme ? QColor ( 80, 90, 100, 150 ) : QColor ( 160, 170, 180, 180 ), 1.5, Qt::SolidLine ) );
+        painter.setPen ( QPen ( QColor ( 80, 90, 100, 150 ), 1.5, Qt::SolidLine ) );
         painter.drawLine ( left, top + plotH - 1, xPreDelay, top + plotH - 1 );
 
         float spikeOffsetsMs[] = { 15.0f, 35.0f, 55.0f, 75.0f, 95.0f };
@@ -614,8 +616,8 @@ protected:
         const int   meterX = left + plotW - meterW - 4;
         const QRect meterRect ( meterX, top + 4, meterW, plotH - 8 );
 
-        painter.fillRect ( meterRect, bDarkTheme ? QColor ( 15, 15, 17 ) : QColor ( 240, 240, 245 ) );
-        painter.setPen ( bDarkTheme ? QColor ( 45, 45, 50 ) : QColor ( 190, 195, 200 ) );
+        painter.fillRect ( meterRect, QColor ( 15, 15, 17 ) );
+        painter.setPen ( QColor ( 45, 45, 50 ) );
         painter.drawRect ( meterRect );
 
         if ( normLevel > 0.0f )
@@ -642,45 +644,9 @@ private:
     float fDisplayLevelDb;
 };
 
-struct SEffectsState
-{
-    int  iReverbLevel        = 0;
-    bool bReverbOnLeftChan   = false;
-    int  iReverbPreDelayMs   = 0;
-    int  iReverbRoomSize     = 0;
-    int  iReverbDamping      = 0;
-    int  iReverbWetMix       = 0;
-    int  iReverbEarlyLevel   = 0;
-    int  iReverbWidth        = 0;
-    bool bReverbEarlyEnabled = false;
-    bool bReverbFreeze       = false;
-    bool bReverbBypass       = true;
-
-    bool  bCompressorBypass         = true;
-    float fCompressorThresholdDb    = 0.0f;
-    float fCompressorRatio          = 1.0f;
-    float fCompressorAttackMs       = 1.0f;
-    float fCompressorReleaseMs      = 10.0f;
-    float fCompressorMakeupDb       = 0.0f;
-    bool  bCompressorLimiterEnabled = true;
-
-    bool  bEQBypass                                          = true;
-    int   aiEQBandGainDb[CAudioEqualizer::NUM_BANDS]         = {};
-    float afEQBandFrequency[CAudioEqualizer::NUM_BANDS]      = {};
-    bool  abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS]     = {};
-    float afEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = {};
-    float afEQBandDynRatio[CAudioEqualizer::NUM_BANDS]       = {};
-    float afEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS]    = {};
-    float afEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS]   = {};
-    float afEQBandQ[CAudioEqualizer::NUM_BANDS]              = {};
-};
-
 class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
 {
     Q_OBJECT
-
-    SEffectsState GetCurrentEffectsState() const;
-    void          SetCurrentEffectsState ( const SEffectsState& state );
 
 public:
     CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent = nullptr );
@@ -698,6 +664,7 @@ public:
 protected:
     virtual void showEvent ( QShowEvent* Event ) override;
     virtual void hideEvent ( QHideEvent* Event ) override;
+    virtual void mousePressEvent ( QMouseEvent* pEvent ) override;
     virtual bool eventFilter ( QObject* pObj, QEvent* pEvent ) override;
 
 signals:
@@ -721,7 +688,7 @@ signals:
     void CompressorMakeupChanged ( int value );
     void CompressorLimiterChanged ( bool enabled );
     void EQBypassChanged ( bool bypassed );
-    void EQBandGainChanged ( int bandIndex, int gainDb );
+    void EQBandGainChanged ( int bandIndex, float fGainDb );
     void EQResetRequested();
 
 private:
@@ -731,10 +698,7 @@ private:
     CGRMeter*           pGRMeter           = nullptr;
     CCompCurveWidget*   pCompCurveWidget   = nullptr;
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
-    SEffectsState       stateA;
-    SEffectsState       stateB;
-    bool                bHasStateB         = false;
-    QPushButton*        pButEffectsCompare = nullptr;
+
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
@@ -751,7 +715,7 @@ private:
     void UpdateEQDynControls ( const int iBand );
 
 private slots:
-    void OnEffectsCompareToggled ( bool bChecked );
+
     void OnResetReverbClicked();
     void OnResetCompressorClicked();
     void OnSaveEffectsPresetClicked();
@@ -762,8 +726,7 @@ private slots:
     void OnSaveAsEQPresetClicked();
     void OnDeleteEQPresetClicked();
 
-    // EQ dynamics and curve interaction slots
-    void OnEQBandGainChanged ( int iBand, int iGainDb );
+    void OnEQBandGainChanged ( int iBand, float fGainDb );
     void OnEQBandFrequencyChanged ( int iBand, float fFreqHz );
     void OnEQBandSelected ( int iBand );
     void OnEQBandGainReset ( int iBand );
@@ -775,4 +738,10 @@ private slots:
     void OnEQBandQChanged ( int iValue );
     void OnEQDynFreqEditFinished();
     void OnEQDynGainEditFinished();
+    void OnEQBandGainKnobChanged ( int iValue );
+    void OnEQBandQEditFinished();
+    void OnEQDynThresholdEditFinished();
+    void OnEQDynRatioEditFinished();
+    void OnEQDynAttackEditFinished();
+    void OnEQDynReleaseEditFinished();
 };

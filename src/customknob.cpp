@@ -192,8 +192,16 @@ void CCustomKnob::paintEvent ( QPaintEvent* event )
 
     const SControlPalette palette           = GetCustomKnobPalette ( bDarkTheme, isEnabled() );
     const QColor          bgColor           = palette.background;
-    const QColor          arcColor          = palette.accent;
-    const QColor          glowColor         = palette.accentGlow;
+    QColor                arcColor          = palette.accent;
+    QColor                glowColor         = palette.accentGlow;
+
+    // Apply per-band accent color override if set
+    if ( colAccentOverride.isValid() )
+    {
+        arcColor  = colAccentOverride;
+        glowColor = QColor ( colAccentOverride.red(), colAccentOverride.green(), colAccentOverride.blue(), 120 );
+    }
+
     const QColor          knobNormalTop     = palette.knobNormalTop;
     const QColor          knobNormalMid     = palette.knobNormalMid;
     const QColor          knobNormalBottom  = palette.knobNormalBottom;
@@ -312,7 +320,6 @@ void CCustomKnob::mousePressEvent ( QMouseEvent* event )
         iDragStartY     = event->y();
         emit sliderPressed();
         setCursor ( Qt::SizeVerCursor );
-        updateValue ( event );
         event->accept();
     }
 }

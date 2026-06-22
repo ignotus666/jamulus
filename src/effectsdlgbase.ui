@@ -80,9 +80,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayoutReverb">
        <item>
-        <widget class="QCheckBox" name="pChbReverbBypass">
+        <widget class="QCheckBox" name="pChbReverbEnable">
          <property name="text">
-          <string>Bypass Reverb</string>
+          <string>Enable Reverb</string>
          </property>
         </widget>
        </item>
@@ -345,9 +345,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayoutCompressor">
        <item>
-        <widget class="QCheckBox" name="pChbCompressorBypass">
+        <widget class="QCheckBox" name="pChbCompressorEnable">
          <property name="text">
-          <string>Bypass Compressor</string>
+          <string>Enable Compressor</string>
          </property>
         </widget>
        </item>
@@ -573,9 +573,9 @@
         </layout>
        </item>
        <item row="0" column="0">
-        <widget class="QCheckBox" name="pChbEQBypass">
+        <widget class="QCheckBox" name="pChbEQEnable">
          <property name="text">
-          <string>Bypass EQ</string>
+          <string>Enable EQ</string>
          </property>
         </widget>
        </item>
@@ -648,21 +648,33 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QLabel" name="pLblEQDynAttackValue">
+           <widget class="QLineEdit" name="pEdtEQDynAttack">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>60</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
              <string>5 ms</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -687,21 +699,33 @@
            </spacer>
           </item>
           <item row="0" column="3">
-           <widget class="QLabel" name="pLblEQDynThresholdValue">
+           <widget class="QLineEdit" name="pEdtEQDynThreshold">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>60</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
              <string>-20 dB</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -716,28 +740,64 @@
            </widget>
           </item>
           <item row="1" column="8">
-           <widget class="QLabel" name="pLblEQDynReleaseValue">
+           <widget class="QLineEdit" name="pEdtEQDynRelease">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>60</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
              <string>80 ms</string>
             </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="0" column="8">
-           <widget class="QLabel" name="pLblEQDynRatioValue">
+           <widget class="QLineEdit" name="pEdtEQDynRatio">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>60</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="text">
              <string>4:1</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -845,6 +905,9 @@
           </widget>
          </item>
          <item>
+          <widget class="CCustomKnob" name="pKnobEQBandGain" native="true"/>
+         </item>
+         <item>
           <widget class="QLineEdit" name="pEdtEQDynGain">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -911,9 +974,33 @@
           <widget class="CCustomKnob" name="pKnobEQBandQ" native="true"/>
          </item>
          <item>
-          <widget class="QLabel" name="pLblEQBandQValue">
+          <widget class="QLineEdit" name="pEdtEQBandQ">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>16777215</height>
+            </size>
+           </property>
            <property name="text">
             <string>1.0</string>
+           </property>
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

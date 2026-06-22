@@ -674,11 +674,16 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     // equalizer per-band gains and dynamics in dB
     for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
     {
-        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), -12, 12, iValue ) )
+        QString strVal = GetIniSetting ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ) );
+        if ( !strVal.isEmpty() )
         {
-            aiEQBandGainDb[iIdx] = iValue;
+            float fVal = strVal.toFloat();
+            if ( fVal >= -12.0f && fVal <= 12.0f )
+            {
+                afEQBandGainDb[iIdx] = fVal;
+            }
         }
-        pClient->SetEQBandGainDb ( iIdx, aiEQBandGainDb[iIdx] );
+        pClient->SetEQBandGainDb ( iIdx, afEQBandGainDb[iIdx] );
 
         if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "eqbanddynenabled%1" ).arg ( iIdx ), bValue ) )
         {
@@ -895,10 +900,15 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
 
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            aiEQPresetBandGainDb[iIdx][iBand] = 0;
-            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
+            afEQPresetBandGainDb[iIdx][iBand] = 0.0f;
+            QString strVal = GetIniSetting ( IniXMLDocument, "client", QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ) );
+            if ( !strVal.isEmpty() )
             {
-                aiEQPresetBandGainDb[iIdx][iBand] = iValue;
+                float fVal = strVal.toFloat();
+                if ( fVal >= -12.0f && fVal <= 12.0f )
+                {
+                    afEQPresetBandGainDb[iIdx][iBand] = fVal;
+                }
             }
 
             abEQPresetBandDynEnabled[iIdx][iBand] = false;
@@ -964,10 +974,15 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         bEffectsPresetEQBypass[iIdx] = true;
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            aiEffectsPresetEQBandGainDb[iIdx][iBand] = 0;
-            if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ), -12, 12, iValue ) )
+            afEffectsPresetEQBandGainDb[iIdx][iBand] = 0.0f;
+            QString strVal = GetIniSetting ( IniXMLDocument, "client", QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ) );
+            if ( !strVal.isEmpty() )
             {
-                aiEffectsPresetEQBandGainDb[iIdx][iBand] = iValue;
+                float fVal = strVal.toFloat();
+                if ( fVal >= -12.0f && fVal <= 12.0f )
+                {
+                    afEffectsPresetEQBandGainDb[iIdx][iBand] = fVal;
+                }
             }
 
             abEffectsPresetEQBandDynEnabled[iIdx][iBand] = false;
@@ -1430,8 +1445,8 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     // equalizer per-band gains and dynamics in dB
     for ( iIdx = 0; iIdx < CAudioEqualizer::NUM_BANDS; ++iIdx )
     {
-        aiEQBandGainDb[iIdx] = pClient->GetEQBandGainDb ( iIdx );
-        SetNumericIniSet ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), aiEQBandGainDb[iIdx] );
+        afEQBandGainDb[iIdx] = pClient->GetEQBandGainDb ( iIdx );
+        PutIniSetting ( IniXMLDocument, "client", QString ( "eqbandgain%1" ).arg ( iIdx ), QString::number ( afEQBandGainDb[iIdx], 'f', 1 ) );
 
         abEQBandDynEnabled[iIdx] = pClient->GetEQBandDynEnabled ( iIdx );
         SetFlagIniSet ( IniXMLDocument, "client", QString ( "eqbanddynenabled%1" ).arg ( iIdx ), abEQBandDynEnabled[iIdx] );
@@ -1483,10 +1498,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
 
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            SetNumericIniSet ( IniXMLDocument,
-                               "client",
-                               QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ),
-                               aiEQPresetBandGainDb[iIdx][iBand] );
+            PutIniSetting ( IniXMLDocument,
+                            "client",
+                            QString ( "eqpreset%1band%2" ).arg ( iIdx ).arg ( iBand ),
+                            QString::number ( afEQPresetBandGainDb[iIdx][iBand], 'f', 1 ) );
             SetFlagIniSet ( IniXMLDocument,
                             "client",
                             QString ( "eqpreset%1banddynenabled%2" ).arg ( iIdx ).arg ( iBand ),
@@ -1523,10 +1538,10 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
         SetFlagIniSet ( IniXMLDocument, "client", QString ( "effectpreset%1_eqbypass" ).arg ( iIdx ), bEffectsPresetEQBypass[iIdx] );
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            SetNumericIniSet ( IniXMLDocument,
-                               "client",
-                               QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ),
-                               aiEffectsPresetEQBandGainDb[iIdx][iBand] );
+            PutIniSetting ( IniXMLDocument,
+                            "client",
+                            QString ( "effectpreset%1_eqband%2" ).arg ( iIdx ).arg ( iBand ),
+                            QString::number ( afEffectsPresetEQBandGainDb[iIdx][iBand], 'f', 1 ) );
             SetFlagIniSet ( IniXMLDocument,
                             "client",
                             QString ( "effectpreset%1_eqbanddynenabled%2" ).arg ( iIdx ).arg ( iBand ),
@@ -1927,7 +1942,7 @@ void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot )
         bEffectsPresetEQBypass[iPresetSlot] = pClient->GetEQBypass();
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            aiEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+            afEffectsPresetEQBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
             aiEffectsPresetEQBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
             abEffectsPresetEQBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
             aiEffectsPresetEQBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );
@@ -1945,7 +1960,7 @@ void CClientSettings::SaveEQPresetFromClient ( int iPresetSlot )
     {
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
-            aiEQPresetBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
+            afEQPresetBandGainDb[iPresetSlot][iBand]         = pClient->GetEQBandGainDb ( iBand );
             aiEQPresetBandFrequency[iPresetSlot][iBand]      = static_cast<int> ( pClient->GetEQBandFrequency ( iBand ) );
             abEQPresetBandDynEnabled[iPresetSlot][iBand]     = pClient->GetEQBandDynEnabled ( iBand );
             aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = static_cast<int> ( pClient->GetEQBandDynThresholdDb ( iBand ) );

@@ -90,16 +90,8 @@ void CEQCurveWidget::UpdateBandTooltipStyle()
         return;
     }
 
-    if ( bDarkTheme )
-    {
-        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid "
-                                                       "#4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
-    }
-    else
-    {
-        pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #1c1e22; background-color: #fafafa; border: 1px solid "
-                                                       "#b8bec8; border-radius: 3px; padding: 2px 4px; }" ) );
-    }
+    pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid "
+                                                   "#4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
 }
 
 void CEQCurveWidget::UpdateBandTooltip ( const int iBand, const bool bVisible )
@@ -423,14 +415,14 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     // --- Background ---
     const QColor colBg   = GetControlPalette ( bDarkTheme ).background;
-    const QColor colGrid = bDarkTheme ? QColor ( 48, 52, 58 ) : QColor ( 215, 218, 224 );
-    const QColor colZero = bDarkTheme ? QColor ( 72, 78, 86 ) : QColor ( 180, 185, 195 );
+    const QColor colGrid = QColor ( 48, 52, 58 );
+    const QColor colZero = QColor ( 72, 78, 86 );
     const QColor colText = bDarkTheme ? QColor ( 150, 158, 168 ) : QColor ( 100, 110, 120 );
 
     painter.fillRect ( rect(), colBg );
 
     // --- Plot area background ---
-    const QColor colPlotBg = bDarkTheme ? QColor ( 20, 20, 22 ) : QColor ( 225, 230, 235 );
+    const QColor colPlotBg = QColor ( 20, 20, 22 );
     painter.fillRect ( r.toRect(), colPlotBg );
 
     // --- Grid: horizontal dB lines ---
@@ -520,25 +512,15 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
         // Create a beautiful, semi-transparent glowing gradient matching the level colors
         QLinearGradient spectrumGrad ( r.left(), r.bottom(), r.left(), r.top() );
-        if ( bDarkTheme )
-        {
-            spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );   // transparent at bottom
-            spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );  // glowing green
-            spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 60 ) ); // orange near top
-            spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 80 ) );  // red at top
-        }
-        else
-        {
-            spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );
-            spectrumGrad.setColorAt ( 0.4, QColor ( 60, 220, 90, 35 ) );
-            spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 50 ) );
-            spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 65 ) );
-        }
+        spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );   // transparent at bottom
+        spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );  // glowing green
+        spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 60 ) ); // orange near top
+        spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 80 ) );  // red at top
 
         painter.fillPath ( spectrumPath, spectrumGrad );
 
         // Draw a thin outline to make it look extremely sharp and premium
-        const QColor colSpectrumLine = bDarkTheme ? QColor ( 48, 230, 75, 120 ) : QColor ( 60, 220, 90, 100 );
+        const QColor colSpectrumLine = QColor ( 48, 230, 75, 120 );
         painter.setPen ( QPen ( colSpectrumLine, 1.0, Qt::SolidLine ) );
         painter.setBrush ( Qt::NoBrush );
 
@@ -592,6 +574,65 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         bEffectiveCurveDirty   = false;
     }
 
+    // --- Individual band curves ---
+    if ( !bEQBypassed )
+    {
+        const int   iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
+        constexpr int kStepSize = 6;
+        const float fZeroY    = DbToYf ( 0.0f );
+
+        for ( int iBand = 0; iBand < kNumBands; ++iBand )
+        {
+            if ( std::abs ( afBandGainDb[iBand] ) < 0.05f )
+            {
+                continue;
+            }
+
+            const QColor colBand = GetBandColor ( iBand );
+
+            // Build filled path (starts and ends at the 0 dB center line)
+            QPainterPath fillPath;
+            fillPath.moveTo ( r.left(), fZeroY );
+
+            // Build stroke outline path
+            QPainterPath strokePath;
+            const float fStartDb = EvalBandMagnitudeDb ( iBand, afBandGainDb[iBand], XToFreq ( r.left() ) );
+            strokePath.moveTo ( r.left(), DbToYf ( fStartDb ) );
+
+            for ( int iX = 0; iX < iWidth; iX += kStepSize )
+            {
+                const float fX      = r.left() + static_cast<float> ( iX );
+                const float fFreqHz = XToFreq ( fX );
+                const float fDb     = EvalBandMagnitudeDb ( iBand, afBandGainDb[iBand], fFreqHz );
+                const float fY      = DbToYf ( fDb );
+
+                fillPath.lineTo ( fX, fY );
+                if ( iX > 0 )
+                {
+                    strokePath.lineTo ( fX, fY );
+                }
+            }
+
+            const float fEndDb = EvalBandMagnitudeDb ( iBand, afBandGainDb[iBand], XToFreq ( r.right() ) );
+            const float fEndY  = DbToYf ( fEndDb );
+            fillPath.lineTo ( r.right(), fEndY );
+            fillPath.lineTo ( r.right(), fZeroY );
+            fillPath.closeSubpath();
+
+            strokePath.lineTo ( r.right(), fEndY );
+
+            // Render fill with soft opacity (e.g. ~10% for dark/light themes)
+            const QColor colFill = QColor ( colBand.red(), colBand.green(), colBand.blue(), 25 );
+            painter.fillPath ( fillPath, colFill );
+
+            // Render outline with medium opacity (e.g. ~35%)
+            const QColor colOutline = QColor ( colBand.red(), colBand.green(), colBand.blue(), 90 );
+            painter.setPen ( QPen ( colOutline, 1.0, Qt::SolidLine ) );
+            painter.setBrush ( Qt::NoBrush );
+            painter.drawPath ( strokePath );
+        }
+    }
+
     const QVector<QPointF>& vecStaticCurve    = vecStaticCurveCache;
     const QVector<QPointF>& vecEffectiveCurve = vecEffectiveCurveCache;
 
@@ -613,7 +654,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
         fillPath.closeSubpath();
 
-        const QColor colFill = bDarkTheme ? QColor ( 255, 140, 40, 50 ) : QColor ( 220, 100, 20, 40 );
+        const QColor colFill = QColor ( 255, 140, 40, 50 );
         painter.fillPath ( fillPath, colFill );
     }
 
@@ -628,7 +669,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             staticPath.lineTo ( vecStaticCurve[i] );
         }
 
-        const QColor colStatic = bDarkTheme ? QColor ( 54, 207, 255, 70 ) : QColor ( 50, 150, 200, 60 );
+        const QColor colStatic = QColor ( 54, 207, 255, 70 );
         painter.setPen ( QPen ( colStatic, 1.2 ) );
         painter.setBrush ( Qt::NoBrush );
         painter.drawPath ( staticPath );
@@ -650,7 +691,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             areaPath.lineTo ( vecEffectiveCurve.last().x(), fZeroY );
             areaPath.closeSubpath();
 
-            const QColor colAreaAbove = bDarkTheme ? QColor ( 54, 207, 255, 22 ) : QColor ( 50, 150, 200, 18 );
+            const QColor colAreaAbove = QColor ( 54, 207, 255, 22 );
             painter.fillPath ( areaPath, colAreaAbove );
         }
 
@@ -665,11 +706,11 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         QColor colCurve;
         if ( bEQBypassed )
         {
-            colCurve = bDarkTheme ? QColor ( 100, 105, 115 ) : QColor ( 170, 175, 180 );
+            colCurve = QColor ( 100, 105, 115 );
         }
         else
         {
-            colCurve = bDarkTheme ? QColor ( 54, 207, 255 ) : QColor ( 50, 150, 200 );
+            colCurve = QColor ( 54, 207, 255 );
         }
         painter.setPen ( QPen ( colCurve, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
         painter.setBrush ( Qt::NoBrush );
@@ -683,12 +724,16 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const float fNy = DbToYf ( afBandGainDb[iBand] );
 
         const bool bSelected = ( iBand == iSelectedBand );
-        const int  iRad      = ( bSelected && !bEQBypassed ) ? kNodeRadius + 2 : kNodeRadius;
+        const bool bHovered  = ( iBand == iTooltipBand );
+        const int  iRad      = ( ( bSelected || bHovered ) && !bEQBypassed ) ? kNodeRadius + 2 : kNodeRadius;
+
+        // Per-band color
+        const QColor colBand = GetBandColor ( iBand );
 
         // Glow for selected node
         if ( bSelected && !bEQBypassed )
         {
-            const QColor colGlow = QColor ( 255, 69, 0, 80 );
+            const QColor colGlow ( colBand.red(), colBand.green(), colBand.blue(), 80 );
             painter.setPen ( Qt::NoPen );
             painter.setBrush ( colGlow );
             painter.drawEllipse ( QPointF ( fNx, fNy ), iRad + 3, iRad + 3 );
@@ -703,18 +748,26 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
                 const float fX1    = FreqToXf ( fFreqL );
                 const float fX2    = FreqToXf ( fFreqR );
 
-                const QColor colBandwidth = QColor ( 255, 140, 0, 30 );
-                painter.setPen ( QPen ( QColor ( 255, 140, 0, 150 ), 1.0, Qt::DashLine ) );
+                const QColor colBandwidth ( colBand.red(), colBand.green(), colBand.blue(), 30 );
+                painter.setPen ( QPen ( QColor ( colBand.red(), colBand.green(), colBand.blue(), 150 ), 1.0, Qt::DashLine ) );
                 painter.setBrush ( colBandwidth );
                 painter.drawRoundedRect ( QRectF ( fX1, fNy - 5, fX2 - fX1, 10 ), 5, 5 );
             }
+        }
+        else if ( bHovered && !bEQBypassed )
+        {
+            // Subtle glow for hover
+            const QColor colGlow ( colBand.red(), colBand.green(), colBand.blue(), 40 );
+            painter.setPen ( Qt::NoPen );
+            painter.setBrush ( colGlow );
+            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad + 2, iRad + 2 );
         }
 
         // Gain reduction indicator: vertical line from static to effective
         if ( afBandGainReductionDb[iBand] > 0.05f && !bEQBypassed )
         {
             const float  fEy   = DbToYf ( afBandGainDb[iBand] - afBandGainReductionDb[iBand] );
-            const QColor colGR = bDarkTheme ? QColor ( 255, 140, 40, 180 ) : QColor ( 220, 100, 20, 160 );
+            const QColor colGR = QColor ( 255, 140, 40, 180 );
             painter.setPen ( QPen ( colGR, 2.5, Qt::SolidLine, Qt::RoundCap ) );
             painter.drawLine ( QPointF ( fNx, fNy ), QPointF ( fNx, fEy ) );
 
@@ -724,20 +777,20 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             painter.drawEllipse ( QPointF ( fNx, fEy ), 3, 3 );
         }
 
-        // Node circle
+        // Node circle — per-band color
         QColor colNode;
         if ( bEQBypassed )
         {
-            colNode = bDarkTheme ? QColor ( 80, 85, 95 ) : QColor ( 180, 185, 190 );
+            colNode = QColor ( 80, 85, 95 );
         }
         else
         {
-            colNode = QColor ( 255, 140, 0 );
+            colNode = colBand;
         }
 
         if ( bEQBypassed )
         {
-            const QColor colBorder = bDarkTheme ? QColor ( 20, 22, 26 ) : QColor ( 255, 255, 255 );
+            const QColor colBorder = QColor ( 20, 22, 26 );
             painter.setPen ( QPen ( colBorder, 1 ) );
             painter.setBrush ( colNode );
             painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
@@ -793,9 +846,9 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const QRect rectBox ( iBoxX, iBoxY, iBoxW, iBoxH );
 
         // Render box background and border based on theme
-        const QColor colBg     = bDarkTheme ? QColor ( 32, 35, 40 ) : QColor ( 250, 250, 250 );
-        const QColor colBorder = bDarkTheme ? QColor ( 74, 79, 87 ) : QColor ( 184, 190, 200 );
-        const QColor colText   = bDarkTheme ? QColor ( 238, 241, 245 ) : QColor ( 28, 30, 34 );
+        const QColor colBg     = QColor ( 32, 35, 40 );
+        const QColor colBorder = QColor ( 74, 79, 87 );
+        const QColor colText   = QColor ( 238, 241, 245 );
 
         painter.setPen ( QPen ( colBorder, 1 ) );
         painter.setBrush ( colBg );
@@ -855,13 +908,6 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
         float     fDist = 0.0f;
         const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
 
-        if ( iB >= 0 && fDist <= kHitRadius && iB != iSelectedBand )
-        {
-            iSelectedBand = iB;
-            emit bandSelected ( iB );
-            update();
-        }
-
         if ( iB >= 0 && fDist <= kHitRadius )
         {
             UpdateBandTooltip ( iB );
@@ -880,15 +926,15 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 
         // --- 1. Handle Gain Dragging (Vertical) ---
         const float fDb = YToDb ( pEvent->pos().y() );
-        const int   iClampedDb =
-            std::max ( static_cast<int> ( kGainMinDb ), std::min ( static_cast<int> ( kGainMaxDb ), static_cast<int> ( std::round ( fDb ) ) ) );
+        const float fClampedDb =
+            std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
 
-        if ( static_cast<int> ( std::round ( afBandGainDb[iSelectedBand] ) ) != iClampedDb )
+        if ( std::abs ( afBandGainDb[iSelectedBand] - fClampedDb ) > 0.001f )
         {
-            afBandGainDb[iSelectedBand] = static_cast<float> ( iClampedDb );
+            afBandGainDb[iSelectedBand] = fClampedDb;
             bStaticCurveDirty           = true;
             bEffectiveCurveDirty        = true;
-            emit bandGainChanged ( iSelectedBand, iClampedDb );
+            emit bandGainChanged ( iSelectedBand, fClampedDb );
             bChanged = true;
         }
 
@@ -982,15 +1028,15 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
         return;
     }
 
-    const int iDelta = ( pEvent->angleDelta().y() > 0 ) ? 1 : -1;
-    const int iNewDb =
-        std::max ( static_cast<int> ( kGainMinDb ),
-                   std::min ( static_cast<int> ( kGainMaxDb ), static_cast<int> ( std::round ( afBandGainDb[iSelectedBand] ) ) + iDelta ) );
+    const float fDelta = ( pEvent->angleDelta().y() > 0 ) ? 0.1f : -0.1f;
+    const float fNewDb =
+        std::max ( kGainMinDb,
+                   std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
 
-    afBandGainDb[iSelectedBand] = static_cast<float> ( iNewDb );
+    afBandGainDb[iSelectedBand] = fNewDb;
     bStaticCurveDirty           = true;
     bEffectiveCurveDirty        = true;
-    emit bandGainChanged ( iSelectedBand, iNewDb );
+    emit bandGainChanged ( iSelectedBand, fNewDb );
     UpdateBandTooltip ( iSelectedBand );
     update();
 }
