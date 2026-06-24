@@ -413,7 +413,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     const QRectF r = PlotRect();
 
-    // --- Background ---
+    // Background
     const QColor colBg   = GetControlPalette ( bDarkTheme ).background;
     const QColor colGrid = QColor ( 48, 52, 58 );
     const QColor colZero = QColor ( 72, 78, 86 );
@@ -421,11 +421,11 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     painter.fillRect ( rect(), colBg );
 
-    // --- Plot area background ---
+    // Plot area background
     const QColor colPlotBg = QColor ( 20, 20, 22 );
     painter.fillRect ( r.toRect(), colPlotBg );
 
-    // --- Grid: horizontal dB lines ---
+    // Grid: horizontal dB lines
     painter.setPen ( QPen ( colGrid, 1 ) );
     const QFont fontSmall = QFont ( "Inter", 8 );
     painter.setFont ( fontSmall );
@@ -454,7 +454,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
     }
 
-    // --- Grid: vertical frequency lines ---
+    // Grid: vertical frequency lines
     const float afGridFreqs[] = { 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 };
     const int   iGridCount    = sizeof ( afGridFreqs ) / sizeof ( afGridFreqs[0] );
 
@@ -480,7 +480,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         painter.drawText ( QRectF ( fX - 20, r.bottom() + 2, 40, 20 ), Qt::AlignHCenter | Qt::AlignTop, strLabel );
     }
 
-    // --- Draw spectrum overlay in the background ---
+    // Draw spectrum overlay in the background
     bool bAnySpectrum = false;
     for ( int i = 0; i < kNumSpectrumBands; ++i )
     {
@@ -510,7 +510,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         spectrumPath.lineTo ( FreqToXf ( kFreqMax ), r.bottom() );
         spectrumPath.closeSubpath();
 
-        // Create a beautiful, semi-transparent glowing gradient matching the level colors
+        // Create a semi-transparent glowing gradient matching the level colors
         QLinearGradient spectrumGrad ( r.left(), r.bottom(), r.left(), r.top() );
         spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );   // transparent at bottom
         spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );  // glowing green
@@ -519,7 +519,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
         painter.fillPath ( spectrumPath, spectrumGrad );
 
-        // Draw a thin outline to make it look extremely sharp and premium
+        // Draw thin outline
         const QColor colSpectrumLine = QColor ( 48, 230, 75, 120 );
         painter.setPen ( QPen ( colSpectrumLine, 1.0, Qt::SolidLine ) );
         painter.setBrush ( Qt::NoBrush );
@@ -535,7 +535,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         painter.drawPath ( linePath );
     }
 
-    // --- Compute and draw response curves ---
+    // Compute and draw response curves
     if ( bStaticCurveDirty )
     {
         ComputeResponseCurve ( afBandGainDb, vecStaticCurveCache );
@@ -574,7 +574,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         bEffectiveCurveDirty   = false;
     }
 
-    // --- Individual band curves ---
+    // Individual band curves
     if ( !bEQBypassed )
     {
         const int     iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
@@ -658,7 +658,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         painter.fillPath ( fillPath, colFill );
     }
 
-    // Draw static curve (thin, subdued)
+    // Draw static curve
     if ( bAnyReduction && vecStaticCurve.size() > 1 )
     {
         QPainterPath staticPath;
@@ -717,7 +717,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         painter.drawPath ( effectivePath );
     }
 
-    // --- Band nodes ---
+    // Band nodes
     for ( int iBand = 0; iBand < kNumBands; ++iBand )
     {
         const float fNx = FreqToXf ( afBandFrequencies[iBand] );
@@ -803,12 +803,12 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
     }
 
-    // --- Plot area border ---
+    // Plot area border
     painter.setPen ( QPen ( colGrid, 1 ) );
     painter.setBrush ( Qt::NoBrush );
     painter.drawRect ( r );
 
-    // --- Draw custom canvas tooltip ---
+    // Draw custom canvas tooltip
     if ( iTooltipBand >= 0 && iTooltipBand < kNumBands && !bEQBypassed )
     {
         const float fNx = FreqToXf ( afBandFrequencies[iTooltipBand] );
@@ -924,7 +924,7 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
     {
         bool bChanged = false;
 
-        // --- 1. Handle Gain Dragging (Vertical) ---
+        // Handle Gain Dragging (Vertical)
         const float fDb        = YToDb ( pEvent->pos().y() );
         const float fClampedDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
 
@@ -937,7 +937,7 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
             bChanged = true;
         }
 
-        // --- 2. Handle Frequency Dragging (Horizontal) ---
+        // Handle Frequency Dragging (Horizontal)
         const float fFreqHz = XToFreq ( pEvent->pos().x() );
 
         // Prevent band crossover with a 10% dynamic safety margin:

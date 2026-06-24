@@ -31,12 +31,12 @@ inline QColor GetBandColor ( const int iBand )
     // 8 colors for the 8 EQ bands
     static const QColor aBandColors[8] = {
         QColor ( 102, 217, 73 ),  // Band 0: green
-        QColor ( 100, 180, 255 ), // Band 1: light blue
+        QColor ( 235, 60, 55 ),   // Band 1: red
         QColor ( 255, 210, 60 ),  // Band 2: yellow
         QColor ( 230, 80, 180 ),  // Band 3: magenta / pink
-        QColor ( 255, 130, 80 ),  // Band 4: coral / orange
+        QColor ( 190, 230, 60 ),  // Band 4: lime / yellow-green
         QColor ( 140, 120, 255 ), // Band 5: purple / indigo
-        QColor ( 190, 230, 60 ),  // Band 6: lime / yellow-green
+        QColor ( 255, 130, 80 ),  // Band 6: coral / orange
         QColor ( 80, 210, 220 ),  // Band 7: cyan / teal
     };
 
