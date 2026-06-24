@@ -333,13 +333,15 @@ void CChannelFader::ApplyMeterStyle()
 {
     const EMeterStyle activeMeterStyle = ( eDesign == GD_SLIMFADER ) ? MT_BAR_NARROW : eMeterStyle;
 
-    // Mixer meters are bar-only: only MT_BAR_NARROW maps to narrow, everything else maps to wide.
+    // Remove any previous maximum constraint (common to both styles).
+    plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
+    pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
+
+    // Mixer meters are bar-only: MT_BAR_NARROW maps to narrow, everything else maps to wide.
     if ( activeMeterStyle == MT_BAR_NARROW )
     {
         const int iControlHeight = 85;
         plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_NARROW );
-        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
-        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
         plbrChannelLevel->setMinimumHeight ( iControlHeight );
         pFader->setMinimumHeight ( iControlHeight );
     }
@@ -347,8 +349,6 @@ void CChannelFader::ApplyMeterStyle()
     {
         const int iControlHeight = 120;
         plbrChannelLevel->SetLevelMeterType ( CLevelMeter::MT_BAR_WIDE );
-        plbrChannelLevel->setMaximumHeight ( QWIDGETSIZE_MAX );
-        pFader->setMaximumHeight ( QWIDGETSIZE_MAX );
         plbrChannelLevel->setMinimumHeight ( iControlHeight );
         pFader->setMinimumHeight ( iControlHeight );
     }
@@ -362,26 +362,6 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
 
     switch ( eNewDesign )
     {
-    case GD_STANDARD:
-        pFader->setTickPosition ( QSlider::TicksBothSides );
-        pFader->setStyleSheet ( "" ); // Custom slider handles its own rendering
-        pFader->SetCompactMode ( false );
-        pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
-        pLabelInstBox->setMinimumWidth ( 0 );
-        pLabelInstBox->setMinimumHeight ( 52 ); // maximum height of the instrument+flag pictures
-        pLabelInstBox->setMaximumWidth ( 86 );
-        plblInstrument->setFixedWidth ( 35 );
-        plblInstrument->setAlignment ( Qt::AlignCenter );
-        plblCountryFlag->setFixedWidth ( 35 );
-        plblCountryFlag->setAlignment ( Qt::AlignCenter );
-        pPan->setFixedSize ( 45, 45 );
-        pPanLabel->setText ( tr ( "Pan" ) );
-        pcbMute->setText ( tr ( "Mute" ) );
-        pcbSolo->setText ( tr ( "Solo" ) );
-        strGroupBaseText  = tr ( "Grp" );
-        iInstrPicMaxWidth = INVALID_INDEX; // no instrument picture scaling
-        break;
-
     case GD_SLIMFADER:
         pLabelPictGrid->addWidget ( plblLabel, 0, Qt::AlignHCenter ); // label below icons
         pLabelInstBox->setMinimumWidth ( 38 );
@@ -402,10 +382,10 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         iInstrPicMaxWidth = 23; // scale instrument picture to avoid enlarging the width by the picture
         break;
 
+    case GD_STANDARD:
     default:
-        // reset style sheet and set original parameters
         pFader->setTickPosition ( QSlider::TicksBothSides );
-        pFader->setStyleSheet ( "" );
+        pFader->setStyleSheet ( "" ); // Custom slider handles its own rendering
         pFader->SetCompactMode ( false );
         pLabelGrid->addWidget ( plblLabel, 0, Qt::AlignVCenter ); // label next to icons
         pLabelInstBox->setMinimumWidth ( 0 );
@@ -424,13 +404,11 @@ void CChannelFader::SetGUIDesign ( const EGUIDesign eNewDesign )
         break;
     }
 
-    // we need to update since we changed the checkbox text
-    UpdateGroupIDDependencies();
-
     // the instrument picture might need scaling after a style change
+    // (SetChannelInfos internally calls UpdateGroupIDDependencies)
     SetChannelInfos ( cReceivedChanInfo );
 
-    // Defer a second pass to let layouts settle before sizing the buttons.
+    // Defer a second pass so layouts settle before final button sizing.
     QTimer::singleShot ( 0, pFrame, [this] { UpdateGroupIDDependencies(); } );
 }
 
@@ -446,19 +424,8 @@ bool CChannelFader::GetDisplayChannelLevel() { return !plbrChannelLevel->isHidde
 
 void CChannelFader::SetDisplayPans ( const bool eNDP )
 {
-    if ( eNDP )
-    {
-        pPanLabel->setVisible ( true );
-        pPan->setVisible ( true );
-        pPan->setEnabled ( true );
-        pPanLabel->setText ( tr ( "Pan" ) );
-    }
-    else
-    {
-        pPanLabel->setVisible ( false );
-        pPan->setVisible ( false );
-        pPan->setEnabled ( false );
-    }
+    pPanLabel->setVisible ( eNDP );
+    pPan->setVisible ( eNDP );
 }
 
 void CChannelFader::SetupFaderTag ( const ESkillLevel eSkillLevel )
@@ -764,15 +731,7 @@ void CChannelFader::UpdateGroupIDDependencies()
     }
 
     // Match GRP/MUTE/SOLO controls to the info-box width.
-    const int iButtonWidth = GetMuteSoloButtonWidthHint();
-
-    pcbGroup->setFixedWidth ( iButtonWidth );
-    pcbMute->setFixedWidth ( iButtonWidth );
-    pcbSolo->setFixedWidth ( iButtonWidth );
-    pcbGroup->setFixedHeight ( 25 );
-    pcbMute->setFixedHeight ( 25 );
-    pcbSolo->setFixedHeight ( 25 );
-    pMuteSoloBox->setFixedWidth ( iButtonWidth );
+    SetMuteSoloButtonWidth ( GetMuteSoloButtonWidthHint() );
 
     // if the group is disable for this fader, reset the previous fader level
     if ( iGroupID == INVALID_INDEX )
@@ -1588,6 +1547,8 @@ void CAudioMixerBoard::ApplyNewConClientList ( CVector<CChannelInfo>& vecChanInf
     ChangeFaderOrder ( eChSortType );
 
     // Keep GRP/MUTE/SOLO button widths consistent across all visible strips.
+    // Call once now for immediate visual correctness, then again deferred
+    // so that layouts have settled before final sizing.
     NormalizeVisibleFaderButtonWidths();
     QTimer::singleShot ( 0, this, [this] { NormalizeVisibleFaderButtonWidths(); } );
 
