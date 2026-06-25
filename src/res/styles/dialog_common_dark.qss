@@ -95,7 +95,8 @@ QPushButton:disabled {
     border: 1px solid rgb(96, 96, 100);
 }
 
-QPushButton:hover {
+QPushButton:hover,
+QPushButton:checked {
     border: 2px solid rgb(75, 213, 248);
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 rgb(62, 62, 66),

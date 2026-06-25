@@ -646,7 +646,16 @@ class CEffectsDlg : public CBaseDlg, private Ui_CEffectsDlgBase
     Q_OBJECT
 
 public:
+    enum EEffectsContext
+    {
+        EC_INPUT,
+        EC_OUTPUT
+    };
+
     CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent = nullptr );
+
+    EEffectsContext GetContext() const { return eCurrentContext; }
+    void SetContext ( EEffectsContext eContext );
 
     void UpdateReverbControls();
     void UpdateCompressorControls();
@@ -692,6 +701,73 @@ private:
     CGRMeter*           pGRMeter           = nullptr;
     CCompCurveWidget*   pCompCurveWidget   = nullptr;
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
+    EEffectsContext     eCurrentContext    = EC_INPUT;
+
+    // Context-aware settings helpers
+    CVector<QString>& GetEffectsPresetNames() const { return pSettings->vstrEffectsPresetNames[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
+    int& GetSelectedEffectsPreset() const { return pSettings->iSelectedEffectsPreset[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
+    CVector<QString>& GetEQPresetNames() const { return eCurrentContext == EC_INPUT ? pSettings->vstrEQPresetNames : pSettings->vstrOutEQPresetNames; }
+    int& GetSelectedEQPreset() const { return pSettings->iSelectedEQPreset[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
+
+public:
+    // Context-aware client parameters getters & setters
+    int   GetReverbLevel() const { return pClient ? pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbLevel ( int iNL ) { if ( pClient ) { pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) = iNL; } }
+    bool  IsReverbOnLeftChan() const { return pClient ? pClient->GetReverbOnLeftChan ( eCurrentContext == EC_OUTPUT ) : false; }
+    void  SetReverbOnLeftChan ( bool bOnLeft ) { if ( pClient ) { pClient->GetReverbOnLeftChan ( eCurrentContext == EC_OUTPUT ) = bOnLeft; } }
+    int   GetReverbPreDelayMs() const { return pClient ? pClient->GetReverbPreDelayMs ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbPreDelayMs ( int iMs ) { if ( pClient ) { pClient->GetReverbPreDelayMs ( eCurrentContext == EC_OUTPUT ) = iMs; } }
+    int   GetReverbRoomSize() const { return pClient ? pClient->GetReverbRoomSize ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbRoomSize ( int iValue ) { if ( pClient ) { pClient->GetReverbRoomSize ( eCurrentContext == EC_OUTPUT ) = iValue; } }
+    int   GetReverbDamping() const { return pClient ? pClient->GetReverbDamping ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbDamping ( int iValue ) { if ( pClient ) { pClient->GetReverbDamping ( eCurrentContext == EC_OUTPUT ) = iValue; } }
+    int   GetReverbWetMix() const { return pClient ? pClient->GetReverbWetMix ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbWetMix ( int iValue ) { if ( pClient ) { pClient->GetReverbWetMix ( eCurrentContext == EC_OUTPUT ) = iValue; } }
+    int   GetReverbEarlyLevel() const { return pClient ? pClient->GetReverbEarlyLevel ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbEarlyLevel ( int iValue ) { if ( pClient ) { pClient->GetReverbEarlyLevel ( eCurrentContext == EC_OUTPUT ) = iValue; } }
+    bool  GetReverbEarlyEnabled() const { return pClient ? pClient->GetReverbEarlyEnabled ( eCurrentContext == EC_OUTPUT ) : false; }
+    void  SetReverbEarlyEnabled ( bool bEnabled ) { if ( pClient ) { pClient->GetReverbEarlyEnabled ( eCurrentContext == EC_OUTPUT ) = bEnabled; } }
+    int   GetReverbWidth() const { return pClient ? pClient->GetReverbWidth ( eCurrentContext == EC_OUTPUT ) : 0; }
+    void  SetReverbWidth ( int iValue ) { if ( pClient ) { pClient->GetReverbWidth ( eCurrentContext == EC_OUTPUT ) = iValue; } }
+    bool  GetReverbFreeze() const { return pClient ? pClient->GetReverbFreeze ( eCurrentContext == EC_OUTPUT ) : false; }
+    void  SetReverbFreeze ( bool bEnabled ) { if ( pClient ) { pClient->GetReverbFreeze ( eCurrentContext == EC_OUTPUT ) = bEnabled; } }
+    bool  GetReverbBypass() const { return pClient ? pClient->GetReverbBypass ( eCurrentContext == EC_OUTPUT ) : true; }
+    void  SetReverbBypass ( bool bBypass ) { if ( pClient ) { pClient->GetReverbBypass ( eCurrentContext == EC_OUTPUT ) = bBypass; } }
+
+    bool  GetCompressorBypass() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetBypass() : true; }
+    void  SetCompressorBypass ( bool bBypass ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetBypass ( bBypass ); } }
+    float GetCompressorThresholdDb() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetThresholdDb() : 0.0f; }
+    void  SetCompressorThresholdDb ( float fDb ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetThresholdDb ( fDb ); } }
+    float GetCompressorRatio() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetRatio() : 1.0f; }
+    void  SetCompressorRatio ( float fValue ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetRatio ( fValue ); } }
+    float GetCompressorAttackMs() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetAttackMs() : 1.0f; }
+    void  SetCompressorAttackMs ( float fMs ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetAttackMs ( fMs ); } }
+    float GetCompressorReleaseMs() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetReleaseMs() : 1.0f; }
+    void  SetCompressorReleaseMs ( float fMs ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetReleaseMs ( fMs ); } }
+    float GetCompressorMakeupDb() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetMakeupDb() : 0.0f; }
+    void  SetCompressorMakeupDb ( float fDb ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetMakeupDb ( fDb ); } }
+    bool  GetCompressorLimiterEnabled() const { return pClient ? pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).GetLimiterEnabled() : false; }
+    void  SetCompressorLimiterEnabled ( bool bEnabled ) { if ( pClient ) { pClient->GetCompressor ( eCurrentContext == EC_OUTPUT ).SetLimiterEnabled ( bEnabled ); } }
+
+    bool  GetEQBypass() const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBypass() : true; }
+    void  SetEQBypass ( bool bNBypass ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBypass ( bNBypass ); } }
+    float GetEQBandGainDb ( int iBandIndex ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandGainDb ( iBandIndex ) : 0.0f; }
+    void  SetEQBandGainDb ( int iBandIndex, float fGainDb ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandGainDb ( iBandIndex, fGainDb ); } }
+    float GetEQBandFrequency ( int iBandIndex ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandFrequency ( iBandIndex ) : 0.0f; }
+    void  SetEQBandFrequency ( int iBandIndex, float fFreqHz ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandFrequency ( iBandIndex, fFreqHz ); } }
+    float GetEQBandQ ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandQ ( iBand ) : 1.0f; }
+    void  SetEQBandQ ( int iBand, float fQ ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandQ ( iBand, fQ ); } }
+    bool  GetEQBandDynEnabled ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynEnabled ( iBand ) : false; }
+    void  SetEQBandDynEnabled ( int iBand, bool bEnabled ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynEnabled ( iBand, bEnabled ); } }
+    float GetEQBandDynThresholdDb ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynThresholdDb ( iBand ) : -20.0f; }
+    void  SetEQBandDynThresholdDb ( int iBand, float fDb ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynThresholdDb ( iBand, fDb ); } }
+    float GetEQBandDynRatio ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynRatio ( iBand ) : 4.0f; }
+    void  SetEQBandDynRatio ( int iBand, float fRatio ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynRatio ( iBand, fRatio ); } }
+    float GetEQBandDynAttackMs ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynAttackMs ( iBand ) : 5.0f; }
+    void  SetEQBandDynAttackMs ( int iBand, float fMs ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynAttackMs ( iBand, fMs ); } }
+    float GetEQBandDynReleaseMs ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynReleaseMs ( iBand ) : 80.0f; }
+    void  SetEQBandDynReleaseMs ( int iBand, float fMs ) { if ( pClient ) { pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynReleaseMs ( iBand, fMs ); } }
+    float GetEQBandGainReductionDb ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandGainReductionDb ( iBand ) : 0.0f; }
 
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
@@ -708,6 +784,8 @@ private:
     void UpdateEQDynControls ( const int iBand );
 
 private slots:
+    void OnContextInputClicked();
+    void OnContextOutputClicked();
 
     void OnResetReverbClicked();
     void OnResetCompressorClicked();

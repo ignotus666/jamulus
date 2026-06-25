@@ -15,6 +15,30 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayoutMain">
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayoutContextToggle">
+     <item>
+      <widget class="QPushButton" name="pButContextInput">
+       <property name="text">
+        <string>Input (to server)</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pButContextOutput">
+       <property name="text">
+        <string>Output (monitor)</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayoutEffectsPresetRow">
      <item>
       <widget class="QLabel" name="pLblEffectsPreset">

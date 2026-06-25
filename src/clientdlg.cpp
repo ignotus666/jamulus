@@ -326,9 +326,10 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
         bool bHasPreset = false;
 
+        const int ctx = ( EffectsDlg.GetContext() == CEffectsDlg::EC_OUTPUT ) ? 1 : 0;
         for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
         {
-            const QString strName = pSettings->vstrEffectsPresetNames[iPreset];
+            const QString strName = pSettings->vstrEffectsPresetNames[ctx][iPreset];
             if ( strName.isEmpty() )
             {
                 continue;
@@ -638,11 +639,11 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbWidthChanged, this, &CClientDlg::OnReverbWidthChanged );
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbLeftSelected, this, [this] {
-        pClient->SetReverbOnLeftChan ( true );
+        EffectsDlg.SetReverbOnLeftChan ( true );
         UpdateRevSelection();
     } );
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbRightSelected, this, [this] {
-        pClient->SetReverbOnLeftChan ( false );
+        EffectsDlg.SetReverbOnLeftChan ( false );
         UpdateRevSelection();
     } );
     QObject::connect ( &EffectsDlg, &CEffectsDlg::ReverbEarlyEnabledChanged, this, &CClientDlg::OnReverbEarlyEnabledChanged );
@@ -665,7 +666,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
 
     QObject::connect ( &EffectsDlg, &CEffectsDlg::CompressorLimiterChanged, this, &CClientDlg::OnCompressorLimiterChanged );
 
-    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { pClient->SetEQBypass ( bBypassed ); } );
+    QObject::connect ( &EffectsDlg, &CEffectsDlg::EQBypassChanged, this, [this] ( bool bBypassed ) { EffectsDlg.SetEQBypass ( bBypassed ); } );
 
     // other
     QObject::connect ( pClient, &CClient::ConClientListMesReceived, this, &CClientDlg::OnConClientListMesReceived );
@@ -1270,11 +1271,22 @@ void CClientDlg::OnTimerSigMet()
 
     if ( EffectsDlg.isVisible() )
     {
-        CVector<float> vecOutLevels;
-        pClient->GetOutputBandLevels ( vecOutLevels );
-        EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
-        EffectsDlg.UpdateCompressorGainReduction ( pClient->GetCompressorGainReductionDb(), pClient->GetCompressorInputLevelDb() );
-        EffectsDlg.UpdateReverbOutputLevel ( pClient->GetReverbOutputLevelDb() );
+        const bool bIsOutput = ( EffectsDlg.GetContext() == CEffectsDlg::EC_OUTPUT );
+        if ( !bIsOutput )
+        {
+            CVector<float> vecInLevels;
+            pClient->GetInputBandLevels ( vecInLevels );
+            EffectsDlg.UpdateOutputBandLevels ( vecInLevels );
+        }
+        else
+        {
+            CVector<float> vecOutLevels;
+            pClient->GetOutputBandLevels ( vecOutLevels );
+            EffectsDlg.UpdateOutputBandLevels ( vecOutLevels );
+        }
+        EffectsDlg.UpdateCompressorGainReduction ( pClient->GetCompressor ( bIsOutput ).GetGainReductionDb(),
+                                                   pClient->GetCompressor ( bIsOutput ).GetInputLevelDb() );
+        EffectsDlg.UpdateReverbOutputLevel ( pClient->GetReverb ( bIsOutput ).GetReverbOutputLevelDb() );
     }
 
     if ( bDetectFeedback &&
@@ -1607,49 +1619,49 @@ void CClientDlg::SetGUIDesign ( const EGUIDesign eNewDesign )
 
 void CClientDlg::OnAudioReverbValueChanged ( int value )
 {
-    pClient->SetReverbLevel ( value );
+    EffectsDlg.SetReverbLevel ( value );
     EffectsDlg.UpdateReverbControls();
 }
 
-void CClientDlg::OnReverbPreDelayChanged ( int value ) { pClient->SetReverbPreDelayMs ( value ); }
+void CClientDlg::OnReverbPreDelayChanged ( int value ) { EffectsDlg.SetReverbPreDelayMs ( value ); }
 
-void CClientDlg::OnReverbRoomSizeChanged ( int value ) { pClient->SetReverbRoomSize ( value ); }
+void CClientDlg::OnReverbRoomSizeChanged ( int value ) { EffectsDlg.SetReverbRoomSize ( value ); }
 
-void CClientDlg::OnReverbDampingChanged ( int value ) { pClient->SetReverbDamping ( value ); }
+void CClientDlg::OnReverbDampingChanged ( int value ) { EffectsDlg.SetReverbDamping ( value ); }
 
-void CClientDlg::OnReverbWetMixChanged ( int value ) { pClient->SetReverbWetMix ( value ); }
+void CClientDlg::OnReverbWetMixChanged ( int value ) { EffectsDlg.SetReverbWetMix ( value ); }
 
-void CClientDlg::OnReverbEarlyLevelChanged ( int value ) { pClient->SetReverbEarlyLevel ( value ); }
+void CClientDlg::OnReverbEarlyLevelChanged ( int value ) { EffectsDlg.SetReverbEarlyLevel ( value ); }
 
-void CClientDlg::OnReverbWidthChanged ( int value ) { pClient->SetReverbWidth ( value ); }
+void CClientDlg::OnReverbWidthChanged ( int value ) { EffectsDlg.SetReverbWidth ( value ); }
 
-void CClientDlg::OnReverbEarlyEnabledChanged ( bool enabled ) { pClient->SetReverbEarlyEnabled ( enabled ); }
+void CClientDlg::OnReverbEarlyEnabledChanged ( bool enabled ) { EffectsDlg.SetReverbEarlyEnabled ( enabled ); }
 
-void CClientDlg::OnReverbFreezeChanged ( bool enabled ) { pClient->SetReverbFreeze ( enabled ); }
+void CClientDlg::OnReverbFreezeChanged ( bool enabled ) { EffectsDlg.SetReverbFreeze ( enabled ); }
 
 void CClientDlg::OnReverbBypassChanged ( bool bypassed )
 {
-    pClient->SetReverbBypass ( bypassed );
+    EffectsDlg.SetReverbBypass ( bypassed );
     EffectsDlg.UpdateReverbControls();
 }
 
 void CClientDlg::OnCompressorBypassChanged ( bool bypassed )
 {
-    pClient->SetCompressorBypass ( bypassed );
+    EffectsDlg.SetCompressorBypass ( bypassed );
     EffectsDlg.UpdateCompressorControls();
 }
 
-void CClientDlg::OnCompressorThresholdChanged ( int value ) { pClient->SetCompressorThresholdDb ( static_cast<float> ( value ) ); }
+void CClientDlg::OnCompressorThresholdChanged ( int value ) { EffectsDlg.SetCompressorThresholdDb ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorRatioChanged ( int value ) { pClient->SetCompressorRatio ( static_cast<float> ( value ) ); }
+void CClientDlg::OnCompressorRatioChanged ( int value ) { EffectsDlg.SetCompressorRatio ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorAttackChanged ( int value ) { pClient->SetCompressorAttackMs ( static_cast<float> ( value ) ); }
+void CClientDlg::OnCompressorAttackChanged ( int value ) { EffectsDlg.SetCompressorAttackMs ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorReleaseChanged ( int value ) { pClient->SetCompressorReleaseMs ( static_cast<float> ( value ) ); }
+void CClientDlg::OnCompressorReleaseChanged ( int value ) { EffectsDlg.SetCompressorReleaseMs ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorMakeupChanged ( int value ) { pClient->SetCompressorMakeupDb ( static_cast<float> ( value ) ); }
+void CClientDlg::OnCompressorMakeupChanged ( int value ) { EffectsDlg.SetCompressorMakeupDb ( static_cast<float> ( value ) ); }
 
-void CClientDlg::OnCompressorLimiterChanged ( bool enabled ) { pClient->SetCompressorLimiterEnabled ( enabled ); }
+void CClientDlg::OnCompressorLimiterChanged ( bool enabled ) { EffectsDlg.SetCompressorLimiterEnabled ( enabled ); }
 
 void CClientDlg::SetMeterStyle ( const EMeterStyle eNewMeterStyle )
 {

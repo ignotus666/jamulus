@@ -92,6 +92,17 @@ CClient::CClient ( const quint16  iPortNumber,
     bReverbEarlyEnabled ( true ),
     bReverbFreeze ( false ),
     bReverbBypass ( true ),
+    bOutReverbOnLeftChan ( false ),
+    iOutReverbLevel ( 0 ),
+    iOutReverbPreDelayMs ( 0 ),
+    iOutReverbRoomSize ( 60 ),
+    iOutReverbDamping ( 30 ),
+    iOutReverbWetMix ( 25 ),
+    iOutReverbEarlyLevel ( 30 ),
+    iOutReverbWidth ( 100 ),
+    bOutReverbEarlyEnabled ( true ),
+    bOutReverbFreeze ( false ),
+    bOutReverbBypass ( true ),
     iInputBoost ( 1 ),
     iSndCrdPrefFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
     iSndCrdFrameSizeFactor ( FRAME_SIZE_FACTOR_DEFAULT ),
@@ -107,6 +118,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bJitterBufferOK ( true ),
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
     bOutputBandLevelsEnabled ( false ),
+    bInputBandLevelsEnabled ( false ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
     bRawAudioIsSupported ( false )
 {
@@ -232,6 +244,11 @@ CClient::CClient ( const quint16  iPortNumber,
     {
         fLevel = 0.0f;
     }
+
+    for ( float& fLevel : afInputBandLevels )
+    {
+        fLevel = 0.0f;
+    }
 }
 
 void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
@@ -242,6 +259,17 @@ void CClient::GetOutputBandLevels ( CVector<float>& vecOutLevels )
     for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
         vecOutLevels[iBand] = afOutputBandLevels[iBand];
+    }
+}
+
+void CClient::GetInputBandLevels ( CVector<float>& vecInLevels )
+{
+    vecInLevels.Init ( NUM_SPECTRUM_BANDS );
+
+    QMutexLocker locker ( &MutexInputBandLevels );
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
+    {
+        vecInLevels[iBand] = afInputBandLevels[iBand];
     }
 }
 
@@ -1376,10 +1404,12 @@ void CClient::Init()
     // set the channel network properties
     Channel.SetAudioStreamProperties ( eAudioCompressionType, iCeltNumCodedBytes, iSndCrdFrameSizeFactor, iNumAudioChannels );
 
-    // init reverberation
     AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
     AudioEqualizer.Init ( SYSTEM_SAMPLE_RATE_HZ );
     AudioCompressor.Init ( SYSTEM_SAMPLE_RATE_HZ );
+    AudioReverbOutput.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
+    AudioEqualizerOutput.Init ( SYSTEM_SAMPLE_RATE_HZ );
+    AudioCompressorOutput.Init ( SYSTEM_SAMPLE_RATE_HZ );
 
     // init the sound card conversion buffers
     if ( bSndCrdConversionBufferRequired )
@@ -1476,6 +1506,8 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
             vecsStereoSndCrd[j]     = static_cast<int16_t> ( iInputBoost * vecsStereoSndCrd[j] );
         }
     }
+
+    UpdateInputBandLevels ( vecsStereoSndCrd );
 
     // update stereo signal level meter (not needed in headless mode)
 #ifndef HEADLESS
@@ -1665,6 +1697,31 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
                 vecsStereoSndCrd[j] = vecsStereoSndCrd[j + 1] = vecsStereoSndCrd[i];
             }
         }
+
+        // Apply output/monitoring effects (EQ -> Compressor -> Reverb)
+        AudioEqualizerOutput.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+        AudioCompressorOutput.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+        if ( !bOutReverbBypass && iOutReverbLevel != 0 )
+        {
+            SReverbParams sParams;
+            sParams.fWet          = static_cast<float> ( iOutReverbWetMix ) / REVERB_WET_MIX_MAX;
+            sParams.fDry          = 1.0f - sParams.fWet;
+            sParams.fEarlyLevel   = static_cast<float> ( iOutReverbEarlyLevel ) / REVERB_EARLY_LEVEL_MAX;
+            sParams.fWidth        = static_cast<float> ( iOutReverbWidth ) / REVERB_WIDTH_MAX;
+            sParams.fDamping      = static_cast<float> ( iOutReverbDamping ) / REVERB_DAMPING_MAX;
+            sParams.iPreDelayMs   = iOutReverbPreDelayMs;
+            sParams.bEarlyEnabled = bOutReverbEarlyEnabled;
+            sParams.bFreeze       = bOutReverbFreeze;
+
+            const float fRoomSize   = static_cast<float> ( iOutReverbRoomSize ) / REVERB_ROOM_SIZE_MAX;
+            sParams.fT60            = 0.3f + 4.2f * fRoomSize;
+            const float fLevelScale = static_cast<float> ( iOutReverbLevel ) / AUD_REVERB_MAX;
+            sParams.fWet *= fLevelScale;
+            sParams.fDry = 1.0f - sParams.fWet;
+            sParams.fEarlyLevel *= fLevelScale;
+
+            AudioReverbOutput.Process ( vecsStereoSndCrd, false, sParams );
+        }
     }
     else
     {
@@ -1741,6 +1798,52 @@ void CClient::UpdateOutputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd 
     for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
         afOutputBandLevels[iBand] = 0.85f * afOutputBandLevels[iBand] + 0.15f * afNewLevels[iBand];
+    }
+}
+
+void CClient::UpdateInputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd )
+{
+    if ( !bInputBandLevelsEnabled )
+    {
+        return;
+    }
+
+    constexpr float fPi = 3.14159265358979323846f;
+
+    if ( iMonoBlockSizeSam <= 0 )
+    {
+        return;
+    }
+
+    float afNewLevels[NUM_SPECTRUM_BANDS] = { 0.0f };
+
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
+    {
+        const float fFreq = GetSpectrumBandFrequency ( iBand );
+        const float omega = 2.0f * fPi * fFreq / SYSTEM_SAMPLE_RATE_HZ;
+        const float coeff = 2.0f * std::cos ( omega );
+
+        float q0 = 0.0f;
+        float q1 = 0.0f;
+        float q2 = 0.0f;
+
+        for ( int i = 0, j = 0; i < iMonoBlockSizeSam; ++i, j += 2 )
+        {
+            const float x = 0.5f * ( vecsStereoSndCrd[j] + vecsStereoSndCrd[j + 1] ) / 32768.0f;
+            q0            = coeff * q1 - q2 + x;
+            q2            = q1;
+            q1            = q0;
+        }
+
+        const float power  = q1 * q1 + q2 * q2 - coeff * q1 * q2;
+        const float mag    = std::sqrt ( qMax ( power, 0.0f ) ) / iMonoBlockSizeSam;
+        afNewLevels[iBand] = qBound ( 0.0f, mag * 16.0f, 1.0f );
+    }
+
+    QMutexLocker locker ( &MutexInputBandLevels );
+    for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
+    {
+        afInputBandLevels[iBand] = 0.85f * afInputBandLevels[iBand] + 0.15f * afNewLevels[iBand];
     }
 }
 

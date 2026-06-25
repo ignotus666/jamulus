@@ -160,6 +160,37 @@ public slots:
     void OnAboutToQuit() { Save ( true ); }
 };
 
+struct SEffectsPreset
+{
+    bool             bEQBypass = true;
+    float            afEQBandGainDb[CAudioEqualizer::NUM_BANDS] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    bool             abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS] = { false, false, false, false, false, false, false, false };
+    int              aiEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = { -20, -20, -20, -20, -20, -20, -20, -20 };
+    int              aiEQBandDynRatio[CAudioEqualizer::NUM_BANDS] = { 4, 4, 4, 4, 4, 4, 4, 4 };
+    int              aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS] = { 5, 5, 5, 5, 5, 5, 5, 5 };
+    int              aiEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS] = { 80, 80, 80, 80, 80, 80, 80, 80 };
+    int              aiEQBandFrequency[CAudioEqualizer::NUM_BANDS] = { 63, 125, 250, 500, 1000, 2000, 4000, 8000 };
+    int              aiEQBandQ[CAudioEqualizer::NUM_BANDS] = { 10, 10, 10, 10, 10, 10, 10, 10 };
+    int              iReverbLevel = 0;
+    int              iReverbPreDelayMs = 0;
+    int              iReverbRoomSize = 60;
+    int              iReverbDamping = 30;
+    int              iReverbWetMix = 25;
+    int              iReverbEarlyLevel = 30;
+    int              iReverbWidth = 100;
+    bool             bReverbEarlyEnabled = true;
+    bool             bReverbFreeze = false;
+    bool             bReverbBypass = true;
+    bool             bReverbOnLeftChan = false;
+    bool             bCompressorBypass = true;
+    int              iCompressorThresholdDb = -12;
+    int              iCompressorRatio = 3;
+    int              iCompressorAttackMs = 5;
+    int              iCompressorReleaseMs = 120;
+    int              iCompressorMakeupDb = 3;
+    bool             bCompressorLimiterEnabled = true;
+};
+
 #ifndef SERVER_ONLY
 class CClientSettings : public CSettings
 {
@@ -181,39 +212,15 @@ public:
         eChannelSortType ( ST_NO_SORT ),
         iNumMixerPanelRows ( 1 ),
         vstrDirectoryAddress ( MAX_NUM_SERVER_ADDR_ITEMS, "" ),
-        vstrEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
-        vstrEffectsPresetNames ( MAX_NUM_EFFECT_PRESETS, "" ),
         eDirectoryType ( AT_DEFAULT ),
         bEnableFeedbackDetection ( true ),
         bEnableAudioAlerts ( false ),
-        bEQBypass ( true ),
-        afEQBandGainDb{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f },
-        abEQBandDynEnabled{ false, false, false, false, false, false, false, false },
-        aiEQBandDynThresholdDb{ -20, -20, -20, -20, -20, -20, -20, -20 },
-        aiEQBandDynRatio{ 4, 4, 4, 4, 4, 4, 4, 4 },
-        aiEQBandDynAttackMs{ 5, 5, 5, 5, 5, 5, 5, 5 },
-        aiEQBandDynReleaseMs{ 80, 80, 80, 80, 80, 80, 80, 80 },
-        aiEQBandFrequency{ 63, 125, 250, 500, 1000, 2000, 4000, 8000 },
-        aiEQBandQ{ 10, 10, 10, 10, 10, 10, 10, 10 },
-        iReverbPreDelayMs ( 0 ),
-        iReverbRoomSize ( 60 ),
-        iReverbDamping ( 30 ),
-        iReverbWetMix ( 25 ),
-        iReverbEarlyLevel ( 30 ),
-        iReverbWidth ( 100 ),
-        bReverbEarlyEnabled ( true ),
-        bReverbFreeze ( false ),
-        bReverbBypass ( true ),
-        bCompressorBypass ( true ),
-        fCompressorThresholdDb ( -12.0f ),
-        fCompressorRatio ( 3.0f ),
-        fCompressorAttackMs ( 5.0f ),
-        fCompressorReleaseMs ( 120.0f ),
-        fCompressorMakeupDb ( 3.0f ),
-        bCompressorLimiterEnabled ( true ),
         eUITheme ( UIT_LIGHT ),
-        iSelectedEffectsPreset ( INVALID_INDEX ),
-        iSelectedEQPreset ( INVALID_INDEX ),
+        vstrEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
+        vstrOutEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
+        vstrEffectsPresetNames{ CVector<QString> ( MAX_NUM_EFFECT_PRESETS, "" ), CVector<QString> ( MAX_NUM_EFFECT_PRESETS, "" ) },
+        iSelectedEffectsPreset{ INVALID_INDEX, INVALID_INDEX },
+        iSelectedEQPreset{ INVALID_INDEX, INVALID_INDEX },
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
         vecWindowPosEffects(),  // empty array
@@ -255,53 +262,25 @@ public:
                 aiEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
                 aiEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
                 aiEQPresetBandQ[iPreset][iBand]              = 10;
+
+                afOutEQPresetBandGainDb[iPreset][iBand]         = 0.0f;
+                abOutEQPresetBandDynEnabled[iPreset][iBand]     = false;
+                aiOutEQPresetBandDynThresholdDb[iPreset][iBand] = -20;
+                aiOutEQPresetBandDynRatio[iPreset][iBand]       = 4;
+                aiOutEQPresetBandDynAttackMs[iPreset][iBand]    = 5;
+                aiOutEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
+                aiOutEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
+                aiOutEQPresetBandQ[iPreset][iBand]              = 10;
             }
         }
-
-        for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
-        {
-            bEffectsPresetEQBypass[iPreset] = true;
-            for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-            {
-                afEffectsPresetEQBandGainDb[iPreset][iBand]         = 0.0f;
-                abEffectsPresetEQBandDynEnabled[iPreset][iBand]     = false;
-                aiEffectsPresetEQBandDynThresholdDb[iPreset][iBand] = -20;
-                aiEffectsPresetEQBandDynRatio[iPreset][iBand]       = 4;
-                aiEffectsPresetEQBandDynAttackMs[iPreset][iBand]    = 5;
-                aiEffectsPresetEQBandDynReleaseMs[iPreset][iBand]   = 80;
-                aiEffectsPresetEQBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
-                aiEffectsPresetEQBandQ[iPreset][iBand]              = 10;
-            }
-
-            iEffectsPresetReverbLevel[iPreset]        = 0;
-            iEffectsPresetReverbPreDelayMs[iPreset]   = 0;
-            iEffectsPresetReverbRoomSize[iPreset]     = 60;
-            iEffectsPresetReverbDamping[iPreset]      = 30;
-            iEffectsPresetReverbWetMix[iPreset]       = 25;
-            iEffectsPresetReverbEarlyLevel[iPreset]   = 30;
-            iEffectsPresetReverbWidth[iPreset]        = 100;
-            bEffectsPresetReverbEarlyEnabled[iPreset] = true;
-            bEffectsPresetReverbFreeze[iPreset]       = false;
-            bEffectsPresetReverbBypass[iPreset]       = true;
-            bEffectsPresetReverbOnLeftChan[iPreset]   = false;
-
-            bEffectsPresetCompressorBypass[iPreset]         = true;
-            iEffectsPresetCompressorThresholdDb[iPreset]    = -12;
-            iEffectsPresetCompressorRatio[iPreset]          = 3;
-            iEffectsPresetCompressorAttackMs[iPreset]       = 5;
-            iEffectsPresetCompressorReleaseMs[iPreset]      = 120;
-            iEffectsPresetCompressorMakeupDb[iPreset]       = 3;
-            bEffectsPresetCompressorLimiterEnabled[iPreset] = true;
-        }
-
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
     }
 
     void LoadFaderSettings ( const QString& strCurFileName );
     void SaveFaderSettings ( const QString& strCurFileName );
 
-    void SaveEffectsPresetFromClient ( int iPresetSlot );
-    void SaveEQPresetFromClient ( int iPresetSlot );
+    void SaveEffectsPresetFromClient ( int iPresetSlot, bool bIsOutput = false );
+    void SaveEQPresetFromClient ( int iPresetSlot, bool bIsOutput = false );
 
     // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
     static void ParseCtrlMidiCh ( const QString& strMidiMap,
@@ -340,6 +319,11 @@ public:
     EChSortType      eChannelSortType;
     int              iNumMixerPanelRows;
     CVector<QString> vstrDirectoryAddress;
+    EDirectoryType   eDirectoryType;
+    int              iCustomDirectoryIndex; // index of selected custom directory
+    bool             bEnableFeedbackDetection;
+    bool             bEnableAudioAlerts;
+    EUITheme         eUITheme;
     CVector<QString> vstrEQPresetNames;
     float            afEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     bool             abEQPresetBandDynEnabled[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
@@ -349,66 +333,28 @@ public:
     int              aiEQPresetBandDynReleaseMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEQPresetBandFrequency[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     int              aiEQPresetBandQ[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    CVector<QString> vstrEffectsPresetNames;
-    bool             bEffectsPresetEQBypass[MAX_NUM_EFFECT_PRESETS];
-    float            afEffectsPresetEQBandGainDb[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    bool             abEffectsPresetEQBandDynEnabled[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandDynThresholdDb[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandDynRatio[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandDynAttackMs[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandDynReleaseMs[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandFrequency[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEffectsPresetEQBandQ[MAX_NUM_EFFECT_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              iEffectsPresetReverbLevel[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbPreDelayMs[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbRoomSize[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbDamping[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbWetMix[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbEarlyLevel[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetReverbWidth[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetReverbEarlyEnabled[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetReverbFreeze[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetReverbBypass[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetReverbOnLeftChan[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetCompressorBypass[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetCompressorThresholdDb[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetCompressorRatio[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetCompressorAttackMs[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetCompressorReleaseMs[MAX_NUM_EFFECT_PRESETS];
-    int              iEffectsPresetCompressorMakeupDb[MAX_NUM_EFFECT_PRESETS];
-    bool             bEffectsPresetCompressorLimiterEnabled[MAX_NUM_EFFECT_PRESETS];
-    EDirectoryType   eDirectoryType;
-    int              iCustomDirectoryIndex; // index of selected custom directory
-    bool             bEnableFeedbackDetection;
-    bool             bEnableAudioAlerts;
-    bool             bEQBypass;
-    float            afEQBandGainDb[CAudioEqualizer::NUM_BANDS];
-    bool             abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandDynRatio[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandFrequency[CAudioEqualizer::NUM_BANDS];
-    int              aiEQBandQ[CAudioEqualizer::NUM_BANDS];
-    int              iReverbPreDelayMs;
-    int              iReverbRoomSize;
-    int              iReverbDamping;
-    int              iReverbWetMix;
-    int              iReverbEarlyLevel;
-    int              iReverbWidth;
-    bool             bReverbEarlyEnabled;
-    bool             bReverbFreeze;
-    bool             bReverbBypass;
-    bool             bCompressorBypass;
-    float            fCompressorThresholdDb;
-    float            fCompressorRatio;
-    float            fCompressorAttackMs;
-    float            fCompressorReleaseMs;
-    float            fCompressorMakeupDb;
-    bool             bCompressorLimiterEnabled;
-    EUITheme         eUITheme;
-    int              iSelectedEffectsPreset;
-    int              iSelectedEQPreset;
+    CVector<QString> vstrOutEQPresetNames;
+    float            afOutEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    bool             abOutEQPresetBandDynEnabled[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandDynThresholdDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandDynRatio[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandDynAttackMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandDynReleaseMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandFrequency[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    int              aiOutEQPresetBandQ[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
+    CVector<QString> vstrEffectsPresetNames[2];
+    int              iSelectedEffectsPreset[2];
+    int              iSelectedEQPreset[2];
+    SEffectsPreset   EffectsPresets[2][MAX_NUM_EFFECT_PRESETS];
+
+    void ReadEQSettingsFromXML ( const QDomDocument& IniXMLDocument, CClient* pClient, bool bIsOutput );
+    void WriteEQSettingsToXML ( QDomDocument& IniXMLDocument, const CClient* pClient, bool bIsOutput );
+    void ReadCompressorSettingsFromXML ( const QDomDocument& IniXMLDocument, CClient* pClient, bool bIsOutput );
+    void WriteCompressorSettingsToXML ( QDomDocument& IniXMLDocument, const CClient* pClient, bool bIsOutput );
+    void ReadReverbSettingsFromXML ( const QDomDocument& IniXMLDocument, CClient* pClient, bool bIsOutput );
+    void WriteReverbSettingsToXML ( QDomDocument& IniXMLDocument, const CClient* pClient, bool bIsOutput );
+    void ReadEffectsPresetsFromXML ( const QDomDocument& IniXMLDocument, bool bIsOutput );
+    void WriteEffectsPresetsToXML ( QDomDocument& IniXMLDocument, bool bIsOutput );
 
     // window position/state settings
     QByteArray vecWindowPosSettings;

@@ -281,6 +281,30 @@ public:
     float GetCompressorGainReductionDb() { return AudioCompressor.GetGainReductionDb(); }
     float GetCompressorInputLevelDb() { return AudioCompressor.GetInputLevelDb(); }
 
+    // Context-aware reference accessors
+    CAudioReverb&     GetReverb ( const bool bIsOutput ) { return bIsOutput ? AudioReverbOutput : AudioReverb; }
+    CAudioEqualizer&  GetEQ ( const bool bIsOutput ) { return bIsOutput ? AudioEqualizerOutput : AudioEqualizer; }
+    CAudioCompressor& GetCompressor ( const bool bIsOutput ) { return bIsOutput ? AudioCompressorOutput : AudioCompressor; }
+
+    int&  GetReverbLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbLevel : iReverbLevel; }
+    bool& GetReverbBypass ( const bool bIsOutput ) { return bIsOutput ? bOutReverbBypass : bReverbBypass; }
+    int&  GetReverbPreDelayMs ( const bool bIsOutput ) { return bIsOutput ? iOutReverbPreDelayMs : iReverbPreDelayMs; }
+    int&  GetReverbRoomSize ( const bool bIsOutput ) { return bIsOutput ? iOutReverbRoomSize : iReverbRoomSize; }
+    int&  GetReverbDamping ( const bool bIsOutput ) { return bIsOutput ? iOutReverbDamping : iReverbDamping; }
+    int&  GetReverbWetMix ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWetMix : iReverbWetMix; }
+    int&  GetReverbEarlyLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbEarlyLevel : iReverbEarlyLevel; }
+    int&  GetReverbWidth ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWidth : iReverbWidth; }
+    bool& GetReverbEarlyEnabled ( const bool bIsOutput ) { return bIsOutput ? bOutReverbEarlyEnabled : bReverbEarlyEnabled; }
+    bool& GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
+    bool& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
+
+
+    // Input spectrum band level telemetry getters & setters
+    void  GetInputBandLevels ( CVector<float>& vecInLevels );
+    void  SetInputBandLevelsEnabled ( const bool bEnabled ) { bInputBandLevelsEnabled = bEnabled; }
+    bool  GetInputBandLevelsEnabled() const { return bInputBandLevelsEnabled; }
+    void  UpdateInputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd );
+
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }
 
@@ -500,6 +524,20 @@ protected:
     CAudioReverb     AudioReverb;
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
+    bool             bOutReverbOnLeftChan;
+    int              iOutReverbLevel;
+    int              iOutReverbPreDelayMs;
+    int              iOutReverbRoomSize;
+    int              iOutReverbDamping;
+    int              iOutReverbWetMix;
+    int              iOutReverbEarlyLevel;
+    int              iOutReverbWidth;
+    bool             bOutReverbEarlyEnabled;
+    bool             bOutReverbFreeze;
+    bool             bOutReverbBypass;
+    CAudioReverb     AudioReverbOutput;
+    CAudioEqualizer  AudioEqualizerOutput;
+    CAudioCompressor AudioCompressorOutput;
     int              iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;
@@ -531,6 +569,9 @@ protected:
     QMutex            MutexOutputBandLevels;
     float             afOutputBandLevels[NUM_SPECTRUM_BANDS];
     std::atomic<bool> bOutputBandLevelsEnabled;
+    QMutex            MutexInputBandLevels;
+    float             afInputBandLevels[NUM_SPECTRUM_BANDS];
+    std::atomic<bool> bInputBandLevelsEnabled;
 
     // server settings
     int  iServerSockBufNumFrames;
