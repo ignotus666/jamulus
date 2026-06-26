@@ -1407,7 +1407,7 @@ void CClient::Init()
     AudioReverb.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
     AudioEqualizer.Init ( SYSTEM_SAMPLE_RATE_HZ );
     AudioCompressor.Init ( SYSTEM_SAMPLE_RATE_HZ );
-    AudioReverbOutput.Init ( eAudioChannelConf, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
+    AudioReverbOutput.Init ( CC_STEREO, iStereoBlockSizeSam, SYSTEM_SAMPLE_RATE_HZ );
     AudioEqualizerOutput.Init ( SYSTEM_SAMPLE_RATE_HZ );
     AudioCompressorOutput.Init ( SYSTEM_SAMPLE_RATE_HZ );
 

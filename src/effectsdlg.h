@@ -317,10 +317,10 @@ protected:
         for ( int px = 0; px <= steps; ++px )
         {
             float inputDb  = -60.0f + ( static_cast<float> ( px ) / steps ) * 60.0f;
-            float fGR      = bBypass ? 0.0f : computeGainDb ( inputDb );
-            float outputDb = inputDb + fGR + ( bBypass ? 0.0f : fMakeupDb );
+            float fGR      = computeGainDb ( inputDb );
+            float outputDb = inputDb + fGR + fMakeupDb;
 
-            if ( bLimiterEnabled && !bBypass )
+            if ( bLimiterEnabled )
             {
                 outputDb = std::min ( -1.0f, outputDb );
             }
@@ -343,41 +343,22 @@ protected:
         fillPath.closeSubpath();
 
         QLinearGradient curveGrad ( left, top, left, top + plotH );
-        if ( bBypass )
-        {
-            curveGrad.setColorAt ( 0.0, QColor ( 120, 130, 140, 40 ) );
-            curveGrad.setColorAt ( 1.0, QColor ( 120, 130, 140, 10 ) );
-        }
-        else
-        {
-            curveGrad.setColorAt ( 0.0, QColor ( 0, 191, 255, 60 ) );
-            curveGrad.setColorAt ( 1.0, QColor ( 0, 100, 255, 10 ) );
-        }
+        curveGrad.setColorAt ( 0.0, QColor ( 0, 191, 255, 60 ) );
+        curveGrad.setColorAt ( 1.0, QColor ( 0, 100, 255, 10 ) );
         painter.setPen ( Qt::NoPen );
         painter.setBrush ( curveGrad );
         painter.drawPath ( fillPath );
 
-        QPen curvePen;
-        if ( bBypass )
-        {
-            curvePen = QPen ( QColor ( 120, 130, 140 ), 1.5, Qt::DashLine );
-        }
-        else
-        {
-            curvePen = QPen ( QColor ( 0, 191, 255 ), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
-        }
+        QPen curvePen = QPen ( QColor ( 0, 191, 255 ), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
         painter.setPen ( curvePen );
         painter.setBrush ( Qt::NoBrush );
         painter.drawPath ( curvePath );
 
-        if ( !bBypass )
-        {
-            float threshX = mapX ( fThresholdDb );
-            painter.setPen ( QPen ( QColor ( 255, 165, 0, 150 ), 1, Qt::DashLine ) );
-            painter.drawLine ( threshX, top + 1, threshX, top + plotH - 1 );
-        }
+        float threshX = mapX ( fThresholdDb );
+        painter.setPen ( QPen ( QColor ( 255, 165, 0, 150 ), 1, Qt::DashLine ) );
+        painter.drawLine ( threshX, top + 1, threshX, top + plotH - 1 );
 
-        if ( !bBypass && fCurrentInputDb > -60.0f )
+        if ( fCurrentInputDb > -60.0f )
         {
             float inputDb  = std::max ( -60.0f, std::min ( 0.0f, fCurrentInputDb ) );
             float fGR      = computeGainDb ( inputDb );
@@ -520,13 +501,6 @@ protected:
         painter.drawText ( QRect ( left + plotW - 40, top + plotH + 2, 60, 12 ), Qt::AlignCenter, "1000 ms" );
 
         float xPreDelay = left + ( std::min ( fPreDelayMs, 120.0f ) / 1000.0f ) * plotW;
-
-        if ( bBypass )
-        {
-            painter.setPen ( QPen ( QColor ( 120, 130, 140 ), 1.5, Qt::DashLine ) );
-            painter.drawLine ( left, top + plotH - 2, left + plotW, top + plotH - 2 );
-            return;
-        }
 
         painter.setPen ( QPen ( QColor ( 80, 90, 100, 150 ), 1.5, Qt::SolidLine ) );
         painter.drawLine ( left, top + plotH - 1, xPreDelay, top + plotH - 1 );
@@ -706,11 +680,7 @@ private:
     // Context-aware settings helpers
     CVector<QString>& GetEffectsPresetNames() const { return pSettings->vstrEffectsPresetNames[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
     int&              GetSelectedEffectsPreset() const { return pSettings->iSelectedEffectsPreset[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
-    CVector<QString>& GetEQPresetNames() const
-    {
-        return eCurrentContext == EC_INPUT ? pSettings->vstrEQPresetNames : pSettings->vstrOutEQPresetNames;
-    }
-    int& GetSelectedEQPreset() const { return pSettings->iSelectedEQPreset[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
+
 
 public:
     // Context-aware client parameters getters & setters
@@ -960,13 +930,9 @@ public:
     void ApplyEffectsPresetFromSlot ( const int iPresetSlot );
     int  FindEffectsPresetSlotByName ( const QString& strName ) const;
     int  FindFreeEffectsPresetSlot() const;
-    void PopulateEQPresetCombo();
-    void ApplyPresetFromComboIndex ( const int iPresetIndex );
-    void UpdateEQPresetSelection();
     void ApplyThemeToCustomWidgets();
 
-    int  FindPresetSlotByName ( const QString& strName ) const;
-    int  FindFreePresetSlot() const;
+
     void UpdateEQDynControls ( const int iBand );
 
 private slots:
@@ -979,9 +945,7 @@ private slots:
     void OnSaveAsEffectsPresetClicked();
     void OnDeleteEffectsPresetClicked();
     void OnResetEQClicked();
-    void OnSaveEQPresetClicked();
-    void OnSaveAsEQPresetClicked();
-    void OnDeleteEQPresetClicked();
+
 
     void OnEQBandGainChanged ( int iBand, float fGainDb );
     void OnEQBandFrequencyChanged ( int iBand, float fFreqHz );

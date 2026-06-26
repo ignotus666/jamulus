@@ -55,7 +55,6 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     iSelectedBand ( 0 ),
     bDragging ( false ),
     bDarkTheme ( true ),
-    bEQBypassed ( false ),
     bStaticCurveDirty ( true ),
     bEffectiveCurveDirty ( true ),
     pBandTooltip ( nullptr ),
@@ -202,20 +201,16 @@ void CEQCurveWidget::SetSampleRate ( const int iRate )
 
 void CEQCurveWidget::SetBypassed ( const bool bBypassed )
 {
-    if ( bEQBypassed != bBypassed )
+    if ( bBypassed )
     {
-        bEQBypassed = bBypassed;
-        if ( bEQBypassed )
+        // Clear real-time analyzer data when bypassed
+        for ( int i = 0; i < kNumSpectrumBands; ++i )
         {
-            // Clear real-time analyzer data when bypassed
-            for ( int i = 0; i < kNumSpectrumBands; ++i )
-            {
-                afSpectrumLevels[i] = 0.0f;
-            }
-            for ( int i = 0; i < kNumBands; ++i )
-            {
-                afBandGainReductionDb[i] = 0.0f;
-            }
+            afSpectrumLevels[i] = 0.0f;
+        }
+        for ( int i = 0; i < kNumBands; ++i )
+        {
+            afBandGainReductionDb[i] = 0.0f;
         }
         update();
     }
@@ -491,7 +486,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
     }
 
-    if ( bAnySpectrum && !bEQBypassed )
+    if ( bAnySpectrum )
     {
         QPainterPath spectrumPath;
         // Start at bottom-left corner of plot area (20 Hz)
@@ -543,15 +538,12 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     }
 
     bool bAnyReduction = false;
-    if ( !bEQBypassed )
+    for ( int iBand = 0; iBand < kNumBands; ++iBand )
     {
-        for ( int iBand = 0; iBand < kNumBands; ++iBand )
+        if ( afBandGainReductionDb[iBand] > 0.05f )
         {
-            if ( afBandGainReductionDb[iBand] > 0.05f )
-            {
-                bAnyReduction = true;
-                break;
-            }
+            bAnyReduction = true;
+            break;
         }
     }
 
@@ -575,7 +567,6 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     }
 
     // Individual band curves
-    if ( !bEQBypassed )
     {
         const int     iWidth    = std::max ( 1, static_cast<int> ( r.width() ) );
         constexpr int kStepSize = 6;
@@ -680,7 +671,6 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     {
         // Gradient fill under the curve
         const float fZeroY = DbToYf ( 0.0f );
-        if ( !bEQBypassed )
         {
             QPainterPath areaPath;
             areaPath.moveTo ( vecEffectiveCurve.first().x(), fZeroY );
@@ -703,15 +693,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
             effectivePath.lineTo ( vecEffectiveCurve[i] );
         }
 
-        QColor colCurve;
-        if ( bEQBypassed )
-        {
-            colCurve = QColor ( 100, 105, 115 );
-        }
-        else
-        {
-            colCurve = QColor ( 54, 207, 255 );
-        }
+        QColor colCurve = QColor ( 54, 207, 255 );
         painter.setPen ( QPen ( colCurve, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
         painter.setBrush ( Qt::NoBrush );
         painter.drawPath ( effectivePath );
@@ -725,13 +707,13 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
         const bool bSelected = ( iBand == iSelectedBand );
         const bool bHovered  = ( iBand == iTooltipBand );
-        const int  iRad      = ( ( bSelected || bHovered ) && !bEQBypassed ) ? kNodeRadius + 2 : kNodeRadius;
+        const int  iRad      = ( bSelected || bHovered ) ? kNodeRadius + 2 : kNodeRadius;
 
         // Per-band color
         const QColor colBand = GetBandColor ( iBand );
 
         // Glow for selected node
-        if ( bSelected && !bEQBypassed )
+        if ( bSelected )
         {
             const QColor colGlow ( colBand.red(), colBand.green(), colBand.blue(), 80 );
             painter.setPen ( Qt::NoPen );
@@ -754,7 +736,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
                 painter.drawRoundedRect ( QRectF ( fX1, fNy - 5, fX2 - fX1, 10 ), 5, 5 );
             }
         }
-        else if ( bHovered && !bEQBypassed )
+        else if ( bHovered )
         {
             // Subtle glow for hover
             const QColor colGlow ( colBand.red(), colBand.green(), colBand.blue(), 40 );
@@ -764,7 +746,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
 
         // Gain reduction indicator: vertical line from static to effective
-        if ( afBandGainReductionDb[iBand] > 0.05f && !bEQBypassed )
+        if ( afBandGainReductionDb[iBand] > 0.05f )
         {
             const float  fEy   = DbToYf ( afBandGainDb[iBand] - afBandGainReductionDb[iBand] );
             const QColor colGR = QColor ( 255, 140, 40, 180 );
@@ -778,29 +760,11 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         }
 
         // Node circle — per-band color
-        QColor colNode;
-        if ( bEQBypassed )
-        {
-            colNode = QColor ( 80, 85, 95 );
-        }
-        else
-        {
-            colNode = colBand;
-        }
+        QColor colNode = colBand;
 
-        if ( bEQBypassed )
-        {
-            const QColor colBorder = QColor ( 20, 22, 26 );
-            painter.setPen ( QPen ( colBorder, 1 ) );
-            painter.setBrush ( colNode );
-            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
-        }
-        else
-        {
-            painter.setPen ( Qt::NoPen );
-            painter.setBrush ( colNode );
-            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
-        }
+        painter.setPen ( Qt::NoPen );
+        painter.setBrush ( colNode );
+        painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
     }
 
     // Plot area border
@@ -809,7 +773,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
     painter.drawRect ( r );
 
     // Draw custom canvas tooltip
-    if ( iTooltipBand >= 0 && iTooltipBand < kNumBands && !bEQBypassed )
+    if ( iTooltipBand >= 0 && iTooltipBand < kNumBands )
     {
         const float fNx = FreqToXf ( afBandFrequencies[iTooltipBand] );
         const float fNy = DbToYf ( afBandGainDb[iTooltipBand] );
@@ -864,10 +828,6 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 // ---------------------------------------------------------------------------
 void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 {
-    if ( bEQBypassed )
-    {
-        return;
-    }
 
     if ( pEvent->button() != Qt::LeftButton )
     {
@@ -898,10 +858,6 @@ void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 {
-    if ( bEQBypassed )
-    {
-        return;
-    }
 
     if ( !bDragging )
     {
@@ -982,10 +938,6 @@ void CEQCurveWidget::leaveEvent ( QEvent* pEvent )
 
 void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 {
-    if ( bEQBypassed )
-    {
-        return;
-    }
 
     float     fDist = 0.0f;
     const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
@@ -1004,10 +956,6 @@ void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 {
-    if ( bEQBypassed )
-    {
-        return;
-    }
 
     if ( iSelectedBand < 0 )
     {

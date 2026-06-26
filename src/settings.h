@@ -62,7 +62,6 @@
 #include "server.h"
 #include "util.h"
 
-#define MAX_NUM_EQ_USER_PRESETS 12
 #define MAX_NUM_EFFECT_PRESETS  12
 
 /* Classes ********************************************************************/
@@ -211,11 +210,8 @@ public:
         bEnableFeedbackDetection ( true ),
         bEnableAudioAlerts ( false ),
         eUITheme ( UIT_LIGHT ),
-        vstrEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
-        vstrOutEQPresetNames ( MAX_NUM_EQ_USER_PRESETS, "" ),
         vstrEffectsPresetNames{ CVector<QString> ( MAX_NUM_EFFECT_PRESETS, "" ), CVector<QString> ( MAX_NUM_EFFECT_PRESETS, "" ) },
         iSelectedEffectsPreset{ INVALID_INDEX, INVALID_INDEX },
-        iSelectedEQPreset{ INVALID_INDEX, INVALID_INDEX },
         vecWindowPosSettings(), // empty array
         vecWindowPosChat(),     // empty array
         vecWindowPosEffects(),  // empty array
@@ -245,29 +241,6 @@ public:
         strMidiDevice ( "" ),
         pClient ( pNCliP )
     {
-        for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
-        {
-            for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-            {
-                afEQPresetBandGainDb[iPreset][iBand]         = 0.0f;
-                abEQPresetBandDynEnabled[iPreset][iBand]     = false;
-                aiEQPresetBandDynThresholdDb[iPreset][iBand] = -20;
-                aiEQPresetBandDynRatio[iPreset][iBand]       = 4;
-                aiEQPresetBandDynAttackMs[iPreset][iBand]    = 5;
-                aiEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
-                aiEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
-                aiEQPresetBandQ[iPreset][iBand]              = 10;
-
-                afOutEQPresetBandGainDb[iPreset][iBand]         = 0.0f;
-                abOutEQPresetBandDynEnabled[iPreset][iBand]     = false;
-                aiOutEQPresetBandDynThresholdDb[iPreset][iBand] = -20;
-                aiOutEQPresetBandDynRatio[iPreset][iBand]       = 4;
-                aiOutEQPresetBandDynAttackMs[iPreset][iBand]    = 5;
-                aiOutEQPresetBandDynReleaseMs[iPreset][iBand]   = 80;
-                aiOutEQPresetBandFrequency[iPreset][iBand]      = static_cast<int> ( CAudioEqualizer::GetDefaultBandFrequency ( iBand ) );
-                aiOutEQPresetBandQ[iPreset][iBand]              = 10;
-            }
-        }
         SetFileName ( sNFiName, DEFAULT_INI_FILE_NAME );
     }
 
@@ -275,7 +248,6 @@ public:
     void SaveFaderSettings ( const QString& strCurFileName );
 
     void SaveEffectsPresetFromClient ( int iPresetSlot, bool bIsOutput = false );
-    void SaveEQPresetFromClient ( int iPresetSlot, bool bIsOutput = false );
 
     // Parse a --ctrlmidich MIDI mapping string and update MIDI variables
     static void ParseCtrlMidiCh ( const QString& strMidiMap,
@@ -319,27 +291,8 @@ public:
     bool             bEnableFeedbackDetection;
     bool             bEnableAudioAlerts;
     EUITheme         eUITheme;
-    CVector<QString> vstrEQPresetNames;
-    float            afEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    bool             abEQPresetBandDynEnabled[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandDynThresholdDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandDynRatio[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandDynAttackMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandDynReleaseMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandFrequency[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiEQPresetBandQ[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    CVector<QString> vstrOutEQPresetNames;
-    float            afOutEQPresetBandGainDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    bool             abOutEQPresetBandDynEnabled[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandDynThresholdDb[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandDynRatio[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandDynAttackMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandDynReleaseMs[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandFrequency[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
-    int              aiOutEQPresetBandQ[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS];
     CVector<QString> vstrEffectsPresetNames[2];
     int              iSelectedEffectsPreset[2];
-    int              iSelectedEQPreset[2];
     SEffectsPreset   EffectsPresets[2][MAX_NUM_EFFECT_PRESETS];
 
     void ReadEQSettingsFromXML ( const QDomDocument& IniXMLDocument, CClient* pClient, bool bIsOutput );

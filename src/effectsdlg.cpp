@@ -148,12 +148,12 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pKnobEQBandGain->setRange ( -120, 120 );
     QObject::connect ( pKnobEQBandGain, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQBandGainKnobChanged );
 
-    pKnobEQDynThreshold->setMaximumSize ( 40, 40 );
-    pKnobEQDynRatio->setMaximumSize ( 40, 40 );
-    pKnobEQDynAttack->setMaximumSize ( 40, 40 );
-    pKnobEQDynRelease->setMaximumSize ( 40, 40 );
-    pKnobEQBandQ->setMaximumSize ( 40, 40 );
-    pKnobEQBandGain->setMaximumSize ( 40, 40 );
+    pKnobEQDynThreshold->setFixedSize ( 40, 40 );
+    pKnobEQDynRatio->setFixedSize ( 40, 40 );
+    pKnobEQDynAttack->setFixedSize ( 40, 40 );
+    pKnobEQDynRelease->setFixedSize ( 40, 40 );
+    pKnobEQBandQ->setFixedSize ( 40, 40 );
+    pKnobEQBandGain->setFixedSize ( 40, 40 );
 
     // Frequency input: starts read-only, click to edit, commit on Return or focus loss
     pEdtEQDynFreq->setValidator (
@@ -170,7 +170,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     iSelectedBand = 0;
 
-    setMinimumHeight ( 443 );
 
     QObject::connect ( pKnobReverb, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbValue->setText ( QString::number ( value ) + tr ( " %" ) );
@@ -299,11 +298,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     QObject::connect ( pButEffectsSavePreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveEffectsPresetClicked );
     QObject::connect ( pButEffectsSaveAsPreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveAsEffectsPresetClicked );
     QObject::connect ( pButEffectsDeletePreset, &QPushButton::clicked, this, &CEffectsDlg::OnDeleteEffectsPresetClicked );
-    QObject::connect ( pCbxEQPresets, QOverload<int>::of ( &QComboBox::currentIndexChanged ), this, &CEffectsDlg::ApplyPresetFromComboIndex );
     QObject::connect ( pButEQReset, &QPushButton::clicked, this, &CEffectsDlg::OnResetEQClicked );
-    QObject::connect ( pButEQSavePreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveEQPresetClicked );
-    QObject::connect ( pButEQSaveAsPreset, &QPushButton::clicked, this, &CEffectsDlg::OnSaveAsEQPresetClicked );
-    QObject::connect ( pButEQDeletePreset, &QPushButton::clicked, this, &CEffectsDlg::OnDeleteEQPresetClicked );
 
     QObject::connect ( pButContextInput, &QPushButton::clicked, this, &CEffectsDlg::OnContextInputClicked );
     QObject::connect ( pButContextOutput, &QPushButton::clicked, this, &CEffectsDlg::OnContextOutputClicked );
@@ -374,7 +369,6 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
     UpdateReverbControls();
     UpdateCompressorControls();
     UpdateEQControls();
-    UpdateEQPresetSelection();
     CBaseDlg::showEvent ( Event );
 }
 
@@ -476,25 +470,24 @@ void CEffectsDlg::UpdateCompressorControls()
     pKnobCompressorMakeup->setValue ( static_cast<int> ( GetCompressorMakeupDb() ) );
     pKnobCompressorMakeup->blockSignals ( false );
 
-    const bool bBypass = GetCompressorBypass();
-    pKnobCompressorThreshold->setEnabled ( !bBypass );
-    pKnobCompressorRatio->setEnabled ( !bBypass );
-    pKnobCompressorAttack->setEnabled ( !bBypass );
-    pKnobCompressorRelease->setEnabled ( !bBypass );
-    pKnobCompressorMakeup->setEnabled ( !bBypass );
-    pChbCompressorLimiter->setEnabled ( !bBypass );
-    pButCompressorReset->setEnabled ( !bBypass );
+    pKnobCompressorThreshold->setEnabled ( true );
+    pKnobCompressorRatio->setEnabled ( true );
+    pKnobCompressorAttack->setEnabled ( true );
+    pKnobCompressorRelease->setEnabled ( true );
+    pKnobCompressorMakeup->setEnabled ( true );
+    pChbCompressorLimiter->setEnabled ( true );
+    pButCompressorReset->setEnabled ( true );
 
-    pLblCompressorThreshold->setEnabled ( !bBypass );
-    pLblCompressorThresholdValue->setEnabled ( !bBypass );
-    pLblCompressorRatio->setEnabled ( !bBypass );
-    pLblCompressorRatioValue->setEnabled ( !bBypass );
-    pLblCompressorAttack->setEnabled ( !bBypass );
-    pLblCompressorAttackValue->setEnabled ( !bBypass );
-    pLblCompressorRelease->setEnabled ( !bBypass );
-    pLblCompressorReleaseValue->setEnabled ( !bBypass );
-    pLblCompressorMakeup->setEnabled ( !bBypass );
-    pLblCompressorMakeupValue->setEnabled ( !bBypass );
+    pLblCompressorThreshold->setEnabled ( true );
+    pLblCompressorThresholdValue->setEnabled ( true );
+    pLblCompressorRatio->setEnabled ( true );
+    pLblCompressorRatioValue->setEnabled ( true );
+    pLblCompressorAttack->setEnabled ( true );
+    pLblCompressorAttackValue->setEnabled ( true );
+    pLblCompressorRelease->setEnabled ( true );
+    pLblCompressorReleaseValue->setEnabled ( true );
+    pLblCompressorMakeup->setEnabled ( true );
+    pLblCompressorMakeupValue->setEnabled ( true );
 
     pLblCompressorThresholdValue->setText ( QString::number ( pKnobCompressorThreshold->value() ) + tr ( " dB" ) );
     pLblCompressorRatioValue->setText ( QString::number ( pKnobCompressorRatio->value() ) + tr ( ":1" ) );
@@ -555,35 +548,34 @@ void CEffectsDlg::UpdateReverbControls()
     pChbReverbFreeze->setChecked ( GetReverbFreeze() );
     pChbReverbFreeze->blockSignals ( false );
 
-    const bool bBypass = GetReverbBypass();
-    pKnobReverb->setEnabled ( !bBypass );
-    pKnobReverbPreDelay->setEnabled ( !bBypass );
-    pKnobReverbRoom->setEnabled ( !bBypass );
-    pKnobReverbDamping->setEnabled ( !bBypass );
-    pKnobReverbWet->setEnabled ( !bBypass );
-    pKnobReverbEarly->setEnabled ( !bBypass && GetReverbEarlyEnabled() );
-    pKnobReverbWidth->setEnabled ( !bBypass );
-    pChbReverbEarly->setEnabled ( !bBypass );
-    pChbReverbFreeze->setEnabled ( !bBypass );
-    pRbtReverbSelL->setEnabled ( !bBypass );
-    pRbtReverbSelR->setEnabled ( !bBypass );
-    pButReverbReset->setEnabled ( !bBypass );
+    pKnobReverb->setEnabled ( true );
+    pKnobReverbPreDelay->setEnabled ( true );
+    pKnobReverbRoom->setEnabled ( true );
+    pKnobReverbDamping->setEnabled ( true );
+    pKnobReverbWet->setEnabled ( true );
+    pKnobReverbEarly->setEnabled ( GetReverbEarlyEnabled() );
+    pKnobReverbWidth->setEnabled ( true );
+    pChbReverbEarly->setEnabled ( true );
+    pChbReverbFreeze->setEnabled ( true );
+    pRbtReverbSelL->setEnabled ( true );
+    pRbtReverbSelR->setEnabled ( true );
+    pButReverbReset->setEnabled ( true );
 
-    pLblReverb->setEnabled ( !bBypass );
-    pLblReverbValue->setEnabled ( !bBypass );
-    pLblReverbPreDelay->setEnabled ( !bBypass );
-    pLblReverbPreDelayValue->setEnabled ( !bBypass );
-    pLblReverbWet->setEnabled ( !bBypass );
-    pLblReverbWetValue->setEnabled ( !bBypass );
-    pLblReverbRoom->setEnabled ( !bBypass );
-    pLblReverbRoomValue->setEnabled ( !bBypass );
-    pLblReverbEarly->setEnabled ( !bBypass );
-    pLblReverbEarlyValue->setEnabled ( !bBypass );
-    pLblReverbDamping->setEnabled ( !bBypass );
-    pLblReverbDampingValue->setEnabled ( !bBypass );
-    pLblReverbWidth->setEnabled ( !bBypass );
-    pLblReverbWidthValue->setEnabled ( !bBypass );
-    pLblStereoHint->setEnabled ( !bBypass );
+    pLblReverb->setEnabled ( true );
+    pLblReverbValue->setEnabled ( true );
+    pLblReverbPreDelay->setEnabled ( true );
+    pLblReverbPreDelayValue->setEnabled ( true );
+    pLblReverbWet->setEnabled ( true );
+    pLblReverbWetValue->setEnabled ( true );
+    pLblReverbRoom->setEnabled ( true );
+    pLblReverbRoomValue->setEnabled ( true );
+    pLblReverbEarly->setEnabled ( true );
+    pLblReverbEarlyValue->setEnabled ( true );
+    pLblReverbDamping->setEnabled ( true );
+    pLblReverbDampingValue->setEnabled ( true );
+    pLblReverbWidth->setEnabled ( true );
+    pLblReverbWidthValue->setEnabled ( true );
+    pLblStereoHint->setEnabled ( true );
 
     pLblReverbValue->setText ( QString::number ( pKnobReverb->value() ) + tr ( " %" ) );
     pLblReverbPreDelayValue->setText ( QString::number ( pKnobReverbPreDelay->value() ) + tr ( " ms" ) );
@@ -593,7 +585,7 @@ void CEffectsDlg::UpdateReverbControls()
     pLblReverbEarlyValue->setText ( QString::number ( pKnobReverbEarly->value() ) + tr ( " %" ) );
     pLblReverbWidthValue->setText ( QString::number ( pKnobReverbWidth->value() ) + tr ( " %" ) );
 
-    const bool bShowChannelSelection = pClient->GetAudioChannels() != CC_STEREO;
+    const bool bShowChannelSelection = ( eCurrentContext == EC_INPUT ) && ( pClient->GetAudioChannels() != CC_STEREO );
 
     pRbtReverbSelL->setVisible ( bShowChannelSelection );
     pRbtReverbSelR->setVisible ( bShowChannelSelection );
@@ -627,7 +619,7 @@ void CEffectsDlg::UpdateEQControls()
     pChbEQEnable->blockSignals ( true );
     pChbEQEnable->setChecked ( !bBypassed );
     pChbEQEnable->blockSignals ( false );
-    pButEQReset->setEnabled ( !bBypassed );
+    pButEQReset->setEnabled ( true );
 
     if ( pEQCurveWidget && pClient )
     {
@@ -757,7 +749,6 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
     UpdateReverbControls();
     UpdateCompressorControls();
     UpdateEQControls();
-    UpdateEQPresetSelection();
 }
 
 int CEffectsDlg::FindEffectsPresetSlotByName ( const QString& strName ) const
@@ -902,280 +893,13 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
     PopulateEffectsPresetCombo();
 }
 
-void CEffectsDlg::PopulateEQPresetCombo()
-{
-    const bool bBlocked = pCbxEQPresets->blockSignals ( true );
-    pCbxEQPresets->clear();
 
-    int iTargetIndex = -1;
-    for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
-    {
-        const QString strName = GetEQPresetNames()[iPreset];
-        if ( strName.isEmpty() )
-        {
-            continue;
-        }
-
-        QString strGains;
-        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-        {
-            if ( !strGains.isEmpty() )
-            {
-                strGains += ",";
-            }
-            float fGain = ( eCurrentContext == EC_INPUT ) ? pSettings->afEQPresetBandGainDb[iPreset][iBand]
-                                                          : pSettings->afOutEQPresetBandGainDb[iPreset][iBand];
-            strGains += QString::number ( fGain, 'f', 1 );
-        }
-
-        pCbxEQPresets->addItem ( strName );
-        const int iCurrentItemIdx = pCbxEQPresets->count() - 1;
-        pCbxEQPresets->setItemData ( iCurrentItemIdx, strGains, Qt::UserRole );
-        pCbxEQPresets->setItemData ( iCurrentItemIdx, iPreset, Qt::UserRole + 1 );
-
-        if ( GetSelectedEQPreset() != INVALID_INDEX && iPreset == GetSelectedEQPreset() )
-        {
-            iTargetIndex = iCurrentItemIdx;
-        }
-    }
-
-    if ( iTargetIndex >= 0 )
-    {
-        pCbxEQPresets->setCurrentIndex ( iTargetIndex );
-    }
-    else if ( pCbxEQPresets->count() > 0 )
-    {
-        pCbxEQPresets->setCurrentIndex ( 0 );
-    }
-
-    pCbxEQPresets->blockSignals ( bBlocked );
-}
-
-void CEffectsDlg::UpdateEQPresetSelection()
-{
-    if ( pCbxEQPresets->count() == 0 )
-    {
-        return;
-    }
-
-    QString currentGains;
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        if ( !currentGains.isEmpty() )
-        {
-            currentGains += ",";
-        }
-        currentGains += QString::number ( GetEQBandGainDb ( iBand ), 'f', 1 );
-    }
-
-    int matchedIndex = -1;
-    for ( int iPreset = 0; iPreset < pCbxEQPresets->count(); ++iPreset )
-    {
-        const QString presetGains = pCbxEQPresets->itemData ( iPreset, Qt::UserRole ).toString();
-        if ( presetGains == currentGains )
-        {
-            matchedIndex = iPreset;
-            break;
-        }
-    }
-
-    if ( matchedIndex >= 0 )
-    {
-        pCbxEQPresets->blockSignals ( true );
-        pCbxEQPresets->setCurrentIndex ( matchedIndex );
-        pCbxEQPresets->blockSignals ( false );
-        GetSelectedEQPreset() = pCbxEQPresets->itemData ( matchedIndex, Qt::UserRole + 1 ).toInt();
-    }
-}
-
-void CEffectsDlg::ApplyPresetFromComboIndex ( const int iPresetIndex )
-{
-    if ( iPresetIndex < 0 )
-    {
-        return;
-    }
-
-    const int iPresetSlot = pCbxEQPresets->itemData ( iPresetIndex, Qt::UserRole + 1 ).toInt();
-    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EQ_USER_PRESETS )
-    {
-        return;
-    }
-
-    GetSelectedEQPreset() = iPresetSlot;
-
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        if ( eCurrentContext == EC_INPUT )
-        {
-            SetEQBandGainDb ( iBand, pSettings->afEQPresetBandGainDb[iPresetSlot][iBand] );
-            SetEQBandFrequency ( iBand, pSettings->aiEQPresetBandFrequency[iPresetSlot][iBand] );
-            SetEQBandDynEnabled ( iBand, pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand] );
-            SetEQBandDynThresholdDb ( iBand, pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] );
-            SetEQBandDynRatio ( iBand, pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand] );
-            SetEQBandDynAttackMs ( iBand, pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand] );
-            SetEQBandDynReleaseMs ( iBand, pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand] );
-            SetEQBandQ ( iBand, static_cast<float> ( pSettings->aiEQPresetBandQ[iPresetSlot][iBand] ) / 10.0f );
-        }
-        else
-        {
-            SetEQBandGainDb ( iBand, pSettings->afOutEQPresetBandGainDb[iPresetSlot][iBand] );
-            SetEQBandFrequency ( iBand, pSettings->aiOutEQPresetBandFrequency[iPresetSlot][iBand] );
-            SetEQBandDynEnabled ( iBand, pSettings->abOutEQPresetBandDynEnabled[iPresetSlot][iBand] );
-            SetEQBandDynThresholdDb ( iBand, pSettings->aiOutEQPresetBandDynThresholdDb[iPresetSlot][iBand] );
-            SetEQBandDynRatio ( iBand, pSettings->aiOutEQPresetBandDynRatio[iPresetSlot][iBand] );
-            SetEQBandDynAttackMs ( iBand, pSettings->aiOutEQPresetBandDynAttackMs[iPresetSlot][iBand] );
-            SetEQBandDynReleaseMs ( iBand, pSettings->aiOutEQPresetBandDynReleaseMs[iPresetSlot][iBand] );
-            SetEQBandQ ( iBand, static_cast<float> ( pSettings->aiOutEQPresetBandQ[iPresetSlot][iBand] ) / 10.0f );
-        }
-    }
-
-    UpdateEQControls();
-}
-
-int CEffectsDlg::FindPresetSlotByName ( const QString& strName ) const
-{
-    for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
-    {
-        if ( GetEQPresetNames()[iPreset].compare ( strName, Qt::CaseInsensitive ) == 0 )
-        {
-            return iPreset;
-        }
-    }
-
-    return INVALID_INDEX;
-}
-
-int CEffectsDlg::FindFreePresetSlot() const
-{
-    for ( int iPreset = 0; iPreset < MAX_NUM_EQ_USER_PRESETS; ++iPreset )
-    {
-        if ( GetEQPresetNames()[iPreset].isEmpty() )
-        {
-            return iPreset;
-        }
-    }
-
-    return INVALID_INDEX;
-}
-
-void CEffectsDlg::OnSaveEQPresetClicked()
-{
-    const int iComboIndex = pCbxEQPresets->currentIndex();
-    if ( iComboIndex < 0 )
-    {
-        QMessageBox::warning ( this,
-                               tr ( "No Preset Selected" ),
-                               tr ( "Select an existing preset to overwrite, or use Save As... to create a new one." ) );
-        return;
-    }
-
-    const int     iPresetSlot = pCbxEQPresets->itemData ( iComboIndex, Qt::UserRole + 1 ).toInt();
-    const QString strName     = pCbxEQPresets->itemText ( iComboIndex );
-
-    if ( iPresetSlot == INVALID_INDEX )
-    {
-        QMessageBox::warning ( this,
-                               tr ( "Preset Limit Reached" ),
-                               tr ( "No free preset slot is available. Delete an existing user preset first." ) );
-        return;
-    }
-
-    GetEQPresetNames()[iPresetSlot] = strName;
-
-    pSettings->SaveEQPresetFromClient ( iPresetSlot, eCurrentContext == EC_OUTPUT );
-
-    PopulateEQPresetCombo();
-    const int iUpdatedIndex = pCbxEQPresets->findText ( strName );
-    if ( iUpdatedIndex >= 0 )
-    {
-        pCbxEQPresets->setCurrentIndex ( iUpdatedIndex );
-    }
-}
-
-void CEffectsDlg::OnSaveAsEQPresetClicked()
-{
-    bool    bOk     = false;
-    QString strName = QInputDialog::getText ( this, tr ( "Save EQ Preset" ), tr ( "Preset name:" ), QLineEdit::Normal, "", &bOk ).trimmed();
-
-    if ( !bOk || strName.isEmpty() )
-    {
-        return;
-    }
-
-    int iPresetSlot = FindPresetSlotByName ( strName );
-    if ( iPresetSlot == INVALID_INDEX )
-    {
-        iPresetSlot = FindFreePresetSlot();
-    }
-
-    if ( iPresetSlot == INVALID_INDEX )
-    {
-        QMessageBox::warning ( this,
-                               tr ( "Preset Limit Reached" ),
-                               tr ( "No free preset slot is available. Delete an existing user preset first." ) );
-        return;
-    }
-
-    GetEQPresetNames()[iPresetSlot] = strName;
-
-    pSettings->SaveEQPresetFromClient ( iPresetSlot, eCurrentContext == EC_OUTPUT );
-
-    PopulateEQPresetCombo();
-    const int iSavedIndex = pCbxEQPresets->findText ( strName );
-    if ( iSavedIndex >= 0 )
-    {
-        pCbxEQPresets->setCurrentIndex ( iSavedIndex );
-    }
-}
-
-void CEffectsDlg::OnDeleteEQPresetClicked()
-{
-    const int iPresetSlot = pCbxEQPresets->currentData ( Qt::UserRole + 1 ).toInt();
-    if ( iPresetSlot < 0 || iPresetSlot >= MAX_NUM_EQ_USER_PRESETS )
-    {
-        return;
-    }
-
-    GetEQPresetNames()[iPresetSlot].clear();
-
-    for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
-    {
-        if ( eCurrentContext == EC_INPUT )
-        {
-            pSettings->afEQPresetBandGainDb[iPresetSlot][iBand]         = 0.0f;
-            pSettings->abEQPresetBandDynEnabled[iPresetSlot][iBand]     = false;
-            pSettings->aiEQPresetBandDynThresholdDb[iPresetSlot][iBand] = -20;
-            pSettings->aiEQPresetBandDynRatio[iPresetSlot][iBand]       = 4;
-            pSettings->aiEQPresetBandDynAttackMs[iPresetSlot][iBand]    = 5;
-            pSettings->aiEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = 80;
-            pSettings->aiEQPresetBandQ[iPresetSlot][iBand]              = 10;
-        }
-        else
-        {
-            pSettings->afOutEQPresetBandGainDb[iPresetSlot][iBand]         = 0.0f;
-            pSettings->abOutEQPresetBandDynEnabled[iPresetSlot][iBand]     = false;
-            pSettings->aiOutEQPresetBandDynThresholdDb[iPresetSlot][iBand] = -20;
-            pSettings->aiOutEQPresetBandDynRatio[iPresetSlot][iBand]       = 4;
-            pSettings->aiOutEQPresetBandDynAttackMs[iPresetSlot][iBand]    = 5;
-            pSettings->aiOutEQPresetBandDynReleaseMs[iPresetSlot][iBand]   = 80;
-            pSettings->aiOutEQPresetBandQ[iPresetSlot][iBand]              = 10;
-        }
-    }
-
-    if ( iPresetSlot == GetSelectedEQPreset() )
-    {
-        GetSelectedEQPreset() = INVALID_INDEX;
-    }
-
-    PopulateEQPresetCombo();
-}
 
 void CEffectsDlg::OnEQBandGainChanged ( int iBand, float fGainDb )
 {
     if ( pClient )
     {
         SetEQBandGainDb ( iBand, fGainDb );
-        UpdateEQPresetSelection();
         if ( iBand == iSelectedBand )
         {
             UpdateEQDynControls ( iBand );
@@ -1188,7 +912,6 @@ void CEffectsDlg::OnEQBandFrequencyChanged ( int iBand, float fFreqHz )
     if ( pClient )
     {
         SetEQBandFrequency ( iBand, fFreqHz );
-        UpdateEQPresetSelection();
         if ( iBand == iSelectedBand )
         {
             UpdateEQDynControls ( iBand );
@@ -1203,7 +926,6 @@ void CEffectsDlg::OnEQBandGainReset ( int iBand )
     if ( pClient )
     {
         SetEQBandGainDb ( iBand, 0.0f );
-        UpdateEQPresetSelection();
         if ( iBand == iSelectedBand )
         {
             UpdateEQDynControls ( iBand );
@@ -1295,7 +1017,6 @@ void CEffectsDlg::OnEQBandGainKnobChanged ( int iValue )
         {
             pEQCurveWidget->SetBandGain ( iSelectedBand, fGainDb );
         }
-        UpdateEQPresetSelection();
         UpdateEQDynControls ( iSelectedBand );
     }
 }
@@ -1319,9 +1040,8 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
 
     iSelectedBand = iBand;
 
-    const bool bBypassed   = GetEQBypass();
     const bool bEnabled    = GetEQBandDynEnabled ( iBand );
-    const bool bDynEnabled = bEnabled && !bBypassed;
+    const bool bDynEnabled = bEnabled;
 
     // Apply per-band accent color to all EQ knobs
     const QColor colBand = GetBandColor ( iBand );
@@ -1359,7 +1079,7 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pEdtEQDynFreq->blockSignals ( false );
 
     const float fGainDb = GetEQBandGainDb ( iBand );
-    if ( pEdtEQDynGain->isReadOnly() || bBypassed )
+    if ( pEdtEQDynGain->isReadOnly() )
     {
         QString strGain = ( fGainDb > 0.0f ) ? QString ( "+%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) )
                                              : QString ( "%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) );
@@ -1418,7 +1138,7 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     const float fQ    = GetEQBandQ ( iBand );
     const int   iQInt = static_cast<int> ( std::round ( fQ * 10.0f ) );
     pKnobEQBandQ->setValue ( iQInt );
-    if ( pEdtEQBandQ->isReadOnly() || bBypassed )
+    if ( pEdtEQBandQ->isReadOnly() )
     {
         pEdtEQBandQ->blockSignals ( true );
         pEdtEQBandQ->setReadOnly ( true );
@@ -1435,15 +1155,15 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQBandQ->blockSignals ( false );
     pKnobEQBandGain->blockSignals ( false );
 
-    pChbEQDynEnabled->setEnabled ( !bBypassed );
-    pKnobEQBandQ->setEnabled ( !bBypassed );
-    pKnobEQBandGain->setEnabled ( !bBypassed );
-    pEdtEQDynFreq->setEnabled ( !bBypassed );
-    pEdtEQDynGain->setEnabled ( !bBypassed );
-    pEdtEQBandQ->setEnabled ( !bBypassed );
-    pLblEQDynFreqPrefix->setEnabled ( !bBypassed );
-    pLblEQDynGainPrefix->setEnabled ( !bBypassed );
-    pLblEQBandQ->setEnabled ( !bBypassed );
+    pChbEQDynEnabled->setEnabled ( true );
+    pKnobEQBandQ->setEnabled ( true );
+    pKnobEQBandGain->setEnabled ( true );
+    pEdtEQDynFreq->setEnabled ( true );
+    pEdtEQDynGain->setEnabled ( true );
+    pEdtEQBandQ->setEnabled ( true );
+    pLblEQDynFreqPrefix->setEnabled ( true );
+    pLblEQDynGainPrefix->setEnabled ( true );
+    pLblEQBandQ->setEnabled ( true );
 
     pKnobEQDynThreshold->setEnabled ( bDynEnabled );
     pKnobEQDynRatio->setEnabled ( bDynEnabled );
@@ -1691,7 +1411,6 @@ void CEffectsDlg::OnEQDynFreqEditFinished()
     }
 
     UpdateEQDynControls ( iSelectedBand );
-    UpdateEQPresetSelection();
 }
 
 void CEffectsDlg::OnEQDynGainEditFinished()
@@ -1727,7 +1446,6 @@ void CEffectsDlg::OnEQDynGainEditFinished()
     }
 
     UpdateEQDynControls ( iSelectedBand );
-    UpdateEQPresetSelection();
 }
 
 void CEffectsDlg::OnEQBandQEditFinished()
@@ -1905,6 +1623,4 @@ void CEffectsDlg::SetContext ( EEffectsContext eContext )
     UpdateCompressorControls();
     UpdateEQControls();
     PopulateEffectsPresetCombo();
-    PopulateEQPresetCombo();
-    UpdateEQPresetSelection();
 }

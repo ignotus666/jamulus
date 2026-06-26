@@ -102,7 +102,6 @@ private:
     int   iSelectedBand;
     bool  bDragging;
     bool  bDarkTheme;
-    bool  bEQBypassed;
 
     // Cached curves
     QVector<QPointF> vecStaticCurveCache;

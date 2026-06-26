@@ -43,7 +43,7 @@
      <item>
       <widget class="QLabel" name="pLblEffectsPreset">
        <property name="text">
-        <string>Global Effects Preset:</string>
+        <string>Effects Preset:</string>
        </property>
       </widget>
      </item>
@@ -541,61 +541,6 @@
        <string>Equalizer</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="1" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayoutEQPresetRow">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>EQ Preset:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="pCbxEQPresets">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pButEQSavePreset">
-           <property name="text">
-            <string>Save</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pButEQSaveAsPreset">
-           <property name="text">
-            <string>Save As...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pButEQDeletePreset">
-           <property name="text">
-            <string>Delete</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
        <item row="0" column="0">
         <widget class="QCheckBox" name="pChbEQEnable">
          <property name="text">
@@ -603,7 +548,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="4" column="0">
         <layout class="QHBoxLayout" name="horizontalLayoutEQReset">
          <item>
           <spacer name="horizontalSpacerEQ">
@@ -627,7 +572,7 @@
          </item>
         </layout>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="3" column="0" colspan="2">
         <widget class="QWidget" name="pEQDynPanel" native="true">
          <layout class="QGridLayout" name="gridLayoutEQDyn">
           <property name="leftMargin">
@@ -841,7 +786,7 @@
          </layout>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="2" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
           <number>4</number>
@@ -1063,7 +1008,7 @@
          </item>
         </layout>
        </item>
-       <item row="2" column="0" colspan="2">
+       <item row="1" column="0" colspan="2">
         <widget class="CEQCurveWidget" name="pEQCurveWidget" native="true"/>
        </item>
       </layout>
