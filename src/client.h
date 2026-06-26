@@ -298,12 +298,11 @@ public:
     bool& GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
     bool& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
 
-
     // Input spectrum band level telemetry getters & setters
-    void  GetInputBandLevels ( CVector<float>& vecInLevels );
-    void  SetInputBandLevelsEnabled ( const bool bEnabled ) { bInputBandLevelsEnabled = bEnabled; }
-    bool  GetInputBandLevelsEnabled() const { return bInputBandLevelsEnabled; }
-    void  UpdateInputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd );
+    void GetInputBandLevels ( CVector<float>& vecInLevels );
+    void SetInputBandLevelsEnabled ( const bool bEnabled ) { bInputBandLevelsEnabled = bEnabled; }
+    bool GetInputBandLevelsEnabled() const { return bInputBandLevelsEnabled; }
+    void UpdateInputBandLevels ( const CVector<int16_t>& vecsStereoSndCrd );
 
     void SetSockBufNumFrames ( const int iNumBlocks, const bool bPreserve = false ) { Channel.SetSockBufNumFrames ( iNumBlocks, bPreserve ); }
     int  GetSockBufNumFrames() { return Channel.GetSockBufNumFrames(); }

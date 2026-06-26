@@ -718,7 +718,7 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
         pCbxEffectsPresets->blockSignals ( bBlocked );
     }
 
-    const int ctx = ( eCurrentContext == EC_OUTPUT ) ? 1 : 0;
+    const int             ctx    = ( eCurrentContext == EC_OUTPUT ) ? 1 : 0;
     const SEffectsPreset& preset = pSettings->EffectsPresets[ctx][iPresetSlot];
 
     SetReverbLevel ( preset.iReverbLevel );
@@ -800,7 +800,7 @@ void CEffectsDlg::OnSaveEffectsPresetClicked()
         return;
     }
 
-    const QString strName                          = pCbxEffectsPresets->itemText ( iComboIndex );
+    const QString strName                = pCbxEffectsPresets->itemText ( iComboIndex );
     GetEffectsPresetNames()[iPresetSlot] = strName;
 
     pSettings->SaveEffectsPresetFromClient ( iPresetSlot, eCurrentContext == EC_OUTPUT );
@@ -891,7 +891,7 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
 
     GetEffectsPresetNames()[iPresetSlot].clear();
 
-    const int ctx = ( eCurrentContext == EC_OUTPUT ) ? 1 : 0;
+    const int ctx                               = ( eCurrentContext == EC_OUTPUT ) ? 1 : 0;
     pSettings->EffectsPresets[ctx][iPresetSlot] = SEffectsPreset();
 
     if ( iPresetSlot == GetSelectedEffectsPreset() )
@@ -1875,15 +1875,9 @@ void CEffectsDlg::OnEQDynReleaseEditFinished()
     UpdateEQDynControls ( iSelectedBand );
 }
 
-void CEffectsDlg::OnContextInputClicked()
-{
-    SetContext ( EC_INPUT );
-}
+void CEffectsDlg::OnContextInputClicked() { SetContext ( EC_INPUT ); }
 
-void CEffectsDlg::OnContextOutputClicked()
-{
-    SetContext ( EC_OUTPUT );
-}
+void CEffectsDlg::OnContextOutputClicked() { SetContext ( EC_OUTPUT ); }
 
 void CEffectsDlg::SetContext ( EEffectsContext eContext )
 {
@@ -1914,5 +1908,3 @@ void CEffectsDlg::SetContext ( EEffectsContext eContext )
     PopulateEQPresetCombo();
     UpdateEQPresetSelection();
 }
-
-

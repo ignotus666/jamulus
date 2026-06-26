@@ -86,12 +86,7 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect (
-                pGApp,
-                &QGuiApplication::saveStateRequest,
-                this,
-                [=] ( QSessionManager& ) { Save ( false ); },
-                Qt::DirectConnection );
+            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
@@ -162,33 +157,33 @@ public slots:
 
 struct SEffectsPreset
 {
-    bool             bEQBypass = true;
-    float            afEQBandGainDb[CAudioEqualizer::NUM_BANDS] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    bool             abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS] = { false, false, false, false, false, false, false, false };
-    int              aiEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = { -20, -20, -20, -20, -20, -20, -20, -20 };
-    int              aiEQBandDynRatio[CAudioEqualizer::NUM_BANDS] = { 4, 4, 4, 4, 4, 4, 4, 4 };
-    int              aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS] = { 5, 5, 5, 5, 5, 5, 5, 5 };
-    int              aiEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS] = { 80, 80, 80, 80, 80, 80, 80, 80 };
-    int              aiEQBandFrequency[CAudioEqualizer::NUM_BANDS] = { 63, 125, 250, 500, 1000, 2000, 4000, 8000 };
-    int              aiEQBandQ[CAudioEqualizer::NUM_BANDS] = { 10, 10, 10, 10, 10, 10, 10, 10 };
-    int              iReverbLevel = 0;
-    int              iReverbPreDelayMs = 0;
-    int              iReverbRoomSize = 60;
-    int              iReverbDamping = 30;
-    int              iReverbWetMix = 25;
-    int              iReverbEarlyLevel = 30;
-    int              iReverbWidth = 100;
-    bool             bReverbEarlyEnabled = true;
-    bool             bReverbFreeze = false;
-    bool             bReverbBypass = true;
-    bool             bReverbOnLeftChan = false;
-    bool             bCompressorBypass = true;
-    int              iCompressorThresholdDb = -12;
-    int              iCompressorRatio = 3;
-    int              iCompressorAttackMs = 5;
-    int              iCompressorReleaseMs = 120;
-    int              iCompressorMakeupDb = 3;
-    bool             bCompressorLimiterEnabled = true;
+    bool  bEQBypass                                          = true;
+    float afEQBandGainDb[CAudioEqualizer::NUM_BANDS]         = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    bool  abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS]     = { false, false, false, false, false, false, false, false };
+    int   aiEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = { -20, -20, -20, -20, -20, -20, -20, -20 };
+    int   aiEQBandDynRatio[CAudioEqualizer::NUM_BANDS]       = { 4, 4, 4, 4, 4, 4, 4, 4 };
+    int   aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS]    = { 5, 5, 5, 5, 5, 5, 5, 5 };
+    int   aiEQBandDynReleaseMs[CAudioEqualizer::NUM_BANDS]   = { 80, 80, 80, 80, 80, 80, 80, 80 };
+    int   aiEQBandFrequency[CAudioEqualizer::NUM_BANDS]      = { 63, 125, 250, 500, 1000, 2000, 4000, 8000 };
+    int   aiEQBandQ[CAudioEqualizer::NUM_BANDS]              = { 10, 10, 10, 10, 10, 10, 10, 10 };
+    int   iReverbLevel                                       = 0;
+    int   iReverbPreDelayMs                                  = 0;
+    int   iReverbRoomSize                                    = 60;
+    int   iReverbDamping                                     = 30;
+    int   iReverbWetMix                                      = 25;
+    int   iReverbEarlyLevel                                  = 30;
+    int   iReverbWidth                                       = 100;
+    bool  bReverbEarlyEnabled                                = true;
+    bool  bReverbFreeze                                      = false;
+    bool  bReverbBypass                                      = true;
+    bool  bReverbOnLeftChan                                  = false;
+    bool  bCompressorBypass                                  = true;
+    int   iCompressorThresholdDb                             = -12;
+    int   iCompressorRatio                                   = 3;
+    int   iCompressorAttackMs                                = 5;
+    int   iCompressorReleaseMs                               = 120;
+    int   iCompressorMakeupDb                                = 3;
+    bool  bCompressorLimiterEnabled                          = true;
 };
 
 #ifndef SERVER_ONLY
