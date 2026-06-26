@@ -1736,14 +1736,14 @@ void CClientSettings::SaveEQPresetFromClient ( int iPresetSlot, bool bIsOutput )
     {
         const CAudioEqualizer& eq = pClient->GetEQ ( bIsOutput );
 
-        float (&afGainDb)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? afOutEQPresetBandGainDb : afEQPresetBandGainDb;
-        int (&aiFrequency)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandFrequency : aiEQPresetBandFrequency;
-        bool (&abDynEnabled)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? abOutEQPresetBandDynEnabled : abEQPresetBandDynEnabled;
-        int (&aiDynThresholdDb)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynThresholdDb : aiOutEQPresetBandDynThresholdDb;
-        int (&aiDynRatio)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynRatio : aiOutEQPresetBandDynRatio;
-        int (&aiDynAttackMs)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynAttackMs : aiEQPresetBandDynAttackMs;
-        int (&aiDynReleaseMs)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynReleaseMs : aiEQPresetBandDynReleaseMs;
-        int (&aiQ)[MAX_NUM_EQ_USER_PRESETS][CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandQ : aiEQPresetBandQ;
+        float (*afGainDb)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? afOutEQPresetBandGainDb : afEQPresetBandGainDb;
+        int (*aiFrequency)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandFrequency : aiEQPresetBandFrequency;
+        bool (*abDynEnabled)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? abOutEQPresetBandDynEnabled : abEQPresetBandDynEnabled;
+        int (*aiDynThresholdDb)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynThresholdDb : aiEQPresetBandDynThresholdDb;
+        int (*aiDynRatio)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynRatio : aiEQPresetBandDynRatio;
+        int (*aiDynAttackMs)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynAttackMs : aiEQPresetBandDynAttackMs;
+        int (*aiDynReleaseMs)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandDynReleaseMs : aiEQPresetBandDynReleaseMs;
+        int (*aiQ)[CAudioEqualizer::NUM_BANDS] = bIsOutput ? aiOutEQPresetBandQ : aiEQPresetBandQ;
 
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
