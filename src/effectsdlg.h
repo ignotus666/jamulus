@@ -681,7 +681,6 @@ private:
     CVector<QString>& GetEffectsPresetNames() const { return pSettings->vstrEffectsPresetNames[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
     int&              GetSelectedEffectsPreset() const { return pSettings->iSelectedEffectsPreset[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
 
-
 public:
     // Context-aware client parameters getters & setters
     int  GetReverbLevel() const { return pClient ? pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) : 0; }
@@ -932,7 +931,6 @@ public:
     int  FindFreeEffectsPresetSlot() const;
     void ApplyThemeToCustomWidgets();
 
-
     void UpdateEQDynControls ( const int iBand );
 
 private slots:
@@ -945,7 +943,6 @@ private slots:
     void OnSaveAsEffectsPresetClicked();
     void OnDeleteEffectsPresetClicked();
     void OnResetEQClicked();
-
 
     void OnEQBandGainChanged ( int iBand, float fGainDb );
     void OnEQBandFrequencyChanged ( int iBand, float fFreqHz );

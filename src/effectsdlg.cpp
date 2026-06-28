@@ -170,7 +170,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     iSelectedBand = 0;
 
-
     QObject::connect ( pKnobReverb, &CCustomKnob::valueChanged, this, [this] ( int value ) {
         pLblReverbValue->setText ( QString::number ( value ) + tr ( " %" ) );
         emit ReverbValueChanged ( value );
@@ -892,8 +891,6 @@ void CEffectsDlg::OnDeleteEffectsPresetClicked()
 
     PopulateEffectsPresetCombo();
 }
-
-
 
 void CEffectsDlg::OnEQBandGainChanged ( int iBand, float fGainDb )
 {

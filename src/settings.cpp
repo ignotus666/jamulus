@@ -835,8 +835,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
         strDirectoryAddress        = "";
     }
 
-
-
     ReadEffectsPresetsFromXML ( IniXMLDocument, false );
     ReadEffectsPresetsFromXML ( IniXMLDocument, true );
 
@@ -857,8 +855,6 @@ void CClientSettings::ReadSettingsFromXML ( const QDomDocument& IniXMLDocument, 
     {
         iSelectedEffectsPreset[1] = INVALID_INDEX;
     }
-
-
 
     // directory type
 
@@ -1103,8 +1099,6 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     WriteEQSettingsToXML ( IniXMLDocument, pClient, false );
     WriteEQSettingsToXML ( IniXMLDocument, pClient, true );
 
-
-
     WriteEffectsPresetsToXML ( IniXMLDocument, true );
 
     // GUI design
@@ -1127,8 +1121,6 @@ void CClientSettings::WriteSettingsToXML ( QDomDocument& IniXMLDocument, bool is
     {
         PutIniSetting ( IniXMLDocument, "client", QString ( "directoryaddress%1" ).arg ( iIdx ), vstrDirectoryAddress[iIdx] );
     }
-
-
 
     WriteEffectsPresetsToXML ( IniXMLDocument, false );
 
@@ -1491,8 +1483,6 @@ void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot, bool bIsOut
         }
     }
 }
-
-
 
 void CClientSettings::ReadEQSettingsFromXML ( const QDomDocument& IniXMLDocument, CClient* pClient, bool bIsOutput )
 {
