@@ -62,7 +62,7 @@
 #include "server.h"
 #include "util.h"
 
-#define MAX_NUM_EFFECT_PRESETS  12
+#define MAX_NUM_EFFECT_PRESETS 12
 
 /* Classes ********************************************************************/
 class CSettings : public QObject
@@ -85,7 +85,12 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
+            QObject::connect (
+                pGApp,
+                &QGuiApplication::saveStateRequest,
+                this,
+                [=] ( QSessionManager& ) { Save ( false ); },
+                Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {

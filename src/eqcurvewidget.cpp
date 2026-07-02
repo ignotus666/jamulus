@@ -1018,7 +1018,8 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
     {
         // Scroll vertically -> adjust gain
         const float fDelta = ( deltaY > 0 ) ? 0.1f : -0.1f;
-        const float fNewDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
+        const float fNewDb =
+            std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
 
         if ( std::abs ( afBandGainDb[iSelectedBand] - fNewDb ) > 0.001f )
         {
