@@ -956,7 +956,6 @@ void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 {
-
     if ( iSelectedBand < 0 )
     {
         return;
@@ -975,13 +974,67 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
         return;
     }
 
-    const float fDelta = ( pEvent->angleDelta().y() > 0 ) ? 0.1f : -0.1f;
-    const float fNewDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
+    int deltaX = pEvent->angleDelta().x();
+    int deltaY = pEvent->angleDelta().y();
 
-    afBandGainDb[iSelectedBand] = fNewDb;
-    bStaticCurveDirty           = true;
-    bEffectiveCurveDirty        = true;
-    emit bandGainChanged ( iSelectedBand, fNewDb );
-    UpdateBandTooltip ( iSelectedBand );
-    update();
+    // Map Shift + vertical scroll to horizontal scroll if the OS/Qt doesn't do it automatically
+    if ( pEvent->modifiers() & Qt::ShiftModifier )
+    {
+        if ( deltaX == 0 && deltaY != 0 )
+        {
+            deltaX = deltaY;
+            deltaY = 0;
+        }
+    }
+
+    bool bChanged = false;
+
+    if ( deltaX != 0 )
+    {
+        // Scroll horizontally -> adjust frequency
+        // We move the frequency dot by a uniform visual pixel step (e.g. 2 pixels)
+        float fX = FreqToXf ( afBandFrequencies[iSelectedBand] );
+        fX += ( deltaX > 0 ) ? 2.0f : -2.0f;
+        const float fFreqHz = XToFreq ( fX );
+
+        // Prevent band crossover with a 10% dynamic safety margin:
+        float fMinFreq = ( iSelectedBand > 0 ) ? afBandFrequencies[iSelectedBand - 1] * 1.10f : kFreqMin;
+        float fMaxFreq = ( iSelectedBand < kNumBands - 1 ) ? afBandFrequencies[iSelectedBand + 1] * 0.90f : kFreqMax;
+
+        fMinFreq = std::max ( kFreqMin, fMinFreq );
+        fMaxFreq = std::min ( kFreqMax, fMaxFreq );
+
+        const float fClampedFreq = std::max ( fMinFreq, std::min ( fMaxFreq, fFreqHz ) );
+
+        if ( std::fabs ( afBandFrequencies[iSelectedBand] - fClampedFreq ) > 0.1f )
+        {
+            afBandFrequencies[iSelectedBand] = fClampedFreq;
+            bStaticCurveDirty                = true;
+            bEffectiveCurveDirty             = true;
+            emit bandFrequencyChanged ( iSelectedBand, fClampedFreq );
+            bChanged = true;
+        }
+    }
+
+    if ( deltaY != 0 )
+    {
+        // Scroll vertically -> adjust gain
+        const float fDelta = ( deltaY > 0 ) ? 0.1f : -0.1f;
+        const float fNewDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
+
+        if ( std::abs ( afBandGainDb[iSelectedBand] - fNewDb ) > 0.001f )
+        {
+            afBandGainDb[iSelectedBand] = fNewDb;
+            bStaticCurveDirty           = true;
+            bEffectiveCurveDirty        = true;
+            emit bandGainChanged ( iSelectedBand, fNewDb );
+            bChanged = true;
+        }
+    }
+
+    if ( bChanged )
+    {
+        UpdateBandTooltip ( iSelectedBand );
+        update();
+    }
 }
