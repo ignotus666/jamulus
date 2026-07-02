@@ -991,11 +991,9 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 
     if ( deltaX != 0 )
     {
-        // Scroll horizontally -> adjust frequency
-        // We move the frequency dot by a uniform visual pixel step (e.g. 2 pixels)
-        float fX = FreqToXf ( afBandFrequencies[iSelectedBand] );
-        fX += ( deltaX > 0 ) ? 2.0f : -2.0f;
-        const float fFreqHz = XToFreq ( fX );
+        // Scroll horizontally -> adjust frequency by 0.1 semitones per detent (120 units of delta)
+        const float fFactor = std::pow ( 2.0f, static_cast<float> ( deltaX ) / 14400.0f );
+        const float fFreqHz = afBandFrequencies[iSelectedBand] * fFactor;
 
         // Prevent band crossover with a 10% dynamic safety margin:
         float fMinFreq = ( iSelectedBand > 0 ) ? afBandFrequencies[iSelectedBand - 1] * 1.10f : kFreqMin;
