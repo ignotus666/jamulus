@@ -1022,7 +1022,7 @@ void CEffectsDlg::OnResetEQClicked()
 {
     if ( pClient )
     {
-        pClient->ResetEQ();
+        pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).Reset();
     }
     UpdateEQControls();
     pTabs->setFocus();

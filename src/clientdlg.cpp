@@ -316,33 +316,67 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
             QWhatsThis::showText ( butEffects->mapToGlobal ( QPoint ( 0, butEffects->height() ) ), butEffects->whatsThis(), butEffects );
         } );
 
+        // --- Input (to server) Presets ---
         presetMenu.addSeparator();
-        QAction* pPresetsHeaderAction = presetMenu.addAction ( tr ( "Presets:" ) );
-        QFont    headerFont           = pPresetsHeaderAction->font();
-        headerFont.setBold ( true );
-        pPresetsHeaderAction->setFont ( headerFont );
-        pPresetsHeaderAction->setEnabled ( false );
+        QAction* pInputHeaderAction = presetMenu.addAction ( tr ( "Input (to server):" ) );
+        QFont    inputHeaderFont    = pInputHeaderAction->font();
+        inputHeaderFont.setBold ( true );
+        pInputHeaderAction->setFont ( inputHeaderFont );
+        pInputHeaderAction->setEnabled ( false );
         presetMenu.addSeparator();
 
-        bool bHasPreset = false;
-
-        const int ctx = ( EffectsDlg.GetContext() == CEffectsDlg::EC_OUTPUT ) ? 1 : 0;
+        bool bHasInputPreset = false;
         for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
         {
-            const QString strName = pSettings->vstrEffectsPresetNames[ctx][iPreset];
+            const QString strName = pSettings->vstrEffectsPresetNames[0][iPreset];
             if ( strName.isEmpty() )
             {
                 continue;
             }
 
-            bHasPreset       = true;
+            bHasInputPreset  = true;
             QAction* pAction = presetMenu.addAction ( strName );
-            QObject::connect ( pAction, &QAction::triggered, this, [this, iPreset] { EffectsDlg.ApplyEffectsPreset ( iPreset ); } );
+            QObject::connect ( pAction, &QAction::triggered, this, [this, iPreset] {
+                EffectsDlg.SetContext ( CEffectsDlg::EC_INPUT );
+                EffectsDlg.ApplyEffectsPreset ( iPreset );
+            } );
         }
 
-        if ( !bHasPreset )
+        if ( !bHasInputPreset )
         {
-            QAction* pAction = presetMenu.addAction ( tr ( "No saved global effects presets" ) );
+            QAction* pAction = presetMenu.addAction ( tr ( "No saved input presets" ) );
+            pAction->setEnabled ( false );
+        }
+
+        // --- Output (monitor) Presets ---
+        presetMenu.addSeparator();
+        QAction* pOutputHeaderAction = presetMenu.addAction ( tr ( "Output (monitor):" ) );
+        QFont    outputHeaderFont    = pOutputHeaderAction->font();
+        outputHeaderFont.setBold ( true );
+        pOutputHeaderAction->setFont ( outputHeaderFont );
+        pOutputHeaderAction->setEnabled ( false );
+        presetMenu.addSeparator();
+
+        bool bHasOutputPreset = false;
+        for ( int iPreset = 0; iPreset < MAX_NUM_EFFECT_PRESETS; ++iPreset )
+        {
+            const QString strName = pSettings->vstrEffectsPresetNames[1][iPreset];
+            if ( strName.isEmpty() )
+            {
+                continue;
+            }
+
+            bHasOutputPreset = true;
+            QAction* pAction = presetMenu.addAction ( strName );
+            QObject::connect ( pAction, &QAction::triggered, this, [this, iPreset] {
+                EffectsDlg.SetContext ( CEffectsDlg::EC_OUTPUT );
+                EffectsDlg.ApplyEffectsPreset ( iPreset );
+            } );
+        }
+
+        if ( !bHasOutputPreset )
+        {
+            QAction* pAction = presetMenu.addAction ( tr ( "No saved output presets" ) );
             pAction->setEnabled ( false );
         }
 
