@@ -355,7 +355,9 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
 {
     if ( pClient )
     {
-        pClient->SetOutputBandLevelsEnabled ( true );
+        const bool bIsInput = ( eCurrentContext == EC_INPUT );
+        pClient->SetInputBandLevelsEnabled ( bIsInput );
+        pClient->SetOutputBandLevelsEnabled ( !bIsInput );
     }
     ApplyThemeToCustomWidgets();
 
@@ -375,6 +377,7 @@ void CEffectsDlg::hideEvent ( QHideEvent* Event )
 {
     if ( pClient )
     {
+        pClient->SetInputBandLevelsEnabled ( false );
         pClient->SetOutputBandLevelsEnabled ( false );
     }
     CBaseDlg::hideEvent ( Event );
