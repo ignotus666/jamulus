@@ -67,9 +67,10 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
         afBandFrequencies[i]     = CAudioEqualizer::GetDefaultBandFrequency ( i );
         afBandQ[i]               = 1.0f;
     }
-    for ( int i = 0; i < kNumSpectrumBands; ++i )
+    for ( int i = 0; i < kNumVisualBands; ++i )
     {
         afSpectrumLevels[i] = 0.0f;
+        afSpectrumPeaks[i]  = 0.0f;
     }
 
     setMinimumSize ( 300, 120 );
@@ -165,20 +166,65 @@ void CEQCurveWidget::SetBandGainReduction ( const int iBand, const float fReduct
 
 void CEQCurveWidget::SetSpectrumLevels ( const QVector<float>& vecLevels )
 {
-    bool bChanged = false;
-    for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
+    const int iInputSize = vecLevels.size();
+    bool      bChanged   = false;
+
+    for ( int iBand = 0; iBand < kNumVisualBands; ++iBand )
     {
-        const float fOldVal = afSpectrumLevels[iBand];
-        float       fNewVal = 0.0f;
-        if ( iBand < vecLevels.size() )
+        // Linearly interpolate the input level for this visual band index
+        float fNewVal = 0.0f;
+        if ( iInputSize > 1 )
         {
-            fNewVal = qBound ( 0.0f, vecLevels[iBand], 1.0f );
+            // Map visual band index iBand [0..kNumVisualBands-1] to input range [0..iInputSize-1]
+            const float fSrcIdx = static_cast<float> ( iBand ) / ( kNumVisualBands - 1 ) * ( iInputSize - 1 );
+            const int   iIdxL   = static_cast<int> ( fSrcIdx );
+            const int   iIdxR   = std::min ( iInputSize - 1, iIdxL + 1 );
+            const float fAlpha  = fSrcIdx - iIdxL;
+
+            const float fL = qBound ( 0.0f, vecLevels[iIdxL], 1.0f );
+            const float fR = qBound ( 0.0f, vecLevels[iIdxR], 1.0f );
+            fNewVal = ( 1.0f - fAlpha ) * fL + fAlpha * fR;
+        }
+        else if ( iInputSize == 1 )
+        {
+            fNewVal = qBound ( 0.0f, vecLevels[0], 1.0f );
         }
 
-        if ( std::fabs ( fOldVal - fNewVal ) > 0.02f )
+        const float fOldVal = afSpectrumLevels[iBand];
+        float fTargetVal = fOldVal;
+        if ( fNewVal >= fOldVal )
         {
-            afSpectrumLevels[iBand] = fNewVal;
+            fTargetVal = fNewVal;
+        }
+        else
+        {
+            // Decay when falling
+            fTargetVal = std::max ( fNewVal, fOldVal * 0.92f - 0.005f );
+        }
+
+        if ( std::fabs ( fOldVal - fTargetVal ) > 0.005f )
+        {
+            afSpectrumLevels[iBand] = fTargetVal;
             bChanged                = true;
+        }
+
+        // Peak decay
+        const float fOldPeak = afSpectrumPeaks[iBand];
+        float fTargetPeak = fOldPeak;
+        if ( fNewVal >= fOldPeak )
+        {
+            fTargetPeak = fNewVal;
+        }
+        else
+        {
+            // Peaks decay more slowly than the level lines
+            fTargetPeak = std::max ( fNewVal, fOldPeak * 0.97f - 0.002f );
+        }
+
+        if ( std::fabs ( fOldPeak - fTargetPeak ) > 0.005f )
+        {
+            afSpectrumPeaks[iBand] = fTargetPeak;
+            bChanged               = true;
         }
     }
 
@@ -204,9 +250,10 @@ void CEQCurveWidget::SetBypassed ( const bool bBypassed )
     if ( bBypassed )
     {
         // Clear real-time analyzer data when bypassed
-        for ( int i = 0; i < kNumSpectrumBands; ++i )
+        for ( int i = 0; i < kNumVisualBands; ++i )
         {
             afSpectrumLevels[i] = 0.0f;
+            afSpectrumPeaks[i]  = 0.0f;
         }
         for ( int i = 0; i < kNumBands; ++i )
         {
@@ -477,7 +524,7 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     // Draw spectrum overlay in the background
     bool bAnySpectrum = false;
-    for ( int i = 0; i < kNumSpectrumBands; ++i )
+    for ( int i = 0; i < kNumVisualBands; ++i )
     {
         if ( afSpectrumLevels[i] > 0.001f )
         {
@@ -488,46 +535,68 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 
     if ( bAnySpectrum )
     {
-        QPainterPath spectrumPath;
-        // Start at bottom-left corner of plot area (20 Hz)
-        spectrumPath.moveTo ( FreqToXf ( kFreqMin ), r.bottom() );
+        const float fBarWidth = std::max ( 2.0f, static_cast<float> ( r.width() / kNumVisualBands ) - 1.5f );
+        const float fRad      = fBarWidth / 2.0f;
 
-        // Add each band level point
-        for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
+        for ( int iBand = 0; iBand < kNumVisualBands; ++iBand )
         {
-            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumSpectrumBands - 1 ) );
-            const float fNx   = FreqToXf ( fFreq );
-            const float fNy   = r.bottom() - afSpectrumLevels[iBand] * r.height();
-            spectrumPath.lineTo ( fNx, fNy );
+            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumVisualBands - 1 ) );
+            const float fX    = FreqToXf ( fFreq );
+            const float fY    = r.bottom() - afSpectrumLevels[iBand] * r.height();
+
+            // 1. Draw the vertical decaying level rounded bar
+            if ( afSpectrumLevels[iBand] > 0.001f )
+            {
+                QLinearGradient barGrad ( fX, r.bottom(), fX, fY );
+                barGrad.setColorAt ( 0.0, QColor ( 0, 150, 255, 10 ) );
+                barGrad.setColorAt ( 0.5, QColor ( 48, 230, 75, 25 ) );
+                barGrad.setColorAt ( 0.8, QColor ( 245, 155, 40, 35 ) );
+                barGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 45 ) );
+
+                painter.setPen ( Qt::NoPen );
+                painter.setBrush ( barGrad );
+                painter.drawRoundedRect ( QRectF ( fX - fRad, fY, fBarWidth, r.bottom() - fY ), fRad, fRad );
+            }
+
+            // 2. Draw the slowly decaying peak tick mark (rounded pill-shaped tick)
+            const float fPeakY = r.bottom() - afSpectrumPeaks[iBand] * r.height();
+            if ( afSpectrumPeaks[iBand] > 0.001f )
+            {
+                QColor colPeak;
+                if ( afSpectrumPeaks[iBand] < 0.5f )
+                {
+                    const float t = afSpectrumPeaks[iBand] / 0.5f;
+                    colPeak = QColor (
+                        static_cast<int> ( 0 * ( 1.0f - t ) + 48 * t ),
+                        static_cast<int> ( 150 * ( 1.0f - t ) + 230 * t ),
+                        static_cast<int> ( 255 * ( 1.0f - t ) + 75 * t )
+                    );
+                }
+                else if ( afSpectrumPeaks[iBand] < 0.8f )
+                {
+                    const float t = ( afSpectrumPeaks[iBand] - 0.5f ) / 0.3f;
+                    colPeak = QColor (
+                        static_cast<int> ( 48 * ( 1.0f - t ) + 245 * t ),
+                        static_cast<int> ( 230 * ( 1.0f - t ) + 155 * t ),
+                        static_cast<int> ( 75 * ( 1.0f - t ) + 40 * t )
+                    );
+                }
+                else
+                {
+                    const float t = ( afSpectrumPeaks[iBand] - 0.8f ) / 0.2f;
+                    colPeak = QColor (
+                        static_cast<int> ( 245 * ( 1.0f - t ) + 235 * t ),
+                        static_cast<int> ( 155 * ( 1.0f - t ) + 60 * t ),
+                        static_cast<int> ( 40 * ( 1.0f - t ) + 55 * t )
+                    );
+                }
+
+                colPeak.setAlpha ( 60 ); // Soft, non-interfering peak ticks
+                painter.setPen ( Qt::NoPen );
+                painter.setBrush ( colPeak );
+                painter.drawRoundedRect ( QRectF ( fX - fRad, fPeakY - 1.0f, fBarWidth, 2.0f ), 1.0f, 1.0f );
+            }
         }
-
-        // End at bottom-right corner of plot area (20000 Hz)
-        spectrumPath.lineTo ( FreqToXf ( kFreqMax ), r.bottom() );
-        spectrumPath.closeSubpath();
-
-        // Create a semi-transparent glowing gradient matching the level colors
-        QLinearGradient spectrumGrad ( r.left(), r.bottom(), r.left(), r.top() );
-        spectrumGrad.setColorAt ( 0.0, QColor ( 0, 200, 255, 0 ) );   // transparent at bottom
-        spectrumGrad.setColorAt ( 0.4, QColor ( 48, 230, 75, 45 ) );  // glowing green
-        spectrumGrad.setColorAt ( 0.7, QColor ( 245, 155, 40, 60 ) ); // orange near top
-        spectrumGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 80 ) );  // red at top
-
-        painter.fillPath ( spectrumPath, spectrumGrad );
-
-        // Draw thin outline
-        const QColor colSpectrumLine = QColor ( 48, 230, 75, 120 );
-        painter.setPen ( QPen ( colSpectrumLine, 1.0, Qt::SolidLine ) );
-        painter.setBrush ( Qt::NoBrush );
-
-        QPainterPath linePath;
-        linePath.moveTo ( FreqToXf ( kFreqMin ), r.bottom() );
-        for ( int iBand = 0; iBand < kNumSpectrumBands; ++iBand )
-        {
-            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumSpectrumBands - 1 ) );
-            linePath.lineTo ( FreqToXf ( fFreq ), r.bottom() - afSpectrumLevels[iBand] * r.height() );
-        }
-        linePath.lineTo ( FreqToXf ( kFreqMax ), r.bottom() );
-        painter.drawPath ( linePath );
     }
 
     // Compute and draw response curves
