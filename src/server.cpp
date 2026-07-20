@@ -50,7 +50,8 @@
 // CServer implementation ******************************************************
 CServer::CServer ( const int          iNewMaxNumChan,
                    const QString&     strLoggingFileName,
-                   const QString&     strServerBindIP,
+                   const QString&     strServerBindIP4,
+                   const QString&     strServerBindIP6,
                    const quint16      iPortNumber,
                    const quint16      iQosNumber,
                    const QString&     strDirectoryAddress,
@@ -74,7 +75,7 @@ CServer::CServer ( const int          iNewMaxNumChan,
     iCurNumChannels ( 0 ),
     bDisableRaw ( bNDisableRaw ),
     bIPv6Available ( false ),
-    Socket ( this, iPortNumber, iQosNumber, strServerBindIP, bNDisableIPv6, bIPv6Available ),
+    Socket ( this, iPortNumber, iQosNumber, strServerBindIP4, strServerBindIP6, bNDisableIPv6, bIPv6Available ),
     Logging(),
     iFrameCount ( 0 ),
     HighPrecisionTimer ( bNUseDoubleSystemFrameSize ),
@@ -731,7 +732,7 @@ void CServer::OnTimer()
     if ( iNumClients > 0 )
     {
         // calculate levels for all connected clients
-        const bool bSendChannelLevels = CreateLevelsForAllConChannels ( iNumClients, vecNumAudioChannels, vecvecsData, vecChannelLevels );
+        const bool bSendChannelLevels = CreateLevelsForAllConChannels ( iNumClients );
 
         for ( int iChanCnt = 0; iChanCnt < iNumClients; iChanCnt++ )
         {
@@ -1672,10 +1673,7 @@ void CServer::customEvent ( QEvent* pEvent )
 }
 
 /// @brief Compute frame peak level for each client
-bool CServer::CreateLevelsForAllConChannels ( const int                       iNumClients,
-                                              const CVector<int>&             vecNumAudioChannels,
-                                              const CVector<CVector<int16_t>> vecvecsData,
-                                              CVector<uint16_t>&              vecLevelsOut )
+bool CServer::CreateLevelsForAllConChannels ( const int iNumClients )
 {
     bool bLevelsWereUpdated = false;
 
@@ -1694,7 +1692,7 @@ bool CServer::CreateLevelsForAllConChannels ( const int                       iN
 
             // map value to integer for transmission via the protocol (4 bit available)
             const double dScaled = dCurSigLevelForMeterdB * 15.0 / NUM_STEPS_LED_BAR;
-            vecLevelsOut[j]      = static_cast<uint16_t> ( std::min ( 15.0, std::ceil ( dScaled ) ) );
+            vecChannelLevels[j]  = static_cast<uint16_t> ( std::min ( 15.0, std::ceil ( dScaled ) ) );
         }
     }
 

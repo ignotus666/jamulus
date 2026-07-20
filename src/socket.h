@@ -50,12 +50,16 @@
 #include <QThread>
 #include <QMutex>
 #include <vector>
+#include <atomic>
 #include "global.h"
 #include "protocol.h"
 #include "util.h"
 #ifndef _WIN32
 #    include <netinet/in.h>
 #    include <sys/socket.h>
+// for compatibility with winsock, avoiding ifdefs
+typedef int SOCKET;
+#    define INVALID_SOCKET -1
 #endif
 
 // The header files channel.h and server.h require to include this header file
@@ -78,14 +82,16 @@ public:
     CSocket ( CChannel*      pNewChannel,
               const quint16  iPortNumber,
               const quint16  iQosNumber,
-              const QString& strServerBindIP,
+              const QString& strServerBindIP4,
+              const QString& strServerBindIP6,
               const bool     bDisableIPv6,
               bool&          bIPv6Available );
 
     CSocket ( CServer*       pNServP,
               const quint16  iPortNumber,
               const quint16  iQosNumber,
-              const QString& strServerBindIP,
+              const QString& strServerBindIP4,
+              const QString& strServerBindIP6,
               const bool     bDisableIPv6,
               bool&          bIPv6Available );
 
@@ -94,19 +100,20 @@ public:
     void SendPacket ( const CVector<uint8_t>& vecbySendBuf, const CHostAddress& HostAddr );
 
     bool GetAndResetbJitterBufferOKFlag();
-    void Close();
 
 protected:
-    void    Init ( const quint16 iPortNumber, const quint16 iQosNumber, const QString& strServerBindIP, const bool bDisableIPv6 );
+    void    Init ( const quint16  iPortNumber,
+                   const quint16  iQosNumber,
+                   const QString& strServerBindIP4,
+                   const QString& strServerBindIP6,
+                   const bool     bDisableIPv6 );
     quint16 iPortNumber;
     quint16 iQosNumber;
-    QString strServerBindIP;
+    QString strServerBindIP4;
+    QString strServerBindIP6;
 
-#ifdef _WIN32
-    SOCKET UdpSocket;
-#else
-    int UdpSocket;
-#endif
+    SOCKET UdpSocket4;
+    SOCKET UdpSocket6;
 
     QMutex Mutex;
 
@@ -123,8 +130,11 @@ protected:
     // to inform the Client or Server which type of socket was created at startup.
     bool& bIPv6Available;
 
+private:
+    void ProcessPacket ( const CHostAddress& RecHostAddr, const int iNumBytesRead );
+
 public:
-    void OnDataReceived();
+    void OnDataReceived ( std::atomic<bool>& bRun );
 
 signals:
     void NewConnection(); // for the client
@@ -154,10 +164,11 @@ public:
     CHighPrioSocket ( CChannel*      pNewChannel,
                       const quint16  iPortNumber,
                       const quint16  iQosNumber,
-                      const QString& strServerBindIP,
+                      const QString& strServerBindIP4,
+                      const QString& strServerBindIP6,
                       const bool     bDisableIPv6,
                       bool&          bIPv6Available ) :
-        Socket ( pNewChannel, iPortNumber, iQosNumber, strServerBindIP, bDisableIPv6, bIPv6Available )
+        Socket ( pNewChannel, iPortNumber, iQosNumber, strServerBindIP4, strServerBindIP6, bDisableIPv6, bIPv6Available )
     {
         Init();
     }
@@ -165,10 +176,11 @@ public:
     CHighPrioSocket ( CServer*       pNewServer,
                       const quint16  iPortNumber,
                       const quint16  iQosNumber,
-                      const QString& strServerBindIP,
+                      const QString& strServerBindIP4,
+                      const QString& strServerBindIP6,
                       const bool     bDisableIPv6,
                       bool&          bIPv6Available ) :
-        Socket ( pNewServer, iPortNumber, iQosNumber, strServerBindIP, bDisableIPv6, bIPv6Available )
+        Socket ( pNewServer, iPortNumber, iQosNumber, strServerBindIP4, strServerBindIP6, bDisableIPv6, bIPv6Available )
     {
         Init();
     }
@@ -200,9 +212,6 @@ protected:
             // disable run flag so that the thread loop can be exit
             bRun = false;
 
-            // to leave blocking wait for receive
-            pSocket->Close();
-
             // give thread some time to terminate
             wait ( 5000 );
         }
@@ -220,13 +229,13 @@ protected:
                 {
                     // this function is a blocking function (waiting for network
                     // packets to be received and processed)
-                    pSocket->OnDataReceived();
+                    pSocket->OnDataReceived ( bRun );
                 }
             }
         }
 
-        CSocket* pSocket;
-        bool     bRun;
+        CSocket*          pSocket;
+        std::atomic<bool> bRun; // atomic, as it is set and tested by different threads
     };
 
     void Init()
@@ -250,11 +259,3 @@ protected:
 signals:
     void InvalidPacketReceived ( CHostAddress RecHostAddr );
 };
-
-// overlay generic, IPv4 and IPv6 sockaddr structures
-typedef union
-{
-    struct sockaddr     sa;
-    struct sockaddr_in  sa4;
-    struct sockaddr_in6 sa6;
-} uSockAddr;
