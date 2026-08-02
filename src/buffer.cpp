@@ -517,7 +517,7 @@ void CNetBufWithStats::Init ( const int iNewBlockSize, const int iNewNumBlocks, 
 
         // init auto buffer setting with a meaningful value, also init the
         // IIR parameter with this value
-        iCurAutoBufferSizeSetting = 6;
+        iCurAutoBufferSizeSetting = 4;
         dCurIIRFilterResult       = iCurAutoBufferSizeSetting;
         iCurDecidedResult         = iCurAutoBufferSizeSetting;
     }

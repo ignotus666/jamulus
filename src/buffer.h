@@ -68,17 +68,17 @@
 #define UP_MAX_ERROR_BOUND                   ( UP_MAX_ERROR_BOUND_DOUBLE_FRAME_SIZE / 2 )
 
 // each regular buffer access lead to a count for put and get, assuming 2.66 ms
-// blocks we have 15 s / 2.66 ms * 2 = approx. 11000
-#define MAX_STATISTIC_COUNT_DOUBLE_FRAME_SIZE 11000
+// blocks we have 7.5 s / 2.66 ms * 2 = approx. 5500
+#define MAX_STATISTIC_COUNT_DOUBLE_FRAME_SIZE 5500
 
 // each regular buffer access lead to a count for put and get, assuming 1.33 ms
-// blocks we have 15 s / 1.33 ms * 2 = approx. 22500
-#define MAX_STATISTIC_COUNT 22500
+// blocks we have 7.5 s / 1.33 ms * 2 = approx. 11000
+#define MAX_STATISTIC_COUNT 11000
 
 // Note that the following definitions of the weigh constants assume a block
 // size of 128 samples at a sampling rate of 48 kHz.
 #define IIR_WEIGTH_UP_NORMAL_DOUBLE_FRAME_SIZE   0.999995
-#define IIR_WEIGTH_DOWN_NORMAL_DOUBLE_FRAME_SIZE 0.9999
+#define IIR_WEIGTH_DOWN_NORMAL_DOUBLE_FRAME_SIZE 0.9997  // ~3x faster decay for quicker latency recovery
 #define IIR_WEIGTH_UP_FAST_DOUBLE_FRAME_SIZE     0.9995
 #define IIR_WEIGTH_DOWN_FAST_DOUBLE_FRAME_SIZE   0.999
 
@@ -86,7 +86,7 @@
 // and https://octave-online.net:
 // gamma = exp(-Ts/tau), after some calculations we get: x=0.999995;exp(64/128*log(x))
 #define IIR_WEIGTH_UP_NORMAL   0.9999975
-#define IIR_WEIGTH_DOWN_NORMAL 0.99994999875
+#define IIR_WEIGTH_DOWN_NORMAL 0.99985  // sqrt(0.9997) — ~3x faster decay than original 0.99994999875
 #define IIR_WEIGTH_UP_FAST     0.9997499687422
 #define IIR_WEIGTH_DOWN_FAST   0.999499875
 
