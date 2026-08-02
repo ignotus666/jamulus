@@ -1448,7 +1448,7 @@ void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot, bool bIsOut
         SEffectsPreset& preset = EffectsPresets[ctx][iPresetSlot];
 
         preset.iReverbLevel        = pClient->GetReverbLevel ( bIsOutput );
-        preset.bReverbOnLeftChan   = bIsOutput ? false : pClient->GetReverbOnLeftChan ( false );
+        preset.bReverbOnLeftChan   = bIsOutput ? false : static_cast<bool> ( pClient->GetReverbOnLeftChan ( false ) );
         preset.iReverbPreDelayMs   = pClient->GetReverbPreDelayMs ( bIsOutput );
         preset.iReverbRoomSize     = pClient->GetReverbRoomSize ( bIsOutput );
         preset.iReverbDamping      = pClient->GetReverbDamping ( bIsOutput );

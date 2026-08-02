@@ -286,7 +286,7 @@ public:
     CAudioEqualizer&  GetEQ ( const bool bIsOutput ) { return bIsOutput ? AudioEqualizerOutput : AudioEqualizer; }
     CAudioCompressor& GetCompressor ( const bool bIsOutput ) { return bIsOutput ? AudioCompressorOutput : AudioCompressor; }
 
-    int&  GetReverbLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbLevel : iReverbLevel; }
+    std::atomic<int>&  GetReverbLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbLevel : iReverbLevel; }
     bool& GetReverbBypass ( const bool bIsOutput ) { return bIsOutput ? bOutReverbBypass : bReverbBypass; }
     int&  GetReverbPreDelayMs ( const bool bIsOutput ) { return bIsOutput ? iOutReverbPreDelayMs : iReverbPreDelayMs; }
     int&  GetReverbRoomSize ( const bool bIsOutput ) { return bIsOutput ? iOutReverbRoomSize : iReverbRoomSize; }
@@ -296,7 +296,7 @@ public:
     int&  GetReverbWidth ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWidth : iReverbWidth; }
     bool& GetReverbEarlyEnabled ( const bool bIsOutput ) { return bIsOutput ? bOutReverbEarlyEnabled : bReverbEarlyEnabled; }
     bool& GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
-    bool& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
+    std::atomic<bool>& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
 
     // Input spectrum band level telemetry getters & setters
     void GetInputBandLevels ( CVector<float>& vecInLevels );
@@ -497,8 +497,8 @@ protected:
     EAudChanConf           eAudioChannelConf;
     int                    iNumAudioChannels;
     bool                   bIsInitializationPhase;
-    bool                   bMuteOutStream;
-    float                  fMuteOutStreamGain;
+    std::atomic<bool>      bMuteOutStream;
+    std::atomic<float>     fMuteOutStreamGain;
     CVector<unsigned char> vecCeltData;
 
     bool            bIPv6Available; // must be before Socket - passed by reference to Socket
@@ -509,9 +509,9 @@ protected:
 
     CVector<uint8_t> vecbyNetwData;
 
-    int              iAudioInFader;
-    bool             bReverbOnLeftChan;
-    int              iReverbLevel;
+    std::atomic<int>  iAudioInFader;
+    std::atomic<bool> bReverbOnLeftChan;
+    std::atomic<int>  iReverbLevel;
     int              iReverbPreDelayMs;
     int              iReverbRoomSize;
     int              iReverbDamping;
@@ -524,8 +524,8 @@ protected:
     CAudioReverb     AudioReverb;
     CAudioEqualizer  AudioEqualizer;
     CAudioCompressor AudioCompressor;
-    bool             bOutReverbOnLeftChan;
-    int              iOutReverbLevel;
+    std::atomic<bool> bOutReverbOnLeftChan;
+    std::atomic<int>  iOutReverbLevel;
     int              iOutReverbPreDelayMs;
     int              iOutReverbRoomSize;
     int              iOutReverbDamping;
@@ -538,7 +538,7 @@ protected:
     CAudioReverb     AudioReverbOutput;
     CAudioEqualizer  AudioEqualizerOutput;
     CAudioCompressor AudioCompressorOutput;
-    int              iInputBoost;
+    std::atomic<int>  iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;
     int iSndCrdFrameSizeFactor;
@@ -563,7 +563,7 @@ protected:
     bool        bEnableAudioAlerts;
     bool        bEnableOPUS64;
 
-    bool              bJitterBufferOK;
+    std::atomic<bool> bJitterBufferOK;
     bool              bMuteMeInPersonalMix;
     QMutex            MutexDriverReinit;
     QMutex            MutexOutputBandLevels;

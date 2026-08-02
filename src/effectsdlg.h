@@ -683,7 +683,7 @@ private:
 
 public:
     // Context-aware client parameters getters & setters
-    int  GetReverbLevel() const { return pClient ? pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) : 0; }
+    int  GetReverbLevel() const { return pClient ? static_cast<int> ( pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) ) : 0; }
     void SetReverbLevel ( int iNL )
     {
         if ( pClient )
@@ -691,7 +691,7 @@ public:
             pClient->GetReverbLevel ( eCurrentContext == EC_OUTPUT ) = iNL;
         }
     }
-    bool IsReverbOnLeftChan() const { return pClient ? pClient->GetReverbOnLeftChan ( eCurrentContext == EC_OUTPUT ) : false; }
+    bool IsReverbOnLeftChan() const { return pClient ? static_cast<bool> ( pClient->GetReverbOnLeftChan ( eCurrentContext == EC_OUTPUT ) ) : false; }
     void SetReverbOnLeftChan ( bool bOnLeft )
     {
         if ( pClient )
