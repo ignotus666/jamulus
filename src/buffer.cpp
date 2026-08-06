@@ -432,7 +432,12 @@ CNetBufWithStats::CNetBufWithStats() :
     dAutoFilt_WightUpFast ( IIR_WEIGTH_UP_FAST ),
     dAutoFilt_WightDownFast ( IIR_WEIGTH_DOWN_FAST ),
     dErrorRateBound ( ERROR_RATE_BOUND ),
-    dUpMaxErrorBound ( UP_MAX_ERROR_BOUND )
+    dUpMaxErrorBound ( UP_MAX_ERROR_BOUND ),
+    dConservativeDownNormal ( IIR_WEIGTH_DOWN_NORMAL ),
+    dAggressiveDownNormal ( IIR_WEIGTH_DOWN_AGGRESSIVE ),
+    dAdaptiveDecayFactor ( 0.0 ),
+    iStabilityCounter ( 0 ),
+    iPrevAutoBufferResult ( 0 )
 {
     // Define the sizes of the simulation buffers,
     // must be NUM_STAT_SIMULATION_BUFFERS elements!
@@ -490,6 +495,10 @@ void CNetBufWithStats::Init ( const int iNewBlockSize, const int iNewNumBlocks, 
             iMaxStatisticCount        = MAX_STATISTIC_COUNT_DOUBLE_FRAME_SIZE;
             dErrorRateBound           = ERROR_RATE_BOUND_DOUBLE_FRAME_SIZE;
             dUpMaxErrorBound          = UP_MAX_ERROR_BOUND_DOUBLE_FRAME_SIZE;
+
+            // adaptive decay bounds for double frame size
+            dConservativeDownNormal = IIR_WEIGTH_DOWN_NORMAL_DOUBLE_FRAME_SIZE;
+            dAggressiveDownNormal   = IIR_WEIGTH_DOWN_AGGRESSIVE_DOUBLE_FRAME_SIZE;
         }
         else
         {
@@ -500,6 +509,10 @@ void CNetBufWithStats::Init ( const int iNewBlockSize, const int iNewNumBlocks, 
             iMaxStatisticCount        = MAX_STATISTIC_COUNT;
             dErrorRateBound           = ERROR_RATE_BOUND;
             dUpMaxErrorBound          = UP_MAX_ERROR_BOUND;
+
+            // adaptive decay bounds for normal frame size
+            dConservativeDownNormal = IIR_WEIGTH_DOWN_NORMAL;
+            dAggressiveDownNormal   = IIR_WEIGTH_DOWN_AGGRESSIVE;
         }
 
         for ( int i = 0; i < NUM_STAT_SIMULATION_BUFFERS; i++ )
@@ -516,10 +529,15 @@ void CNetBufWithStats::Init ( const int iNewBlockSize, const int iNewNumBlocks, 
         ResetInitCounter();
 
         // init auto buffer setting with a meaningful value, also init the
-        // IIR parameter with this value
-        iCurAutoBufferSizeSetting = 4;
+        // IIR parameter with this value (start conservative, matching upstream)
+        iCurAutoBufferSizeSetting = 6;
         dCurIIRFilterResult       = iCurAutoBufferSizeSetting;
         iCurDecidedResult         = iCurAutoBufferSizeSetting;
+
+        // reset adaptive decay state: start fully conservative
+        dAdaptiveDecayFactor  = 0.0;
+        iStabilityCounter     = 0;
+        iPrevAutoBufferResult = iCurAutoBufferSizeSetting;
     }
 }
 
@@ -682,6 +700,35 @@ void CNetBufWithStats::UpdateAutoSetting()
 
     // apply a hysteresis
     iCurAutoBufferSizeSetting = MathUtils().DecideWithHysteresis ( dCurIIRFilterResult, iCurDecidedResult, dHysteresisValue );
+
+    // Adaptive decay: adjust IIR down-weight based on network stability -------
+    // When the auto-setting remains constant across statistics windows, the
+    // network is stable and we can safely use a faster (more aggressive) IIR
+    // decay to reduce latency sooner. When the setting changes, we retreat
+    // toward the conservative (upstream) decay rate to avoid glitches.
+    if ( iCurAutoBufferSizeSetting == iPrevAutoBufferResult )
+    {
+        // buffer size decision hasn't changed -> network is stable, ramp up
+        if ( iStabilityCounter < ADAPTIVE_STABILITY_THRESHOLD )
+        {
+            iStabilityCounter++;
+        }
+    }
+    else
+    {
+        // buffer size changed -> network is volatile, snap back to conservative
+        iStabilityCounter     = 0;
+        iPrevAutoBufferResult = iCurAutoBufferSizeSetting;
+    }
+
+    // compute adaptive factor: linearly ramp from 0.0 (conservative) to
+    // 1.0 (aggressive) over ADAPTIVE_STABILITY_THRESHOLD stable windows
+    dAdaptiveDecayFactor = static_cast<double> ( iStabilityCounter ) / ADAPTIVE_STABILITY_THRESHOLD;
+
+    // interpolate the normal-mode IIR down-weight between conservative and
+    // aggressive bounds (only affects the "normal" path, not "fast adaptation")
+    dAutoFilt_WightDownNormal = dConservativeDownNormal +
+        dAdaptiveDecayFactor * ( dAggressiveDownNormal - dConservativeDownNormal );
 
     // Initialization phase check and correction -------------------------------
     // sometimes in the very first period after a connection we get a bad error
