@@ -202,6 +202,16 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
         response["result"] = "ok";
     } );
 
+    /// @rpc_method jamulusclient/getCurrentDirectory
+    /// @brief Returns the currently selected directory socket address.
+    /// @param {object} params - No parameters (empty object).
+    /// @result {string} result - The socket address of the current directory, usable as params.directory in jamulusclient/pollServerList.
+    pRpcServer->HandleMethod ( "jamulusclient/getCurrentDirectory", [=] ( const QJsonObject& params, QJsonObject& response ) {
+        response["result"] =
+            NetworkUtil::GetDirectoryAddress ( m_pSettings->eDirectoryType, m_pSettings->vstrDirectoryAddress[m_pSettings->iCustomDirectoryIndex] );
+        Q_UNUSED ( params );
+    } );
+
     /// @rpc_method jamulus/getMode
     /// @brief Returns the current mode, i.e. whether Jamulus is running as a server or client.
     /// @param {object} params - No parameters (empty object).
@@ -324,6 +334,32 @@ CClientRpc::CClientRpc ( CClient* pClient, CClientSettings* pSettings, CRpcServe
             return;
         }
 
+        pClient->SetRemoteInfo();
+        response["result"] = "ok";
+    } );
+
+    /// @rpc_method jamulusclient/setInstrumentCode
+    /// @brief Sets your instrument code.
+    /// @param {number} params.instrCode - The new instrument code.
+    /// @result {string} result - Always "ok".
+    pRpcServer->HandleMethod ( "jamulusclient/setInstrumentCode", [=] ( const QJsonObject& params, QJsonObject& response ) {
+        auto jsonInstrCode = params["instrCode"];
+
+        if ( !jsonInstrCode.isDouble() )
+        {
+            response["error"] = CRpcServer::CreateJsonRpcError ( CRpcServer::iErrInvalidParams, "Invalid params: instrCode is not a number" );
+            return;
+        }
+
+        const int iNInstrument = static_cast<int> ( jsonInstrCode.toDouble() );
+
+        if ( CInstPictures::GetName ( iNInstrument ).isEmpty() )
+        {
+            response["error"] = CRpcServer::CreateJsonRpcError ( CRpcServer::iErrInvalidParams, "Invalid params: unknown instrCode" );
+            return;
+        }
+
+        pClient->ChannelInfo.iInstrument = iNInstrument;
         pClient->SetRemoteInfo();
         response["result"] = "ok";
     } );

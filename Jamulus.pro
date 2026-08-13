@@ -1,4 +1,4 @@
-VERSION = 3.12.3dev
+VERSION = 3.12.4dev
 
 # Using lrelease and embed_translations only works for Qt 5.12 or later.
 # See https://github.com/jamulussoftware/jamulus/pull/3288 for these changes.
@@ -289,6 +289,7 @@ win32 {
     HEADERS += $$OBOE_HEADERS
     SOURCES += $$OBOE_SOURCES
     DISTFILES += $$DISTFILES_OBOE
+    QMAKE_DISTCLEAN += android-$${TARGET}-deployment-settings.json
 } else:unix {
     # we want to compile with C++11
     CONFIG += c++11
@@ -1183,8 +1184,12 @@ contains(CONFIG, "opus_shared_lib") {
     }
 }
 
-# Always enable auto vectorization
-QMAKE_CXXFLAGS+=-ftree-vectorize
+# Scope -ftree-vectorize to GCC mkspecs (#3863): Clang already auto-vectorizes
+# and MSVC warns on the flag. At -O2 the flag raises GCC's cost model to `cheap`,
+# which vectorizes the mixer loops on every current GCC (11 through 14).
+*-g++* {
+    QMAKE_CXXFLAGS += -ftree-vectorize
+}
 
 # disable version check if requested (#370)
 contains(CONFIG, "disable_version_check") {
@@ -1206,3 +1211,27 @@ CLANG_FORMAT_SOURCES = $$find(CLANG_FORMAT_SOURCES, ^\(android|ios|mac|linux|src
 CLANG_FORMAT_SOURCES ~= s!^\(libs/.*/|src/res/qrc_resources\.cpp\)\S*$!!g
 clang_format.commands = 'clang-format -i $$CLANG_FORMAT_SOURCES'
 QMAKE_EXTRA_TARGETS += clang_format
+
+# QMAKE_DISTCLEAN only removes files. Use a custom target to remove
+# generated directory trees. Deliberately do not remove user-installed
+# dependencies such as libs/ASIOSDK2.
+android {
+    for (abi, ANDROID_ABIS) {
+        DISTCLEAN_DIRS += debug-$${abi} release-$${abi}
+    }
+    DISTCLEAN_DIRS += .qm
+} else {
+    DISTCLEAN_DIRS += debug release .qm
+}
+
+win32 {
+    for(dir, DISTCLEAN_DIRS) {
+        distclean_dirs.commands += if exist $$replace(dir, /, \\) rmdir /s /q $$replace(dir, /, \\) $$escape_expand(\\n\\t)
+    }
+} else {
+    # Works for Linux, macOS, iOS, and Android using standard Unix rm
+    distclean_dirs.commands += rm -rf $$DISTCLEAN_DIRS
+}
+
+QMAKE_EXTRA_TARGETS += distclean_dirs
+DISTCLEAN_DEPS += distclean_dirs

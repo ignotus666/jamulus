@@ -41,7 +41,7 @@ This snippet uses [jayson](https://www.npmjs.com/package/jayson) to connect usin
 const jayson = require("jayson/promise");
 const client = new jayson.client.tcp({ host: "127.0.0.1", port: 22100 });
 
-client.request('jamulusserver/getServerInfo', {})
+client.request('jamulus/apiAuth', { secret: "...the secret from the file in --jsonrpcsecretfile..." })
 .then(console.log)
 .catch(console.error)
 ```
@@ -188,6 +188,23 @@ Results:
 | result.clients | array | The client list. See jamulusclient/clientListReceived for the format. |
 
 
+### jamulusclient/getCurrentDirectory
+
+Returns the currently selected directory socket address.
+
+Parameters:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| params | object | No parameters (empty object). |
+
+Results:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| result | string | The socket address of the current directory, usable as params.directory in jamulusclient/pollServerList. |
+
+
 ### jamulusclient/getMidiDevices
 
 Returns a list of available MIDI input devices.
@@ -266,6 +283,23 @@ Parameters:
 | --- | --- | --- |
 | params.channelIndex | number | The channel index of the fader to be set. |
 | params.level | number | The fader level in range 0..100. |
+
+Results:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| result | string | Always "ok". |
+
+
+### jamulusclient/setInstrumentCode
+
+Sets your instrument code.
+
+Parameters:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| params.instrCode | number | The new instrument code. |
 
 Results:
 

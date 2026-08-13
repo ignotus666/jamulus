@@ -3,7 +3,10 @@ name: Coding Style Check
 on:
   workflow_dispatch:
   push:
-    branches: [ my-build-effects ]
+    branches:
+      - 'my-build-effects'
+      - 'main'
+      - 'release/**'
     paths:
       - '**.cpp'
       - '**.h'
@@ -11,7 +14,9 @@ on:
       - '**.sh'
       - '**.py'
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'main'
+      - 'release/**'
     paths:
       - '**.cpp'
       - '**.h'
