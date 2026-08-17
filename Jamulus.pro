@@ -1,4 +1,4 @@
-VERSION = 3.12.4dev
+VERSION = 4.0.0effects
 
 # Using lrelease and embed_translations only works for Qt 5.12 or later.
 # See https://github.com/jamulussoftware/jamulus/pull/3288 for these changes.
@@ -1191,11 +1191,8 @@ contains(CONFIG, "opus_shared_lib") {
     QMAKE_CXXFLAGS += -ftree-vectorize
 }
 
-# disable version check if requested (#370)
-contains(CONFIG, "disable_version_check") {
-    message(The version check is disabled.)
-    DEFINES += DISABLE_VERSION_CHECK
-}
+# disable version check by default for experimental build
+DEFINES += DISABLE_VERSION_CHECK
 
 # disable SRV resolution in DNS if requested (#3556)
 contains(CONFIG, "disable_srv_dns") {

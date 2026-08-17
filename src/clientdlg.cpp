@@ -804,6 +804,7 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         chbLocalMute->setChecked ( true );
     }
 
+#ifndef DISABLE_VERSION_CHECK
     // query the update server version number needed for update check (note
     // that the connection less message respond may not make it back but that
     // is not critical since the next time Jamulus is started we have another
@@ -824,6 +825,8 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
     {
         pClient->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
+#endif
+
 }
 
 void CClientDlg::closeEvent ( QCloseEvent* Event )

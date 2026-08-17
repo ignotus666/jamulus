@@ -511,6 +511,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     // start timer for GUI controls
     Timer.start ( GUI_CONTRL_UPDATE_TIME );
 
+#ifndef DISABLE_VERSION_CHECK
     // query the update server version number needed for update check (note
     // that the connection less message respond may not make it back but that
     // is not critical since the next time Jamulus is started we have another
@@ -531,6 +532,7 @@ CServerDlg::CServerDlg ( CServer* pNServP, CServerSettings* pNSetP, const bool b
     {
         pServer->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
+#endif
 }
 
 void CServerDlg::ApplyTheme()
@@ -722,7 +724,7 @@ void CServerDlg::OnSysTrayActivated ( QSystemTrayIcon::ActivationReason ActReaso
 void CServerDlg::OnCLVersionAndOSReceived ( CHostAddress, COSUtil::EOpSystemType, QString strVersion )
 {
     // update check
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 )
+#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 6, 0 ) ) && !defined( DISABLE_VERSION_CHECK )
     const QString mappedServerVersion = MapVersionStrForCompare ( strVersion );
 
     // Ignore non-release remote versions when deciding whether to notify.
