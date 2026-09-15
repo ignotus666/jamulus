@@ -93,8 +93,8 @@
 // Aggressive-floor constants for adaptive decay: ~3x faster decay than the
 // conservative defaults above. The adaptive system interpolates between
 // conservative and aggressive based on observed network stability.
-#define IIR_WEIGTH_DOWN_AGGRESSIVE_DOUBLE_FRAME_SIZE 0.9997
-#define IIR_WEIGTH_DOWN_AGGRESSIVE                   0.99985
+#define IIR_WEIGTH_DOWN_AGGRESSIVE_DOUBLE_FRAME_SIZE     0.9997
+#define IIR_WEIGTH_DOWN_AGGRESSIVE                       0.99985
 #define MAX_STATISTIC_COUNT_AGGRESSIVE_DOUBLE_FRAME_SIZE 5500
 #define MAX_STATISTIC_COUNT_AGGRESSIVE                   11000
 

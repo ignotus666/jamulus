@@ -34,7 +34,6 @@ class CEQCurveWidget : public QWidget
 
 public:
     static constexpr int   kNumBands         = CAudioEqualizer::NUM_BANDS;
-    static constexpr int   kNumSpectrumBands = 24;
     static constexpr int   kNumVisualBands   = 72;
     static constexpr float kGainMinDb        = -12.0f;
     static constexpr float kGainMaxDb        = 12.0f;
@@ -46,14 +45,20 @@ public:
     explicit CEQCurveWidget ( QWidget* parent = nullptr );
 
     // Band data (called from the dialog to keep widget in sync)
-    void SetBandGain ( const int iBand, const float fGainDb );
-    void SetBandFrequency ( const int iBand, const float fFreqHz );
-    void SetBandGainReduction ( const int iBand, const float fReductionDb );
-    void SetSpectrumLevels ( const QVector<float>& vecLevels );
-    void SetSampleRate ( const int iSampleRateHz );
-    void SetDarkTheme ( const bool bEnable );
-    void SetBypassed ( const bool bBypassed );
-    void SetBandQ ( const int iBand, const float fQ );
+    void                         SetBandGain ( const int iBand, const float fGainDb );
+    void                         SetBandFrequency ( const int iBand, const float fFreqHz );
+    void                         SetBandGainReduction ( const int iBand, const float fReductionDb );
+    void                         SetBandFilterType ( const int iBand, const CAudioEqualizer::EFilterType eType );
+    CAudioEqualizer::EFilterType GetBandFilterType ( const int iBand ) const;
+    void                         SetSpectrumLevels ( const QVector<float>& vecLevels );
+    void                         SetSampleRate ( const int iSampleRateHz );
+    void                         SetDarkTheme ( const bool bEnable );
+    void                         SetBypassed ( const bool bBypassed );
+    void                         SetBandQ ( const int iBand, const float fQ );
+    void                         SetSoloBand ( const int iBand );
+    int                          GetSoloBand() const { return iSoloBand; }
+    void                         SetBandMuted ( const int iBand, const bool bMuted );
+    bool                         GetBandMuted ( const int iBand ) const;
 
     int   GetSelectedBand() const { return iSelectedBand; }
     float GetBandFrequency ( const int iBand ) const;
@@ -64,8 +69,11 @@ public:
 signals:
     void bandGainChanged ( int iBand, float fGainDb );
     void bandFrequencyChanged ( int iBand, float fFreqHz );
+    void bandQChanged ( int iBand, float fQ );
     void bandSelected ( int iBand );
     void bandGainReset ( int iBand );
+    void bandSoloToggled ( int iBand );
+    void bandMuteToggled ( int iBand );
 
 protected:
     void paintEvent ( QPaintEvent* pEvent ) override;
@@ -85,32 +93,34 @@ private:
     float  YToDb ( const float fY ) const;
     QRectF PlotRect() const;
 
-    // Biquad transfer-function evaluation for curve rendering
+    // Transfer-function evaluation for curve rendering
     float EvalBandMagnitudeDb ( const int iBand, const float fGainDb, const float fFreqHz ) const;
     void  ComputeResponseCurve ( const float* afGains, QVector<QPointF>& vecPoints ) const;
 
     int  FindNearestBand ( const QPointF& pos, float* pfDistOut = nullptr ) const;
     void UpdateBandTooltip ( const int iBand, const bool bVisible = true );
-    void UpdateBandTooltipStyle();
 
     // State
-    float afBandGainDb[kNumBands];
-    float afBandFrequencies[kNumBands];
-    float afBandGainReductionDb[kNumBands];
-    float afBandQ[kNumBands];
-    float afSpectrumLevels[kNumVisualBands];
-    float afSpectrumPeaks[kNumVisualBands];
-    int   iSampleRateHz;
-    int   iSelectedBand;
-    bool  bDragging;
-    bool  bDarkTheme;
+    float                        afBandGainDb[kNumBands];
+    float                        afBandFrequencies[kNumBands];
+    float                        afBandGainReductionDb[kNumBands];
+    float                        afBandQ[kNumBands];
+    bool                         abBandMuted[kNumBands];
+    CAudioEqualizer::EFilterType aeBandFilterType[kNumBands];
+    float                        afSpectrumLevels[kNumVisualBands];
+    float                        afSpectrumPeaks[kNumVisualBands];
+    int                          iSampleRateHz;
+    int                          iSelectedBand;
+    int                          iSoloBand;
+    bool                         bDragging;
+    bool                         bDrawingCurve;
+    bool                         bDarkTheme;
 
     // Cached curves
     QVector<QPointF> vecStaticCurveCache;
     QVector<QPointF> vecEffectiveCurveCache;
     bool             bStaticCurveDirty;
     bool             bEffectiveCurveDirty;
-    class QLabel*    pBandTooltip;
     int              iTooltipBand;
 
     // Layout constants

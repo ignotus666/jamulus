@@ -27,21 +27,55 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QMouseEvent>
-#include <QLabel>
-#include <QScreen>
 #include <QWheelEvent>
 #include <QResizeEvent>
 #include <cmath>
 
 namespace
 {
-QString MakeBandTooltipText ( const float fFreqHz, const float fGainDb, const float fQ )
+QString FilterTypeToString ( const CAudioEqualizer::EFilterType eType )
 {
+    switch ( eType )
+    {
+    case CAudioEqualizer::EFilterType::Peak:
+        return QObject::tr ( "Peak" );
+    case CAudioEqualizer::EFilterType::LowShelf:
+        return QObject::tr ( "Low Shelf" );
+    case CAudioEqualizer::EFilterType::HighShelf:
+        return QObject::tr ( "High Shelf" );
+    case CAudioEqualizer::EFilterType::LowPass:
+        return QObject::tr ( "Low Pass" );
+    case CAudioEqualizer::EFilterType::HighPass:
+        return QObject::tr ( "High Pass" );
+    case CAudioEqualizer::EFilterType::Notch:
+        return QObject::tr ( "Notch" );
+    }
+    return QObject::tr ( "Peak" );
+}
+
+QString MakeBandTooltipText ( const int                          iBand,
+                              const float                        fFreqHz,
+                              const float                        fGainDb,
+                              const float                        fQ,
+                              const CAudioEqualizer::EFilterType eType,
+                              const bool                         bSolo )
+{
+    const QString strType = FilterTypeToString ( eType );
     const QString strFreq = ( fFreqHz >= 1000.0f ) ? QString::number ( fFreqHz / 1000.0f, 'f', 2 ) + QObject::tr ( " kHz" )
                                                    : QString::number ( fFreqHz, 'f', 1 ) + QObject::tr ( " Hz" );
     const QString strGain = ( fGainDb >= 0.0f ) ? QString ( "+%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) )
                                                 : QString ( "%1 dB" ).arg ( QString::number ( fGainDb, 'f', 1 ) );
-    return QObject::tr ( "%1 | %2 | Q: %3" ).arg ( strFreq ).arg ( strGain ).arg ( QString::number ( fQ, 'f', 1 ) );
+    QString       strRes  = QObject::tr ( "Band %1 (%2) | %3 | %4 | Q: %5" )
+                         .arg ( iBand + 1 )
+                         .arg ( strType )
+                         .arg ( strFreq )
+                         .arg ( strGain )
+                         .arg ( QString::number ( fQ, 'f', 1 ) );
+    if ( bSolo )
+    {
+        strRes += QObject::tr ( " [SOLO]" );
+    }
+    return strRes;
 }
 
 } // namespace
@@ -53,11 +87,12 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     QWidget ( parent ),
     iSampleRateHz ( 48000 ),
     iSelectedBand ( 0 ),
+    iSoloBand ( -1 ),
     bDragging ( false ),
+    bDrawingCurve ( false ),
     bDarkTheme ( true ),
     bStaticCurveDirty ( true ),
     bEffectiveCurveDirty ( true ),
-    pBandTooltip ( nullptr ),
     iTooltipBand ( -1 )
 {
     for ( int i = 0; i < kNumBands; ++i )
@@ -66,6 +101,8 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
         afBandGainReductionDb[i] = 0.0f;
         afBandFrequencies[i]     = CAudioEqualizer::GetDefaultBandFrequency ( i );
         afBandQ[i]               = 1.0f;
+        abBandMuted[i]           = false;
+        aeBandFilterType[i]      = CAudioEqualizer::EFilterType::Peak;
     }
     for ( int i = 0; i < kNumVisualBands; ++i )
     {
@@ -77,21 +114,6 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     setSizePolicy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
     setMouseTracking ( true );
     setFocusPolicy ( Qt::ClickFocus );
-
-    pBandTooltip = nullptr;
-
-    UpdateBandTooltipStyle();
-}
-
-void CEQCurveWidget::UpdateBandTooltipStyle()
-{
-    if ( !pBandTooltip )
-    {
-        return;
-    }
-
-    pBandTooltip->setStyleSheet ( QStringLiteral ( "QLabel { font-size: 9px; color: #eef1f5; background-color: #202328; border: 1px solid "
-                                                   "#4a4f57; border-radius: 3px; padding: 2px 4px; }" ) );
 }
 
 void CEQCurveWidget::UpdateBandTooltip ( const int iBand, const bool bVisible )
@@ -149,6 +171,51 @@ void CEQCurveWidget::SetBandQ ( const int iBand, const float fQ )
     }
 }
 
+void CEQCurveWidget::SetBandFilterType ( const int iBand, const CAudioEqualizer::EFilterType eType )
+{
+    if ( iBand >= 0 && iBand < kNumBands )
+    {
+        if ( aeBandFilterType[iBand] != eType )
+        {
+            aeBandFilterType[iBand] = eType;
+            bStaticCurveDirty       = true;
+            bEffectiveCurveDirty    = true;
+            update();
+        }
+    }
+}
+
+CAudioEqualizer::EFilterType CEQCurveWidget::GetBandFilterType ( const int iBand ) const
+{
+    return ( iBand >= 0 && iBand < kNumBands ) ? aeBandFilterType[iBand] : CAudioEqualizer::EFilterType::Peak;
+}
+
+void CEQCurveWidget::SetSoloBand ( const int iBand )
+{
+    const int iNewSolo = ( iBand >= 0 && iBand < kNumBands ) ? iBand : -1;
+    if ( iSoloBand != iNewSolo )
+    {
+        iSoloBand = iNewSolo;
+        update();
+    }
+}
+
+void CEQCurveWidget::SetBandMuted ( const int iBand, const bool bMuted )
+{
+    if ( iBand >= 0 && iBand < kNumBands )
+    {
+        if ( abBandMuted[iBand] != bMuted )
+        {
+            abBandMuted[iBand]   = bMuted;
+            bStaticCurveDirty    = true;
+            bEffectiveCurveDirty = true;
+            update();
+        }
+    }
+}
+
+bool CEQCurveWidget::GetBandMuted ( const int iBand ) const { return ( iBand >= 0 && iBand < kNumBands ) ? abBandMuted[iBand] : false; }
+
 float CEQCurveWidget::GetBandFrequency ( const int iBand ) const { return ( iBand >= 0 && iBand < kNumBands ) ? afBandFrequencies[iBand] : 0.0f; }
 
 void CEQCurveWidget::SetBandGainReduction ( const int iBand, const float fReductionDb )
@@ -171,53 +238,41 @@ void CEQCurveWidget::SetSpectrumLevels ( const QVector<float>& vecLevels )
 
     for ( int iBand = 0; iBand < kNumVisualBands; ++iBand )
     {
-        // Linearly interpolate the input level for this visual band index
         float fNewVal = 0.0f;
-        if ( iInputSize > 1 )
+        if ( iBand < iInputSize )
         {
-            // Map visual band index iBand [0..kNumVisualBands-1] to input range [0..iInputSize-1]
-            const float fSrcIdx = static_cast<float> ( iBand ) / ( kNumVisualBands - 1 ) * ( iInputSize - 1 );
-            const int   iIdxL   = static_cast<int> ( fSrcIdx );
-            const int   iIdxR   = std::min ( iInputSize - 1, iIdxL + 1 );
-            const float fAlpha  = fSrcIdx - iIdxL;
-
-            const float fL = qBound ( 0.0f, vecLevels[iIdxL], 1.0f );
-            const float fR = qBound ( 0.0f, vecLevels[iIdxR], 1.0f );
-            fNewVal = ( 1.0f - fAlpha ) * fL + fAlpha * fR;
-        }
-        else if ( iInputSize == 1 )
-        {
-            fNewVal = qBound ( 0.0f, vecLevels[0], 1.0f );
+            fNewVal = vecLevels[iBand];
         }
 
-        const float fOldVal = afSpectrumLevels[iBand];
-        float fTargetVal = fOldVal;
-        if ( fNewVal >= fOldVal )
+        fNewVal = std::max ( 0.0f, std::min ( 1.0f, fNewVal ) );
+
+        const float fOldLevel = afSpectrumLevels[iBand];
+        float       fTargetLevel;
+
+        if ( fNewVal >= fOldLevel )
         {
-            fTargetVal = fNewVal;
+            fTargetLevel = fNewVal;
         }
         else
         {
-            // Decay when falling
-            fTargetVal = std::max ( fNewVal, fOldVal * 0.92f - 0.005f );
+            fTargetLevel = fOldLevel * 0.88f + fNewVal * 0.12f;
         }
 
-        if ( std::fabs ( fOldVal - fTargetVal ) > 0.005f )
+        if ( std::fabs ( fOldLevel - fTargetLevel ) > 0.005f )
         {
-            afSpectrumLevels[iBand] = fTargetVal;
+            afSpectrumLevels[iBand] = fTargetLevel;
             bChanged                = true;
         }
 
-        // Peak decay
         const float fOldPeak = afSpectrumPeaks[iBand];
-        float fTargetPeak = fOldPeak;
+        float       fTargetPeak;
+
         if ( fNewVal >= fOldPeak )
         {
             fTargetPeak = fNewVal;
         }
         else
         {
-            // Peaks decay more slowly than the level lines
             fTargetPeak = std::max ( fNewVal, fOldPeak * 0.97f - 0.002f );
         }
 
@@ -249,7 +304,6 @@ void CEQCurveWidget::SetBypassed ( const bool bBypassed )
 {
     if ( bBypassed )
     {
-        // Clear real-time analyzer data when bypassed
         for ( int i = 0; i < kNumVisualBands; ++i )
         {
             afSpectrumLevels[i] = 0.0f;
@@ -268,20 +322,29 @@ void CEQCurveWidget::resizeEvent ( QResizeEvent* pEvent )
     QWidget::resizeEvent ( pEvent );
     bStaticCurveDirty    = true;
     bEffectiveCurveDirty = true;
+    update();
+}
+
+void CEQCurveWidget::leaveEvent ( QEvent* pEvent )
+{
+    QWidget::leaveEvent ( pEvent );
+    UpdateBandTooltip ( -1, false );
 }
 
 void CEQCurveWidget::SetDarkTheme ( const bool bEnable )
 {
     if ( bDarkTheme != bEnable )
     {
-        bDarkTheme = bEnable;
+        bDarkTheme           = bEnable;
+        bStaticCurveDirty    = true;
+        bEffectiveCurveDirty = true;
         UpdateBandTooltipStyle();
         update();
     }
 }
 
 // ---------------------------------------------------------------------------
-// Coordinate transforms
+// Coordinate mapping
 // ---------------------------------------------------------------------------
 QRectF CEQCurveWidget::PlotRect() const
 {
@@ -291,16 +354,18 @@ QRectF CEQCurveWidget::PlotRect() const
 float CEQCurveWidget::FreqToXf ( const float fHz ) const
 {
     const QRectF r     = PlotRect();
-    const float  fNorm = std::log ( fHz / kFreqMin ) / std::log ( kFreqMax / kFreqMin );
+    const float  fClmp = std::max ( kFreqMin, std::min ( kFreqMax, fHz ) );
+    const float  fNorm = std::log ( fClmp / kFreqMin ) / std::log ( kFreqMax / kFreqMin );
     return r.left() + fNorm * r.width();
 }
 
-int CEQCurveWidget::FreqToX ( const float fHz ) const { return static_cast<int> ( FreqToXf ( fHz ) + 0.5f ); }
+int CEQCurveWidget::FreqToX ( const float fHz ) const { return static_cast<int> ( std::round ( FreqToXf ( fHz ) ) ); }
 
 float CEQCurveWidget::DbToYf ( const float fDb ) const
 {
     const QRectF r     = PlotRect();
-    const float  fNorm = ( kDisplayMax - fDb ) / ( kDisplayMax - kDisplayMin );
+    const float  fClmp = std::max ( kDisplayMin, std::min ( kDisplayMax, fDb ) );
+    const float  fNorm = ( kDisplayMax - fClmp ) / ( kDisplayMax - kDisplayMin );
     return r.top() + fNorm * r.height();
 }
 
@@ -319,62 +384,101 @@ float CEQCurveWidget::YToDb ( const float fY ) const
 }
 
 // ---------------------------------------------------------------------------
-// Biquad transfer-function evaluation (analytical, no FFT)
+// SVF transfer-function evaluation (analytical, no FFT)
 // ---------------------------------------------------------------------------
 float CEQCurveWidget::EvalBandMagnitudeDb ( const int iBand, const float fGainDb, const float fFreqHz ) const
 {
-    // Evaluate |H(e^{jω})| for a peaking EQ biquad at the given frequency.
-    // We recompute coefficients here to be independent of the DSP engine's state.
-    constexpr float fPi = 3.14159265358979323846f;
-    const float     fQ  = afBandQ[iBand];
-
-    const float fBandFreq = afBandFrequencies[iBand];
-
-    if ( fBandFreq <= 0.0f || iSampleRateHz <= 0 )
+    if ( iBand < 0 || iBand >= kNumBands || iSampleRateHz <= 0 || fFreqHz <= 0.0f || abBandMuted[iBand] )
     {
         return 0.0f;
     }
 
-    const float fA     = std::pow ( 10.0f, fGainDb / 40.0f );
-    const float fW0    = 2.0f * fPi * fBandFreq / iSampleRateHz;
-    const float fAlpha = std::sin ( fW0 ) / ( 2.0f * fQ );
-    const float fCosW0 = std::cos ( fW0 );
+    const CAudioEqualizer::EFilterType eType = aeBandFilterType[iBand];
 
-    const float b0 = 1.0f + fAlpha * fA;
-    const float b1 = -2.0f * fCosW0;
-    const float b2 = 1.0f - fAlpha * fA;
-    const float a0 = 1.0f + fAlpha / fA;
-    const float a1 = -2.0f * fCosW0;
-    const float a2 = 1.0f - fAlpha / fA;
-
-    // Normalise coefficients
-    const float nb0 = b0 / a0;
-    const float nb1 = b1 / a0;
-    const float nb2 = b2 / a0;
-    const float na1 = a1 / a0;
-    const float na2 = a2 / a0;
-
-    // Evaluate H(e^{jω}) at the plot frequency
-    const float fW    = 2.0f * fPi * fFreqHz / iSampleRateHz;
-    const float cosW  = std::cos ( fW );
-    const float sinW  = std::sin ( fW );
-    const float cos2W = std::cos ( 2.0f * fW );
-    const float sin2W = std::sin ( 2.0f * fW );
-
-    const float numRe = nb0 + nb1 * cosW + nb2 * cos2W;
-    const float numIm = -( nb1 * sinW + nb2 * sin2W );
-    const float denRe = 1.0f + na1 * cosW + na2 * cos2W;
-    const float denIm = -( na1 * sinW + na2 * sin2W );
-
-    const float numMagSq = numRe * numRe + numIm * numIm;
-    const float denMagSq = denRe * denRe + denIm * denIm;
-
-    if ( denMagSq < 1e-18f )
+    // For Peak or Shelves, if gain is 0 dB, response is flat 0 dB
+    if ( ( eType == CAudioEqualizer::EFilterType::Peak || eType == CAudioEqualizer::EFilterType::LowShelf ||
+           eType == CAudioEqualizer::EFilterType::HighShelf ) &&
+         std::fabs ( fGainDb ) < 0.001f )
     {
         return 0.0f;
     }
 
-    return 10.0f * std::log10 ( numMagSq / denMagSq );
+    constexpr float fPi       = 3.14159265358979323846f;
+    const float     fBandFreq = std::max ( 10.0f, std::min ( afBandFrequencies[iBand], iSampleRateHz * 0.49f ) );
+    const float     fQ        = std::max ( 0.1f, std::min ( 20.0f, afBandQ[iBand] ) );
+    const double    A         = std::pow ( 10.0, static_cast<double> ( fGainDb ) / 40.0 );
+
+    double g  = std::tan ( static_cast<double> ( fPi * fBandFreq / iSampleRateHz ) );
+    double k  = 1.0 / static_cast<double> ( fQ );
+    double m0 = 1.0;
+    double m1 = 0.0;
+    double m2 = 0.0;
+
+    switch ( eType )
+    {
+    case CAudioEqualizer::EFilterType::Peak:
+        k  = 1.0 / ( static_cast<double> ( fQ ) * A );
+        m0 = 1.0;
+        m1 = k * ( A * A - 1.0 );
+        m2 = 0.0;
+        break;
+    case CAudioEqualizer::EFilterType::LowShelf:
+        g /= std::sqrt ( A );
+        k  = 1.0 / static_cast<double> ( fQ );
+        m0 = 1.0;
+        m1 = k * ( A - 1.0 );
+        m2 = A * A - 1.0;
+        break;
+    case CAudioEqualizer::EFilterType::HighShelf:
+        g *= std::sqrt ( A );
+        k  = 1.0 / static_cast<double> ( fQ );
+        m0 = A * A;
+        m1 = k * ( 1.0 - A ) * A;
+        m2 = 1.0 - A * A;
+        break;
+    case CAudioEqualizer::EFilterType::LowPass:
+        k  = 1.0 / static_cast<double> ( fQ );
+        m0 = 0.0;
+        m1 = 0.0;
+        m2 = 1.0;
+        break;
+    case CAudioEqualizer::EFilterType::HighPass:
+        k  = 1.0 / static_cast<double> ( fQ );
+        m0 = 1.0;
+        m1 = -k;
+        m2 = -1.0;
+        break;
+    case CAudioEqualizer::EFilterType::Notch:
+        k  = 1.0 / static_cast<double> ( fQ );
+        m0 = 1.0;
+        m1 = -k;
+        m2 = 0.0;
+        break;
+    }
+
+    if ( g < 1e-7 )
+    {
+        return 0.0f;
+    }
+
+    const double wPlot   = std::tan ( static_cast<double> ( fPi * std::min ( fFreqHz, iSampleRateHz * 0.499f ) / iSampleRateHz ) );
+    const double omega   = wPlot / g;
+    const double omegaSq = omega * omega;
+
+    const double numRe    = m0 * ( 1.0 - omegaSq ) + m2;
+    const double numIm    = omega * ( m0 * k + m1 );
+    const double numMagSq = numRe * numRe + numIm * numIm;
+
+    const double denRe    = 1.0 - omegaSq;
+    const double denIm    = k * omega;
+    const double denMagSq = denRe * denRe + denIm * denIm;
+
+    if ( denMagSq < 1e-18 || numMagSq < 1e-18 )
+    {
+        return ( denMagSq < 1e-18 ) ? 0.0f : -100.0f;
+    }
+
+    return static_cast<float> ( 10.0 * std::log10 ( numMagSq / denMagSq ) );
 }
 
 void CEQCurveWidget::ComputeResponseCurve ( const float* afGains, QVector<QPointF>& vecPoints ) const
@@ -566,29 +670,23 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
                 if ( afSpectrumPeaks[iBand] < 0.5f )
                 {
                     const float t = afSpectrumPeaks[iBand] / 0.5f;
-                    colPeak = QColor (
-                        static_cast<int> ( 0 * ( 1.0f - t ) + 48 * t ),
-                        static_cast<int> ( 150 * ( 1.0f - t ) + 230 * t ),
-                        static_cast<int> ( 255 * ( 1.0f - t ) + 75 * t )
-                    );
+                    colPeak       = QColor ( static_cast<int> ( 0 * ( 1.0f - t ) + 48 * t ),
+                                       static_cast<int> ( 150 * ( 1.0f - t ) + 230 * t ),
+                                       static_cast<int> ( 255 * ( 1.0f - t ) + 75 * t ) );
                 }
                 else if ( afSpectrumPeaks[iBand] < 0.8f )
                 {
                     const float t = ( afSpectrumPeaks[iBand] - 0.5f ) / 0.3f;
-                    colPeak = QColor (
-                        static_cast<int> ( 48 * ( 1.0f - t ) + 245 * t ),
-                        static_cast<int> ( 230 * ( 1.0f - t ) + 155 * t ),
-                        static_cast<int> ( 75 * ( 1.0f - t ) + 40 * t )
-                    );
+                    colPeak       = QColor ( static_cast<int> ( 48 * ( 1.0f - t ) + 245 * t ),
+                                       static_cast<int> ( 230 * ( 1.0f - t ) + 155 * t ),
+                                       static_cast<int> ( 75 * ( 1.0f - t ) + 40 * t ) );
                 }
                 else
                 {
                     const float t = ( afSpectrumPeaks[iBand] - 0.8f ) / 0.2f;
-                    colPeak = QColor (
-                        static_cast<int> ( 245 * ( 1.0f - t ) + 235 * t ),
-                        static_cast<int> ( 155 * ( 1.0f - t ) + 60 * t ),
-                        static_cast<int> ( 40 * ( 1.0f - t ) + 55 * t )
-                    );
+                    colPeak       = QColor ( static_cast<int> ( 245 * ( 1.0f - t ) + 235 * t ),
+                                       static_cast<int> ( 155 * ( 1.0f - t ) + 60 * t ),
+                                       static_cast<int> ( 40 * ( 1.0f - t ) + 55 * t ) );
                 }
 
                 colPeak.setAlpha ( 60 ); // Soft, non-interfering peak ticks
@@ -831,9 +929,70 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         // Node circle — per-band color
         QColor colNode = colBand;
 
+        // Solo highlight ring
+        if ( iBand == iSoloBand )
+        {
+            painter.setPen ( QPen ( QColor ( 255, 190, 0, 220 ), 2.0 ) );
+            painter.setBrush ( Qt::NoBrush );
+            painter.drawEllipse ( QPointF ( fNx, fNy ), iRad + 4, iRad + 4 );
+        }
+
         painter.setPen ( Qt::NoPen );
         painter.setBrush ( colNode );
         painter.drawEllipse ( QPointF ( fNx, fNy ), iRad, iRad );
+
+        // Filter type badge for non-Peak filters
+        const CAudioEqualizer::EFilterType eType = aeBandFilterType[iBand];
+        if ( eType != CAudioEqualizer::EFilterType::Peak )
+        {
+            QString strTypeBadge;
+            switch ( eType )
+            {
+            case CAudioEqualizer::EFilterType::LowShelf:
+                strTypeBadge = "LS";
+                break;
+            case CAudioEqualizer::EFilterType::HighShelf:
+                strTypeBadge = "HS";
+                break;
+            case CAudioEqualizer::EFilterType::LowPass:
+                strTypeBadge = "LP";
+                break;
+            case CAudioEqualizer::EFilterType::HighPass:
+                strTypeBadge = "HP";
+                break;
+            case CAudioEqualizer::EFilterType::Notch:
+                strTypeBadge = "NT";
+                break;
+            default:
+                break;
+            }
+            if ( !strTypeBadge.isEmpty() )
+            {
+                painter.setFont ( QFont ( "Inter", 6, QFont::Bold ) );
+                painter.setPen ( colBand );
+                painter.drawText ( QRectF ( fNx - 12, fNy + iRad + 1, 24, 10 ), Qt::AlignCenter, strTypeBadge );
+            }
+        }
+    }
+
+    // Solo mode canvas indicator
+    if ( iSoloBand >= 0 && iSoloBand < kNumBands )
+    {
+        const QString strSolo = tr ( "SOLO BAND %1" ).arg ( iSoloBand + 1 );
+        painter.setFont ( QFont ( "Inter", 8, QFont::Bold ) );
+        const QFontMetrics fm = painter.fontMetrics();
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 )
+        const int iW = fm.horizontalAdvance ( strSolo ) + 12;
+#else
+        const int iW = fm.width ( strSolo ) + 12;
+#endif
+        const int   iH = 18;
+        const QRect rectSolo ( static_cast<int> ( r.right() - iW - 6 ), static_cast<int> ( r.top() + 6 ), iW, iH );
+        painter.setPen ( QPen ( QColor ( 255, 180, 0 ), 1.5 ) );
+        painter.setBrush ( QColor ( 40, 30, 10, 220 ) );
+        painter.drawRoundedRect ( rectSolo, 3, 3 );
+        painter.setPen ( QColor ( 255, 200, 50 ) );
+        painter.drawText ( rectSolo, Qt::AlignCenter, strSolo );
     }
 
     // Plot area border
@@ -847,7 +1006,12 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         const float fNx = FreqToXf ( afBandFrequencies[iTooltipBand] );
         const float fNy = DbToYf ( afBandGainDb[iTooltipBand] );
 
-        const QString strText = MakeBandTooltipText ( afBandFrequencies[iTooltipBand], afBandGainDb[iTooltipBand], afBandQ[iTooltipBand] );
+        const QString strText = MakeBandTooltipText ( iTooltipBand,
+                                                      afBandFrequencies[iTooltipBand],
+                                                      afBandGainDb[iTooltipBand],
+                                                      afBandQ[iTooltipBand],
+                                                      aeBandFilterType[iTooltipBand],
+                                                      iTooltipBand == iSoloBand );
 
         painter.setFont ( QFont ( "Inter", 8 ) );
         const QFontMetrics fm = painter.fontMetrics();
@@ -897,10 +1061,51 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
 // ---------------------------------------------------------------------------
 void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 {
+    if ( pEvent->button() == Qt::RightButton )
+    {
+        float     fDist = 0.0f;
+        const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
+        if ( iB >= 0 && fDist <= kHitRadius )
+        {
+            emit bandSoloToggled ( iB );
+            return;
+        }
+    }
 
     if ( pEvent->button() != Qt::LeftButton )
     {
         QWidget::mousePressEvent ( pEvent );
+        return;
+    }
+
+    if ( pEvent->modifiers() & Qt::ControlModifier )
+    {
+        bDrawingCurve          = true;
+        const float fDb        = YToDb ( pEvent->pos().y() );
+        const float fClampedDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
+        const float fMouseX    = pEvent->pos().x();
+
+        int   iNearestX = 0;
+        float fMinDx    = 1e9f;
+        for ( int i = 0; i < kNumBands; ++i )
+        {
+            const float dx = std::fabs ( fMouseX - FreqToXf ( afBandFrequencies[i] ) );
+            if ( dx < fMinDx )
+            {
+                fMinDx    = dx;
+                iNearestX = i;
+            }
+        }
+        if ( iNearestX >= 0 && iNearestX < kNumBands )
+        {
+            afBandGainDb[iNearestX] = fClampedDb;
+            bStaticCurveDirty       = true;
+            bEffectiveCurveDirty    = true;
+            iSelectedBand           = iNearestX;
+            emit bandGainChanged ( iNearestX, fClampedDb );
+            emit bandSelected ( iNearestX );
+            update();
+        }
         return;
     }
 
@@ -927,6 +1132,38 @@ void CEQCurveWidget::mousePressEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 {
+    if ( bDrawingCurve )
+    {
+        const float fDb        = YToDb ( pEvent->pos().y() );
+        const float fClampedDb = std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( fDb * 10.0f ) / 10.0f ) );
+        const float fMouseX    = pEvent->pos().x();
+
+        int   iNearestX = 0;
+        float fMinDx    = 1e9f;
+        for ( int i = 0; i < kNumBands; ++i )
+        {
+            const float dx = std::fabs ( fMouseX - FreqToXf ( afBandFrequencies[i] ) );
+            if ( dx < fMinDx )
+            {
+                fMinDx    = dx;
+                iNearestX = i;
+            }
+        }
+        if ( iNearestX >= 0 && iNearestX < kNumBands )
+        {
+            if ( std::fabs ( afBandGainDb[iNearestX] - fClampedDb ) > 0.05f )
+            {
+                afBandGainDb[iNearestX] = fClampedDb;
+                bStaticCurveDirty       = true;
+                bEffectiveCurveDirty    = true;
+                iSelectedBand           = iNearestX;
+                emit bandGainChanged ( iNearestX, fClampedDb );
+                emit bandSelected ( iNearestX );
+                update();
+            }
+        }
+        return;
+    }
 
     if ( !bDragging )
     {
@@ -995,19 +1232,12 @@ void CEQCurveWidget::mouseMoveEvent ( QMouseEvent* pEvent )
 void CEQCurveWidget::mouseReleaseEvent ( QMouseEvent* pEvent )
 {
     Q_UNUSED ( pEvent )
-    bDragging = false;
-}
-
-void CEQCurveWidget::leaveEvent ( QEvent* pEvent )
-{
-    Q_UNUSED ( pEvent )
-    UpdateBandTooltip ( -1, false );
-    QWidget::leaveEvent ( pEvent );
+    bDragging     = false;
+    bDrawingCurve = false;
 }
 
 void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 {
-
     float     fDist = 0.0f;
     const int iB    = FindNearestBand ( pEvent->pos(), &fDist );
 
@@ -1025,7 +1255,7 @@ void CEQCurveWidget::mouseDoubleClickEvent ( QMouseEvent* pEvent )
 
 void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 {
-    if ( iSelectedBand < 0 )
+    if ( iSelectedBand < 0 || iSelectedBand >= kNumBands )
     {
         return;
     }
@@ -1038,7 +1268,7 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
     const int iB = FindNearestBand ( pEvent->posF(), &fDist );
 #endif
 
-    if ( iB != iSelectedBand || fDist > kHitRadius * 3 )
+    if ( iB != iSelectedBand && fDist > kHitRadius * 3 )
     {
         return;
     }
@@ -1085,18 +1315,36 @@ void CEQCurveWidget::wheelEvent ( QWheelEvent* pEvent )
 
     if ( deltaY != 0 )
     {
-        // Scroll vertically -> adjust gain
-        const float fDelta = ( deltaY > 0 ) ? 0.1f : -0.1f;
-        const float fNewDb =
-            std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
-
-        if ( std::abs ( afBandGainDb[iSelectedBand] - fNewDb ) > 0.001f )
+        if ( pEvent->modifiers() & Qt::ControlModifier )
         {
-            afBandGainDb[iSelectedBand] = fNewDb;
-            bStaticCurveDirty           = true;
-            bEffectiveCurveDirty        = true;
-            emit bandGainChanged ( iSelectedBand, fNewDb );
-            bChanged = true;
+            // Ctrl + Wheel -> adjust gain
+            const float fDelta = ( deltaY > 0 ) ? 0.1f : -0.1f;
+            const float fNewDb =
+                std::max ( kGainMinDb, std::min ( kGainMaxDb, std::round ( ( afBandGainDb[iSelectedBand] + fDelta ) * 10.0f ) / 10.0f ) );
+
+            if ( std::abs ( afBandGainDb[iSelectedBand] - fNewDb ) > 0.001f )
+            {
+                afBandGainDb[iSelectedBand] = fNewDb;
+                bStaticCurveDirty           = true;
+                bEffectiveCurveDirty        = true;
+                emit bandGainChanged ( iSelectedBand, fNewDb );
+                bChanged = true;
+            }
+        }
+        else
+        {
+            // Vertical wheel -> adjust Q (bandwidth)
+            const float fFactor = std::pow ( 2.0f, static_cast<float> ( deltaY ) / 1200.0f );
+            const float fNewQ   = std::max ( 0.1f, std::min ( 20.0f, std::round ( ( afBandQ[iSelectedBand] * fFactor ) * 100.0f ) / 100.0f ) );
+
+            if ( std::fabs ( afBandQ[iSelectedBand] - fNewQ ) > 0.01f )
+            {
+                afBandQ[iSelectedBand] = fNewQ;
+                bStaticCurveDirty      = true;
+                bEffectiveCurveDirty   = true;
+                emit bandQChanged ( iSelectedBand, fNewQ );
+                bChanged = true;
+            }
         }
     }
 

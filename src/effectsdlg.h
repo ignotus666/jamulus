@@ -28,6 +28,8 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QPushButton>
+#include <QButtonGroup>
+#include <QIcon>
 #include <QLabel>
 #include <QRadioButton>
 #include <QTabWidget>
@@ -675,6 +677,7 @@ private:
     CGRMeter*           pGRMeter           = nullptr;
     CCompCurveWidget*   pCompCurveWidget   = nullptr;
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
+    QButtonGroup*       pGrpEQDynMode      = nullptr;
     EEffectsContext     eCurrentContext    = EC_INPUT;
 
     // Context-aware settings helpers
@@ -924,6 +927,49 @@ public:
         return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandGainReductionDb ( iBand ) : 0.0f;
     }
 
+    CAudioEqualizer::EFilterType GetEQBandFilterType ( int iBand ) const
+    {
+        return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandFilterType ( iBand ) : CAudioEqualizer::EFilterType::Peak;
+    }
+    void SetEQBandFilterType ( int iBand, CAudioEqualizer::EFilterType eType )
+    {
+        if ( pClient )
+        {
+            pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandFilterType ( iBand, eType );
+        }
+    }
+    CAudioEqualizer::EDynMode GetEQBandDynMode ( int iBand ) const
+    {
+        return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandDynMode ( iBand ) : CAudioEqualizer::EDynMode::Compress;
+    }
+    void SetEQBandDynMode ( int iBand, CAudioEqualizer::EDynMode eMode )
+    {
+        if ( pClient )
+        {
+            pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandDynMode ( iBand, eMode );
+        }
+    }
+    int  GetEQSoloBand() const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetSoloBand() : -1; }
+    void SetEQSoloBand ( int iBand )
+    {
+        if ( pClient )
+        {
+            pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetSoloBand ( iBand );
+        }
+    }
+    bool GetEQBandMute ( int iBand ) const { return pClient ? pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).GetBandMute ( iBand ) : false; }
+    void SetEQBandMute ( int iBand, bool bMute )
+    {
+        if ( pClient )
+        {
+            pClient->GetEQ ( eCurrentContext == EC_OUTPUT ).SetBandMute ( iBand, bMute );
+        }
+    }
+
+    static QIcon CreateFilterTypeIcon ( CAudioEqualizer::EFilterType eType, bool bDarkTheme, const QColor& accentColor = QColor() );
+    static QIcon CreateDynModeIcon ( CAudioEqualizer::EDynMode eMode, bool bDarkTheme, const QColor& accentColor = QColor() );
+    static QIcon CreateDynToggleIcon ( bool bDarkTheme, const QColor& accentColor = QColor() );
+
     void PopulateEffectsPresetCombo();
     void ApplyEffectsPresetFromComboIndex ( const int iPresetIndex );
     void ApplyEffectsPresetFromSlot ( const int iPresetSlot );
@@ -948,7 +994,14 @@ private slots:
     void OnEQBandFrequencyChanged ( int iBand, float fFreqHz );
     void OnEQBandSelected ( int iBand );
     void OnEQBandGainReset ( int iBand );
-    void OnEQDynEnabledChanged ( bool bEnabled );
+    void OnEQBandFilterTypeChanged ( int iIndex );
+    void OnEQBandSoloClicked();
+    void OnEQBandSoloToggled ( int iBand );
+    void OnEQBandMuteClicked();
+    void OnEQBandMuteToggled ( int iBand );
+    void OnEQDynModeClicked ( int iId );
+    void OnEQDynToggleClicked();
+    void OnEQCurveBandQChanged ( int iBand, float fQ );
     void OnEQDynThresholdChanged ( int iValue );
     void OnEQDynRatioChanged ( int iValue );
     void OnEQDynAttackChanged ( int iValue );

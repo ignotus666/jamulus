@@ -4,20 +4,28 @@
 
 #include "audioequalizer.h"
 #include <cmath>
+#include <algorithm>
 
-CAudioEqualizer::CAudioEqualizer() : bBypass ( true ), fWetMixCurrent ( 0.0f ), fWetMixTarget ( 0.0f ), iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ )
+CAudioEqualizer::CAudioEqualizer() :
+    bBypass ( true ),
+    fWetMixCurrent ( 0.0f ),
+    fWetMixTarget ( 0.0f ),
+    iSampleRateHz ( SYSTEM_SAMPLE_RATE_HZ ),
+    iSoloBand ( -1 )
 {
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         afBandFrequencies[iBand]     = GetDefaultBandFrequency ( iBand );
         afBandQ[iBand]               = 1.0f;
+        aeBandFilterType[iBand]      = EFilterType::Peak;
         afBandTargetGainDb[iBand]    = 0.0f;
         afBandSmoothedGainDb[iBand]  = 0.0f;
         afBandEffectiveGainDb[iBand] = 0.0f;
-        aBandCoeff[iBand]            = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-        aDetCoeff[iBand]             = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+        aBandCoeff[iBand]            = { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
+        aDetCoeff[iBand]             = { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f };
 
         aBandDynParams[iBand].bEnabled     = false;
+        aBandDynParams[iBand].eMode        = EDynMode::Compress;
         aBandDynParams[iBand].fThresholdDb = -20.0f;
         aBandDynParams[iBand].fRatio       = 4.0f;
         aBandDynParams[iBand].fAttackMs    = 5.0f;
@@ -25,6 +33,7 @@ CAudioEqualizer::CAudioEqualizer() : bBypass ( true ), fWetMixCurrent ( 0.0f ), 
 
         afDetEnvelope[iBand]         = 0.0f;
         afBandGainReductionDb[iBand] = 0.0f;
+        abBandMute[iBand]            = false;
     }
 
     ClearFilterState();
@@ -43,6 +52,15 @@ void CAudioEqualizer::Init ( const int iNsampleRateHz )
     }
 
     ClearFilterState();
+}
+
+void CAudioEqualizer::SetBandFilterType ( const int iBand, const EFilterType eType )
+{
+    if ( ( iBand >= 0 ) && ( iBand < NUM_BANDS ) )
+    {
+        aeBandFilterType[iBand] = eType;
+        UpdateBandCoeff ( iBand, afBandEffectiveGainDb[iBand], afBandQ[iBand] );
+    }
 }
 
 void CAudioEqualizer::SetBandGainDb ( const int iBandIndex, const float fGainDb )
@@ -67,6 +85,19 @@ void CAudioEqualizer::SetBandDynEnabled ( const int iBand, const bool bEnabled )
             afBandGainReductionDb[iBand] = 0.0f;
         }
     }
+}
+
+void CAudioEqualizer::SetBandDynMode ( const int iBand, const EDynMode eMode )
+{
+    if ( ( iBand >= 0 ) && ( iBand < NUM_BANDS ) )
+    {
+        aBandDynParams[iBand].eMode = eMode;
+    }
+}
+
+CAudioEqualizer::EDynMode CAudioEqualizer::GetBandDynMode ( const int iBand ) const
+{
+    return ( iBand >= 0 && iBand < NUM_BANDS ) ? aBandDynParams[iBand].eMode : EDynMode::Compress;
 }
 
 void CAudioEqualizer::SetBandDynThresholdDb ( const int iBand, const float fDb )
@@ -150,7 +181,7 @@ void CAudioEqualizer::SetBandQ ( const int iBand, const float fQ )
 {
     if ( ( iBand >= 0 ) && ( iBand < NUM_BANDS ) )
     {
-        afBandQ[iBand] = std::max ( 0.3f, std::min ( 10.0f, fQ ) );
+        afBandQ[iBand] = std::max ( 0.1f, std::min ( 20.0f, fQ ) );
         UpdateBandCoeff ( iBand, afBandSmoothedGainDb[iBand], afBandQ[iBand] );
         UpdateDetCoeff ( iBand, afBandQ[iBand] );
     }
@@ -158,12 +189,17 @@ void CAudioEqualizer::SetBandQ ( const int iBand, const float fQ )
 
 float CAudioEqualizer::GetBandQ ( const int iBand ) const { return ( iBand >= 0 && iBand < NUM_BANDS ) ? afBandQ[iBand] : 1.0f; }
 
+void CAudioEqualizer::SetSoloBand ( const int iBand ) { iSoloBand = ( iBand >= 0 && iBand < NUM_BANDS ) ? iBand : -1; }
+
 void CAudioEqualizer::Reset()
 {
+    iSoloBand = -1;
+
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         afBandFrequencies[iBand]     = GetDefaultBandFrequency ( iBand );
         afBandQ[iBand]               = 1.0f;
+        aeBandFilterType[iBand]      = EFilterType::Peak;
         afBandTargetGainDb[iBand]    = 0.0f;
         afBandSmoothedGainDb[iBand]  = 0.0f;
         afBandEffectiveGainDb[iBand] = 0.0f;
@@ -171,6 +207,7 @@ void CAudioEqualizer::Reset()
         UpdateDetCoeff ( iBand, afBandQ[iBand] );
 
         aBandDynParams[iBand].bEnabled     = false;
+        aBandDynParams[iBand].eMode        = EDynMode::Compress;
         aBandDynParams[iBand].fThresholdDb = -20.0f;
         aBandDynParams[iBand].fRatio       = 4.0f;
         aBandDynParams[iBand].fAttackMs    = 5.0f;
@@ -178,6 +215,7 @@ void CAudioEqualizer::Reset()
 
         afDetEnvelope[iBand]         = 0.0f;
         afBandGainReductionDb[iBand] = 0.0f;
+        abBandMute[iBand]            = false;
     }
 
     ClearFilterState();
@@ -185,7 +223,7 @@ void CAudioEqualizer::Reset()
 
 void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iStereoBlockSizeSam )
 {
-    // --- Step 1: Compute per-band gain reduction from previous block's detector envelopes ---
+    // --- Step 1: Compute per-band dynamic gain reduction/boost from previous block's detector envelopes ---
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         if ( aBandDynParams[iBand].bEnabled && afDetEnvelope[iBand] > 0.0f )
@@ -195,8 +233,17 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
 
             if ( fInputDb > aBandDynParams[iBand].fThresholdDb )
             {
-                const float fOverDb          = fInputDb - aBandDynParams[iBand].fThresholdDb;
-                afBandGainReductionDb[iBand] = fOverDb * ( 1.0f - 1.0f / aBandDynParams[iBand].fRatio );
+                const float fOverDb      = fInputDb - aBandDynParams[iBand].fThresholdDb;
+                const float fDynAmountDb = fOverDb * ( 1.0f - 1.0f / aBandDynParams[iBand].fRatio );
+
+                if ( aBandDynParams[iBand].eMode == EDynMode::Compress )
+                {
+                    afBandGainReductionDb[iBand] = fDynAmountDb; // Dynamic attenuation
+                }
+                else
+                {
+                    afBandGainReductionDb[iBand] = -fDynAmountDb; // Dynamic boost
+                }
             }
             else
             {
@@ -209,7 +256,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
         }
     }
 
-    // --- Step 2: Smooth static gain and compute effective biquad gain ---
+    // --- Step 2: Smooth static gain and compute effective SVF gain ---
     for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
     {
         // Smooth user-set static gain toward target (anti-zipper)
@@ -228,7 +275,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
         // Effective gain = smoothed static gain minus dynamics gain reduction
         const float fEffective = afBandSmoothedGainDb[iBand] - afBandGainReductionDb[iBand];
 
-        // Update biquad coefficients only if effective gain actually changed
+        // Update SVF coefficients only if effective gain actually changed
         if ( std::fabs ( fEffective - afBandEffectiveGainDb[iBand] ) > 0.001f )
         {
             afBandEffectiveGainDb[iBand] = fEffective;
@@ -236,7 +283,7 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
         }
     }
 
-    // --- Step 3: Pre-compute per-band attack/release coefficients ---
+    // --- Step 3: Pre-compute per-band attack/release coefficients (frequency-scaled) ---
     float afAttackCoeff[NUM_BANDS];
     float afReleaseCoeff[NUM_BANDS];
 
@@ -244,12 +291,18 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
     {
         if ( aBandDynParams[iBand].bEnabled )
         {
-            afAttackCoeff[iBand]  = std::exp ( -1.0f / ( 0.001f * aBandDynParams[iBand].fAttackMs * iSampleRateHz ) );
-            afReleaseCoeff[iBand] = std::exp ( -1.0f / ( 0.001f * aBandDynParams[iBand].fReleaseMs * iSampleRateHz ) );
+            // Adapt detector time constants relative to center frequency:
+            // Prevents low-frequency harmonic ripple distortion in bass while maintaining fast high response.
+            const float fMinPeriodMs = ( afBandFrequencies[iBand] > 1.0f ) ? ( ( 1000.0f / afBandFrequencies[iBand] ) * 2.0f ) : 1.0f;
+            const float fAttackMs    = std::max ( aBandDynParams[iBand].fAttackMs, fMinPeriodMs * 0.5f );
+            const float fReleaseMs   = std::max ( aBandDynParams[iBand].fReleaseMs, fMinPeriodMs * 2.0f );
+
+            afAttackCoeff[iBand]  = std::exp ( -1.0f / ( 0.001f * fAttackMs * iSampleRateHz ) );
+            afReleaseCoeff[iBand] = std::exp ( -1.0f / ( 0.001f * fReleaseMs * iSampleRateHz ) );
         }
     }
 
-    // --- Step 4: Process audio samples ---
+    // --- Step 4: Process audio samples with Cytomic SVF filters ---
     const int   iFrameCount = iStereoBlockSizeSam / 2;
     const float fWetStep    = ( iFrameCount > 0 ) ? ( fWetMixTarget - fWetMixCurrent ) / iFrameCount : 0.0f;
 
@@ -260,46 +313,59 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
 
         for ( int iChannel = 0; iChannel < 2; ++iChannel )
         {
-            const float fDry    = vecsStereoInOut[iSample + iChannel];
-            float       fSample = fDry;
+            const float fDry        = vecsStereoInOut[iSample + iChannel];
+            float       fSample     = fDry;
+            float       fSoloSample = fDry;
 
             for ( int iBand = 0; iBand < NUM_BANDS; ++iBand )
             {
-                // --- Detector path: bandpass filter on dry (pre-EQ) input ---
-                if ( aBandDynParams[iBand].bEnabled )
+                // --- Detector path: bandpass filter on dry (pre-EQ) input for dynamics / solo ---
+                if ( aBandDynParams[iBand].bEnabled || iSoloBand == iBand )
                 {
-                    const SCoeff& d  = aDetCoeff[iBand];
-                    SState&       ds = aDetState[iBand];
+                    const SSvfCoeff& d  = aDetCoeff[iBand];
+                    SSvfState&       ds = aDetState[iBand];
 
-                    const float fDetOut =
-                        d.b0 * fDry + d.b1 * ds.x1[iChannel] + d.b2 * ds.x2[iChannel] - d.a1 * ds.y1[iChannel] - d.a2 * ds.y2[iChannel];
+                    const float v1     = d.a1 * ds.ic1eq[iChannel] + d.a2 * ( fDry - ds.ic2eq[iChannel] );
+                    const float v2     = ds.ic2eq[iChannel] + d.g * v1;
+                    ds.ic1eq[iChannel] = 2.0f * v1 - ds.ic1eq[iChannel];
+                    ds.ic2eq[iChannel] = 2.0f * v2 - ds.ic2eq[iChannel];
 
-                    ds.x2[iChannel] = ds.x1[iChannel];
-                    ds.x1[iChannel] = fDry;
-                    ds.y2[iChannel] = ds.y1[iChannel];
-                    ds.y1[iChannel] = fDetOut;
+                    const float fDetOut = d.m0 * fDry + d.m1 * v1 + d.m2 * v2;
 
-                    // Track peak across both channels for this frame
-                    const float fAbs = std::fabs ( fDetOut );
-
-                    if ( fAbs > afDetPeak[iBand] )
+                    if ( iSoloBand == iBand )
                     {
-                        afDetPeak[iBand] = fAbs;
+                        fSoloSample = fDetOut;
+                    }
+
+                    if ( aBandDynParams[iBand].bEnabled )
+                    {
+                        const float fAbs = std::fabs ( fDetOut );
+                        if ( fAbs > afDetPeak[iBand] )
+                        {
+                            afDetPeak[iBand] = fAbs;
+                        }
                     }
                 }
 
-                // --- EQ path: cascaded peaking biquad ---
-                const SCoeff& c = aBandCoeff[iBand];
-                SState&       s = aBandState[iBand];
+                // --- EQ path: cascaded Cytomic SVF section ---
+                if ( !abBandMute[iBand] )
+                {
+                    const SSvfCoeff& c = aBandCoeff[iBand];
+                    SSvfState&       s = aBandState[iBand];
 
-                const float fOut = c.b0 * fSample + c.b1 * s.x1[iChannel] + c.b2 * s.x2[iChannel] - c.a1 * s.y1[iChannel] - c.a2 * s.y2[iChannel];
+                    const float v1    = c.a1 * s.ic1eq[iChannel] + c.a2 * ( fSample - s.ic2eq[iChannel] );
+                    const float v2    = s.ic2eq[iChannel] + c.g * v1;
+                    s.ic1eq[iChannel] = 2.0f * v1 - s.ic1eq[iChannel];
+                    s.ic2eq[iChannel] = 2.0f * v2 - s.ic2eq[iChannel];
 
-                s.x2[iChannel] = s.x1[iChannel];
-                s.x1[iChannel] = fSample;
-                s.y2[iChannel] = s.y1[iChannel];
-                s.y1[iChannel] = fOut;
+                    fSample = c.m0 * fSample + c.m1 * v1 + c.m2 * v2;
+                }
+            }
 
-                fSample = fOut;
+            if ( iSoloBand >= 0 )
+            {
+                // When a band is soloed, audition the isolated bandpass signal
+                fSample = fSoloSample;
             }
 
             const float fMixed                  = fDry + ( fSample - fDry ) * fWetMixCurrent;
@@ -333,50 +399,102 @@ void CAudioEqualizer::Process ( CVector<int16_t>& vecsStereoInOut, const int iSt
 
 void CAudioEqualizer::UpdateBandCoeff ( const int iBandIndex, const float fGainDb, const float fQ )
 {
-    // RBJ peaking EQ biquad
-    constexpr float fPi = 3.14159265358979323846f;
+    // Andrew Simper / Cytomic State Variable Filter (SVF) - linear trapezoidal solver
+    constexpr float fPi       = 3.14159265358979323846f;
+    const float     fFreq     = std::max ( 10.0f, std::min ( afBandFrequencies[iBandIndex], ( iSampleRateHz * 0.49f ) ) );
+    const float     fClampedQ = std::max ( 0.1f, std::min ( 20.0f, fQ ) );
+    const double    A         = std::pow ( 10.0, static_cast<double> ( fGainDb ) / 40.0 );
 
-    const float fA     = std::pow ( 10.0f, fGainDb / 40.0f );
-    const float fW0    = 2.0f * fPi * afBandFrequencies[iBandIndex] / iSampleRateHz;
-    const float fAlpha = std::sin ( fW0 ) / ( 2.0f * fQ );
-    const float fCosW0 = std::cos ( fW0 );
+    double g  = std::tan ( static_cast<double> ( fPi * fFreq / iSampleRateHz ) );
+    double k  = 1.0 / static_cast<double> ( fClampedQ );
+    double m0 = 1.0;
+    double m1 = 0.0;
+    double m2 = 0.0;
 
-    const float b0 = 1.0f + fAlpha * fA;
-    const float b1 = -2.0f * fCosW0;
-    const float b2 = 1.0f - fAlpha * fA;
-    const float a0 = 1.0f + fAlpha / fA;
-    const float a1 = -2.0f * fCosW0;
-    const float a2 = 1.0f - fAlpha / fA;
+    switch ( aeBandFilterType[iBandIndex] )
+    {
+    case EFilterType::Peak:
+    {
+        k  = 1.0 / ( static_cast<double> ( fClampedQ ) * A );
+        m0 = 1.0;
+        m1 = k * ( A * A - 1.0 );
+        m2 = 0.0;
+        break;
+    }
+    case EFilterType::LowShelf:
+    {
+        g /= std::sqrt ( A );
+        k  = 1.0 / static_cast<double> ( fClampedQ );
+        m0 = 1.0;
+        m1 = k * ( A - 1.0 );
+        m2 = A * A - 1.0;
+        break;
+    }
+    case EFilterType::HighShelf:
+    {
+        g *= std::sqrt ( A );
+        k  = 1.0 / static_cast<double> ( fClampedQ );
+        m0 = A * A;
+        m1 = k * ( 1.0 - A ) * A;
+        m2 = 1.0 - A * A;
+        break;
+    }
+    case EFilterType::LowPass:
+    {
+        k  = 1.0 / static_cast<double> ( fClampedQ );
+        m0 = 0.0;
+        m1 = 0.0;
+        m2 = 1.0;
+        break;
+    }
+    case EFilterType::HighPass:
+    {
+        k  = 1.0 / static_cast<double> ( fClampedQ );
+        m0 = 1.0;
+        m1 = -k;
+        m2 = -1.0;
+        break;
+    }
+    case EFilterType::Notch:
+    {
+        k  = 1.0 / static_cast<double> ( fClampedQ );
+        m0 = 1.0;
+        m1 = -k;
+        m2 = 0.0;
+        break;
+    }
+    }
 
-    aBandCoeff[iBandIndex].b0 = b0 / a0;
-    aBandCoeff[iBandIndex].b1 = b1 / a0;
-    aBandCoeff[iBandIndex].b2 = b2 / a0;
-    aBandCoeff[iBandIndex].a1 = a1 / a0;
-    aBandCoeff[iBandIndex].a2 = a2 / a0;
+    const double a1 = 1.0 / ( 1.0 + g * ( g + k ) );
+    const double a2 = g * a1;
+
+    aBandCoeff[iBandIndex].g  = static_cast<float> ( g );
+    aBandCoeff[iBandIndex].a1 = static_cast<float> ( a1 );
+    aBandCoeff[iBandIndex].a2 = static_cast<float> ( a2 );
+    aBandCoeff[iBandIndex].m0 = static_cast<float> ( m0 );
+    aBandCoeff[iBandIndex].m1 = static_cast<float> ( m1 );
+    aBandCoeff[iBandIndex].m2 = static_cast<float> ( m2 );
 }
 
 void CAudioEqualizer::UpdateDetCoeff ( const int iBandIndex, const float fQ )
 {
-    // RBJ bandpass filter (constant 0 dB peak gain) for frequency-selective envelope detection.
-    // This isolates the frequency content around the band center for the dynamics sidechain.
-    constexpr float fPi = 3.14159265358979323846f;
+    // Cytomic SVF bandpass filter (m1 = 1.0, m0 = m2 = 0) for frequency-selective envelope detection
+    constexpr float fPi       = 3.14159265358979323846f;
+    const float     fFreq     = std::max ( 10.0f, std::min ( afBandFrequencies[iBandIndex], ( iSampleRateHz * 0.49f ) ) );
+    const float     fClampedQ = std::max ( 0.1f, std::min ( 20.0f, fQ ) );
 
-    const float fW0    = 2.0f * fPi * afBandFrequencies[iBandIndex] / iSampleRateHz;
-    const float fAlpha = std::sin ( fW0 ) / ( 2.0f * fQ );
-    const float fCosW0 = std::cos ( fW0 );
+    const double g = std::tan ( static_cast<double> ( fPi * fFreq / iSampleRateHz ) );
+    const double k = 1.0 / static_cast<double> ( fClampedQ );
 
-    const float b0 = fAlpha;
-    const float b1 = 0.0f;
-    const float b2 = -fAlpha;
-    const float a0 = 1.0f + fAlpha;
-    const float a1 = -2.0f * fCosW0;
-    const float a2 = 1.0f - fAlpha;
+    const double a1 = 1.0 / ( 1.0 + g * ( g + k ) );
+    const double a2 = g * a1;
 
-    aDetCoeff[iBandIndex].b0 = b0 / a0;
-    aDetCoeff[iBandIndex].b1 = b1 / a0;
-    aDetCoeff[iBandIndex].b2 = b2 / a0;
-    aDetCoeff[iBandIndex].a1 = a1 / a0;
-    aDetCoeff[iBandIndex].a2 = a2 / a0;
+    aDetCoeff[iBandIndex].g  = static_cast<float> ( g );
+    aDetCoeff[iBandIndex].a1 = static_cast<float> ( a1 );
+    aDetCoeff[iBandIndex].a2 = static_cast<float> ( a2 );
+    aDetCoeff[iBandIndex].m0 = 0.0f;
+    aDetCoeff[iBandIndex].m1 = 1.0f;
+    aDetCoeff[iBandIndex].m2 = 0.0f;
 }
 
 void CAudioEqualizer::ClearFilterState()
@@ -385,15 +503,11 @@ void CAudioEqualizer::ClearFilterState()
     {
         for ( int iChannel = 0; iChannel < 2; ++iChannel )
         {
-            aBandState[iBand].x1[iChannel] = 0.0f;
-            aBandState[iBand].x2[iChannel] = 0.0f;
-            aBandState[iBand].y1[iChannel] = 0.0f;
-            aBandState[iBand].y2[iChannel] = 0.0f;
+            aBandState[iBand].ic1eq[iChannel] = 0.0f;
+            aBandState[iBand].ic2eq[iChannel] = 0.0f;
 
-            aDetState[iBand].x1[iChannel] = 0.0f;
-            aDetState[iBand].x2[iChannel] = 0.0f;
-            aDetState[iBand].y1[iChannel] = 0.0f;
-            aDetState[iBand].y2[iChannel] = 0.0f;
+            aDetState[iBand].ic1eq[iChannel] = 0.0f;
+            aDetState[iBand].ic2eq[iChannel] = 0.0f;
         }
 
         afDetEnvelope[iBand]         = 0.0f;

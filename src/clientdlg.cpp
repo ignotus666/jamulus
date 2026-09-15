@@ -826,7 +826,6 @@ CClientDlg::CClientDlg ( CClient*         pNCliP,
         pClient->CreateCLServerListReqVerAndOSMes ( UpdateServerHostAddress );
     }
 #endif
-
 }
 
 void CClientDlg::closeEvent ( QCloseEvent* Event )

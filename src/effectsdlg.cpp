@@ -34,6 +34,164 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 
+QIcon CEffectsDlg::CreateFilterTypeIcon ( CAudioEqualizer::EFilterType eType, bool bDarkTheme, const QColor& accentColor )
+{
+    QIcon icon;
+    auto  makePixmap = [eType] ( const QColor& strokeCol, const QColor& fillCol ) -> QPixmap {
+        QPixmap pix ( 32, 32 );
+        pix.fill ( Qt::transparent );
+        QPainter painter ( &pix );
+        painter.setRenderHint ( QPainter::Antialiasing, true );
+
+        QPen pen ( strokeCol, 2.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
+        painter.setPen ( pen );
+
+        QPainterPath path;
+        switch ( eType )
+        {
+        case CAudioEqualizer::EFilterType::Peak:
+            path.moveTo ( 4.0, 22.0 );
+            path.cubicTo ( 10.5, 22.0, 11.5, 7.0, 16.0, 7.0 );
+            path.cubicTo ( 20.5, 7.0, 21.5, 22.0, 28.0, 22.0 );
+            break;
+        case CAudioEqualizer::EFilterType::LowShelf:
+            path.moveTo ( 4.0, 9.0 );
+            path.lineTo ( 8.5, 9.0 );
+            path.cubicTo ( 14.5, 9.0, 17.5, 23.0, 23.5, 23.0 );
+            path.lineTo ( 28.0, 23.0 );
+            break;
+        case CAudioEqualizer::EFilterType::HighShelf:
+            path.moveTo ( 4.0, 23.0 );
+            path.lineTo ( 8.5, 23.0 );
+            path.cubicTo ( 14.5, 23.0, 17.5, 9.0, 23.5, 9.0 );
+            path.lineTo ( 28.0, 9.0 );
+            break;
+        case CAudioEqualizer::EFilterType::LowPass:
+            path.moveTo ( 4.0, 8.0 );
+            path.lineTo ( 12.0, 8.0 );
+            path.cubicTo ( 18.5, 8.0, 24.5, 13.0, 27.5, 25.0 );
+            break;
+        case CAudioEqualizer::EFilterType::HighPass:
+            path.moveTo ( 4.5, 25.0 );
+            path.cubicTo ( 7.5, 13.0, 13.5, 8.0, 20.0, 8.0 );
+            path.lineTo ( 28.0, 8.0 );
+            break;
+        case CAudioEqualizer::EFilterType::Notch:
+            path.moveTo ( 4.0, 8.0 );
+            path.lineTo ( 10.0, 8.0 );
+            path.cubicTo ( 13.5, 8.0, 14.0, 25.0, 16.0, 25.0 );
+            path.cubicTo ( 18.0, 25.0, 18.5, 8.0, 22.0, 8.0 );
+            path.lineTo ( 28.0, 8.0 );
+            break;
+        }
+
+        if ( fillCol != Qt::transparent )
+        {
+            QPainterPath fillPath = path;
+            fillPath.lineTo ( 28.0, 28.0 );
+            fillPath.lineTo ( 4.0, 28.0 );
+            fillPath.closeSubpath();
+            painter.fillPath ( fillPath, fillCol );
+        }
+
+        painter.drawPath ( path );
+        return pix;
+    };
+
+    const QColor colNormalOff = accentColor.isValid() ? accentColor : ( bDarkTheme ? QColor ( 215, 220, 230 ) : QColor ( 60, 65, 75 ) );
+    const QColor colNormalOn  = accentColor.isValid() ? accentColor : ( bDarkTheme ? QColor ( 45, 190, 255 ) : QColor ( 0, 135, 230 ) );
+    const QColor colDisabled  = bDarkTheme ? QColor ( 95, 100, 110, 120 ) : QColor ( 165, 170, 180, 120 );
+    const QColor colFillOn    = QColor ( colNormalOn.red(), colNormalOn.green(), colNormalOn.blue(), 35 );
+
+    icon.addPixmap ( makePixmap ( colNormalOff, Qt::transparent ), QIcon::Normal, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colNormalOn, colFillOn ), QIcon::Normal, QIcon::On );
+    icon.addPixmap ( makePixmap ( colDisabled, Qt::transparent ), QIcon::Disabled, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colDisabled, Qt::transparent ), QIcon::Disabled, QIcon::On );
+
+    return icon;
+}
+
+QIcon CEffectsDlg::CreateDynModeIcon ( CAudioEqualizer::EDynMode eMode, bool bDarkTheme, const QColor& accentColor )
+{
+    QIcon icon;
+    auto  makePixmap = [eMode] ( const QColor& strokeCol ) -> QPixmap {
+        QPixmap pix ( 24, 24 );
+        pix.fill ( Qt::transparent );
+        QPainter painter ( &pix );
+        painter.setRenderHint ( QPainter::Antialiasing, true );
+
+        QPen pen ( strokeCol, 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
+        painter.setPen ( pen );
+
+        if ( eMode == CAudioEqualizer::EDynMode::Compress )
+        {
+            // Ceiling line at top
+            painter.drawLine ( 4.0, 5.0, 20.0, 5.0 );
+            // Downward arrow
+            painter.drawLine ( 12.0, 9.0, 12.0, 19.0 );
+            painter.drawLine ( 8.0, 15.0, 12.0, 19.0 );
+            painter.drawLine ( 16.0, 15.0, 12.0, 19.0 );
+        }
+        else
+        {
+            // Floor line at bottom
+            painter.drawLine ( 4.0, 19.0, 20.0, 19.0 );
+            // Upward arrow
+            painter.drawLine ( 12.0, 15.0, 12.0, 5.0 );
+            painter.drawLine ( 8.0, 9.0, 12.0, 5.0 );
+            painter.drawLine ( 16.0, 9.0, 12.0, 5.0 );
+        }
+        return pix;
+    };
+
+    const QColor colNormalOff = bDarkTheme ? QColor ( 215, 220, 230 ) : QColor ( 60, 65, 75 );
+    const QColor colNormalOn  = accentColor.isValid() ? accentColor : ( bDarkTheme ? QColor ( 45, 190, 255 ) : QColor ( 0, 135, 230 ) );
+    const QColor colDisabled  = bDarkTheme ? QColor ( 95, 100, 110, 120 ) : QColor ( 165, 170, 180, 120 );
+
+    icon.addPixmap ( makePixmap ( colNormalOff ), QIcon::Normal, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colNormalOn ), QIcon::Normal, QIcon::On );
+    icon.addPixmap ( makePixmap ( colDisabled ), QIcon::Disabled, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colDisabled ), QIcon::Disabled, QIcon::On );
+
+    return icon;
+}
+
+QIcon CEffectsDlg::CreateDynToggleIcon ( bool bDarkTheme, const QColor& accentColor )
+{
+    QIcon icon;
+    auto  makePixmap = [] ( const QColor& strokeCol ) -> QPixmap {
+        QPixmap pix ( 24, 24 );
+        pix.fill ( Qt::transparent );
+        QPainter painter ( &pix );
+        painter.setRenderHint ( QPainter::Antialiasing, true );
+
+        QPen pen ( strokeCol, 2.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
+        painter.setPen ( pen );
+
+        // Standard Power / Standby symbol:
+        // Arc of radius 7.5 centered at (12, 12), gap at top
+        const QRectF arcRect ( 4.5, 4.5, 15.0, 15.0 );
+        // Start at 125° (top-left) and sweep 290° counter-clockwise to 55° (top-right)
+        painter.drawArc ( arcRect, 125 * 16, 290 * 16 );
+
+        // Vertical line descending from top through center opening
+        painter.drawLine ( QPointF ( 12.0, 2.5 ), QPointF ( 12.0, 11.5 ) );
+
+        return pix;
+    };
+
+    const QColor colNormalOff = bDarkTheme ? QColor ( 130, 135, 140 ) : QColor ( 110, 115, 120 );
+    const QColor colNormalOn  = accentColor.isValid() ? accentColor : ( bDarkTheme ? QColor ( 45, 190, 255 ) : QColor ( 0, 135, 230 ) );
+    const QColor colDisabled  = bDarkTheme ? QColor ( 70, 75, 80, 100 ) : QColor ( 180, 185, 190, 100 );
+
+    icon.addPixmap ( makePixmap ( colNormalOff ), QIcon::Normal, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colNormalOn ), QIcon::Normal, QIcon::On );
+    icon.addPixmap ( makePixmap ( colDisabled ), QIcon::Disabled, QIcon::Off );
+    icon.addPixmap ( makePixmap ( colDisabled ), QIcon::Disabled, QIcon::On );
+
+    return icon;
+}
+
 CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* parent ) :
     CBaseDlg ( parent, Qt::Window ),
     pClient ( pNCliP ),
@@ -62,41 +220,59 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pLblReverbWetValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblReverbEarlyValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pLblReverbWidthValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-    pLblReverbPreDelayValue->setMinimumWidth ( 32 );
-    pLblReverbRoomValue->setMinimumWidth ( 32 );
-    pLblReverbDampingValue->setMinimumWidth ( 32 );
-    pLblReverbWetValue->setMinimumWidth ( 32 );
-    pLblReverbEarlyValue->setMinimumWidth ( 32 );
-    pLblReverbWidthValue->setMinimumWidth ( 32 );
 
-    pKnobReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
-    pKnobReverbRoom->setRange ( 0, REVERB_ROOM_SIZE_MAX );
-    pKnobReverbDamping->setRange ( 0, REVERB_DAMPING_MAX );
-    pKnobReverbWet->setRange ( 0, REVERB_WET_MIX_MAX );
-    pKnobReverbEarly->setRange ( 0, REVERB_EARLY_LEVEL_MAX );
-    pKnobReverbWidth->setRange ( 0, REVERB_WIDTH_MAX );
+    pLblCompressorThresholdValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorRatioValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorAttackValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorReleaseValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+    pLblCompressorMakeupValue->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
 
-    pLblCompressorThresholdValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pLblCompressorRatioValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pLblCompressorAttackValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pLblCompressorReleaseValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pLblCompressorMakeupValue->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
-    pLblCompressorThresholdValue->setMinimumWidth ( 48 );
-    pLblCompressorRatioValue->setMinimumWidth ( 48 );
-    pLblCompressorAttackValue->setMinimumWidth ( 48 );
-    pLblCompressorReleaseValue->setMinimumWidth ( 55 );
-    pLblCompressorMakeupValue->setMinimumWidth ( 48 );
     pKnobCompressorThreshold->setRange ( -60, 0 );
     pKnobCompressorRatio->setRange ( 1, 20 );
-    pKnobCompressorAttack->setRange ( 1, 50 );
-    pKnobCompressorRelease->setRange ( 10, 400 );
+    pKnobCompressorAttack->setRange ( 1, 100 );
+    pKnobCompressorRelease->setRange ( 10, 1000 );
     pKnobCompressorMakeup->setRange ( 0, 24 );
+
+    pKnobReverbPreDelay->setRange ( 0, REVERB_PRE_DELAY_MAX_MS );
+    pKnobReverbRoom->setRange ( 0, 100 );
+    pKnobReverbDamping->setRange ( 0, 100 );
+    pKnobReverbWet->setRange ( 0, 100 );
+    pKnobReverbEarly->setRange ( 0, 100 );
+    pKnobReverbWidth->setRange ( 0, 100 );
+
+    pKnobEQBandGain->setRange ( -240, 240 );
+    pKnobEQBandQ->setRange ( 1, 100 );
+    pKnobEQDynThreshold->setRange ( -60, 0 );
+    pKnobEQDynRatio->setRange ( 1, 20 );
+    pKnobEQDynAttack->setRange ( 1, 100 );
+    pKnobEQDynRelease->setRange ( 10, 1000 );
 
     pEQCurveWidget->SetSampleRate ( SYSTEM_SAMPLE_RATE_HZ );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainChanged, this, &CEffectsDlg::OnEQBandGainChanged );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandFrequencyChanged, this, &CEffectsDlg::OnEQBandFrequencyChanged );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandSelected, this, &CEffectsDlg::OnEQBandSelected );
     QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandGainReset, this, &CEffectsDlg::OnEQBandGainReset );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandQChanged, this, &CEffectsDlg::OnEQCurveBandQChanged );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandSoloToggled, this, &CEffectsDlg::OnEQBandSoloToggled );
+    QObject::connect ( pEQCurveWidget, &CEQCurveWidget::bandMuteToggled, this, &CEffectsDlg::OnEQBandMuteToggled );
+
+    QObject::connect ( pCmbEQFilterType, QOverload<int>::of ( &QComboBox::currentIndexChanged ), this, &CEffectsDlg::OnEQBandFilterTypeChanged );
+
+    QObject::connect ( pButEQBandSolo, &QPushButton::clicked, this, &CEffectsDlg::OnEQBandSoloClicked );
+    QObject::connect ( pButEQBandMute, &QPushButton::clicked, this, &CEffectsDlg::OnEQBandMuteClicked );
+    QObject::connect ( pButEQDynEnabled, &QPushButton::clicked, this, &CEffectsDlg::OnEQDynToggleClicked );
+
+    pGrpEQDynMode = new QButtonGroup ( this );
+    pGrpEQDynMode->setExclusive ( true );
+    pGrpEQDynMode->addButton ( pButEQDynCompress, static_cast<int> ( CAudioEqualizer::EDynMode::Compress ) );
+    pGrpEQDynMode->addButton ( pButEQDynBoost, static_cast<int> ( CAudioEqualizer::EDynMode::Boost ) );
+
+    QObject::connect ( pGrpEQDynMode, QOverload<QAbstractButton*>::of ( &QButtonGroup::buttonClicked ), this, [this] ( QAbstractButton* pBtn ) {
+        if ( pBtn )
+        {
+            OnEQDynModeClicked ( pGrpEQDynMode->id ( pBtn ) );
+        }
+    } );
 
     pEdtEQDynThreshold->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
     pEdtEQDynRatio->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -128,7 +304,6 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
     pKnobEQDynAttack->setRange ( 1, 100 );
     pKnobEQDynRelease->setRange ( 10, 500 );
 
-    QObject::connect ( pChbEQDynEnabled, &QCheckBox::toggled, this, &CEffectsDlg::OnEQDynEnabledChanged );
     QObject::connect ( pKnobEQDynThreshold, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynThresholdChanged );
     QObject::connect ( pKnobEQDynRatio, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynRatioChanged );
     QObject::connect ( pKnobEQDynAttack, &CCustomKnob::valueChanged, this, &CEffectsDlg::OnEQDynAttackChanged );
@@ -440,6 +615,42 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
     {
         pReverbDecayWidget->SetDarkTheme ( bDarkTheme );
     }
+
+    // Update Equalizer icon widgets for theme
+    const QColor colBand = GetBandColor ( iSelectedBand );
+
+    pCmbEQFilterType->blockSignals ( true );
+    const int iPrevIdx = pCmbEQFilterType->currentIndex();
+    pCmbEQFilterType->clear();
+    const struct
+    {
+        CAudioEqualizer::EFilterType eType;
+        const char*                  szName;
+    } aFilterTypes[] = {
+        { CAudioEqualizer::EFilterType::Peak, QT_TR_NOOP ( "Peak" ) },
+        { CAudioEqualizer::EFilterType::LowShelf, QT_TR_NOOP ( "Low Shelf" ) },
+        { CAudioEqualizer::EFilterType::HighShelf, QT_TR_NOOP ( "High Shelf" ) },
+        { CAudioEqualizer::EFilterType::LowPass, QT_TR_NOOP ( "Low Pass" ) },
+        { CAudioEqualizer::EFilterType::HighPass, QT_TR_NOOP ( "High Pass" ) },
+        { CAudioEqualizer::EFilterType::Notch, QT_TR_NOOP ( "Notch" ) },
+    };
+    for ( size_t i = 0; i < sizeof ( aFilterTypes ) / sizeof ( aFilterTypes[0] ); ++i )
+    {
+        pCmbEQFilterType->addItem ( CreateFilterTypeIcon ( aFilterTypes[i].eType, bDarkTheme, colBand ),
+                                    QString(),
+                                    static_cast<int> ( aFilterTypes[i].eType ) );
+        pCmbEQFilterType->setItemData ( static_cast<int> ( i ), tr ( aFilterTypes[i].szName ), Qt::ToolTipRole );
+    }
+    if ( iPrevIdx >= 0 && iPrevIdx < pCmbEQFilterType->count() )
+    {
+        pCmbEQFilterType->setCurrentIndex ( iPrevIdx );
+        pCmbEQFilterType->setToolTip ( tr ( aFilterTypes[iPrevIdx].szName ) );
+    }
+    pCmbEQFilterType->blockSignals ( false );
+
+    pButEQDynCompress->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Compress, bDarkTheme, colBand ) );
+    pButEQDynBoost->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Boost, bDarkTheme, colBand ) );
+    pButEQDynEnabled->setIcon ( CreateDynToggleIcon ( bDarkTheme, colBand ) );
 }
 
 void CEffectsDlg::UpdateCompressorControls()
@@ -626,11 +837,14 @@ void CEffectsDlg::UpdateEQControls()
     if ( pEQCurveWidget && pClient )
     {
         pEQCurveWidget->SetBypassed ( bBypassed );
+        pEQCurveWidget->SetSoloBand ( GetEQSoloBand() );
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
             pEQCurveWidget->SetBandGain ( iBand, GetEQBandGainDb ( iBand ) );
             pEQCurveWidget->SetBandFrequency ( iBand, GetEQBandFrequency ( iBand ) );
             pEQCurveWidget->SetBandQ ( iBand, GetEQBandQ ( iBand ) );
+            pEQCurveWidget->SetBandFilterType ( iBand, GetEQBandFilterType ( iBand ) );
+            pEQCurveWidget->SetBandMuted ( iBand, GetEQBandMute ( iBand ) );
         }
     }
 
@@ -741,6 +955,8 @@ void CEffectsDlg::ApplyEffectsPresetFromSlot ( const int iPresetSlot )
         SetEQBandGainDb ( iBand, preset.afEQBandGainDb[iBand] );
         SetEQBandFrequency ( iBand, preset.aiEQBandFrequency[iBand] );
         SetEQBandDynEnabled ( iBand, preset.abEQBandDynEnabled[iBand] );
+        SetEQBandDynMode ( iBand, static_cast<CAudioEqualizer::EDynMode> ( preset.aiEQBandDynMode[iBand] ) );
+        SetEQBandFilterType ( iBand, static_cast<CAudioEqualizer::EFilterType> ( preset.aiEQBandFilterType[iBand] ) );
         SetEQBandDynThresholdDb ( iBand, preset.aiEQBandDynThresholdDb[iBand] );
         SetEQBandDynRatio ( iBand, preset.aiEQBandDynRatio[iBand] );
         SetEQBandDynAttackMs ( iBand, preset.aiEQBandDynAttackMs[iBand] );
@@ -933,15 +1149,6 @@ void CEffectsDlg::OnEQBandGainReset ( int iBand )
     }
 }
 
-void CEffectsDlg::OnEQDynEnabledChanged ( bool bEnabled )
-{
-    if ( pClient )
-    {
-        SetEQBandDynEnabled ( iSelectedBand, bEnabled );
-        UpdateEQDynControls ( iSelectedBand );
-    }
-}
-
 void CEffectsDlg::OnEQDynThresholdChanged ( int iValue )
 {
     if ( pClient )
@@ -1021,6 +1228,123 @@ void CEffectsDlg::OnEQBandGainKnobChanged ( int iValue )
     }
 }
 
+void CEffectsDlg::OnEQBandFilterTypeChanged ( int iIndex )
+{
+    if ( pClient && iIndex >= 0 && iIndex < pCmbEQFilterType->count() )
+    {
+        const auto eType = static_cast<CAudioEqualizer::EFilterType> ( pCmbEQFilterType->itemData ( iIndex ).toInt() );
+        SetEQBandFilterType ( iSelectedBand, eType );
+        pCmbEQFilterType->setToolTip ( pCmbEQFilterType->itemData ( iIndex, Qt::ToolTipRole ).toString() );
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetBandFilterType ( iSelectedBand, eType );
+        }
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQBandSoloClicked()
+{
+    if ( pClient )
+    {
+        const int iCurrentSolo = GetEQSoloBand();
+        if ( iCurrentSolo == iSelectedBand )
+        {
+            SetEQSoloBand ( -1 );
+        }
+        else
+        {
+            SetEQSoloBand ( iSelectedBand );
+        }
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetSoloBand ( GetEQSoloBand() );
+        }
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQBandSoloToggled ( int iBand )
+{
+    if ( pClient && iBand >= 0 && iBand < CAudioEqualizer::NUM_BANDS )
+    {
+        const int iCurrentSolo = GetEQSoloBand();
+        if ( iCurrentSolo == iBand )
+        {
+            SetEQSoloBand ( -1 );
+        }
+        else
+        {
+            SetEQSoloBand ( iBand );
+        }
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetSoloBand ( GetEQSoloBand() );
+        }
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQBandMuteClicked()
+{
+    if ( pClient )
+    {
+        const bool bMuted = GetEQBandMute ( iSelectedBand );
+        SetEQBandMute ( iSelectedBand, !bMuted );
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetBandMuted ( iSelectedBand, !bMuted );
+        }
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQBandMuteToggled ( int iBand )
+{
+    if ( pClient && iBand >= 0 && iBand < CAudioEqualizer::NUM_BANDS )
+    {
+        const bool bMuted = GetEQBandMute ( iBand );
+        SetEQBandMute ( iBand, !bMuted );
+        if ( pEQCurveWidget )
+        {
+            pEQCurveWidget->SetBandMuted ( iBand, !bMuted );
+        }
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQDynModeClicked ( int iId )
+{
+    if ( pClient && iId >= 0 )
+    {
+        const auto eMode = static_cast<CAudioEqualizer::EDynMode> ( iId );
+        SetEQBandDynMode ( iSelectedBand, eMode );
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQDynToggleClicked()
+{
+    if ( pClient )
+    {
+        const bool bEnabled = !GetEQBandDynEnabled ( iSelectedBand );
+        SetEQBandDynEnabled ( iSelectedBand, bEnabled );
+        UpdateEQDynControls ( iSelectedBand );
+    }
+}
+
+void CEffectsDlg::OnEQCurveBandQChanged ( int iBand, float fQ )
+{
+    if ( pClient && iBand >= 0 && iBand < CAudioEqualizer::NUM_BANDS )
+    {
+        SetEQBandQ ( iBand, fQ );
+        if ( iBand == iSelectedBand )
+        {
+            UpdateEQDynControls ( iBand );
+        }
+    }
+}
+
 void CEffectsDlg::OnResetEQClicked()
 {
     if ( pClient )
@@ -1040,11 +1364,12 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
 
     iSelectedBand = iBand;
 
-    const bool bEnabled    = GetEQBandDynEnabled ( iBand );
-    const bool bDynEnabled = bEnabled;
+    const bool    bDarkTheme  = ( ResolveUITheme ( pSettings->eUITheme ) == UIT_DARK );
+    const bool    bDynEnabled = GetEQBandDynEnabled ( iBand );
+    const QColor  colBand     = GetBandColor ( iBand );
+    const QString strBandRgb  = QString ( "%1, %2, %3" ).arg ( colBand.red() ).arg ( colBand.green() ).arg ( colBand.blue() );
 
     // Apply per-band accent color to all EQ knobs
-    const QColor colBand = GetBandColor ( iBand );
     pKnobEQDynThreshold->SetAccentColor ( colBand );
     pKnobEQDynRatio->SetAccentColor ( colBand );
     pKnobEQDynAttack->SetAccentColor ( colBand );
@@ -1052,15 +1377,12 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQBandQ->SetAccentColor ( colBand );
     pKnobEQBandGain->SetAccentColor ( colBand );
 
-    pChbEQDynEnabled->blockSignals ( true );
     pKnobEQDynThreshold->blockSignals ( true );
     pKnobEQDynRatio->blockSignals ( true );
     pKnobEQDynAttack->blockSignals ( true );
     pKnobEQDynRelease->blockSignals ( true );
     pKnobEQBandQ->blockSignals ( true );
     pKnobEQBandGain->blockSignals ( true );
-
-    pChbEQDynEnabled->setChecked ( bEnabled );
 
     const float fFreq = GetEQBandFrequency ( iBand );
     QString     strFreq;
@@ -1147,7 +1469,120 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
         pEdtEQBandQ->blockSignals ( false );
     }
 
-    pChbEQDynEnabled->blockSignals ( false );
+    const CAudioEqualizer::EFilterType eType = GetEQBandFilterType ( iBand );
+    pCmbEQFilterType->blockSignals ( true );
+    const struct
+    {
+        CAudioEqualizer::EFilterType eType;
+        const char*                  szName;
+    } aFilterTypes[] = {
+        { CAudioEqualizer::EFilterType::Peak, QT_TR_NOOP ( "Peak" ) },
+        { CAudioEqualizer::EFilterType::LowShelf, QT_TR_NOOP ( "Low Shelf" ) },
+        { CAudioEqualizer::EFilterType::HighShelf, QT_TR_NOOP ( "High Shelf" ) },
+        { CAudioEqualizer::EFilterType::LowPass, QT_TR_NOOP ( "Low Pass" ) },
+        { CAudioEqualizer::EFilterType::HighPass, QT_TR_NOOP ( "High Pass" ) },
+        { CAudioEqualizer::EFilterType::Notch, QT_TR_NOOP ( "Notch" ) },
+    };
+    if ( pCmbEQFilterType->count() == 0 )
+    {
+        for ( size_t i = 0; i < sizeof ( aFilterTypes ) / sizeof ( aFilterTypes[0] ); ++i )
+        {
+            pCmbEQFilterType->addItem ( CreateFilterTypeIcon ( aFilterTypes[i].eType, bDarkTheme, colBand ),
+                                        QString(),
+                                        static_cast<int> ( aFilterTypes[i].eType ) );
+            pCmbEQFilterType->setItemData ( static_cast<int> ( i ), tr ( aFilterTypes[i].szName ), Qt::ToolTipRole );
+        }
+    }
+    else
+    {
+        for ( int i = 0; i < pCmbEQFilterType->count(); ++i )
+        {
+            const auto itemType = static_cast<CAudioEqualizer::EFilterType> ( pCmbEQFilterType->itemData ( i ).toInt() );
+            pCmbEQFilterType->setItemIcon ( i, CreateFilterTypeIcon ( itemType, bDarkTheme, colBand ) );
+        }
+    }
+    for ( int i = 0; i < pCmbEQFilterType->count(); ++i )
+    {
+        if ( pCmbEQFilterType->itemData ( i ).toInt() == static_cast<int> ( eType ) )
+        {
+            pCmbEQFilterType->setCurrentIndex ( i );
+            pCmbEQFilterType->setToolTip ( pCmbEQFilterType->itemData ( i, Qt::ToolTipRole ).toString() );
+            break;
+        }
+    }
+    pCmbEQFilterType->setStyleSheet ( QString ( "QComboBox { border: 1px solid %1; border-radius: 3px; padding-left: 4px; } "
+                                                "QComboBox:focus, QComboBox:hover { border-color: rgb(%2); }" )
+                                          .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
+                                          .arg ( strBandRgb ) );
+    pCmbEQFilterType->blockSignals ( false );
+
+    const CAudioEqualizer::EDynMode eDynMode = GetEQBandDynMode ( iBand );
+    pGrpEQDynMode->blockSignals ( true );
+    if ( auto* pBtn = pGrpEQDynMode->button ( static_cast<int> ( eDynMode ) ) )
+    {
+        pBtn->setChecked ( true );
+    }
+    pGrpEQDynMode->blockSignals ( false );
+
+    // Dynamic mode buttons styling & icons
+    pButEQDynCompress->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Compress, bDarkTheme, colBand ) );
+    pButEQDynBoost->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Boost, bDarkTheme, colBand ) );
+
+    pButEQDynCompress->setStyleSheet (
+        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
+                  "QPushButton:hover { border-color: rgb(%3); }" )
+            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Compress && bDynEnabled ) ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb )
+                                                                                      : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
+            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Compress && bDynEnabled ) ? QString ( "rgb(%1)" ).arg ( strBandRgb )
+                                                                                      : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
+            .arg ( strBandRgb ) );
+
+    pButEQDynBoost->setStyleSheet (
+        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
+                  "QPushButton:hover { border-color: rgb(%3); }" )
+            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Boost && bDynEnabled ) ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb )
+                                                                                   : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
+            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Boost && bDynEnabled ) ? QString ( "rgb(%1)" ).arg ( strBandRgb )
+                                                                                   : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
+            .arg ( strBandRgb ) );
+
+    // Solo button styling
+    const bool bSolo = ( GetEQSoloBand() == iBand );
+    pButEQBandSolo->blockSignals ( true );
+    pButEQBandSolo->setChecked ( bSolo );
+    pButEQBandSolo->setStyleSheet ( QString ( "QPushButton { font-weight: bold; border-radius: 3px; font-size: 11px; "
+                                              "background-color: %1; color: %2; border: 1px solid %3; } "
+                                              "QPushButton:hover { border-color: rgb(%4); }" )
+                                        .arg ( bSolo ? QString ( "rgba(%1, 0.4)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
+                                        .arg ( bSolo ? ( bDarkTheme ? "#ffffff" : "#000000" ) : ( bDarkTheme ? "#b0b4bc" : "#404550" ) )
+                                        .arg ( bSolo ? QString ( "rgb(%1)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
+                                        .arg ( strBandRgb ) );
+    pButEQBandSolo->blockSignals ( false );
+
+    // Mute button styling
+    const bool bMute = GetEQBandMute ( iBand );
+    pButEQBandMute->blockSignals ( true );
+    pButEQBandMute->setChecked ( bMute );
+    pButEQBandMute->setStyleSheet ( QString ( "QPushButton { font-weight: bold; border-radius: 3px; font-size: 11px; "
+                                              "background-color: %1; color: %2; border: 1px solid %3; } "
+                                              "QPushButton:hover { border-color: #ff5555; }" )
+                                        .arg ( bMute ? "rgba(235, 60, 55, 0.45)" : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
+                                        .arg ( bMute ? "#ffffff" : ( bDarkTheme ? "#b0b4bc" : "#404550" ) )
+                                        .arg ( bMute ? "#eb3c37" : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) ) );
+    pButEQBandMute->blockSignals ( false );
+
+    // Dynamics enable button styling & icon
+    pButEQDynEnabled->blockSignals ( true );
+    pButEQDynEnabled->setChecked ( bDynEnabled );
+    pButEQDynEnabled->setIcon ( CreateDynToggleIcon ( bDarkTheme, colBand ) );
+    pButEQDynEnabled->setStyleSheet (
+        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
+                  "QPushButton:hover { border-color: rgb(%3); }" )
+            .arg ( bDynEnabled ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
+            .arg ( bDynEnabled ? QString ( "rgb(%1)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
+            .arg ( strBandRgb ) );
+    pButEQDynEnabled->blockSignals ( false );
+
     pKnobEQDynThreshold->blockSignals ( false );
     pKnobEQDynRatio->blockSignals ( false );
     pKnobEQDynAttack->blockSignals ( false );
@@ -1155,15 +1590,20 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pKnobEQBandQ->blockSignals ( false );
     pKnobEQBandGain->blockSignals ( false );
 
-    pChbEQDynEnabled->setEnabled ( true );
+    const bool bGainApplicable = ( eType == CAudioEqualizer::EFilterType::Peak || eType == CAudioEqualizer::EFilterType::LowShelf ||
+                                   eType == CAudioEqualizer::EFilterType::HighShelf );
+
+    pButEQDynEnabled->setEnabled ( true );
     pKnobEQBandQ->setEnabled ( true );
-    pKnobEQBandGain->setEnabled ( true );
+    pKnobEQBandGain->setEnabled ( bGainApplicable );
     pEdtEQDynFreq->setEnabled ( true );
-    pEdtEQDynGain->setEnabled ( true );
+    pEdtEQDynGain->setEnabled ( bGainApplicable );
     pEdtEQBandQ->setEnabled ( true );
-    pLblEQDynFreqPrefix->setEnabled ( true );
-    pLblEQDynGainPrefix->setEnabled ( true );
+    pLblEQDynGainPrefix->setEnabled ( bGainApplicable );
     pLblEQBandQ->setEnabled ( true );
+    pCmbEQFilterType->setEnabled ( true );
+    pButEQBandSolo->setEnabled ( true );
+    pButEQBandMute->setEnabled ( true );
 
     pKnobEQDynThreshold->setEnabled ( bDynEnabled );
     pKnobEQDynRatio->setEnabled ( bDynEnabled );
@@ -1177,6 +1617,8 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pLblEQDynRatio->setEnabled ( bDynEnabled );
     pLblEQDynAttack->setEnabled ( bDynEnabled );
     pLblEQDynRelease->setEnabled ( bDynEnabled );
+    pButEQDynCompress->setEnabled ( bDynEnabled );
+    pButEQDynBoost->setEnabled ( bDynEnabled );
 }
 
 bool CEffectsDlg::eventFilter ( QObject* pObj, QEvent* pEvent )
@@ -1588,7 +2030,7 @@ void CEffectsDlg::OnEQDynReleaseEditFinished()
 
     fRelease = std::max ( 10.0f, std::min ( 500.0f, fRelease ) );
 
-    pClient->SetEQBandDynReleaseMs ( iSelectedBand, fRelease );
+    SetEQBandDynReleaseMs ( iSelectedBand, fRelease );
 
     UpdateEQDynControls ( iSelectedBand );
 }

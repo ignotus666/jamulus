@@ -726,8 +726,7 @@ void CNetBufWithStats::UpdateAutoSetting()
 
     // interpolate the normal-mode IIR down-weight between conservative and
     // aggressive bounds (only affects the "normal" path, not "fast adaptation")
-    dAutoFilt_WightDownNormal = dConservativeDownNormal +
-        dAdaptiveDecayFactor * ( dAggressiveDownNormal - dConservativeDownNormal );
+    dAutoFilt_WightDownNormal = dConservativeDownNormal + dAdaptiveDecayFactor * ( dAggressiveDownNormal - dConservativeDownNormal );
 
     // Initialization phase check and correction -------------------------------
     // sometimes in the very first period after a connection we get a bad error

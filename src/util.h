@@ -1377,8 +1377,8 @@ protected:
     std::atomic<bool> bRun;
 
 #    if defined( __APPLE__ ) || defined( __MACOSX )
-    uint64_t          Delay;
-    uint64_t          NextEnd;
+    uint64_t Delay;
+    uint64_t NextEnd;
 #    else
     long     Delay;
     timespec NextEnd;

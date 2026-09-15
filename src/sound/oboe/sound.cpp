@@ -368,7 +368,6 @@ void CSound::Stats::reset()
 
 void CSound::Stats::log() const
 {
-    qDebug() << "Stats: "
-             << "frames_in: " << frames_in << ",frames_out: " << frames_out << ",frames_filled_out: " << frames_filled_out
+    qDebug() << "Stats: " << "frames_in: " << frames_in << ",frames_out: " << frames_out << ",frames_filled_out: " << frames_filled_out
              << ",in_callback_calls: " << in_callback_calls << ",out_callback_calls: " << out_callback_calls << ",ring_overrun: " << ring_overrun;
 }

@@ -711,14 +711,12 @@ int main ( int argc, char** argv )
 
             if ( !strServerListFileName.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list persistence file will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list persistence file will only take effect when running as a directory.";
             }
 
             if ( !strServerListFilter.isEmpty() )
             {
-                qInfo() << "Note:"
-                        << "Server list filter will only take effect when running as a directory.";
+                qInfo() << "Note:" << "Server list filter will only take effect when running as a directory.";
             }
         }
         else
@@ -883,7 +881,7 @@ int main ( int argc, char** argv )
     bIsClient = true; // Client only - TODO: maybe a switch in interface to change to server?
 
     // bUseMultithreading = true;
-    QApplication* pApp       = new QApplication ( argc, argv );
+    QApplication* pApp = new QApplication ( argc, argv );
 #    else
     QCoreApplication* pApp = bUseGUI ? new QApplication ( argc, argv ) : new QCoreApplication ( argc, argv );
     if ( bUseGUI )
@@ -943,7 +941,7 @@ int main ( int argc, char** argv )
         qWarning() << "No JSON-RPC support in this build.";
     }
 #else
-    CRpcServer*   pRpcServer = nullptr;
+    CRpcServer* pRpcServer = nullptr;
 
     if ( iJsonRpcPortNumber != INVALID_PORT )
     {

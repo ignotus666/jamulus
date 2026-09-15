@@ -1473,8 +1473,10 @@ void CClientSettings::SaveEffectsPresetFromClient ( int iPresetSlot, bool bIsOut
         for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
         {
             preset.afEQBandGainDb[iBand]         = eq.GetBandGainDb ( iBand );
+            preset.aiEQBandFilterType[iBand]     = static_cast<int> ( eq.GetBandFilterType ( iBand ) );
             preset.aiEQBandFrequency[iBand]      = static_cast<int> ( eq.GetBandFrequency ( iBand ) );
             preset.abEQBandDynEnabled[iBand]     = eq.GetBandDynEnabled ( iBand );
+            preset.aiEQBandDynMode[iBand]        = static_cast<int> ( eq.GetBandDynMode ( iBand ) );
             preset.aiEQBandDynThresholdDb[iBand] = static_cast<int> ( eq.GetBandDynThresholdDb ( iBand ) );
             preset.aiEQBandDynRatio[iBand]       = static_cast<int> ( eq.GetBandDynRatio ( iBand ) );
             preset.aiEQBandDynAttackMs[iBand]    = static_cast<int> ( eq.GetBandDynAttackMs ( iBand ) );
@@ -1501,13 +1503,23 @@ void CClientSettings::ReadEQSettingsFromXML ( const QDomDocument& IniXMLDocument
             pClient->GetEQ ( bIsOutput ).SetBandGainDb ( iIdx, strVal.toFloat() );
         }
 
+        int iValue;
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "%1eqbandfiltertype%2" ).arg ( prefix ).arg ( iIdx ), 0, 5, iValue ) )
+        {
+            pClient->GetEQ ( bIsOutput ).SetBandFilterType ( iIdx, static_cast<CAudioEqualizer::EFilterType> ( iValue ) );
+        }
+
         bool bValue;
         if ( GetFlagIniSet ( IniXMLDocument, "client", QString ( "%1eqbanddynenabled%2" ).arg ( prefix ).arg ( iIdx ), bValue ) )
         {
             pClient->GetEQ ( bIsOutput ).SetBandDynEnabled ( iIdx, bValue );
         }
 
-        int iValue;
+        if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "%1eqbanddynmode%2" ).arg ( prefix ).arg ( iIdx ), 0, 1, iValue ) )
+        {
+            pClient->GetEQ ( bIsOutput ).SetBandDynMode ( iIdx, static_cast<CAudioEqualizer::EDynMode> ( iValue ) );
+        }
+
         if ( GetNumericIniSet ( IniXMLDocument, "client", QString ( "%1eqbanddynthreshold%2" ).arg ( prefix ).arg ( iIdx ), -60, 0, iValue ) )
         {
             pClient->GetEQ ( bIsOutput ).SetBandDynThresholdDb ( iIdx, iValue );
@@ -1553,7 +1565,15 @@ void CClientSettings::WriteEQSettingsToXML ( QDomDocument& IniXMLDocument, const
                         "client",
                         QString ( "%1eqbandgain%2" ).arg ( prefix ).arg ( iIdx ),
                         QString::number ( eq.GetBandGainDb ( iIdx ), 'f', 1 ) );
+        SetNumericIniSet ( IniXMLDocument,
+                           "client",
+                           QString ( "%1eqbandfiltertype%2" ).arg ( prefix ).arg ( iIdx ),
+                           static_cast<int> ( eq.GetBandFilterType ( iIdx ) ) );
         SetFlagIniSet ( IniXMLDocument, "client", QString ( "%1eqbanddynenabled%2" ).arg ( prefix ).arg ( iIdx ), eq.GetBandDynEnabled ( iIdx ) );
+        SetNumericIniSet ( IniXMLDocument,
+                           "client",
+                           QString ( "%1eqbanddynmode%2" ).arg ( prefix ).arg ( iIdx ),
+                           static_cast<int> ( eq.GetBandDynMode ( iIdx ) ) );
         SetNumericIniSet ( IniXMLDocument,
                            "client",
                            QString ( "%1eqbanddynthreshold%2" ).arg ( prefix ).arg ( iIdx ),
@@ -1742,6 +1762,17 @@ void CClientSettings::ReadEffectsPresetsFromXML ( const QDomDocument& IniXMLDocu
                 }
             }
 
+            p.aiEQBandFilterType[iBand] = 0;
+            if ( GetNumericIniSet ( IniXMLDocument,
+                                    "client",
+                                    QString ( "%1effectpreset%2_eqbandfiltertype%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),
+                                    0,
+                                    5,
+                                    iValue ) )
+            {
+                p.aiEQBandFilterType[iBand] = iValue;
+            }
+
             p.abEQBandDynEnabled[iBand] = false;
             if ( GetFlagIniSet ( IniXMLDocument,
                                  "client",
@@ -1749,6 +1780,17 @@ void CClientSettings::ReadEffectsPresetsFromXML ( const QDomDocument& IniXMLDocu
                                  bValue ) )
             {
                 p.abEQBandDynEnabled[iBand] = bValue;
+            }
+
+            p.aiEQBandDynMode[iBand] = 0;
+            if ( GetNumericIniSet ( IniXMLDocument,
+                                    "client",
+                                    QString ( "%1effectpreset%2_eqbanddynmode%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),
+                                    0,
+                                    1,
+                                    iValue ) )
+            {
+                p.aiEQBandDynMode[iBand] = iValue;
             }
 
             p.aiEQBandDynThresholdDb[iBand] = -20;
@@ -1983,8 +2025,16 @@ void CClientSettings::WriteEffectsPresetsToXML ( QDomDocument& IniXMLDocument, b
                             QString::number ( p.afEQBandGainDb[iBand], 'f', 1 ) );
             PutIniSetting ( IniXMLDocument,
                             "client",
+                            QString ( "%1effectpreset%2_eqbandfiltertype%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),
+                            QString::number ( p.aiEQBandFilterType[iBand] ) );
+            PutIniSetting ( IniXMLDocument,
+                            "client",
                             QString ( "%1effectpreset%2_eqbanddynenabled%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),
                             p.abEQBandDynEnabled[iBand] ? "1" : "0" );
+            PutIniSetting ( IniXMLDocument,
+                            "client",
+                            QString ( "%1effectpreset%2_eqbanddynmode%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),
+                            QString::number ( p.aiEQBandDynMode[iBand] ) );
             PutIniSetting ( IniXMLDocument,
                             "client",
                             QString ( "%1effectpreset%2_eqbanddynthreshold%3" ).arg ( prefix ).arg ( iIdx ).arg ( iBand ),

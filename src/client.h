@@ -259,29 +259,6 @@ public:
     void SetDoAutoSockBufSize ( const bool bValue );
     bool GetDoAutoSockBufSize() const { return Channel.GetDoAutoSockBufSize(); }
 
-    void  SetEQBypass ( const bool bNBypass ) { AudioEqualizer.SetBypass ( bNBypass ); }
-    void  SetEQBandGainDb ( const int iBandIndex, const float fGainDb ) { AudioEqualizer.SetBandGainDb ( iBandIndex, fGainDb ); }
-    void  SetEQBandFrequency ( const int iBandIndex, const float fFreqHz ) { AudioEqualizer.SetBandFrequency ( iBandIndex, fFreqHz ); }
-    void  ResetEQ() { AudioEqualizer.Reset(); }
-    bool  GetEQBypass() const { return AudioEqualizer.GetBypass(); }
-    float GetEQBandGainDb ( const int iBandIndex ) const { return AudioEqualizer.GetBandGainDb ( iBandIndex ); }
-    float GetEQBandFrequency ( const int iBandIndex ) const { return AudioEqualizer.GetBandFrequency ( iBandIndex ); }
-
-    void  SetEQBandQ ( const int iBand, const float fQ ) { AudioEqualizer.SetBandQ ( iBand, fQ ); }
-    float GetEQBandQ ( const int iBand ) const { return AudioEqualizer.GetBandQ ( iBand ); }
-
-    void  SetEQBandDynEnabled ( const int iBand, const bool bEnabled ) { AudioEqualizer.SetBandDynEnabled ( iBand, bEnabled ); }
-    bool  GetEQBandDynEnabled ( const int iBand ) const { return AudioEqualizer.GetBandDynEnabled ( iBand ); }
-    void  SetEQBandDynThresholdDb ( const int iBand, const float fDb ) { AudioEqualizer.SetBandDynThresholdDb ( iBand, fDb ); }
-    float GetEQBandDynThresholdDb ( const int iBand ) const { return AudioEqualizer.GetBandDynThresholdDb ( iBand ); }
-    void  SetEQBandDynRatio ( const int iBand, const float fRatio ) { AudioEqualizer.SetBandDynRatio ( iBand, fRatio ); }
-    float GetEQBandDynRatio ( const int iBand ) const { return AudioEqualizer.GetBandDynRatio ( iBand ); }
-    void  SetEQBandDynAttackMs ( const int iBand, const float fMs ) { AudioEqualizer.SetBandDynAttackMs ( iBand, fMs ); }
-    float GetEQBandDynAttackMs ( const int iBand ) const { return AudioEqualizer.GetBandDynAttackMs ( iBand ); }
-    void  SetEQBandDynReleaseMs ( const int iBand, const float fMs ) { AudioEqualizer.SetBandDynReleaseMs ( iBand, fMs ); }
-    float GetEQBandDynReleaseMs ( const int iBand ) const { return AudioEqualizer.GetBandDynReleaseMs ( iBand ); }
-    float GetEQBandGainReductionDb ( const int iBand ) const { return AudioEqualizer.GetBandGainReductionDb ( iBand ); }
-
     void  SetCompressorBypass ( const bool bNBypass ) { AudioCompressor.SetBypass ( bNBypass ); }
     bool  GetCompressorBypass() const { return AudioCompressor.GetBypass(); }
     void  SetCompressorThresholdDb ( const float fDb ) { AudioCompressor.SetThresholdDb ( fDb ); }
@@ -300,20 +277,23 @@ public:
     float GetCompressorInputLevelDb() { return AudioCompressor.GetInputLevelDb(); }
 
     // Context-aware reference accessors
-    CAudioReverb&     GetReverb ( const bool bIsOutput ) { return bIsOutput ? AudioReverbOutput : AudioReverb; }
-    CAudioEqualizer&  GetEQ ( const bool bIsOutput ) { return bIsOutput ? AudioEqualizerOutput : AudioEqualizer; }
-    CAudioCompressor& GetCompressor ( const bool bIsOutput ) { return bIsOutput ? AudioCompressorOutput : AudioCompressor; }
+    CAudioReverb&           GetReverb ( const bool bIsOutput ) { return bIsOutput ? AudioReverbOutput : AudioReverb; }
+    const CAudioReverb&     GetReverb ( const bool bIsOutput ) const { return bIsOutput ? AudioReverbOutput : AudioReverb; }
+    CAudioEqualizer&        GetEQ ( const bool bIsOutput ) { return bIsOutput ? AudioEqualizerOutput : AudioEqualizer; }
+    const CAudioEqualizer&  GetEQ ( const bool bIsOutput ) const { return bIsOutput ? AudioEqualizerOutput : AudioEqualizer; }
+    CAudioCompressor&       GetCompressor ( const bool bIsOutput ) { return bIsOutput ? AudioCompressorOutput : AudioCompressor; }
+    const CAudioCompressor& GetCompressor ( const bool bIsOutput ) const { return bIsOutput ? AudioCompressorOutput : AudioCompressor; }
 
     std::atomic<int>&  GetReverbLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbLevel : iReverbLevel; }
-    bool& GetReverbBypass ( const bool bIsOutput ) { return bIsOutput ? bOutReverbBypass : bReverbBypass; }
-    int&  GetReverbPreDelayMs ( const bool bIsOutput ) { return bIsOutput ? iOutReverbPreDelayMs : iReverbPreDelayMs; }
-    int&  GetReverbRoomSize ( const bool bIsOutput ) { return bIsOutput ? iOutReverbRoomSize : iReverbRoomSize; }
-    int&  GetReverbDamping ( const bool bIsOutput ) { return bIsOutput ? iOutReverbDamping : iReverbDamping; }
-    int&  GetReverbWetMix ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWetMix : iReverbWetMix; }
-    int&  GetReverbEarlyLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbEarlyLevel : iReverbEarlyLevel; }
-    int&  GetReverbWidth ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWidth : iReverbWidth; }
-    bool& GetReverbEarlyEnabled ( const bool bIsOutput ) { return bIsOutput ? bOutReverbEarlyEnabled : bReverbEarlyEnabled; }
-    bool& GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
+    bool&              GetReverbBypass ( const bool bIsOutput ) { return bIsOutput ? bOutReverbBypass : bReverbBypass; }
+    int&               GetReverbPreDelayMs ( const bool bIsOutput ) { return bIsOutput ? iOutReverbPreDelayMs : iReverbPreDelayMs; }
+    int&               GetReverbRoomSize ( const bool bIsOutput ) { return bIsOutput ? iOutReverbRoomSize : iReverbRoomSize; }
+    int&               GetReverbDamping ( const bool bIsOutput ) { return bIsOutput ? iOutReverbDamping : iReverbDamping; }
+    int&               GetReverbWetMix ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWetMix : iReverbWetMix; }
+    int&               GetReverbEarlyLevel ( const bool bIsOutput ) { return bIsOutput ? iOutReverbEarlyLevel : iReverbEarlyLevel; }
+    int&               GetReverbWidth ( const bool bIsOutput ) { return bIsOutput ? iOutReverbWidth : iReverbWidth; }
+    bool&              GetReverbEarlyEnabled ( const bool bIsOutput ) { return bIsOutput ? bOutReverbEarlyEnabled : bReverbEarlyEnabled; }
+    bool&              GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
     std::atomic<bool>& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
 
     // Input spectrum band level telemetry getters & setters
@@ -540,32 +520,32 @@ protected:
     std::atomic<int>  iAudioInFader;
     std::atomic<bool> bReverbOnLeftChan;
     std::atomic<int>  iReverbLevel;
-    int              iReverbPreDelayMs;
-    int              iReverbRoomSize;
-    int              iReverbDamping;
-    int              iReverbWetMix;
-    int              iReverbEarlyLevel;
-    int              iReverbWidth;
-    bool             bReverbEarlyEnabled;
-    bool             bReverbFreeze;
-    bool             bReverbBypass;
-    CAudioReverb     AudioReverb;
-    CAudioEqualizer  AudioEqualizer;
-    CAudioCompressor AudioCompressor;
+    int               iReverbPreDelayMs;
+    int               iReverbRoomSize;
+    int               iReverbDamping;
+    int               iReverbWetMix;
+    int               iReverbEarlyLevel;
+    int               iReverbWidth;
+    bool              bReverbEarlyEnabled;
+    bool              bReverbFreeze;
+    bool              bReverbBypass;
+    CAudioReverb      AudioReverb;
+    CAudioEqualizer   AudioEqualizer;
+    CAudioCompressor  AudioCompressor;
     std::atomic<bool> bOutReverbOnLeftChan;
     std::atomic<int>  iOutReverbLevel;
-    int              iOutReverbPreDelayMs;
-    int              iOutReverbRoomSize;
-    int              iOutReverbDamping;
-    int              iOutReverbWetMix;
-    int              iOutReverbEarlyLevel;
-    int              iOutReverbWidth;
-    bool             bOutReverbEarlyEnabled;
-    bool             bOutReverbFreeze;
-    bool             bOutReverbBypass;
-    CAudioReverb     AudioReverbOutput;
-    CAudioEqualizer  AudioEqualizerOutput;
-    CAudioCompressor AudioCompressorOutput;
+    int               iOutReverbPreDelayMs;
+    int               iOutReverbRoomSize;
+    int               iOutReverbDamping;
+    int               iOutReverbWetMix;
+    int               iOutReverbEarlyLevel;
+    int               iOutReverbWidth;
+    bool              bOutReverbEarlyEnabled;
+    bool              bOutReverbFreeze;
+    bool              bOutReverbBypass;
+    CAudioReverb      AudioReverbOutput;
+    CAudioEqualizer   AudioEqualizerOutput;
+    CAudioCompressor  AudioCompressorOutput;
     std::atomic<int>  iInputBoost;
 
     int iSndCrdPrefFrameSizeFactor;

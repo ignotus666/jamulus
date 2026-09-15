@@ -85,12 +85,7 @@ public:
         if ( pGApp != nullptr )
         {
 #    ifndef QT_NO_SESSIONMANAGER
-            QObject::connect (
-                pGApp,
-                &QGuiApplication::saveStateRequest,
-                this,
-                [=] ( QSessionManager& ) { Save ( false ); },
-                Qt::DirectConnection );
+            QObject::connect ( pGApp, &QGuiApplication::saveStateRequest, this, [=] ( QSessionManager& ) { Save ( false ); }, Qt::DirectConnection );
 
 #    endif
             QObject::connect ( pGApp, &QGuiApplication::applicationStateChanged, this, [=] ( Qt::ApplicationState state ) {
@@ -163,7 +158,9 @@ struct SEffectsPreset
 {
     bool  bEQBypass                                          = true;
     float afEQBandGainDb[CAudioEqualizer::NUM_BANDS]         = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    int   aiEQBandFilterType[CAudioEqualizer::NUM_BANDS]     = { 0, 0, 0, 0, 0, 0, 0, 0 };
     bool  abEQBandDynEnabled[CAudioEqualizer::NUM_BANDS]     = { false, false, false, false, false, false, false, false };
+    int   aiEQBandDynMode[CAudioEqualizer::NUM_BANDS]        = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int   aiEQBandDynThresholdDb[CAudioEqualizer::NUM_BANDS] = { -20, -20, -20, -20, -20, -20, -20, -20 };
     int   aiEQBandDynRatio[CAudioEqualizer::NUM_BANDS]       = { 4, 4, 4, 4, 4, 4, 4, 4 };
     int   aiEQBandDynAttackMs[CAudioEqualizer::NUM_BANDS]    = { 5, 5, 5, 5, 5, 5, 5, 5 };

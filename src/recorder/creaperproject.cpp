@@ -56,12 +56,8 @@
  */
 QTextStream& operator<< ( QTextStream& os, const recorder::STrackItem& trackItem )
 {
-    os << "_track( "
-       << "numAudioChannels(" << trackItem.numAudioChannels << ")"
-       << ", startFrame(" << trackItem.startFrame << ")"
-       << ", frameCount(" << trackItem.frameCount << ")"
-       << ", fileName(" << trackItem.fileName << ")"
-       << " );";
+    os << "_track( " << "numAudioChannels(" << trackItem.numAudioChannels << ")" << ", startFrame(" << trackItem.startFrame << ")" << ", frameCount("
+       << trackItem.frameCount << ")" << ", fileName(" << trackItem.fileName << ")" << " );";
     return os;
 }
 
