@@ -737,6 +737,8 @@ void CServerDlg::OnCLVersionAndOSReceived ( CHostAddress, COSUtil::EOpSystemType
             lblUpdateCheck->show();
         }
     }
+#else
+    Q_UNUSED ( strVersion );
 #endif
 }
 

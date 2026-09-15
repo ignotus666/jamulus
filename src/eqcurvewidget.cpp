@@ -338,7 +338,6 @@ void CEQCurveWidget::SetDarkTheme ( const bool bEnable )
         bDarkTheme           = bEnable;
         bStaticCurveDirty    = true;
         bEffectiveCurveDirty = true;
-        UpdateBandTooltipStyle();
         update();
     }
 }

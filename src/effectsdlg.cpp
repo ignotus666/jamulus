@@ -1511,7 +1511,7 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
         }
     }
     pCmbEQFilterType->setStyleSheet ( QString ( "QComboBox { border: 1px solid %1; border-radius: 3px; padding-left: 4px; } "
-                                                "QComboBox:focus, QComboBox:hover { border-color: rgb(%2); }" )
+                                                "QComboBox:focus, QComboBox:hover { border-color: rgb(%2); background-color: rgba(%2, 0.15); }" )
                                           .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
                                           .arg ( strBandRgb ) );
     pCmbEQFilterType->blockSignals ( false );
@@ -1529,46 +1529,62 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pButEQDynBoost->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Boost, bDarkTheme, colBand ) );
 
     pButEQDynCompress->setStyleSheet (
-        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
-                  "QPushButton:hover { border-color: rgb(%3); }" )
-            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Compress && bDynEnabled ) ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb )
-                                                                                      : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
-            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Compress && bDynEnabled ) ? QString ( "rgb(%1)" ).arg ( strBandRgb )
-                                                                                      : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
-            .arg ( strBandRgb ) );
+        QString ( "QPushButton#pButEQDynCompress { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid "
+                  "%2; padding: 2px; } "
+                  "QPushButton#pButEQDynCompress:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynCompress:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynCompress:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynCompress:disabled { background-color: %4; border: 1px solid %5; }" )
+            .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
+            .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
+            .arg ( strBandRgb )
+            .arg ( bDarkTheme ? "rgba(42, 43, 48, 0.5)" : "rgba(224, 226, 232, 0.5)" )
+            .arg ( bDarkTheme ? "#33363e" : "#d0d4dc" ) );
 
     pButEQDynBoost->setStyleSheet (
-        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
-                  "QPushButton:hover { border-color: rgb(%3); }" )
-            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Boost && bDynEnabled ) ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb )
-                                                                                   : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
-            .arg ( ( eDynMode == CAudioEqualizer::EDynMode::Boost && bDynEnabled ) ? QString ( "rgb(%1)" ).arg ( strBandRgb )
-                                                                                   : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
-            .arg ( strBandRgb ) );
+        QString ( "QPushButton#pButEQDynBoost { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid %2; "
+                  "padding: 2px; } "
+                  "QPushButton#pButEQDynBoost:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynBoost:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynBoost:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynBoost:disabled { background-color: %4; border: 1px solid %5; }" )
+            .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
+            .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
+            .arg ( strBandRgb )
+            .arg ( bDarkTheme ? "rgba(42, 43, 48, 0.5)" : "rgba(224, 226, 232, 0.5)" )
+            .arg ( bDarkTheme ? "#33363e" : "#d0d4dc" ) );
 
     // Solo button styling
     const bool bSolo = ( GetEQSoloBand() == iBand );
     pButEQBandSolo->blockSignals ( true );
     pButEQBandSolo->setChecked ( bSolo );
-    pButEQBandSolo->setStyleSheet ( QString ( "QPushButton { font-weight: bold; border-radius: 3px; font-size: 11px; "
-                                              "background-color: %1; color: %2; border: 1px solid %3; } "
-                                              "QPushButton:hover { border-color: rgb(%4); }" )
-                                        .arg ( bSolo ? QString ( "rgba(%1, 0.4)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
-                                        .arg ( bSolo ? ( bDarkTheme ? "#ffffff" : "#000000" ) : ( bDarkTheme ? "#b0b4bc" : "#404550" ) )
-                                        .arg ( bSolo ? QString ( "rgb(%1)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
-                                        .arg ( strBandRgb ) );
+    pButEQBandSolo->setStyleSheet (
+        QString ( "QPushButton#pButEQBandSolo { min-height: 0px; max-height: 24px; font-weight: bold; border-radius: 3px; font-size: 11px; "
+                  "background-color: %1; color: %2; border: 1px solid %3; padding: 0px; } "
+                  "QPushButton#pButEQBandSolo:checked { background-color: rgba(%4, 0.40); color: %5; border: 1px solid rgb(%4); } "
+                  "QPushButton#pButEQBandSolo:hover { background-color: rgba(%4, 0.25); color: %5; border: 1px solid rgb(%4); } "
+                  "QPushButton#pButEQBandSolo:checked:hover { background-color: rgba(%4, 0.70); color: %5; border: 1px solid #ffffff; }" )
+            .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
+            .arg ( bDarkTheme ? "#b0b4bc" : "#404550" )
+            .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
+            .arg ( strBandRgb )
+            .arg ( bDarkTheme ? "#ffffff" : "#000000" ) );
     pButEQBandSolo->blockSignals ( false );
 
     // Mute button styling
     const bool bMute = GetEQBandMute ( iBand );
     pButEQBandMute->blockSignals ( true );
     pButEQBandMute->setChecked ( bMute );
-    pButEQBandMute->setStyleSheet ( QString ( "QPushButton { font-weight: bold; border-radius: 3px; font-size: 11px; "
-                                              "background-color: %1; color: %2; border: 1px solid %3; } "
-                                              "QPushButton:hover { border-color: #ff5555; }" )
-                                        .arg ( bMute ? "rgba(235, 60, 55, 0.45)" : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
-                                        .arg ( bMute ? "#ffffff" : ( bDarkTheme ? "#b0b4bc" : "#404550" ) )
-                                        .arg ( bMute ? "#eb3c37" : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) ) );
+    pButEQBandMute->setStyleSheet (
+        QString (
+            "QPushButton#pButEQBandMute { min-height: 0px; max-height: 24px; font-weight: bold; border-radius: 3px; font-size: 11px; "
+            "background-color: %1; color: %2; border: 1px solid %3; padding: 0px; } "
+            "QPushButton#pButEQBandMute:checked { background-color: rgba(235, 60, 55, 0.45); color: #ffffff; border: 1px solid #eb3c37; } "
+            "QPushButton#pButEQBandMute:hover { background-color: rgba(235, 60, 55, 0.25); color: %2; border: 1px solid #ff5555; } "
+            "QPushButton#pButEQBandMute:checked:hover { background-color: rgba(235, 60, 55, 0.75); color: #ffffff; border: 1px solid #ffffff; }" )
+            .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
+            .arg ( bDarkTheme ? "#b0b4bc" : "#404550" )
+            .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" ) );
     pButEQBandMute->blockSignals ( false );
 
     // Dynamics enable button styling & icon
@@ -1576,11 +1592,17 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pButEQDynEnabled->setChecked ( bDynEnabled );
     pButEQDynEnabled->setIcon ( CreateDynToggleIcon ( bDarkTheme, colBand ) );
     pButEQDynEnabled->setStyleSheet (
-        QString ( "QPushButton { border-radius: 3px; background-color: %1; border: 1px solid %2; padding: 2px; } "
-                  "QPushButton:hover { border-color: rgb(%3); }" )
-            .arg ( bDynEnabled ? QString ( "rgba(%1, 0.35)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#2a2b30" : "#e0e2e8" ) )
-            .arg ( bDynEnabled ? QString ( "rgb(%1)" ).arg ( strBandRgb ) : ( bDarkTheme ? "#40444f" : "#c0c4cc" ) )
-            .arg ( strBandRgb ) );
+        QString ( "QPushButton#pButEQDynEnabled { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid %2; "
+                  "padding: 2px; } "
+                  "QPushButton#pButEQDynEnabled:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynEnabled:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynEnabled:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynEnabled:disabled { background-color: %4; border: 1px solid %5; }" )
+            .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
+            .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
+            .arg ( strBandRgb )
+            .arg ( bDarkTheme ? "rgba(42, 43, 48, 0.5)" : "rgba(224, 226, 232, 0.5)" )
+            .arg ( bDarkTheme ? "#33363e" : "#d0d4dc" ) );
     pButEQDynEnabled->blockSignals ( false );
 
     pKnobEQDynThreshold->blockSignals ( false );
