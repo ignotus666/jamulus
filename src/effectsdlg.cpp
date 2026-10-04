@@ -616,41 +616,8 @@ void CEffectsDlg::ApplyThemeToCustomWidgets()
         pReverbDecayWidget->SetDarkTheme ( bDarkTheme );
     }
 
-    // Update Equalizer icon widgets for theme
-    const QColor colBand = GetBandColor ( iSelectedBand );
-
-    pCmbEQFilterType->blockSignals ( true );
-    const int iPrevIdx = pCmbEQFilterType->currentIndex();
-    pCmbEQFilterType->clear();
-    const struct
-    {
-        CAudioEqualizer::EFilterType eType;
-        const char*                  szName;
-    } aFilterTypes[] = {
-        { CAudioEqualizer::EFilterType::Peak, QT_TR_NOOP ( "Peak" ) },
-        { CAudioEqualizer::EFilterType::LowShelf, QT_TR_NOOP ( "Low Shelf" ) },
-        { CAudioEqualizer::EFilterType::HighShelf, QT_TR_NOOP ( "High Shelf" ) },
-        { CAudioEqualizer::EFilterType::LowPass, QT_TR_NOOP ( "Low Pass" ) },
-        { CAudioEqualizer::EFilterType::HighPass, QT_TR_NOOP ( "High Pass" ) },
-        { CAudioEqualizer::EFilterType::Notch, QT_TR_NOOP ( "Notch" ) },
-    };
-    for ( size_t i = 0; i < sizeof ( aFilterTypes ) / sizeof ( aFilterTypes[0] ); ++i )
-    {
-        pCmbEQFilterType->addItem ( CreateFilterTypeIcon ( aFilterTypes[i].eType, bDarkTheme, colBand ),
-                                    QString(),
-                                    static_cast<int> ( aFilterTypes[i].eType ) );
-        pCmbEQFilterType->setItemData ( static_cast<int> ( i ), tr ( aFilterTypes[i].szName ), Qt::ToolTipRole );
-    }
-    if ( iPrevIdx >= 0 && iPrevIdx < pCmbEQFilterType->count() )
-    {
-        pCmbEQFilterType->setCurrentIndex ( iPrevIdx );
-        pCmbEQFilterType->setToolTip ( tr ( aFilterTypes[iPrevIdx].szName ) );
-    }
-    pCmbEQFilterType->blockSignals ( false );
-
-    pButEQDynCompress->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Compress, bDarkTheme, colBand ) );
-    pButEQDynBoost->setIcon ( CreateDynModeIcon ( CAudioEqualizer::EDynMode::Boost, bDarkTheme, colBand ) );
-    pButEQDynEnabled->setIcon ( CreateDynToggleIcon ( bDarkTheme, colBand ) );
+    // Update Equalizer controls for theme (including icons and stylesheets)
+    UpdateEQDynControls ( iSelectedBand );
 }
 
 void CEffectsDlg::UpdateCompressorControls()
@@ -1531,9 +1498,9 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pButEQDynCompress->setStyleSheet (
         QString ( "QPushButton#pButEQDynCompress { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid "
                   "%2; padding: 2px; } "
-                  "QPushButton#pButEQDynCompress:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynCompress:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynCompress:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynCompress:checked { background-color: %1; border: 1px solid %2; } "
+                  "QPushButton#pButEQDynCompress:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynCompress:checked:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
                   "QPushButton#pButEQDynCompress:disabled { background-color: %4; border: 1px solid %5; }" )
             .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
             .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
@@ -1544,9 +1511,9 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pButEQDynBoost->setStyleSheet (
         QString ( "QPushButton#pButEQDynBoost { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid %2; "
                   "padding: 2px; } "
-                  "QPushButton#pButEQDynBoost:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynBoost:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynBoost:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynBoost:checked { background-color: %1; border: 1px solid %2; } "
+                  "QPushButton#pButEQDynBoost:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynBoost:checked:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
                   "QPushButton#pButEQDynBoost:disabled { background-color: %4; border: 1px solid %5; }" )
             .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
             .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
@@ -1594,9 +1561,9 @@ void CEffectsDlg::UpdateEQDynControls ( const int iBand )
     pButEQDynEnabled->setStyleSheet (
         QString ( "QPushButton#pButEQDynEnabled { min-height: 0px; max-height: 24px; border-radius: 3px; background-color: %1; border: 1px solid %2; "
                   "padding: 2px; } "
-                  "QPushButton#pButEQDynEnabled:checked { background-color: rgba(%3, 0.35); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynEnabled:hover { background-color: rgba(%3, 0.25); border: 1px solid rgb(%3); } "
-                  "QPushButton#pButEQDynEnabled:checked:hover { background-color: rgba(%3, 0.65); border: 1px solid #ffffff; } "
+                  "QPushButton#pButEQDynEnabled:checked { background-color: %1; border: 1px solid %2; } "
+                  "QPushButton#pButEQDynEnabled:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
+                  "QPushButton#pButEQDynEnabled:checked:hover { background-color: rgba(%3, 0.15); border: 1px solid rgb(%3); } "
                   "QPushButton#pButEQDynEnabled:disabled { background-color: %4; border: 1px solid %5; }" )
             .arg ( bDarkTheme ? "#2a2b30" : "#e0e2e8" )
             .arg ( bDarkTheme ? "#40444f" : "#c0c4cc" )
