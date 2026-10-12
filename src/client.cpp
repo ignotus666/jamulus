@@ -120,6 +120,7 @@ CClient::CClient ( const quint16  iPortNumber,
     bMuteMeInPersonalMix ( bNMuteMeInPersonalMix ),
     bOutputBandLevelsEnabled ( false ),
     bInputBandLevelsEnabled ( false ),
+    bSpectrumAnalysisEnabled ( false ),
     iServerSockBufNumFrames ( DEF_NET_BUF_SIZE_NUM_BL ),
     bRawAudioIsSupported ( false )
 {
@@ -279,6 +280,46 @@ void CClient::GetInputBandLevels ( CVector<float>& vecInLevels )
     for ( int iBand = 0; iBand < NUM_SPECTRUM_BANDS; ++iBand )
     {
         vecInLevels[iBand] = afInputBandLevels[iBand];
+    }
+}
+
+void CClient::PushSpectrumSamples ( const int16_t* psStereo, const int iNumStereoSamples, const bool bIsOutput, const bool bIsPost )
+{
+    if ( bIsOutput )
+    {
+        if ( bIsPost )
+        {
+            RingBufOutPost.WriteSamples ( psStereo, iNumStereoSamples );
+        }
+        else
+        {
+            RingBufOutPre.WriteSamples ( psStereo, iNumStereoSamples );
+        }
+    }
+    else
+    {
+        if ( bIsPost )
+        {
+            RingBufInPost.WriteSamples ( psStereo, iNumStereoSamples );
+        }
+        else
+        {
+            RingBufInPre.WriteSamples ( psStereo, iNumStereoSamples );
+        }
+    }
+}
+
+void CClient::GetSpectrumSamples ( float* pfPre, float* pfPost, const bool bIsOutput, const size_t n )
+{
+    if ( bIsOutput )
+    {
+        RingBufOutPre.ReadLatest ( pfPre, n );
+        RingBufOutPost.ReadLatest ( pfPost, n );
+    }
+    else
+    {
+        RingBufInPre.ReadLatest ( pfPre, n );
+        RingBufInPost.ReadLatest ( pfPost, n );
     }
 }
 
@@ -1655,7 +1696,18 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
     }
 
     // apply equalizer before dynamics
+    if ( bSpectrumAnalysisEnabled.load ( std::memory_order_relaxed ) )
+    {
+        PushSpectrumSamples ( vecsStereoSndCrd.data(), iStereoBlockSizeSam, false, false );
+    }
+
     AudioEqualizer.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+
+    if ( bSpectrumAnalysisEnabled.load ( std::memory_order_relaxed ) )
+    {
+        PushSpectrumSamples ( vecsStereoSndCrd.data(), iStereoBlockSizeSam, false, true );
+    }
+
     AudioCompressor.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
 
     // apply pan (audio fader) and mix mono signals
@@ -1816,7 +1868,18 @@ void CClient::ProcessAudioDataIntern ( CVector<int16_t>& vecsStereoSndCrd )
         }
 
         // Apply output/monitoring effects (EQ -> Compressor -> Reverb)
+        if ( bSpectrumAnalysisEnabled.load ( std::memory_order_relaxed ) )
+        {
+            PushSpectrumSamples ( vecsStereoSndCrd.data(), iStereoBlockSizeSam, true, false );
+        }
+
         AudioEqualizerOutput.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
+
+        if ( bSpectrumAnalysisEnabled.load ( std::memory_order_relaxed ) )
+        {
+            PushSpectrumSamples ( vecsStereoSndCrd.data(), iStereoBlockSizeSam, true, true );
+        }
+
         AudioCompressorOutput.Process ( vecsStereoSndCrd, iStereoBlockSizeSam );
         if ( !bOutReverbBypass && iOutReverbLevel != 0 )
         {

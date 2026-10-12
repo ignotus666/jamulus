@@ -81,6 +81,83 @@ QString MakeBandTooltipText ( const int                          iBand,
 } // namespace
 
 // ---------------------------------------------------------------------------
+// CFft Implementation (Cooley-Tukey Radix-2 Real FFT)
+// ---------------------------------------------------------------------------
+CFft::CFft()
+{
+    constexpr float fPi = 3.14159265358979323846f;
+
+    // Precompute Hann window
+    for ( int i = 0; i < N; ++i )
+    {
+        afWindow[i] = 0.5f * ( 1.0f - std::cos ( 2.0f * fPi * i / ( N - 1 ) ) );
+    }
+
+    // Precompute bit reversal table
+    for ( int i = 0; i < N; ++i )
+    {
+        int rev  = 0;
+        int temp = i;
+        for ( int j = 0; j < 11; ++j ) // 2^11 = 2048
+        {
+            rev = ( rev << 1 ) | ( temp & 1 );
+            temp >>= 1;
+        }
+        aiBitRev[i] = rev;
+    }
+
+    // Precompute twiddle factor tables
+    for ( int i = 0; i < N / 2; ++i )
+    {
+        const float fAngle = -2.0f * fPi * i / N;
+        afCosTable[i]      = std::cos ( fAngle );
+        afSinTable[i]      = std::sin ( fAngle );
+    }
+}
+
+void CFft::Compute ( const float* pInput, float* pMagnitudesOut )
+{
+    float real[N];
+    float imag[N];
+
+    for ( int i = 0; i < N; ++i )
+    {
+        const int iRev = aiBitRev[i];
+        real[iRev]     = pInput[i] * afWindow[i];
+        imag[iRev]     = 0.0f;
+    }
+
+    for ( int len = 2; len <= N; len <<= 1 )
+    {
+        const int halfLen = len >> 1;
+        const int step    = N / len;
+
+        for ( int i = 0; i < N; i += len )
+        {
+            for ( int j = 0; j < halfLen; ++j )
+            {
+                const int   idx = j * step;
+                const float uR  = real[i + j];
+                const float uI  = imag[i + j];
+                const float vR  = real[i + j + halfLen] * afCosTable[idx] - imag[i + j + halfLen] * afSinTable[idx];
+                const float vI  = real[i + j + halfLen] * afSinTable[idx] + imag[i + j + halfLen] * afCosTable[idx];
+
+                real[i + j]           = uR + vR;
+                imag[i + j]           = uI + vI;
+                real[i + j + halfLen] = uR - vR;
+                imag[i + j + halfLen] = uI - vI;
+            }
+        }
+    }
+
+    const float norm = 2.0f / N;
+    for ( int i = 0; i < N / 2; ++i )
+    {
+        pMagnitudesOut[i] = std::sqrt ( real[i] * real[i] + imag[i] * imag[i] ) * norm;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Construction
 // ---------------------------------------------------------------------------
 CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
@@ -108,6 +185,16 @@ CEQCurveWidget::CEQCurveWidget ( QWidget* parent ) :
     {
         afSpectrumLevels[i] = 0.0f;
         afSpectrumPeaks[i]  = 0.0f;
+    }
+    for ( int p = 0; p < kNumVisualCurvePoints; ++p )
+    {
+        const float fNorm = static_cast<float> ( p ) / ( kNumVisualCurvePoints - 1 );
+        const float fHz   = kFreqMin * std::pow ( kFreqMax / kFreqMin, fNorm );
+        afVisualFreqs[p]  = fHz;
+        // +3.0 dB/octave tilt relative to 1000 Hz for natural musical energy balance
+        afVisualTiltDb[p]       = 3.0f * ( std::log ( fHz / 1000.0f ) / 0.693147f );
+        afSpectrumPreLevels[p]  = 0.0f;
+        afSpectrumPostLevels[p] = 0.0f;
     }
 
     setMinimumSize ( 300, 120 );
@@ -289,6 +376,112 @@ void CEQCurveWidget::SetSpectrumLevels ( const QVector<float>& vecLevels )
     }
 }
 
+void CEQCurveWidget::ResetSpectrum()
+{
+    for ( int p = 0; p < kNumVisualCurvePoints; ++p )
+    {
+        afSpectrumPreLevels[p]  = 0.0f;
+        afSpectrumPostLevels[p] = 0.0f;
+    }
+    for ( int i = 0; i < kNumVisualBands; ++i )
+    {
+        afSpectrumLevels[i] = 0.0f;
+        afSpectrumPeaks[i]  = 0.0f;
+    }
+    update();
+}
+
+void CEQCurveWidget::ProcessSpectrum ( const float* pfPreSamples, const float* pfPostSamples, const int iNumSamples )
+{
+    if ( !pfPreSamples || !pfPostSamples || iNumSamples < CFft::N )
+    {
+        return;
+    }
+
+    float afPreMag[CFft::N / 2];
+    float afPostMag[CFft::N / 2];
+    FftEngine.Compute ( pfPreSamples, afPreMag );
+    FftEngine.Compute ( pfPostSamples, afPostMag );
+
+    const float fBinHz   = ( iSampleRateHz > 0 ? static_cast<float> ( iSampleRateHz ) : 48000.0f ) / static_cast<float> ( CFft::N );
+    const float fMinDb   = -68.0f;
+    const float fMaxDb   = 6.0f;
+    const float fDbRange = fMaxDb - fMinDb;
+
+    bool bChanged = false;
+
+    for ( int p = 0; p < kNumVisualCurvePoints; ++p )
+    {
+        const float fHz   = afVisualFreqs[p];
+        const float fTilt = afVisualTiltDb[p];
+
+        const float fBin  = fHz / fBinHz;
+        const int   iBin0 = std::max ( 0, std::min ( CFft::N / 2 - 2, static_cast<int> ( fBin ) ) );
+        const float fFrac = fBin - static_cast<float> ( iBin0 );
+
+        const float fBandwidthHz = fHz * ( std::pow ( kFreqMax / kFreqMin, 1.0f / ( kNumVisualCurvePoints - 1 ) ) - 1.0f );
+        const int   iSpanBins    = std::max ( 1, static_cast<int> ( std::ceil ( fBandwidthHz / fBinHz ) ) );
+        const int   iBinEnd      = std::min ( CFft::N / 2 - 1, iBin0 + iSpanBins );
+
+        float fMagPre  = ( 1.0f - fFrac ) * afPreMag[iBin0] + fFrac * afPreMag[iBin0 + 1];
+        float fMagPost = ( 1.0f - fFrac ) * afPostMag[iBin0] + fFrac * afPostMag[iBin0 + 1];
+
+        for ( int b = iBin0 + 1; b <= iBinEnd; ++b )
+        {
+            fMagPre  = std::max ( fMagPre, afPreMag[b] );
+            fMagPost = std::max ( fMagPost, afPostMag[b] );
+        }
+
+        const float fDbPre   = ( fMagPre > 1e-6f ) ? ( 20.0f * std::log10 ( fMagPre ) + fTilt ) : -100.0f;
+        float       fNormPre = ( fDbPre - fMinDb ) / fDbRange;
+        fNormPre             = std::max ( 0.0f, std::min ( 1.0f, fNormPre ) );
+
+        const float fDbPost   = ( fMagPost > 1e-6f ) ? ( 20.0f * std::log10 ( fMagPost ) + fTilt ) : -100.0f;
+        float       fNormPost = ( fDbPost - fMinDb ) / fDbRange;
+        fNormPost             = std::max ( 0.0f, std::min ( 1.0f, fNormPost ) );
+
+        // Ballistics (fast attack, smooth exponential decay)
+        const float fOldPre = afSpectrumPreLevels[p];
+        float       fTargetPre;
+        if ( fNormPre >= fOldPre )
+        {
+            fTargetPre = fOldPre * 0.35f + fNormPre * 0.65f;
+        }
+        else
+        {
+            fTargetPre = fOldPre * 0.88f + fNormPre * 0.12f;
+        }
+
+        if ( std::fabs ( fOldPre - fTargetPre ) > 0.003f )
+        {
+            afSpectrumPreLevels[p] = fTargetPre;
+            bChanged               = true;
+        }
+
+        const float fOldPost = afSpectrumPostLevels[p];
+        float       fTargetPost;
+        if ( fNormPost >= fOldPost )
+        {
+            fTargetPost = fOldPost * 0.35f + fNormPost * 0.65f;
+        }
+        else
+        {
+            fTargetPost = fOldPost * 0.88f + fNormPost * 0.12f;
+        }
+
+        if ( std::fabs ( fOldPost - fTargetPost ) > 0.003f )
+        {
+            afSpectrumPostLevels[p] = fTargetPost;
+            bChanged                = true;
+        }
+    }
+
+    if ( bChanged )
+    {
+        update();
+    }
+}
+
 void CEQCurveWidget::SetSampleRate ( const int iRate )
 {
     if ( iSampleRateHz != iRate )
@@ -304,11 +497,7 @@ void CEQCurveWidget::SetBypassed ( const bool bBypassed )
 {
     if ( bBypassed )
     {
-        for ( int i = 0; i < kNumVisualBands; ++i )
-        {
-            afSpectrumLevels[i] = 0.0f;
-            afSpectrumPeaks[i]  = 0.0f;
-        }
+        ResetSpectrum();
         for ( int i = 0; i < kNumBands; ++i )
         {
             afBandGainReductionDb[i] = 0.0f;
@@ -625,74 +814,151 @@ void CEQCurveWidget::paintEvent ( QPaintEvent* pEvent )
         painter.drawText ( QRectF ( fX - 20, r.bottom() + 2, 40, 20 ), Qt::AlignHCenter | Qt::AlignTop, strLabel );
     }
 
-    // Draw spectrum overlay in the background
-    bool bAnySpectrum = false;
-    for ( int i = 0; i < kNumVisualBands; ++i )
+    // Draw real-time FFT spectrum overlay in the background (Pre-EQ and Post-EQ smooth curves)
+    bool bAnyPreSpectrum  = false;
+    bool bAnyPostSpectrum = false;
+    for ( int p = 0; p < kNumVisualCurvePoints; ++p )
     {
-        if ( afSpectrumLevels[i] > 0.001f )
+        if ( afSpectrumPreLevels[p] > 0.002f )
         {
-            bAnySpectrum = true;
-            break;
+            bAnyPreSpectrum = true;
+        }
+        if ( afSpectrumPostLevels[p] > 0.002f )
+        {
+            bAnyPostSpectrum = true;
         }
     }
 
-    if ( bAnySpectrum )
+    if ( bAnyPreSpectrum || bAnyPostSpectrum )
     {
-        const float fBarWidth = std::max ( 2.0f, static_cast<float> ( r.width() / kNumVisualBands ) - 1.5f );
-        const float fRad      = fBarWidth / 2.0f;
+        painter.setRenderHint ( QPainter::Antialiasing, true );
 
-        for ( int iBand = 0; iBand < kNumVisualBands; ++iBand )
+        // 1. Draw Pre-EQ curve (subtle, semi-transparent slate-grey)
+        if ( bAnyPreSpectrum )
         {
-            const float fFreq = 30.0f * std::pow ( 16000.0f / 30.0f, static_cast<float> ( iBand ) / ( kNumVisualBands - 1 ) );
-            const float fX    = FreqToXf ( fFreq );
-            const float fY    = r.bottom() - afSpectrumLevels[iBand] * r.height();
+            QPainterPath pathPreArea;
+            QPainterPath pathPreLine;
 
-            // 1. Draw the vertical decaying level rounded bar
-            if ( afSpectrumLevels[iBand] > 0.001f )
+            const float fStartX = FreqToXf ( afVisualFreqs[0] );
+            const float fStartY = r.bottom() - afSpectrumPreLevels[0] * r.height();
+            pathPreArea.moveTo ( fStartX, r.bottom() );
+            pathPreArea.lineTo ( fStartX, fStartY );
+            pathPreLine.moveTo ( fStartX, fStartY );
+
+            for ( int p = 1; p < kNumVisualCurvePoints; ++p )
             {
-                QLinearGradient barGrad ( fX, r.bottom(), fX, fY );
-                barGrad.setColorAt ( 0.0, QColor ( 0, 150, 255, 10 ) );
-                barGrad.setColorAt ( 0.5, QColor ( 48, 230, 75, 25 ) );
-                barGrad.setColorAt ( 0.8, QColor ( 245, 155, 40, 35 ) );
-                barGrad.setColorAt ( 1.0, QColor ( 235, 60, 55, 45 ) );
-
-                painter.setPen ( Qt::NoPen );
-                painter.setBrush ( barGrad );
-                painter.drawRoundedRect ( QRectF ( fX - fRad, fY, fBarWidth, r.bottom() - fY ), fRad, fRad );
+                const float fX = FreqToXf ( afVisualFreqs[p] );
+                const float fY = r.bottom() - afSpectrumPreLevels[p] * r.height();
+                pathPreArea.lineTo ( fX, fY );
+                pathPreLine.lineTo ( fX, fY );
             }
 
-            // 2. Draw the slowly decaying peak tick mark (rounded pill-shaped tick)
-            const float fPeakY = r.bottom() - afSpectrumPeaks[iBand] * r.height();
-            if ( afSpectrumPeaks[iBand] > 0.001f )
-            {
-                QColor colPeak;
-                if ( afSpectrumPeaks[iBand] < 0.5f )
-                {
-                    const float t = afSpectrumPeaks[iBand] / 0.5f;
-                    colPeak       = QColor ( static_cast<int> ( 0 * ( 1.0f - t ) + 48 * t ),
-                                       static_cast<int> ( 150 * ( 1.0f - t ) + 230 * t ),
-                                       static_cast<int> ( 255 * ( 1.0f - t ) + 75 * t ) );
-                }
-                else if ( afSpectrumPeaks[iBand] < 0.8f )
-                {
-                    const float t = ( afSpectrumPeaks[iBand] - 0.5f ) / 0.3f;
-                    colPeak       = QColor ( static_cast<int> ( 48 * ( 1.0f - t ) + 245 * t ),
-                                       static_cast<int> ( 230 * ( 1.0f - t ) + 155 * t ),
-                                       static_cast<int> ( 75 * ( 1.0f - t ) + 40 * t ) );
-                }
-                else
-                {
-                    const float t = ( afSpectrumPeaks[iBand] - 0.8f ) / 0.2f;
-                    colPeak       = QColor ( static_cast<int> ( 245 * ( 1.0f - t ) + 235 * t ),
-                                       static_cast<int> ( 155 * ( 1.0f - t ) + 60 * t ),
-                                       static_cast<int> ( 40 * ( 1.0f - t ) + 55 * t ) );
-                }
+            const float fEndX = FreqToXf ( afVisualFreqs[kNumVisualCurvePoints - 1] );
+            pathPreArea.lineTo ( fEndX, r.bottom() );
+            pathPreArea.closeSubpath();
 
-                colPeak.setAlpha ( 60 ); // Soft, non-interfering peak ticks
-                painter.setPen ( Qt::NoPen );
-                painter.setBrush ( colPeak );
-                painter.drawRoundedRect ( QRectF ( fX - fRad, fPeakY - 1.0f, fBarWidth, 2.0f ), 1.0f, 1.0f );
+            // Fill Pre-EQ area
+            const QColor colPreFill = bDarkTheme ? QColor ( 150, 160, 175, 25 ) : QColor ( 120, 130, 145, 20 );
+            painter.fillPath ( pathPreArea, colPreFill );
+
+            // Stroke Pre-EQ line
+            const QColor colPreLine = bDarkTheme ? QColor ( 175, 185, 200, 160 ) : QColor ( 110, 120, 135, 160 );
+            painter.strokePath ( pathPreLine, QPen ( colPreLine, 1.25, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
+        }
+
+        // 2. Draw Post-EQ curve (vibrant cyan/teal)
+        if ( bAnyPostSpectrum )
+        {
+            QPainterPath pathPostArea;
+            QPainterPath pathPostLine;
+
+            const float fStartX = FreqToXf ( afVisualFreqs[0] );
+            const float fStartY = r.bottom() - afSpectrumPostLevels[0] * r.height();
+            pathPostArea.moveTo ( fStartX, r.bottom() );
+            pathPostArea.lineTo ( fStartX, fStartY );
+            pathPostLine.moveTo ( fStartX, fStartY );
+
+            for ( int p = 1; p < kNumVisualCurvePoints; ++p )
+            {
+                const float fX = FreqToXf ( afVisualFreqs[p] );
+                const float fY = r.bottom() - afSpectrumPostLevels[p] * r.height();
+                pathPostArea.lineTo ( fX, fY );
+                pathPostLine.lineTo ( fX, fY );
             }
+
+            const float fEndX = FreqToXf ( afVisualFreqs[kNumVisualCurvePoints - 1] );
+            pathPostArea.lineTo ( fEndX, r.bottom() );
+            pathPostArea.closeSubpath();
+
+            // Gradient fill for Post-EQ area
+            QLinearGradient gradPost ( 0, r.top(), 0, r.bottom() );
+            if ( bDarkTheme )
+            {
+                gradPost.setColorAt ( 0.0, QColor ( 45, 215, 205, 55 ) );
+                gradPost.setColorAt ( 0.5, QColor ( 35, 180, 175, 35 ) );
+                gradPost.setColorAt ( 1.0, QColor ( 20, 120, 115, 12 ) );
+            }
+            else
+            {
+                gradPost.setColorAt ( 0.0, QColor ( 0, 180, 170, 50 ) );
+                gradPost.setColorAt ( 0.5, QColor ( 0, 150, 140, 30 ) );
+                gradPost.setColorAt ( 1.0, QColor ( 0, 110, 100, 10 ) );
+            }
+            painter.fillPath ( pathPostArea, gradPost );
+
+            // Stroke Post-EQ line
+            const QColor colPostLine = bDarkTheme ? QColor ( 55, 235, 225, 225 ) : QColor ( 0, 165, 155, 225 );
+            painter.strokePath ( pathPostLine, QPen ( colPostLine, 1.75, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin ) );
+        }
+
+        // 3. Draw Pre/Post legend badge in top-right corner of the plot
+        {
+            const int    iBadgeW = 118;
+            const int    iBadgeH = 17;
+            const QRectF badgeRect ( r.right() - iBadgeW - 6, r.top() + 6, iBadgeW, iBadgeH );
+
+            painter.save();
+            painter.setRenderHint ( QPainter::Antialiasing, true );
+
+            // Subtle background pill
+            const QColor colBadgeBg     = bDarkTheme ? QColor ( 20, 22, 28, 175 ) : QColor ( 245, 247, 250, 185 );
+            const QColor colBadgeBorder = bDarkTheme ? QColor ( 255, 255, 255, 25 ) : QColor ( 0, 0, 0, 25 );
+            painter.setPen ( QPen ( colBadgeBorder, 1 ) );
+            painter.setBrush ( colBadgeBg );
+            painter.drawRoundedRect ( badgeRect, 3.0, 3.0 );
+
+            QFont fontLegend = painter.font();
+            fontLegend.setPixelSize ( 9 );
+            fontLegend.setBold ( false );
+            painter.setFont ( fontLegend );
+
+            const QColor colPreColor   = bDarkTheme ? QColor ( 175, 185, 200 ) : QColor ( 110, 120, 135 );
+            const QColor colPostColor  = bDarkTheme ? QColor ( 55, 235, 225 ) : QColor ( 0, 165, 155 );
+            const QColor colLegendText = bDarkTheme ? QColor ( 190, 195, 205 ) : QColor ( 60, 65, 75 );
+
+            // Pre label + box
+            float       fCurX = badgeRect.left() + 7;
+            const float fMidY = badgeRect.center().y();
+
+            painter.setPen ( colLegendText );
+            painter.drawText ( QPointF ( fCurX, fMidY + 3.0f ), "Pre:" );
+            fCurX += 24;
+
+            painter.setPen ( Qt::NoPen );
+            painter.setBrush ( colPreColor );
+            painter.drawRoundedRect ( QRectF ( fCurX, fMidY - 3.5f, 7, 7 ), 1.5, 1.5 );
+            fCurX += 16;
+
+            // Post label + box
+            painter.setPen ( colLegendText );
+            painter.drawText ( QPointF ( fCurX, fMidY + 3.0f ), "Post:" );
+            fCurX += 28;
+
+            painter.setPen ( Qt::NoPen );
+            painter.setBrush ( colPostColor );
+            painter.drawRoundedRect ( QRectF ( fCurX, fMidY - 3.5f, 7, 7 ), 1.5, 1.5 );
+
+            painter.restore();
         }
     }
 

@@ -43,6 +43,7 @@
 #include "util.h"
 
 #include <QWidget>
+#include <QTimer>
 #include <QPainter>
 #include <QLinearGradient>
 #include <QPainterPath>
@@ -679,6 +680,7 @@ private:
     CReverbDecayWidget* pReverbDecayWidget = nullptr;
     QButtonGroup*       pGrpEQDynMode      = nullptr;
     EEffectsContext     eCurrentContext    = EC_INPUT;
+    QTimer              TimerUIAnimation;
 
     // Context-aware settings helpers
     CVector<QString>& GetEffectsPresetNames() const { return pSettings->vstrEffectsPresetNames[eCurrentContext == EC_OUTPUT ? 1 : 0]; }
@@ -1015,4 +1017,5 @@ private slots:
     void OnEQDynRatioEditFinished();
     void OnEQDynAttackEditFinished();
     void OnEQDynReleaseEditFinished();
+    void OnTimerUIAnimation();
 };

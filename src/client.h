@@ -161,6 +161,49 @@ public:
     // can store here other information about an active channel
 };
 
+template<size_t Capacity = 4096>
+class CAudioRingBuffer
+{
+public:
+    CAudioRingBuffer() : iWritePos ( 0 )
+    {
+        for ( size_t i = 0; i < Capacity; ++i )
+        {
+            afBuffer[i] = 0.0f;
+        }
+    }
+
+    void WriteSamples ( const int16_t* pStereo, const int iNumStereoSamples )
+    {
+        size_t w = iWritePos.load ( std::memory_order_relaxed );
+        for ( int i = 0; i + 1 < iNumStereoSamples; i += 2 )
+        {
+            afBuffer[w & ( Capacity - 1 )] = 0.5f * ( pStereo[i] + pStereo[i + 1] ) * ( 1.0f / 32768.0f );
+            w++;
+        }
+        iWritePos.store ( w, std::memory_order_release );
+    }
+
+    void ReadLatest ( float* pDest, const size_t n ) const
+    {
+        const size_t w         = iWritePos.load ( std::memory_order_acquire );
+        const size_t readCount = std::min ( n, Capacity );
+        const size_t start     = w - readCount;
+        for ( size_t i = 0; i < readCount; ++i )
+        {
+            pDest[i] = afBuffer[( start + i ) & ( Capacity - 1 )];
+        }
+        for ( size_t i = readCount; i < n; ++i )
+        {
+            pDest[i] = 0.0f;
+        }
+    }
+
+private:
+    float               afBuffer[Capacity];
+    std::atomic<size_t> iWritePos;
+};
+
 class CClientSettings;
 
 class CClient : public QObject
@@ -168,7 +211,9 @@ class CClient : public QObject
     Q_OBJECT
 
 public:
-    static constexpr int NUM_SPECTRUM_BANDS = 24;
+    static constexpr int    NUM_SPECTRUM_BANDS        = 24;
+    static constexpr size_t SPECTRUM_RING_BUFFER_SIZE = 4096;
+    static constexpr size_t SPECTRUM_FFT_SIZE         = 2048;
 
     CClient ( const quint16  iPortNumber,
               const quint16  iQosNumber,
@@ -295,6 +340,12 @@ public:
     bool&              GetReverbEarlyEnabled ( const bool bIsOutput ) { return bIsOutput ? bOutReverbEarlyEnabled : bReverbEarlyEnabled; }
     bool&              GetReverbFreeze ( const bool bIsOutput ) { return bIsOutput ? bOutReverbFreeze : bReverbFreeze; }
     std::atomic<bool>& GetReverbOnLeftChan ( const bool bIsOutput ) { return bIsOutput ? bOutReverbOnLeftChan : bReverbOnLeftChan; }
+
+    // Spectrum analysis audio tap methods
+    void SetSpectrumAnalysisEnabled ( const bool bEnabled ) { bSpectrumAnalysisEnabled.store ( bEnabled, std::memory_order_release ); }
+    bool GetSpectrumAnalysisEnabled() const { return bSpectrumAnalysisEnabled.load ( std::memory_order_acquire ); }
+    void PushSpectrumSamples ( const int16_t* psStereo, const int iNumStereoSamples, const bool bIsOutput, const bool bIsPost );
+    void GetSpectrumSamples ( float* pfPre, float* pfPost, const bool bIsOutput, const size_t n = SPECTRUM_FFT_SIZE );
 
     // Input spectrum band level telemetry getters & setters
     void GetInputBandLevels ( CVector<float>& vecInLevels );
@@ -580,6 +631,12 @@ protected:
     QMutex            MutexInputBandLevels;
     float             afInputBandLevels[NUM_SPECTRUM_BANDS];
     std::atomic<bool> bInputBandLevelsEnabled;
+    std::atomic<bool> bSpectrumAnalysisEnabled;
+
+    CAudioRingBuffer<SPECTRUM_RING_BUFFER_SIZE> RingBufInPre;
+    CAudioRingBuffer<SPECTRUM_RING_BUFFER_SIZE> RingBufInPost;
+    CAudioRingBuffer<SPECTRUM_RING_BUFFER_SIZE> RingBufOutPre;
+    CAudioRingBuffer<SPECTRUM_RING_BUFFER_SIZE> RingBufOutPost;
 
     // server settings
     int  iServerSockBufNumFrames;

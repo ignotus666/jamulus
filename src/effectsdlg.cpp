@@ -476,6 +476,7 @@ CEffectsDlg::CEffectsDlg ( CClient* pNCliP, CClientSettings* pNSetP, QWidget* pa
 
     QObject::connect ( pButContextInput, &QPushButton::clicked, this, &CEffectsDlg::OnContextInputClicked );
     QObject::connect ( pButContextOutput, &QPushButton::clicked, this, &CEffectsDlg::OnContextOutputClicked );
+    QObject::connect ( &TimerUIAnimation, &QTimer::timeout, this, &CEffectsDlg::OnTimerUIAnimation );
 
     SetContext ( EC_INPUT );
 }
@@ -533,7 +534,9 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
         const bool bIsInput = ( eCurrentContext == EC_INPUT );
         pClient->SetInputBandLevelsEnabled ( bIsInput );
         pClient->SetOutputBandLevelsEnabled ( !bIsInput );
+        pClient->SetSpectrumAnalysisEnabled ( true );
     }
+    TimerUIAnimation.start ( 30 ); // 33 FPS smooth spectrum and metering
     ApplyThemeToCustomWidgets();
 
     // Restore last used tab if valid (do this first)
@@ -550,10 +553,16 @@ void CEffectsDlg::showEvent ( QShowEvent* Event )
 
 void CEffectsDlg::hideEvent ( QHideEvent* Event )
 {
+    TimerUIAnimation.stop();
     if ( pClient )
     {
         pClient->SetInputBandLevelsEnabled ( false );
         pClient->SetOutputBandLevelsEnabled ( false );
+        pClient->SetSpectrumAnalysisEnabled ( false );
+    }
+    if ( pEQCurveWidget )
+    {
+        pEQCurveWidget->ResetSpectrum();
     }
     CBaseDlg::hideEvent ( Event );
 }
@@ -2054,4 +2063,36 @@ void CEffectsDlg::SetContext ( EEffectsContext eContext )
     UpdateCompressorControls();
     UpdateEQControls();
     PopulateEffectsPresetCombo();
+}
+
+void CEffectsDlg::OnTimerUIAnimation()
+{
+    if ( !pClient || !isVisible() )
+    {
+        return;
+    }
+
+    const bool bIsOutput = ( eCurrentContext == EC_OUTPUT );
+
+    // Process real-time FFT spectrum for EQ curve widget
+    if ( pEQCurveWidget && pEQCurveWidget->isVisible() && !GetEQBypass() )
+    {
+        float afPreSamples[CClient::SPECTRUM_FFT_SIZE];
+        float afPostSamples[CClient::SPECTRUM_FFT_SIZE];
+        pClient->GetSpectrumSamples ( afPreSamples, afPostSamples, bIsOutput, CClient::SPECTRUM_FFT_SIZE );
+        pEQCurveWidget->ProcessSpectrum ( afPreSamples, afPostSamples, CClient::SPECTRUM_FFT_SIZE );
+
+        // Update real-time dynamic gain reductions on the curve
+        for ( int iBand = 0; iBand < CAudioEqualizer::NUM_BANDS; ++iBand )
+        {
+            pEQCurveWidget->SetBandGainReduction ( iBand, GetEQBandGainReductionDb ( iBand ) );
+        }
+    }
+
+    // Update Compressor gain reduction & input meter smoothly
+    UpdateCompressorGainReduction ( pClient->GetCompressor ( bIsOutput ).GetGainReductionDb(),
+                                    pClient->GetCompressor ( bIsOutput ).GetInputLevelDb() );
+
+    // Update Reverb output level smoothly
+    UpdateReverbOutputLevel ( pClient->GetReverb ( bIsOutput ).GetReverbOutputLevelDb() );
 }

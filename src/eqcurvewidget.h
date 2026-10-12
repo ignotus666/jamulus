@@ -28,19 +28,35 @@
 #include <QVector>
 #include "plugins/audioequalizer.h"
 
+class CFft
+{
+public:
+    static constexpr int N = 2048;
+
+    CFft();
+    void Compute ( const float* pInput, float* pMagnitudesOut );
+
+private:
+    float afWindow[N];
+    int   aiBitRev[N];
+    float afCosTable[N / 2];
+    float afSinTable[N / 2];
+};
+
 class CEQCurveWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    static constexpr int   kNumBands       = CAudioEqualizer::NUM_BANDS;
-    static constexpr int   kNumVisualBands = 72;
-    static constexpr float kGainMinDb      = -12.0f;
-    static constexpr float kGainMaxDb      = 12.0f;
-    static constexpr float kDisplayMin     = -15.0f; // Extra range for gain-reduction visualisation
-    static constexpr float kDisplayMax     = 15.0f;
-    static constexpr float kFreqMin        = 20.0f;
-    static constexpr float kFreqMax        = 20000.0f;
+    static constexpr int   kNumBands             = CAudioEqualizer::NUM_BANDS;
+    static constexpr int   kNumVisualBands       = 72;
+    static constexpr int   kNumVisualCurvePoints = 160;
+    static constexpr float kGainMinDb            = -12.0f;
+    static constexpr float kGainMaxDb            = 12.0f;
+    static constexpr float kDisplayMin           = -15.0f; // Extra range for gain-reduction visualisation
+    static constexpr float kDisplayMax           = 15.0f;
+    static constexpr float kFreqMin              = 20.0f;
+    static constexpr float kFreqMax              = 20000.0f;
 
     explicit CEQCurveWidget ( QWidget* parent = nullptr );
 
@@ -51,6 +67,8 @@ public:
     void                         SetBandFilterType ( const int iBand, const CAudioEqualizer::EFilterType eType );
     CAudioEqualizer::EFilterType GetBandFilterType ( const int iBand ) const;
     void                         SetSpectrumLevels ( const QVector<float>& vecLevels );
+    void                         ProcessSpectrum ( const float* pfPreSamples, const float* pfPostSamples, const int iNumSamples );
+    void                         ResetSpectrum();
     void                         SetSampleRate ( const int iSampleRateHz );
     void                         SetDarkTheme ( const bool bEnable );
     void                         SetBypassed ( const bool bBypassed );
@@ -109,6 +127,11 @@ private:
     CAudioEqualizer::EFilterType aeBandFilterType[kNumBands];
     float                        afSpectrumLevels[kNumVisualBands];
     float                        afSpectrumPeaks[kNumVisualBands];
+    CFft                         FftEngine;
+    float                        afSpectrumPreLevels[kNumVisualCurvePoints];
+    float                        afSpectrumPostLevels[kNumVisualCurvePoints];
+    float                        afVisualFreqs[kNumVisualCurvePoints];
+    float                        afVisualTiltDb[kNumVisualCurvePoints];
     int                          iSampleRateHz;
     int                          iSelectedBand;
     int                          iSoloBand;
